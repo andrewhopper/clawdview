@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock 1 – Icon Rail + Pin to Open</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(214.3 31.8% 91.4%)',
+            input: 'hsl(214.3 31.8% 91.4%)',
+            ring: 'hsl(222.2 84% 4.9%)',
+            background: 'hsl(0 0% 100%)',
+            foreground: 'hsl(222.2 84% 4.9%)',
+            muted: { DEFAULT: 'hsl(210 40% 96.1%)', foreground: 'hsl(215.4 16.3% 46.9%)' },
+            accent: { DEFAULT: 'hsl(210 40% 96.1%)', foreground: 'hsl(222.2 47.4% 11.2%)' },
+            sidebar: { DEFAULT: 'hsl(0 0% 98%)', border: 'hsl(220 13% 91%)' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --sidebar-width: 240px;
+      --rail-width: 48px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    .sidebar {
+      width: var(--rail-width);
+      transition: width 0.2s ease;
+      overflow: hidden;
+      background: hsl(0 0% 98%);
+      border-right: 1px solid hsl(220 13% 91%);
+      flex-shrink: 0;
+    }
+    .sidebar.open { width: var(--sidebar-width); }
+
+    .sidebar-label {
+      opacity: 0;
+      white-space: nowrap;
+      transition: opacity 0.15s ease;
+    }
+    .sidebar.open .sidebar-label { opacity: 1; }
+
+    .pin-btn {
+      transform: rotate(45deg);
+      transition: transform 0.2s ease;
+    }
+    .sidebar.open .pin-btn.pinned { transform: rotate(0deg); }
+
+    .file-tree { display: none; }
+    .sidebar.open .file-tree { display: block; }
+
+    .tooltip {
+      position: absolute;
+      left: calc(var(--rail-width) + 6px);
+      background: hsl(222.2 84% 4.9%);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      z-index: 50;
+    }
+    .rail-item:hover .tooltip { opacity: 1; }
+    .sidebar.open .tooltip { display: none; }
+  </style>
+</head>
+<body class="flex h-screen bg-white text-gray-900 overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar flex flex-col h-full">
+
+    <!-- Rail header -->
+    <div class="flex items-center justify-between h-12 px-2 border-b border-gray-200 shrink-0">
+      <!-- Toggle / Pin button -->
+      <button onclick="toggleSidebar()"
+        class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-500 relative group"
+        title="Toggle sidebar">
+        <svg id="toggleIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <!-- Pin indicator (visible only when open) -->
+      <button id="pinBtn" onclick="togglePin()"
+        class="w-8 h-8 items-center justify-center rounded-md hover:bg-gray-100 text-gray-400 hidden transition-colors"
+        title="Pin sidebar open">
+        <svg class="w-4 h-4 pin-btn" id="pinIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Rail icons + file tree -->
+    <div class="flex-1 overflow-y-auto py-2">
+
+      <!-- Section: Files -->
+      <div class="relative rail-item flex items-center px-2 py-1.5 cursor-pointer hover:bg-gray-100 rounded-md mx-1 group"
+           onclick="selectSection('files')">
+        <svg class="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+        </svg>
+        <span class="sidebar-label ml-3 text-sm font-medium text-gray-700">Files</span>
+        <span class="tooltip">Files</span>
+      </div>
+
+      <!-- Nested file tree (only when open) -->
+      <div class="file-tree ml-2 mt-1 space-y-0.5 text-sm text-gray-600">
+        <div class="py-1 px-2 rounded hover:bg-gray-100 cursor-pointer flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 5a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V5z"/>
+          </svg>
+          src/
+        </div>
+        <div class="py-1 px-6 rounded hover:bg-gray-100 cursor-pointer flex items-center gap-2 bg-blue-50 text-blue-700 font-medium">
+          <svg class="w-3.5 h-3.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/>
+          </svg>
+          App.tsx
+        </div>
+        <div class="py-1 px-6 rounded hover:bg-gray-100 cursor-pointer flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/>
+          </svg>
+          index.tsx
+        </div>
+        <div class="py-1 px-6 rounded hover:bg-gray-100 cursor-pointer flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/>
+          </svg>
+          styles.css
+        </div>
+        <div class="py-1 px-2 rounded hover:bg-gray-100 cursor-pointer flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 5a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V5z"/>
+          </svg>
+          public/
+        </div>
+        <div class="py-1 px-6 rounded hover:bg-gray-100 cursor-pointer flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/>
+          </svg>
+          index.html
+        </div>
+      </div>
+
+      <div class="my-2 mx-2 border-t border-gray-200"></div>
+
+      <!-- Section: Search -->
+      <div class="relative rail-item flex items-center px-2 py-1.5 cursor-pointer hover:bg-gray-100 rounded-md mx-1 group">
+        <svg class="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+        </svg>
+        <span class="sidebar-label ml-3 text-sm font-medium text-gray-700">Search</span>
+        <span class="tooltip">Search</span>
+      </div>
+
+      <!-- Section: Settings -->
+      <div class="relative rail-item flex items-center px-2 py-1.5 cursor-pointer hover:bg-gray-100 rounded-md mx-1 group">
+        <svg class="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span class="sidebar-label ml-3 text-sm font-medium text-gray-700">Settings</span>
+        <span class="tooltip">Settings</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top bar -->
+    <div class="h-12 border-b border-gray-200 flex items-center px-4 gap-2 shrink-0">
+      <span class="text-sm text-gray-500">src /</span>
+      <span class="text-sm font-medium text-gray-900">App.tsx</span>
+      <span id="pinnedBadge" class="hidden ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Sidebar pinned</span>
+    </div>
+
+    <!-- Editor placeholder -->
+    <div class="flex-1 p-6 bg-white overflow-auto">
+      <div class="max-w-2xl">
+        <p class="text-xs text-gray-400 mb-6 border border-dashed border-gray-200 rounded-lg p-4 text-center">
+          <strong class="block text-gray-500 mb-1">Mock 1 — Icon Rail + Pin to Open</strong>
+          Sidebar collapses to a 48px icon rail. Click the hamburger to expand.
+          Use the pin icon to lock it open. Tooltips appear on rail hover.
+        </p>
+        <pre class="text-sm text-gray-700 bg-gray-50 rounded-lg p-4 leading-relaxed overflow-auto"><code>import React from 'react'
+
+function App() {
+  return (
+    &lt;div className="app"&gt;
+      &lt;h1&gt;Hello, world!&lt;/h1&gt;
+    &lt;/div&gt;
+  )
+}
+
+export default App</code></pre>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let isOpen = false;
+    let isPinned = false;
+
+    function toggleSidebar() {
+      isOpen = !isOpen;
+      const sidebar = document.getElementById('sidebar');
+      const pinBtn = document.getElementById('pinBtn');
+      sidebar.classList.toggle('open', isOpen);
+      pinBtn.classList.toggle('hidden', !isOpen);
+      pinBtn.style.display = isOpen ? 'flex' : 'none';
+
+      if (!isOpen && isPinned) {
+        isPinned = false;
+        document.getElementById('pinnedBadge').classList.add('hidden');
+        document.getElementById('pinIcon').classList.remove('pinned');
+        document.getElementById('pinIcon').style.color = '';
+      }
+    }
+
+    function togglePin() {
+      isPinned = !isPinned;
+      const pinIcon = document.getElementById('pinIcon');
+      const badge = document.getElementById('pinnedBadge');
+      pinIcon.classList.toggle('pinned', isPinned);
+      pinIcon.style.color = isPinned ? 'hsl(221.2 83.2% 53.3%)' : '';
+      badge.classList.toggle('hidden', !isPinned);
+    }
+
+    function selectSection(name) {}
+  </script>
+</body>
+</html>
