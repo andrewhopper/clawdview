@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sample HTML Fixture</title>
+  <style>
+    body { font-family: system-ui; max-width: 600px; margin: 40px auto; padding: 20px; }
+    h1 { color: #4f46e5; }
+    button { background: #4f46e5; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Sample HTML File</h1>
+  <p id="message">Hello from QuickView fixture!</p>
+  <button id="btn" onclick="document.getElementById('message').textContent = 'Button clicked!'">Click Me</button>
+  <script>
+    window.FIXTURE_LOADED = true;
+  </script>
+</body>
+</html>
