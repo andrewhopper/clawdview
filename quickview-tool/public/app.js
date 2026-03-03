@@ -120,7 +120,11 @@ class QuickViewApp {
             'json': 'json',
             'md': 'md',
             'svg': 'svg',
-            'css': 'css'
+            'css': 'css',
+            'yaml': 'yaml',
+            'yml': 'yaml',
+            'mmd': 'mermaid',
+            'mermaid': 'mermaid'
         };
         
         return classMap[ext] || 'file';
@@ -192,151 +196,21 @@ class QuickViewApp {
             '.css': 'css',
             '.json': 'json',
             '.md': 'markdown',
-            '.svg': 'xml'
+            '.svg': 'xml',
+            '.yaml': 'yaml',
+            '.yml': 'yaml',
+            '.mmd': 'plaintext',
+            '.mermaid': 'plaintext'
         };
-        
+
         return langMap[extension] || null;
     }
 
     updatePreviewPanel(content, extension, filename) {
         const previewContent = document.getElementById('preview-content');
-        
-        switch (extension) {
-            case '.html':
-                this.renderHTML(previewContent, content);
-                break;
-                
-            case '.jsx':
-                this.renderReact(previewContent, content);
-                break;
-                
-            case '.py':
-                this.renderPythonPreview(previewContent, content, filename);
-                break;
-                
-            case '.svg':
-                this.renderSVG(previewContent, content);
-                break;
-                
-            case '.md':
-                this.renderMarkdown(previewContent, content);
-                break;
-                
-            case '.json':
-                this.renderJSON(previewContent, content);
-                break;
-                
-            default:
-                this.renderText(previewContent, content);
-        }
-    }
-
-    renderHTML(container, content) {
-        const iframe = document.createElement('iframe');
-        iframe.className = 'preview-iframe';
-        iframe.srcdoc = content;
-        
-        container.innerHTML = '';
-        container.appendChild(iframe);
-    }
-
-    renderReact(container, content) {
-        try {
-            // Create a wrapper for React component
-            const wrapper = document.createElement('div');
-            wrapper.id = 'react-preview';
-            container.innerHTML = '';
-            container.appendChild(wrapper);
-            
-            // Transform JSX using Babel
-            const transformed = Babel.transform(content, {
-                presets: ['react']
-            }).code;
-            
-            // Create and execute the component
-            const script = document.createElement('script');
-            script.textContent = `
-                try {
-                    ${transformed}
-                    
-                    // Try to find and render the component
-                    const componentName = Object.keys(window).find(key => 
-                        typeof window[key] === 'function' && 
-                        key[0] === key[0].toUpperCase()
-                    );
-                    
-                    if (componentName) {
-                        const Component = window[componentName];
-                        ReactDOM.render(React.createElement(Component), document.getElementById('react-preview'));
-                    }
-                } catch (error) {
-                    document.getElementById('react-preview').innerHTML = 
-                        '<div class="error">React Error: ' + error.message + '</div>';
-                }
-            `;
-            
-            document.head.appendChild(script);
-            setTimeout(() => document.head.removeChild(script), 100);
-            
-        } catch (error) {
-            container.innerHTML = `<div class="error">Failed to render React component: ${error.message}</div>`;
-        }
-    }
-
-    renderPythonPreview(container, content, filename) {
-        container.innerHTML = `
-            <div style="padding: 20px; color: #333;">
-                <h3>Python Script: ${filename}</h3>
-                <p>Click "Run" to execute this Python script and see the output.</p>
-                <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 6px;">
-                    <strong>Script Preview:</strong>
-                    <pre style="margin-top: 10px; overflow-x: auto;">${this.escapeHtml(content.substring(0, 500))}${content.length > 500 ? '...' : ''}</pre>
-                </div>
-            </div>
-        `;
-    }
-
-    renderSVG(container, content) {
-        container.innerHTML = `
-            <div style="padding: 20px; text-align: center; background: white;">
-                ${content}
-            </div>
-        `;
-    }
-
-    renderMarkdown(container, content) {
-        // Simple markdown rendering (would use marked.js in production)
-        const html = content
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-            .replace(/\*(.*)\*/gim, '<em>$1</em>')
-            .replace(/\n/gim, '<br>');
-            
-        container.innerHTML = `<div style="padding: 20px; color: #333;">${html}</div>`;
-    }
-
-    renderJSON(container, content) {
-        try {
-            const parsed = JSON.parse(content);
-            const formatted = JSON.stringify(parsed, null, 2);
-            container.innerHTML = `
-                <div style="padding: 20px; color: #333;">
-                    <pre style="background: #f5f5f5; padding: 15px; border-radius: 6px; overflow-x: auto;">${this.escapeHtml(formatted)}</pre>
-                </div>
-            `;
-        } catch (error) {
-            container.innerHTML = `<div class="error">Invalid JSON: ${error.message}</div>`;
-        }
-    }
-
-    renderText(container, content) {
-        container.innerHTML = `
-            <div style="padding: 20px; color: #333;">
-                <pre style="white-space: pre-wrap; font-family: monospace;">${this.escapeHtml(content)}</pre>
-            </div>
-        `;
+        // Delegate to the modular renderer registry.
+        // To add a new renderer: create a file in public/renderers/ and add a <script> tag in index.html.
+        window.RendererRegistry.render(previewContent, content, extension, filename);
     }
 
     updateActionButtons(extension) {

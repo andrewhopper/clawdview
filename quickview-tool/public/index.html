@@ -62,7 +62,33 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@5/marked.min.js"></script>
+    <!-- Mermaid.js for diagram rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        // Initialise Mermaid with a dark theme to match the app
+        if (window.mermaid) {
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: 'dark',
+                securityLevel: 'loose',
+                fontFamily: 'Inter, system-ui, sans-serif'
+            });
+        }
+    </script>
     <link rel="stylesheet" href="style.css">
+    <!-- Renderer modules — registry must be first, text (fallback) must be last -->
+    <script src="renderers/registry.js"></script>
+    <script src="renderers/html-renderer.js"></script>
+    <script src="renderers/react-renderer.js"></script>
+    <script src="renderers/svg-renderer.js"></script>
+    <script src="renderers/json-renderer.js"></script>
+    <script src="renderers/mermaid-renderer.js"></script>
+    <script src="renderers/markdown-renderer.js"></script>
+    <script src="renderers/python-renderer.js"></script>
+    <script src="renderers/yaml-renderer.js"></script>
+    <script src="renderers/text-renderer.js"></script>
 </head>
 <body class="bg-background text-foreground h-screen overflow-hidden font-sans">
     <div class="flex flex-col h-screen">
@@ -103,8 +129,10 @@
                                         <li class="text-sm text-gray-600">⚛️ React Components (JSX)</li>
                                         <li class="text-sm text-gray-600">🐍 Python Scripts</li>
                                         <li class="text-sm text-gray-600">🎨 SVG Graphics</li>
-                                        <li class="text-sm text-gray-600">📝 Markdown</li>
-                                        <li class="text-sm text-gray-600">📊 JSON/YAML</li>
+                                        <li class="text-sm text-gray-600">📝 Markdown (+ Mermaid diagrams)</li>
+                                        <li class="text-sm text-gray-600">📊 JSON (interactive tree view)</li>
+                                        <li class="text-sm text-gray-600">📄 YAML/YML</li>
+                                        <li class="text-sm text-gray-600">🔀 Mermaid diagrams (.mmd)</li>
                                     </ul>
                                 </div>
                             </div>
