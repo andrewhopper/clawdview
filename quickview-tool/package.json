@@ -1,5 +1,5 @@
 {
-  "name": "quickview-tool",
+  "name": "clawdview",
   "version": "1.0.0",
   "description": "Universal rapid prototyping tool for instant code preview",
   "main": "server.js",
@@ -32,6 +32,6 @@
     "development",
     "hot-reload"
   ],
-  "author": "Austin Morrissey",
+  "author": "Andrew Hopper",
   "license": "MIT"
 }
