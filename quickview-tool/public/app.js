@@ -320,15 +320,120 @@ class QuickViewApp {
     renderJSON(container, content) {
         try {
             const parsed = JSON.parse(content);
-            const formatted = JSON.stringify(parsed, null, 2);
+            const stats = this.getJSONStats(parsed);
+            const treeHTML = this.buildJSONTreeHTML(parsed, null, true, 0);
+
             container.innerHTML = `
-                <div style="padding: 20px; color: #333;">
-                    <pre style="background: #f5f5f5; padding: 15px; border-radius: 6px; overflow-x: auto;">${this.escapeHtml(formatted)}</pre>
+                <div class="json-viewer">
+                    <div class="json-toolbar">
+                        <div class="json-stats">
+                            <span>${stats.totalKeys} keys</span>
+                            <span>${stats.depth} levels deep</span>
+                            <span>${this.formatBytes(content.length)}</span>
+                        </div>
+                        <div class="json-actions">
+                            <button class="json-btn" onclick="document.querySelectorAll('.json-collapsible').forEach(el => el.open = true)">Expand All</button>
+                            <button class="json-btn" onclick="document.querySelectorAll('.json-collapsible').forEach(el => el.open = false)">Collapse All</button>
+                        </div>
+                    </div>
+                    <div class="json-tree">${treeHTML}</div>
                 </div>
             `;
         } catch (error) {
-            container.innerHTML = `<div class="error">Invalid JSON: ${error.message}</div>`;
+            container.innerHTML = `<div class="error">
+                <strong>Invalid JSON</strong>
+                <pre>${this.escapeHtml(error.message)}</pre>
+            </div>`;
         }
+    }
+
+    buildJSONTreeHTML(value, key, isLast, depth) {
+        const type = this.getJSONType(value);
+        let keyHTML = '';
+        if (key !== null) {
+            keyHTML = `<span class="json-key">"${this.escapeHtml(String(key))}"</span><span class="json-colon">: </span>`;
+        }
+        const comma = isLast ? '' : '<span class="json-comma">,</span>';
+        const openAttr = depth < 2 ? ' open' : '';
+
+        if (type === 'object') {
+            const entries = Object.entries(value);
+            if (entries.length === 0) {
+                return `<div class="json-line">${keyHTML}<span class="json-brace">{}</span>${comma}</div>`;
+            }
+            const childrenHTML = entries.map(([k, v], i) =>
+                this.buildJSONTreeHTML(v, k, i === entries.length - 1, depth + 1)
+            ).join('');
+            const count = entries.length;
+            return `<details class="json-collapsible"${openAttr}>` +
+                `<summary class="json-summary">${keyHTML}<span class="json-brace">{</span>` +
+                `<span class="json-preview">${count} ${count === 1 ? 'key' : 'keys'}</span></summary>` +
+                `<div class="json-children">${childrenHTML}</div>` +
+                `<div class="json-closing"><span class="json-brace">}</span>${comma}</div></details>`;
+        }
+
+        if (type === 'array') {
+            if (value.length === 0) {
+                return `<div class="json-line">${keyHTML}<span class="json-bracket">[]</span>${comma}</div>`;
+            }
+            const childrenHTML = value.map((v, i) =>
+                this.buildJSONTreeHTML(v, null, i === value.length - 1, depth + 1)
+            ).join('');
+            const count = value.length;
+            return `<details class="json-collapsible"${openAttr}>` +
+                `<summary class="json-summary">${keyHTML}<span class="json-bracket">[</span>` +
+                `<span class="json-preview">${count} ${count === 1 ? 'item' : 'items'}</span></summary>` +
+                `<div class="json-children">${childrenHTML}</div>` +
+                `<div class="json-closing"><span class="json-bracket">]</span>${comma}</div></details>`;
+        }
+
+        const valueHTML = this.formatJSONValue(value, type);
+        return `<div class="json-line">${keyHTML}${valueHTML}${comma}</div>`;
+    }
+
+    getJSONType(value) {
+        if (value === null) return 'null';
+        if (Array.isArray(value)) return 'array';
+        return typeof value;
+    }
+
+    formatJSONValue(value, type) {
+        switch (type) {
+            case 'string':
+                return `<span class="json-string">"${this.escapeHtml(value)}"</span>`;
+            case 'number':
+                return `<span class="json-number">${value}</span>`;
+            case 'boolean':
+                return `<span class="json-boolean">${value}</span>`;
+            case 'null':
+                return `<span class="json-null">null</span>`;
+            default:
+                return `<span class="json-string">${this.escapeHtml(String(value))}</span>`;
+        }
+    }
+
+    getJSONStats(value) {
+        let totalKeys = 0;
+        let maxDepth = 0;
+        const traverse = (val, depth) => {
+            maxDepth = Math.max(maxDepth, depth);
+            if (Array.isArray(val)) {
+                totalKeys += val.length;
+                val.forEach(item => traverse(item, depth + 1));
+            } else if (val !== null && typeof val === 'object') {
+                const keys = Object.keys(val);
+                totalKeys += keys.length;
+                keys.forEach(k => traverse(val[k], depth + 1));
+            }
+        };
+        traverse(value, 0);
+        return { totalKeys, depth: maxDepth };
+    }
+
+    formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     }
 
     renderText(container, content) {
