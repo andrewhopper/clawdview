@@ -3,9 +3,16 @@ class QuickViewApp {
         this.socket = io();
         this.currentFile = null;
         this.fileTree = null;
+        this.setupMermaid();
         this.setupSocketHandlers();
         this.setupUIHandlers();
         this.setupTabs();
+    }
+
+    setupMermaid() {
+        if (window.mermaid) {
+            mermaid.initialize({ startOnLoad: false, theme: 'default' });
+        }
     }
 
     setupSocketHandlers() {
@@ -120,7 +127,8 @@ class QuickViewApp {
             'json': 'json',
             'md': 'md',
             'svg': 'svg',
-            'css': 'css'
+            'css': 'css',
+            'mmd': 'svg'
         };
         
         return classMap[ext] || 'file';
@@ -192,7 +200,8 @@ class QuickViewApp {
             '.css': 'css',
             '.json': 'json',
             '.md': 'markdown',
-            '.svg': 'xml'
+            '.svg': 'xml',
+            '.mmd': null
         };
         
         return langMap[extension] || null;
@@ -221,7 +230,11 @@ class QuickViewApp {
             case '.md':
                 this.renderMarkdown(previewContent, content);
                 break;
-                
+
+            case '.mmd':
+                this.renderMermaid(previewContent, content);
+                break;
+
             case '.json':
                 this.renderJSON(previewContent, content);
                 break;
@@ -304,17 +317,63 @@ class QuickViewApp {
         `;
     }
 
+    renderMermaid(container, content) {
+        const mermaidDiv = document.createElement('div');
+        mermaidDiv.className = 'mermaid';
+        mermaidDiv.textContent = content.trim();
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'padding: 20px; background: white; display: flex; justify-content: center; align-items: flex-start; min-height: 100%; overflow: auto;';
+        wrapper.appendChild(mermaidDiv);
+
+        container.innerHTML = '';
+        container.appendChild(wrapper);
+
+        if (window.mermaid) {
+            mermaid.run({ nodes: [mermaidDiv] }).catch(err => {
+                mermaidDiv.textContent = '';
+                mermaidDiv.innerHTML = `<div class="error">Mermaid render error: ${this.escapeHtml(err.message)}</div>`;
+            });
+        }
+    }
+
     renderMarkdown(container, content) {
-        // Simple markdown rendering (would use marked.js in production)
-        const html = content
+        // Extract mermaid code blocks and replace with placeholders
+        const mermaidBlocks = [];
+        const withPlaceholders = content.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) => {
+            const idx = mermaidBlocks.length;
+            mermaidBlocks.push(code.trim());
+            return `MERMAID_PLACEHOLDER_${idx}`;
+        });
+
+        // Basic markdown rendering
+        let html = withPlaceholders
             .replace(/^# (.*$)/gim, '<h1>$1</h1>')
             .replace(/^## (.*$)/gim, '<h2>$1</h2>')
             .replace(/^### (.*$)/gim, '<h3>$1</h3>')
             .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
             .replace(/\*(.*)\*/gim, '<em>$1</em>')
             .replace(/\n/gim, '<br>');
-            
+
+        // Replace placeholders with mermaid div stubs
+        mermaidBlocks.forEach((_, idx) => {
+            html = html.replace(`MERMAID_PLACEHOLDER_${idx}`, `<div class="mermaid" data-mermaid-idx="${idx}"></div>`);
+        });
+
         container.innerHTML = `<div style="padding: 20px; color: #333;">${html}</div>`;
+
+        // Populate and render each mermaid block
+        if (window.mermaid && mermaidBlocks.length > 0) {
+            const nodes = Array.from(container.querySelectorAll('[data-mermaid-idx]')).map(el => {
+                el.textContent = mermaidBlocks[parseInt(el.dataset.mermaidIdx, 10)];
+                return el;
+            });
+            mermaid.run({ nodes }).catch(err => {
+                nodes.forEach(el => {
+                    el.innerHTML = `<div class="error">Mermaid render error: ${this.escapeHtml(err.message)}</div>`;
+                });
+            });
+        }
     }
 
     renderJSON(container, content) {

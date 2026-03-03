@@ -44,7 +44,7 @@ class QuickViewServer {
       }
       
       // Security: Basic file type restrictions
-      const allowedExtensions = ['.html', '.jsx', '.js', '.py', '.css', '.json', '.md', '.svg', '.txt', '.xml', '.yaml', '.yml'];
+      const allowedExtensions = ['.html', '.jsx', '.js', '.py', '.css', '.json', '.md', '.svg', '.txt', '.xml', '.yaml', '.yml', '.mmd'];
       const ext = path.extname(filename).toLowerCase();
       if (ext && !allowedExtensions.includes(ext)) {
         return res.status(403).json({ error: 'File type not supported for security reasons' });
