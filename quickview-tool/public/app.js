@@ -3,9 +3,13 @@ class QuickViewApp {
         this.socket = io();
         this.currentFile = null;
         this.fileTree = null;
+        this.commandPaletteOpen = false;
+        this.commandPaletteSelectedIndex = -1;
+        this.commandPaletteResults = [];
         this.setupSocketHandlers();
         this.setupUIHandlers();
         this.setupTabs();
+        this.setupCommandPalette();
     }
 
     setupSocketHandlers() {
@@ -39,6 +43,10 @@ class QuickViewApp {
     setupUIHandlers() {
         document.getElementById('refresh-files').addEventListener('click', () => {
             this.socket.emit('refreshFiles');
+        });
+
+        document.getElementById('open-command-palette').addEventListener('click', () => {
+            this.openCommandPalette();
         });
 
         document.getElementById('run-code').addEventListener('click', () => {
@@ -93,6 +101,7 @@ class QuickViewApp {
             element.className = `file-item ${item.type} ${this.getFileClass(item.extension)}`;
             element.style.paddingLeft = `${12 + (level * 16)}px`;
             element.textContent = item.name;
+            element.dataset.path = item.path;
             
             if (item.type === 'file') {
                 element.addEventListener('click', () => {
@@ -465,6 +474,179 @@ class QuickViewApp {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    setupCommandPalette() {
+        const overlay = document.getElementById('command-palette');
+        const input = document.getElementById('command-palette-input');
+
+        // Open with Cmd+K or Ctrl+K
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                this.openCommandPalette();
+                return;
+            }
+
+            if (!this.commandPaletteOpen) return;
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                this.closeCommandPalette();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                this.navigateCommandPalette(1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                this.navigateCommandPalette(-1);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                this.selectCommandPaletteItem();
+            }
+        });
+
+        // Close when clicking the backdrop
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                this.closeCommandPalette();
+            }
+        });
+
+        // Filter results as user types
+        input.addEventListener('input', () => {
+            this.searchCommandPalette(input.value);
+        });
+    }
+
+    openCommandPalette() {
+        this.commandPaletteOpen = true;
+        const overlay = document.getElementById('command-palette');
+        const input = document.getElementById('command-palette-input');
+        overlay.style.display = 'flex';
+        input.value = '';
+        this.searchCommandPalette('');
+        input.focus();
+    }
+
+    closeCommandPalette() {
+        this.commandPaletteOpen = false;
+        const overlay = document.getElementById('command-palette');
+        overlay.style.display = 'none';
+        this.commandPaletteSelectedIndex = -1;
+    }
+
+    getFlatFileList() {
+        const files = [];
+        const traverse = (items) => {
+            for (const item of items) {
+                if (item.type === 'file') {
+                    files.push(item);
+                } else if (item.children) {
+                    traverse(item.children);
+                }
+            }
+        };
+        if (this.fileTree) traverse(this.fileTree);
+        return files;
+    }
+
+    searchCommandPalette(query) {
+        const allFiles = this.getFlatFileList();
+        let filtered;
+
+        if (!query.trim()) {
+            filtered = allFiles.slice(0, 20);
+        } else {
+            const q = query.toLowerCase();
+            filtered = allFiles
+                .filter(f => f.name.toLowerCase().includes(q) || f.path.toLowerCase().includes(q))
+                .slice(0, 20);
+        }
+
+        this.commandPaletteResults = filtered;
+        this.commandPaletteSelectedIndex = filtered.length > 0 ? 0 : -1;
+        this.renderCommandPaletteResults();
+    }
+
+    renderCommandPaletteResults() {
+        const container = document.getElementById('command-palette-results');
+        container.innerHTML = '';
+
+        if (this.commandPaletteResults.length === 0) {
+            container.innerHTML = '<div class="command-palette-empty">No files found</div>';
+            return;
+        }
+
+        const iconMap = {
+            '.html': '🌐', '.js': '📜', '.jsx': '⚛️', '.py': '🐍',
+            '.json': '📊', '.md': '📝', '.svg': '🎨', '.css': '🎨'
+        };
+
+        this.commandPaletteResults.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'command-palette-result-item';
+            if (index === this.commandPaletteSelectedIndex) {
+                item.classList.add('active');
+            }
+
+            const dir = file.path.includes('/')
+                ? file.path.substring(0, file.path.lastIndexOf('/'))
+                : '';
+            const icon = iconMap[file.extension] || '📄';
+
+            item.innerHTML = `
+                <span class="command-palette-result-icon">${icon}</span>
+                <span class="command-palette-result-name">${this.escapeHtml(file.name)}</span>
+                ${dir ? `<span class="command-palette-result-path">${this.escapeHtml(dir)}</span>` : ''}
+            `;
+
+            item.addEventListener('click', () => {
+                this.commandPaletteSelectedIndex = index;
+                this.selectCommandPaletteItem();
+            });
+
+            item.addEventListener('mouseenter', () => {
+                this.commandPaletteSelectedIndex = index;
+                this.updateCommandPaletteSelection();
+            });
+
+            container.appendChild(item);
+        });
+    }
+
+    navigateCommandPalette(direction) {
+        const len = this.commandPaletteResults.length;
+        if (len === 0) return;
+
+        this.commandPaletteSelectedIndex = (this.commandPaletteSelectedIndex + direction + len) % len;
+        this.updateCommandPaletteSelection();
+
+        const items = document.querySelectorAll('.command-palette-result-item');
+        const activeItem = items[this.commandPaletteSelectedIndex];
+        if (activeItem) activeItem.scrollIntoView({ block: 'nearest' });
+    }
+
+    updateCommandPaletteSelection() {
+        document.querySelectorAll('.command-palette-result-item').forEach((item, index) => {
+            item.classList.toggle('active', index === this.commandPaletteSelectedIndex);
+        });
+    }
+
+    selectCommandPaletteItem() {
+        if (this.commandPaletteSelectedIndex < 0 || this.commandPaletteSelectedIndex >= this.commandPaletteResults.length) {
+            return;
+        }
+
+        const file = this.commandPaletteResults[this.commandPaletteSelectedIndex];
+        this.closeCommandPalette();
+
+        // Load the file and highlight it in the sidebar
+        this.currentFile = file;
+        this.loadFile(file);
+
+        document.querySelectorAll('.file-item.selected').forEach(el => el.classList.remove('selected'));
+        const sidebarItem = document.querySelector(`.file-item[data-path="${CSS.escape(file.path)}"]`);
+        if (sidebarItem) sidebarItem.classList.add('selected');
     }
 }
 

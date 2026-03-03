@@ -69,6 +69,10 @@
         <header class="bg-card border-b border-border px-5 h-12 flex justify-between items-center shrink-0">
             <h1 class="text-base font-semibold tracking-tight">🚀 QuickView</h1>
             <div class="flex items-center gap-2.5 text-sm text-muted-foreground">
+                <button id="open-command-palette" title="Search files (⌘K / Ctrl+K)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-xs font-medium">
+                    <span>Search files</span>
+                    <kbd class="font-mono text-xs opacity-70">⌘K</kbd>
+                </button>
                 <span id="status" class="status">●</span>
                 <span id="current-file">No file selected</span>
             </div>
@@ -129,6 +133,30 @@
                     <button id="format-code" class="action-btn" style="display: none;">✨ Format</button>
                     <button id="open-external" class="action-btn" style="display: none;">🔗 Open External</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Palette -->
+    <div id="command-palette" class="command-palette-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="File search">
+        <div class="command-palette-container">
+            <div class="command-palette-search">
+                <span class="command-palette-icon">🔍</span>
+                <input
+                    type="text"
+                    id="command-palette-input"
+                    class="command-palette-input"
+                    placeholder="Search files..."
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <kbd class="command-palette-esc-hint">Esc</kbd>
+            </div>
+            <div id="command-palette-results" class="command-palette-results"></div>
+            <div class="command-palette-footer">
+                <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+                <span><kbd>↵</kbd> open</span>
+                <span><kbd>Esc</kbd> close</span>
             </div>
         </div>
     </div>
