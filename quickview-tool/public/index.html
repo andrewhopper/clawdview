@@ -56,8 +56,8 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <!-- Monaco Editor CDN loader (replaces highlight.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -83,52 +83,67 @@
                 <div id="file-tree" class="flex-1 overflow-y-auto p-2"></div>
             </aside>
 
-            <div class="flex-1 flex flex-col overflow-hidden min-w-0">
-                <div class="flex bg-card border-b border-border shrink-0">
-                    <button class="tab active" data-tab="preview">🖥️ Preview</button>
-                    <button class="tab" data-tab="code">📝 Code</button>
-                    <button class="tab" data-tab="output">📊 Output</button>
+            <!-- Split-pane main area -->
+            <div class="split-container flex-1 min-w-0 min-h-0 overflow-hidden" id="split-container">
+
+                <!-- Left pane: Monaco read-only editor -->
+                <div class="split-pane" id="code-pane">
+                    <div class="split-pane-header">
+                        <span>📝 Code</span>
+                    </div>
+                    <div id="monaco-editor"></div>
+                    <div class="status-bar" id="status-bar">
+                        <span id="status-lang">Plain Text</span>
+                        <span id="status-pos">Ln 1, Col 1</span>
+                        <span id="status-lines">—</span>
+                    </div>
                 </div>
 
-                <div class="flex-1 relative overflow-hidden">
-                    <div id="preview-panel" class="panel active">
-                        <div id="preview-content" class="h-full bg-white">
-                            <div class="px-10 py-16 text-center text-gray-500">
-                                <h2 class="text-2xl font-semibold text-gray-800 mb-3">Welcome to QuickView!</h2>
-                                <p class="text-gray-500 text-sm">Select a file from the sidebar to start previewing</p>
-                                <div class="mt-8 text-left max-w-xs mx-auto">
-                                    <h3 class="text-xs font-medium uppercase tracking-wider text-gray-400 mb-3">Supported formats</h3>
-                                    <ul class="space-y-2">
-                                        <li class="text-sm text-gray-600">🌐 HTML/CSS/JavaScript</li>
-                                        <li class="text-sm text-gray-600">⚛️ React Components (JSX)</li>
-                                        <li class="text-sm text-gray-600">🐍 Python Scripts</li>
-                                        <li class="text-sm text-gray-600">🎨 SVG Graphics</li>
-                                        <li class="text-sm text-gray-600">📝 Markdown</li>
-                                        <li class="text-sm text-gray-600">📊 JSON/YAML</li>
-                                    </ul>
+                <!-- Resize handle -->
+                <div class="resize-handle" id="resize-handle"></div>
+
+                <!-- Right pane: Preview + Output tabs -->
+                <div class="split-pane" id="preview-pane">
+                    <div class="flex bg-card border-b border-border shrink-0 items-center">
+                        <button class="tab active" data-tab="preview">🖥️ Preview</button>
+                        <button class="tab" data-tab="output">📊 Output</button>
+                        <div class="ml-auto flex items-center gap-1 pr-2">
+                            <button id="run-code" class="action-btn" style="display: none;">▶️ Run</button>
+                            <button id="format-code" class="action-btn" style="display: none;">✨ Format</button>
+                            <button id="open-external" class="action-btn" style="display: none;">🔗 Open</button>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative overflow-hidden">
+                        <div id="preview-panel" class="panel active">
+                            <div id="preview-content" class="h-full bg-white">
+                                <div class="px-10 py-16 text-center text-gray-500">
+                                    <h2 class="text-2xl font-semibold text-gray-800 mb-3">Welcome to QuickView!</h2>
+                                    <p class="text-gray-500 text-sm">Select a file from the sidebar to start previewing</p>
+                                    <div class="mt-8 text-left max-w-xs mx-auto">
+                                        <h3 class="text-xs font-medium uppercase tracking-wider text-gray-400 mb-3">Supported formats</h3>
+                                        <ul class="space-y-2">
+                                            <li class="text-sm text-gray-600">🌐 HTML/CSS/JavaScript</li>
+                                            <li class="text-sm text-gray-600">⚛️ React Components (JSX)</li>
+                                            <li class="text-sm text-gray-600">🐍 Python Scripts</li>
+                                            <li class="text-sm text-gray-600">🎨 SVG Graphics</li>
+                                            <li class="text-sm text-gray-600">📝 Markdown</li>
+                                            <li class="text-sm text-gray-600">📊 JSON/YAML</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="output-panel" class="panel">
+                            <div id="output-content" class="output-content">
+                                <div class="output-placeholder">
+                                    Script output will appear here...
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div id="code-panel" class="panel">
-                        <pre><code id="code-content"></code></pre>
-                    </div>
-
-                    <div id="output-panel" class="panel">
-                        <div id="output-content" class="output-content">
-                            <div class="output-placeholder">
-                                Script output will appear here...
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
-                <div class="bg-card border-t border-border px-4 py-2 flex gap-2 shrink-0">
-                    <button id="run-code" class="action-btn" style="display: none;">▶️ Run</button>
-                    <button id="format-code" class="action-btn" style="display: none;">✨ Format</button>
-                    <button id="open-external" class="action-btn" style="display: none;">🔗 Open External</button>
-                </div>
             </div>
         </div>
     </div>

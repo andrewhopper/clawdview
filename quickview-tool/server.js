@@ -225,13 +225,87 @@ class QuickViewServer {
   setupSocketHandlers() {
     this.io.on('connection', (socket) => {
       console.log('Client connected');
-      
+
       socket.on('disconnect', () => {
         console.log('Client disconnected');
       });
 
       // Send initial file list
       socket.emit('fileTree', this.getFileTree(this.watchDir));
+
+      // Streaming Python execution via Socket.IO
+      socket.on('runPython', ({ code, filename }) => {
+        const clientIP = socket.handshake.address || 'unknown';
+
+        // Rate limiting: max 5 executions per minute per IP
+        const now = Date.now();
+        const executions = this.pythonExecutionCount.get(clientIP) || [];
+        const recentExecutions = executions.filter(t => now - t < 60000);
+
+        if (recentExecutions.length >= 5) {
+          socket.emit('executionDone', {
+            success: false,
+            exitCode: -1,
+            error: 'Too many Python executions. Please wait a minute.'
+          });
+          return;
+        }
+
+        recentExecutions.push(now);
+        this.pythonExecutionCount.set(clientIP, recentExecutions);
+
+        if (!code || typeof code !== 'string' || code.length > 50000) {
+          socket.emit('executionDone', { success: false, exitCode: -1, error: 'Invalid code' });
+          return;
+        }
+
+        const safeFilename = (filename || 'temp').replace(/[^a-zA-Z0-9_.-]/g, '_');
+        const tempFile = path.join(__dirname, 'temp', `${safeFilename}_${Date.now()}.py`);
+        const tempDir = path.dirname(tempFile);
+        if (!fs.existsSync(tempDir)) {
+          fs.mkdirSync(tempDir, { recursive: true });
+        }
+
+        try {
+          fs.writeFileSync(tempFile, code);
+        } catch (err) {
+          socket.emit('executionDone', { success: false, exitCode: -1, error: 'Failed to create temp file' });
+          return;
+        }
+
+        socket.emit('executionStarted', {});
+
+        const python = spawn('python3', [tempFile], { timeout: 30000, killSignal: 'SIGKILL' });
+        let stderrBuffer = '';
+
+        python.stdout.on('data', (data) => {
+          socket.emit('outputLine', { type: 'stdout', text: data.toString() });
+        });
+
+        python.stderr.on('data', (data) => {
+          const text = data.toString();
+          stderrBuffer += text;
+          socket.emit('outputLine', { type: 'stderr', text });
+        });
+
+        python.on('close', (exitCode) => {
+          try { fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
+          socket.emit('executionDone', {
+            success: exitCode === 0,
+            exitCode,
+            stderr: stderrBuffer
+          });
+        });
+
+        python.on('error', (err) => {
+          try { fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
+          socket.emit('executionDone', {
+            success: false,
+            exitCode: -1,
+            error: err.message
+          });
+        });
+      });
     });
   }
 
