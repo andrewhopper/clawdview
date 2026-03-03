@@ -1,4 +1,4 @@
-# 🚀 QuickView - Universal Rapid Prototyping Tool
+# 🚀 ClawdView - Universal Rapid Prototyping Tool
 
 A powerful, universal rapid prototyping tool for Mac that provides instant preview and execution of code files with live reload capabilities.
 
@@ -18,7 +18,7 @@ A powerful, universal rapid prototyping tool for Mac that provides instant previ
 
 ```bash
 # Install dependencies
-cd ~/quickview-tool
+cd ~/clawdview-tool
 npm install
 
 # Install globally for easy access
@@ -34,22 +34,22 @@ npm link
 
 ```bash
 # Start server in current directory
-quickview start
+clawdview start
 
 # Use custom port
-quickview start --port 4000
+clawdview start --port 4000
 
 # Watch specific directory
-quickview start --dir /path/to/project
+clawdview start --dir /path/to/project
 
 # Don't auto-open browser
-quickview start --no-open
+clawdview start --no-open
 
 # Initialize demo files in current project
-quickview init
+clawdview init
 
 # Show information and supported formats
-quickview info
+clawdview info
 ```
 
 ### Using in Your Projects
@@ -58,8 +58,8 @@ quickview info
 # Navigate to your project
 cd /path/to/your/project
 
-# Start QuickView
-quickview start
+# Start ClawdView
+clawdview start
 
 # Browser will open to http://localhost:3333
 ```
@@ -107,21 +107,21 @@ quickview start
 
 ## 📝 Example Files
 
-When you run `quickview init`, it creates example files:
+When you run `clawdview init`, it creates example files:
 
-- `quickview-demo.html` - Interactive HTML demo
-- `quickview-demo.py` - Python script with calculations
-- `quickview-demo.jsx` - React component with state
+- `clawdview-demo.html` - Interactive HTML demo
+- `clawdview-demo.py` - Python script with calculations
+- `clawdview-demo.jsx` - React component with state
 
 ## 🔧 Configuration
 
-QuickView runs with sensible defaults, but you can customize:
+ClawdView runs with sensible defaults, but you can customize:
 
 ```javascript
 // Programmatic usage
-const QuickViewServer = require('quickview-tool');
+const ClawdViewServer = require('clawdview-tool');
 
-const server = new QuickViewServer({
+const server = new ClawdViewServer({
   port: 3333,
   watchDir: '/path/to/project',
   autoOpen: true
@@ -141,7 +141,7 @@ server.start();
 
 ### Port Already in Use
 ```bash
-quickview start --port 4000
+clawdview start --port 4000
 ```
 
 ### Python Scripts Not Running

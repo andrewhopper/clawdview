@@ -1,17 +1,17 @@
 {
-  "name": "quickview-tool",
+  "name": "clawdview-tool",
   "version": "1.0.0",
   "description": "Universal rapid prototyping tool for instant code preview",
   "main": "server.js",
   "bin": {
-    "quickview": "./bin/quickview.js"
+    "clawdview": "./bin/clawdview.js"
   },
   "scripts": {
     "start": "node server.js",
     "install-global": "npm install -g .",
     "dev": "nodemon server.js",
-    "preview": "quickview start",
-    "preview:port": "quickview start --port"
+    "preview": "clawdview start",
+    "preview:port": "clawdview start --port"
   },
   "dependencies": {
     "express": "^4.18.2",

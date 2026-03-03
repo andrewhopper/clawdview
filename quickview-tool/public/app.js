@@ -1,4 +1,4 @@
-class QuickViewApp {
+class ClawdViewApp {
     constructor() {
         this.socket = io();
         this.currentFile = null;
@@ -11,12 +11,12 @@ class QuickViewApp {
     setupSocketHandlers() {
         this.socket.on('connect', () => {
             this.updateStatus('connected');
-            console.log('Connected to QuickView server');
+            console.log('Connected to ClawdView server');
         });
 
         this.socket.on('disconnect', () => {
             this.updateStatus('disconnected');
-            console.log('Disconnected from QuickView server');
+            console.log('Disconnected from ClawdView server');
         });
 
         this.socket.on('fileTree', (tree) => {
@@ -470,5 +470,5 @@ class QuickViewApp {
 
 // Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new QuickViewApp();
+    new ClawdViewApp();
 });

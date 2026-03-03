@@ -7,7 +7,7 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 const open = require('open');
 
-class QuickViewServer {
+class ClawdViewServer {
   constructor(options = {}) {
     this.port = options.port || 3333;
     this.watchDir = options.watchDir || process.cwd();
@@ -393,7 +393,7 @@ class QuickViewServer {
 
   start() {
     this.server.listen(this.port, () => {
-      console.log(`🚀 QuickView Server running at http://localhost:${this.port}`);
+      console.log(`🚀 ClawdView Server running at http://localhost:${this.port}`);
       console.log(`📁 Watching directory: ${this.watchDir}`);
       
       console.log('💡 Open http://localhost:' + this.port + ' in your browser');
@@ -410,7 +410,7 @@ class QuickViewServer {
 
 // Export for use as module or run directly
 if (require.main === module) {
-  const server = new QuickViewServer({
+  const server = new ClawdViewServer({
     port: process.env.PORT || 3333,
     watchDir: process.argv[2] || process.cwd()
   });
@@ -419,10 +419,10 @@ if (require.main === module) {
 
   // Graceful shutdown
   process.on('SIGINT', () => {
-    console.log('\n🛑 Shutting down QuickView Server...');
+    console.log('\n🛑 Shutting down ClawdView Server...');
     server.stop();
     process.exit(0);
   });
 }
 
-module.exports = QuickViewServer;
+module.exports = ClawdViewServer;

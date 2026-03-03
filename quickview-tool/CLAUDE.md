@@ -1,13 +1,13 @@
-# 🤖 Claude Code Integration for QuickView
+# 🤖 Claude Code Integration for ClawdView
 
-This file contains instructions for using QuickView with Claude Code for rapid artifact prototyping.
+This file contains instructions for using ClawdView with Claude Code for rapid artifact prototyping.
 
 ## Quick Start
 
-**1. Start QuickView in any project:**
+**1. Start ClawdView in any project:**
 ```bash
 cd /your/project/directory
-quickview start
+clawdview start
 # Browser opens to http://localhost:3333
 ```
 
@@ -18,7 +18,7 @@ Write component-button.jsx [content]        # → Interactive React component
 Write script-data-viz.py [content]          # → Python script execution
 ```
 
-**3. Files auto-appear in QuickView** with live preview and hot reload!
+**3. Files auto-appear in ClawdView** with live preview and hot reload!
 
 ## 📁 Naming Conventions for Claude
 
@@ -54,7 +54,7 @@ doc-[name].md
 # Examples: doc-api-reference.md, doc-user-guide.md
 ```
 
-## 🔧 Claude Commands for QuickView
+## 🔧 Claude Commands for ClawdView
 
 ### Creating Single Artifacts
 ```bash
@@ -148,7 +148,7 @@ function Counter() {
     ]);
 }
 
-// Export for QuickView
+// Export for ClawdView
 window.Counter = Counter;
 ```
 
@@ -293,7 +293,7 @@ Edit style-dark-theme.css [updated-dark-mode-styles]
 Edit artifact-dashboard.html [add-charts-section]
 ```
 
-**QuickView automatically:**
+**ClawdView automatically:**
 - ✅ Detects file changes
 - ✅ Refreshes browser preview
 - ✅ Maintains scroll position
@@ -322,7 +322,7 @@ Write data-sample-todos.json [sample-todo-data]
 
 ## 🐍 Python Script Features
 
-**QuickView provides:**
+**ClawdView provides:**
 - **"Run" button** - Execute Python scripts with one click
 - **Output panel** - View stdout/stderr in real-time  
 - **Error handling** - Clear error messages and stack traces
@@ -422,16 +422,16 @@ Create a new user.
 
 ## 🚨 Troubleshooting
 
-### QuickView not showing changes?
+### ClawdView not showing changes?
 ```bash
-# Check if QuickView is running
+# Check if ClawdView is running
 curl -s http://localhost:3333 && echo "✅ Running" || echo "❌ Not running"
 
-# Restart QuickView if needed
-pkill -f quickview && quickview start
+# Restart ClawdView if needed
+pkill -f clawdview && clawdview start
 ```
 
-### Files not appearing in QuickView?
+### Files not appearing in ClawdView?
 ```bash
 # Ensure you're in the right directory
 pwd
@@ -455,11 +455,11 @@ python3 -m py_compile script-your-file.py
 2. **Create component demos**: Always pair React components with demo HTML
 3. **Include sample data**: Add `data-*.json` files for components that need data
 4. **Test interactivity**: Use console.log, alerts, and user interactions
-5. **Iterate rapidly**: Edit files directly, QuickView handles the refresh
+5. **Iterate rapidly**: Edit files directly, ClawdView handles the refresh
 
 ## 🛡️ Security & Safety Features
 
-QuickView includes built-in safety measures for personal use:
+ClawdView includes built-in safety measures for personal use:
 
 ### File Type Protection
 - **Allowed file types**: `.html`, `.jsx`, `.js`, `.py`, `.css`, `.json`, `.md`, `.svg`, `.txt`, `.xml`, `.yaml`, `.yml`
@@ -525,6 +525,6 @@ Write artifact-sales-dashboard.html [complete-dashboard]
 
 ---
 
-**This enables Claude Code to work seamlessly with QuickView for rapid prototyping!** 🎉
+**This enables Claude Code to work seamlessly with ClawdView for rapid prototyping!** 🎉
 
 *Last updated: September 2025 - Includes security improvements and real-world testing*

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Claude CLI Helper Functions for QuickView Integration
+ * Claude CLI Helper Functions for ClawdView Integration
  * Add these patterns to your Claude Code workflow
  */
 
 const fs = require('fs');
 const path = require('path');
 
-class ClaudeQuickViewHelper {
+class ClaudeClawdViewHelper {
     constructor(baseDir = process.cwd()) {
         this.baseDir = baseDir;
         this.artifactDir = path.join(baseDir, 'artifacts');
@@ -78,7 +78,7 @@ class ClaudeQuickViewHelper {
             fs.writeFileSync(filepath, content, 'utf8');
             console.log(`✅ Created artifact: ${path.relative(this.baseDir, filepath)}`);
             
-            if (options.openQuickView !== false) {
+            if (options.openClawdView !== false) {
                 console.log(`🔗 View at: http://localhost:3333`);
             }
             
@@ -240,7 +240,7 @@ class ClaudeQuickViewHelper {
         console.log(`🧹 Cleaned ${cleanedCount} old artifacts`);
     }
 
-    getQuickViewStatus() {
+    getClawdViewStatus() {
         const http = require('http');
         
         return new Promise((resolve) => {
@@ -255,7 +255,7 @@ class ClaudeQuickViewHelper {
             req.on('error', () => {
                 resolve({
                     running: false,
-                    message: 'QuickView not running. Start with: quickview start'
+                    message: 'ClawdView not running. Start with: clawdview start'
                 });
             });
             
@@ -263,7 +263,7 @@ class ClaudeQuickViewHelper {
                 req.destroy();
                 resolve({
                     running: false,
-                    message: 'QuickView not responding'
+                    message: 'ClawdView not responding'
                 });
             });
         });
@@ -272,12 +272,12 @@ class ClaudeQuickViewHelper {
 
 // CLI interface
 if (require.main === module) {
-    const helper = new ClaudeQuickViewHelper();
+    const helper = new ClaudeClawdViewHelper();
     const command = process.argv[2];
     
     switch (command) {
         case 'list':
-            console.log('📋 QuickView Artifacts:');
+            console.log('📋 ClawdView Artifacts:');
             const artifacts = helper.listArtifacts();
             artifacts.forEach(artifact => {
                 console.log(`  ${artifact.relativePath} (${artifact.category})`);
@@ -290,9 +290,9 @@ if (require.main === module) {
             break;
             
         case 'status':
-            helper.getQuickViewStatus().then(status => {
+            helper.getClawdViewStatus().then(status => {
                 if (status.running) {
-                    console.log(`✅ QuickView running at ${status.url}`);
+                    console.log(`✅ ClawdView running at ${status.url}`);
                 } else {
                     console.log(`❌ ${status.message}`);
                 }
@@ -329,12 +329,12 @@ window.DemoCounter = DemoCounter;`;
             
         default:
             console.log(`
-🤖 Claude QuickView Helper
+🤖 Claude ClawdView Helper
 
 Usage:
   node claude-helpers.js list     # List all artifacts
   node claude-helpers.js cleanup  # Clean old artifacts (7+ days)  
-  node claude-helpers.js status   # Check QuickView status
+  node claude-helpers.js status   # Check ClawdView status
   node claude-helpers.js demo     # Create demo React component
 
 Programmatic usage:
@@ -345,4 +345,4 @@ Programmatic usage:
     }
 }
 
-module.exports = ClaudeQuickViewHelper;
+module.exports = ClaudeClawdViewHelper;
