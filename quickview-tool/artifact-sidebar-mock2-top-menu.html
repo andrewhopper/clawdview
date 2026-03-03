@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock 2 – Top Menu Bar + Slide-in Sidebar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    .drawer {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      width: 260px;
+      bottom: 0;
+      background: hsl(0 0% 98%);
+      border-right: 1px solid hsl(220 13% 91%);
+      transform: translateX(-100%);
+      transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.06);
+    }
+    .drawer.open { transform: translateX(0); }
+
+    .overlay {
+      position: fixed;
+      inset: 48px 0 0 0;
+      background: rgba(0,0,0,0.25);
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+    .overlay.visible { opacity: 1; pointer-events: auto; }
+
+    .tree-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      border-radius: 6px;
+      margin: 0 8px;
+      color: hsl(222.2 47.4% 11.2%);
+    }
+    .tree-item:hover { background: hsl(210 40% 96.1%); }
+    .tree-item.active { background: hsl(221.2 83.2% 53.3% / 0.1); color: hsl(221.2 83.2% 53.3%); }
+    .tree-indent { padding-left: 32px; }
+
+    .badge {
+      margin-left: auto;
+      font-size: 10px;
+      background: hsl(221.2 83.2% 53.3%);
+      color: white;
+      border-radius: 9999px;
+      padding: 1px 6px;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen bg-white text-gray-900 overflow-hidden">
+
+  <!-- Top navigation bar -->
+  <header class="h-12 bg-white border-b border-gray-200 flex items-center px-3 gap-2 shrink-0 z-50">
+    <!-- Hamburger -->
+    <button onclick="toggleDrawer()"
+      class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
+      id="hamburgerBtn" aria-label="Open file browser">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-1 text-sm text-gray-500 overflow-hidden">
+      <span class="hover:text-gray-900 cursor-pointer truncate">clawdview</span>
+      <span>/</span>
+      <span class="hover:text-gray-900 cursor-pointer truncate">src</span>
+      <span>/</span>
+      <span class="text-gray-900 font-medium truncate">App.tsx</span>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2">
+      <!-- Search shortcut -->
+      <button class="hidden sm:flex items-center gap-2 text-xs text-gray-400 border border-gray-200 rounded-md px-3 py-1.5 hover:border-gray-300 hover:text-gray-600 transition-colors">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+        </svg>
+        Search files
+        <kbd class="text-xs bg-gray-100 px-1 rounded">⌘K</kbd>
+      </button>
+      <!-- Avatar -->
+      <div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-600">A</div>
+    </div>
+  </header>
+
+  <!-- Overlay (click to close) -->
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+  <!-- Slide-in drawer -->
+  <aside class="drawer" id="drawer">
+    <!-- Drawer header -->
+    <div class="h-11 flex items-center justify-between px-4 border-b border-gray-200 shrink-0">
+      <span class="text-sm font-semibold text-gray-900">Explorer</span>
+      <div class="flex items-center gap-1">
+        <button class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400" title="New file">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </button>
+        <button onclick="closeDrawer()" class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400" title="Close">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- File tree -->
+    <div class="flex-1 overflow-y-auto py-2">
+      <div class="px-4 py-1 text-xs font-semibold text-gray-400 uppercase tracking-widest">Project</div>
+
+      <div class="tree-item" onclick="toggleFolder(this)">
+        <svg class="w-3.5 h-3.5 text-gray-400 transition-transform" id="arrow-src" style="transform:rotate(90deg)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+        src
+      </div>
+      <div id="src-children">
+        <div class="tree-item tree-indent active" onclick="selectFile(this, 'App.tsx')">
+          <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          App.tsx
+        </div>
+        <div class="tree-item tree-indent" onclick="selectFile(this, 'index.tsx')">
+          <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          index.tsx
+        </div>
+        <div class="tree-item tree-indent" onclick="selectFile(this, 'main.css')">
+          <svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          main.css
+        </div>
+        <div class="tree-item tree-indent" onclick="selectFile(this, 'utils.ts')">
+          <svg class="w-4 h-4 text-blue-300" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          utils.ts
+        </div>
+      </div>
+
+      <div class="tree-item mt-1" onclick="toggleFolder2(this)">
+        <svg class="w-3.5 h-3.5 text-gray-400" id="arrow-public" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+        public
+      </div>
+      <div id="public-children" class="hidden">
+        <div class="tree-item tree-indent" onclick="selectFile(this, 'index.html')">
+          <svg class="w-4 h-4 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          index.html
+        </div>
+      </div>
+
+      <div class="tree-item mt-1" onclick="selectFile(this, 'package.json')">
+        <svg class="w-3.5 h-3.5 text-transparent" fill="none" viewBox="0 0 24 24"/>
+        <svg class="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+        package.json
+      </div>
+    </div>
+
+    <!-- Drawer footer -->
+    <div class="h-9 border-t border-gray-200 flex items-center px-4 gap-2 shrink-0">
+      <span class="text-xs text-gray-400">5 files</span>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 overflow-auto p-6">
+    <div class="max-w-2xl">
+      <p class="text-xs text-gray-400 mb-6 border border-dashed border-gray-200 rounded-lg p-4 text-center">
+        <strong class="block text-gray-600 mb-1">Mock 2 — Top Menu Bar + Slide-in Drawer</strong>
+        Sidebar is hidden by default. Hamburger in the top bar opens a floating drawer.
+        Clicking outside or the X button closes it. No pin — suitable for document-centric UIs.
+      </p>
+      <pre class="text-sm text-gray-700 bg-gray-50 rounded-lg p-4 leading-relaxed"><code>// App.tsx
+import React from 'react'
+
+export default function App() {
+  return (
+    &lt;main&gt;
+      &lt;h1&gt;Welcome&lt;/h1&gt;
+    &lt;/main&gt;
+  )
+}</code></pre>
+    </div>
+  </main>
+
+  <script>
+    let isOpen = false;
+
+    function toggleDrawer() {
+      isOpen ? closeDrawer() : openDrawer();
+    }
+    function openDrawer() {
+      isOpen = true;
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('overlay').classList.add('visible');
+    }
+    function closeDrawer() {
+      isOpen = false;
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('overlay').classList.remove('visible');
+    }
+
+    function selectFile(el, name) {
+      document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelector('nav span:last-child').textContent = name;
+    }
+
+    function toggleFolder(el) {
+      const children = document.getElementById('src-children');
+      const arrow = document.getElementById('arrow-src');
+      const hidden = children.classList.toggle('hidden');
+      arrow.style.transform = hidden ? 'rotate(0deg)' : 'rotate(90deg)';
+    }
+
+    function toggleFolder2(el) {
+      const children = document.getElementById('public-children');
+      const arrow = document.getElementById('arrow-public');
+      const hidden = children.classList.toggle('hidden');
+      arrow.style.transform = hidden ? 'rotate(0deg)' : 'rotate(90deg)';
+    }
+  </script>
+</body>
+</html>
