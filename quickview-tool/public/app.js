@@ -3,6 +3,7 @@ class QuickViewApp {
         this.socket = io();
         this.currentFile = null;
         this.fileTree = null;
+        this._slidevKeyHandler = null;
         this.setupSocketHandlers();
         this.setupUIHandlers();
         this.setupTabs();
@@ -89,8 +90,10 @@ class QuickViewApp {
 
     renderFileItems(items, container, level = 0) {
         items.forEach(item => {
+            const isSlidev = item.type === 'file' && item.extension === '.md' && item.name.startsWith('slides-');
+            const fileClass = isSlidev ? 'slides' : this.getFileClass(item.extension);
             const element = document.createElement('div');
-            element.className = `file-item ${item.type} ${this.getFileClass(item.extension)}`;
+            element.className = `file-item ${item.type} ${fileClass}`;
             element.style.paddingLeft = `${12 + (level * 16)}px`;
             element.textContent = item.name;
             
@@ -140,6 +143,11 @@ class QuickViewApp {
     }
 
     async loadFile(file) {
+        // Clean up any active Slidev keyboard listener
+        if (this._slidevKeyHandler) {
+            document.removeEventListener('keydown', this._slidevKeyHandler);
+            this._slidevKeyHandler = null;
+        }
         this.showLoading(true);
         
         try {
@@ -219,7 +227,11 @@ class QuickViewApp {
                 break;
                 
             case '.md':
-                this.renderMarkdown(previewContent, content);
+                if (this.isSlidevFile(filename, content)) {
+                    this.renderSlidev(previewContent, content, filename);
+                } else {
+                    this.renderMarkdown(previewContent, content);
+                }
                 break;
                 
             case '.json':
@@ -305,16 +317,173 @@ class QuickViewApp {
     }
 
     renderMarkdown(container, content) {
-        // Simple markdown rendering (would use marked.js in production)
-        const html = content
+        const html = this.renderMarkdownToHtml(content);
+        container.innerHTML = `<div style="padding: 20px; color: #333; line-height: 1.6;">${html}</div>`;
+        container.querySelectorAll('pre code').forEach(el => {
+            if (window.hljs) hljs.highlightElement(el);
+        });
+    }
+
+    renderMarkdownToHtml(content) {
+        if (window.marked) {
+            return marked.parse(content);
+        }
+        // Fallback basic renderer
+        return content
             .replace(/^# (.*$)/gim, '<h1>$1</h1>')
             .replace(/^## (.*$)/gim, '<h2>$1</h2>')
             .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-            .replace(/\*(.*)\*/gim, '<em>$1</em>')
-            .replace(/\n/gim, '<br>');
-            
-        container.innerHTML = `<div style="padding: 20px; color: #333;">${html}</div>`;
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/\n/g, '<br>');
+    }
+
+    isSlidevFile(filename, content) {
+        // Detect by naming convention
+        if (filename.startsWith('slides-')) return true;
+        // Detect by Slidev frontmatter (starts with --- and has Slidev-specific keys)
+        const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
+        if (frontmatterMatch) {
+            const fm = frontmatterMatch[1];
+            if (/^(theme|transition|highlighter|lineNumbers|colorSchema|layout):/m.test(fm)) return true;
+        }
+        return false;
+    }
+
+    parseSimpleYaml(yamlStr) {
+        const result = {};
+        for (const line of yamlStr.split('\n')) {
+            const match = line.match(/^([\w-]+):\s*(.*)$/);
+            if (match) result[match[1]] = match[2].trim();
+        }
+        return result;
+    }
+
+    parseSlidevSlides(content) {
+        // Split on lines that are exactly ---
+        const blocks = content.split(/^---\s*$/m).map(b => b.trim()).filter(b => b);
+
+        if (blocks.length === 0) return [{ frontmatter: {}, content }];
+
+        // A block is YAML-like if every non-empty line is a key: value pair or indented
+        const isYaml = (str) => {
+            const lines = str.split('\n').filter(l => l.trim());
+            return lines.length > 0 && lines.every(l => /^[\w-]+:/.test(l) || /^\s/.test(l));
+        };
+
+        const slides = [];
+        let i = 0;
+
+        // Skip global frontmatter (first block if it's YAML)
+        if (i < blocks.length && isYaml(blocks[i])) i++;
+
+        while (i < blocks.length) {
+            // Slide-level frontmatter followed by content
+            if (isYaml(blocks[i]) && i + 1 < blocks.length && !isYaml(blocks[i + 1])) {
+                slides.push({ frontmatter: this.parseSimpleYaml(blocks[i]), content: blocks[i + 1] });
+                i += 2;
+            } else {
+                slides.push({ frontmatter: {}, content: blocks[i] });
+                i++;
+            }
+        }
+
+        return slides.length > 0 ? slides : [{ frontmatter: {}, content }];
+    }
+
+    renderSlidev(container, content, filename) {
+        const slides = this.parseSlidevSlides(content);
+
+        if (slides.length === 0) {
+            container.innerHTML = '<div class="error">No slides found in this file</div>';
+            return;
+        }
+
+        const viewerId = 'slidev-' + Date.now();
+        container.innerHTML = `
+            <div class="slidev-viewer" id="${viewerId}">
+                <div class="slidev-stage">
+                    <div class="slidev-slide-container">
+                        <div class="slidev-slide layout-default" id="${viewerId}-slide"></div>
+                    </div>
+                </div>
+                <div class="slidev-nav">
+                    <button class="slidev-btn" id="${viewerId}-prev">◀ Prev</button>
+                    <span class="slidev-counter" id="${viewerId}-counter">1 / ${slides.length}</span>
+                    <button class="slidev-btn" id="${viewerId}-next">Next ▶</button>
+                    <button class="slidev-btn" id="${viewerId}-fullscreen">⛶ Fullscreen</button>
+                </div>
+            </div>
+        `;
+
+        let currentIndex = 0;
+        const slideEl = document.getElementById(`${viewerId}-slide`);
+        const counterEl = document.getElementById(`${viewerId}-counter`);
+        const prevBtn = document.getElementById(`${viewerId}-prev`);
+        const nextBtn = document.getElementById(`${viewerId}-next`);
+        const fullscreenBtn = document.getElementById(`${viewerId}-fullscreen`);
+
+        const showSlide = (index) => {
+            const slide = slides[index];
+            const layout = slide.frontmatter.layout || 'default';
+            slideEl.className = `slidev-slide layout-${layout}`;
+
+            let slideContent = slide.content;
+
+            // Handle two-cols layout with ::right:: separator
+            if (layout === 'two-cols') {
+                const parts = slideContent.split(/^::right::\s*$/m);
+                const leftHtml = this.renderMarkdownToHtml(parts[0] || '');
+                const rightHtml = this.renderMarkdownToHtml(parts[1] || '');
+                slideEl.innerHTML = `
+                    <div class="slidev-col">${leftHtml}</div>
+                    <div class="slidev-col">${rightHtml}</div>
+                `;
+            } else {
+                slideEl.innerHTML = this.renderMarkdownToHtml(slideContent);
+            }
+
+            slideEl.querySelectorAll('pre code').forEach(el => {
+                if (window.hljs) hljs.highlightElement(el);
+            });
+
+            counterEl.textContent = `${index + 1} / ${slides.length}`;
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slides.length - 1;
+        };
+
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) showSlide(--currentIndex);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < slides.length - 1) showSlide(++currentIndex);
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            const viewer = document.getElementById(viewerId);
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                viewer.requestFullscreen();
+            }
+        });
+
+        const keyHandler = (e) => {
+            if (['ArrowRight', 'ArrowDown', ' '].includes(e.key)) {
+                if (currentIndex < slides.length - 1) showSlide(++currentIndex);
+                e.preventDefault();
+            } else if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
+                if (currentIndex > 0) showSlide(--currentIndex);
+                e.preventDefault();
+            }
+        };
+
+        document.addEventListener('keydown', keyHandler);
+        this._slidevKeyHandler = keyHandler;
+
+        showSlide(0);
     }
 
     renderJSON(container, content) {
@@ -345,6 +514,7 @@ class QuickViewApp {
         const openBtn = document.getElementById('open-external');
         
         // Show/hide buttons based on file type
+        const isSlidev = extension === '.md' && this.currentFile && this.isSlidevFile(this.currentFile.name, '');
         runBtn.style.display = extension === '.py' ? 'block' : 'none';
         formatBtn.style.display = ['.js', '.jsx', '.json', '.html', '.css'].includes(extension) ? 'block' : 'none';
         openBtn.style.display = extension === '.html' ? 'block' : 'none';

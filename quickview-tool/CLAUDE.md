@@ -52,6 +52,10 @@ graphic-[name].svg
 # Markdown docs (formatted preview)
 doc-[name].md
 # Examples: doc-api-reference.md, doc-user-guide.md
+
+# Slidev presentations (interactive slide viewer)
+slides-[name].md
+# Examples: slides-intro.md, slides-product-demo.md
 ```
 
 ## 🔧 Claude Commands for QuickView
