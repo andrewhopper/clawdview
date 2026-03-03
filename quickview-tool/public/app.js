@@ -3,9 +3,34 @@ class QuickViewApp {
         this.socket = io();
         this.currentFile = null;
         this.fileTree = null;
+        this.setupTheme();
         this.setupSocketHandlers();
         this.setupUIHandlers();
         this.setupTabs();
+    }
+
+    setupTheme() {
+        const saved = localStorage.getItem('quickview-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'light');
+        this.applyTheme(theme);
+
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const isDark = !document.documentElement.classList.contains('light');
+            const next = isDark ? 'light' : 'dark';
+            this.applyTheme(next);
+            localStorage.setItem('quickview-theme', next);
+        });
+    }
+
+    applyTheme(theme) {
+        if (theme === 'light') {
+            document.documentElement.classList.add('light');
+            document.getElementById('theme-toggle').textContent = '🌙';
+        } else {
+            document.documentElement.classList.remove('light');
+            document.getElementById('theme-toggle').textContent = '☀️';
+        }
     }
 
     setupSocketHandlers() {
