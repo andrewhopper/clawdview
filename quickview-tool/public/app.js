@@ -42,7 +42,7 @@ class QuickViewApp {
     );
 
     this.setupUIHandlers();
-    this.initTheme();
+    this.updateThemeUI();
   }
 
   setupUIHandlers() {
@@ -56,28 +56,17 @@ class QuickViewApp {
     document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
   }
 
-  initTheme() {
-    const saved = localStorage.getItem('quickview-theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = saved === 'dark' || (!saved && prefersDark);
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    }
-    this.updateThemeUI(isDark);
-  }
-
   toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('quickview-theme', isDark ? 'dark' : 'light');
-    this.updateThemeUI(isDark);
+    this.updateThemeUI();
   }
 
-  updateThemeUI(isDark) {
+  updateThemeUI() {
+    const isDark = document.documentElement.classList.contains('dark');
     document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
-    const hljsLink = document.getElementById('hljs-theme');
-    hljsLink.href = isDark
-      ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css'
-      : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css';
+    document.getElementById('hljs-light').disabled = isDark;
+    document.getElementById('hljs-dark').disabled = !isDark;
   }
 
   async loadFile(file) {
