@@ -128,7 +128,19 @@
                     <button id="run-code" class="action-btn" style="display: none;">▶️ Run</button>
                     <button id="format-code" class="action-btn" style="display: none;">✨ Format</button>
                     <button id="open-external" class="action-btn" style="display: none;">🔗 Open External</button>
+                    <button id="file-info" class="action-btn" style="display: none;">ℹ️ Info</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="file-info-modal" style="display: none;" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
+        <div class="file-info-panel bg-card border border-border rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center px-5 py-3 border-b border-border">
+                <h2 class="text-sm font-semibold" id="file-info-title">File Info</h2>
+                <button id="file-info-close" class="text-muted-foreground hover:text-foreground hover:bg-accent p-1.5 rounded-md transition-colors text-sm leading-none">✕</button>
+            </div>
+            <div id="file-info-body" class="px-5 py-4 space-y-3 text-sm">
             </div>
         </div>
     </div>

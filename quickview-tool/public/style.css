@@ -220,6 +220,39 @@
     font-size: 0.8125rem;
 }
 
+/* File info modal */
+.file-info-panel {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.file-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+.file-info-row:last-child {
+    border-bottom: none;
+}
+
+.file-info-label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8125rem;
+    flex-shrink: 0;
+}
+
+.file-info-value {
+    color: hsl(var(--foreground));
+    font-size: 0.8125rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Menlo', monospace;
+    text-align: right;
+    word-break: break-all;
+    margin-left: 16px;
+}
+
 /* Loading spinner */
 .spinner {
     width: 32px;

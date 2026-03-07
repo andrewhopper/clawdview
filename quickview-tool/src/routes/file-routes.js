@@ -31,6 +31,33 @@ function createFileRoutes(fileService) {
     }
   });
 
+  router.get('/file-info/*', (req, res) => {
+    const requestedPath = req.params[0];
+    const filename = path.basename(requestedPath);
+
+    if (fileService.isHiddenFile(filename)) {
+      return res.status(403).json({ error: 'Access to hidden files denied' });
+    }
+
+    const ext = path.extname(filename).toLowerCase();
+    if (ext && !fileService.isAllowedExtension(ext)) {
+      return res.status(403).json({ error: 'File type not supported for security reasons' });
+    }
+
+    const filePath = fileService.getFilePath(requestedPath);
+
+    if (!fileService.fileExists(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    try {
+      const info = fileService.getFileInfo(filePath);
+      res.json({ ...info, filename, path: requestedPath, extension: ext });
+    } catch {
+      res.status(500).json({ error: 'Unable to read file info' });
+    }
+  });
+
   router.get('/files', (req, res) => {
     res.json(fileService.getFileTree());
   });

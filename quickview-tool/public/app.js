@@ -52,6 +52,11 @@ class QuickViewApp {
     document.getElementById('run-code').addEventListener('click', () => this.runCode());
     document.getElementById('format-code').addEventListener('click', () => this.formatCode());
     document.getElementById('open-external').addEventListener('click', () => this.openExternal());
+    document.getElementById('file-info').addEventListener('click', () => this.showFileInfo());
+    document.getElementById('file-info-close').addEventListener('click', () => this.hideFileInfo());
+    document.getElementById('file-info-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'file-info-modal') this.hideFileInfo();
+    });
   }
 
   async loadFile(file) {
@@ -116,6 +121,7 @@ class QuickViewApp {
     document.getElementById('run-code').style.display = extension === '.py' ? 'block' : 'none';
     document.getElementById('format-code').style.display = FORMATTABLE_EXTENSIONS.includes(extension) ? 'block' : 'none';
     document.getElementById('open-external').style.display = extension === '.html' ? 'block' : 'none';
+    document.getElementById('file-info').style.display = 'block';
   }
 
   async runCode() {
@@ -189,6 +195,57 @@ class QuickViewApp {
     if (this.currentFile && this.currentFile.extension === '.html') {
       window.open(`/preview/${this.currentFile.path}`, '_blank');
     }
+  }
+
+  async showFileInfo() {
+    if (!this.currentFile) return;
+
+    const modal = document.getElementById('file-info-modal');
+    const title = document.getElementById('file-info-title');
+    const body = document.getElementById('file-info-body');
+
+    title.textContent = this.currentFile.name;
+    body.innerHTML = '<div style="text-align:center;padding:12px;color:hsl(var(--muted-foreground))">Loading...</div>';
+    modal.style.display = 'flex';
+
+    try {
+      const response = await fetch(`/api/file-info/${this.currentFile.path}`);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Failed to load file info');
+
+      const rows = [
+        ['Filename', data.filename],
+        ['Path', data.path],
+        ['Extension', data.extension || 'None'],
+        ['Size', this.formatFileSize(data.size)],
+        ['Lines', data.lines.toLocaleString()],
+        ['Modified', new Date(data.modifiedAt).toLocaleString()],
+        ['Created', new Date(data.createdAt).toLocaleString()],
+        ['Permissions', data.permissions],
+        ['Encoding', data.encoding],
+      ];
+
+      body.innerHTML = rows.map(([label, value]) =>
+        `<div class="file-info-row">
+          <span class="file-info-label">${escapeHtml(label)}</span>
+          <span class="file-info-value">${escapeHtml(String(value))}</span>
+        </div>`
+      ).join('');
+    } catch (error) {
+      body.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+    }
+  }
+
+  hideFileInfo() {
+    document.getElementById('file-info-modal').style.display = 'none';
+  }
+
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return parseFloat((bytes / Math.pow(1024, i)).toFixed(1)) + ' ' + units[i];
   }
 
   showLoading(show) {

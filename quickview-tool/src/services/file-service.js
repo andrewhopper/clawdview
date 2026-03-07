@@ -43,6 +43,21 @@ class FileService {
     return fs.existsSync(filePath);
   }
 
+  getFileInfo(filePath) {
+    const stat = fs.statSync(filePath);
+    const content = fs.readFileSync(filePath, 'utf8');
+    const lines = content.split('\n').length;
+
+    return {
+      size: stat.size,
+      createdAt: stat.birthtime.toISOString(),
+      modifiedAt: stat.mtime.toISOString(),
+      permissions: '0' + (stat.mode & parseInt('777', 8)).toString(8),
+      lines,
+      encoding: 'utf-8',
+    };
+  }
+
   getFileTree(dir = this.watchDir, prefix = '') {
     const items = [];
 
