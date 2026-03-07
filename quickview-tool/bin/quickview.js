@@ -19,7 +19,7 @@ program
   .option('-p, --port <port>', 'Server port', '3333')
   .option('-d, --dir <directory>', 'Directory to watch', process.cwd())
   .option('--no-open', 'Don\'t auto-open browser')
-  .option('--tunnel <provider>', 'Expose via tunnel (ngrok or tailscale)')
+  .option('--tunnel <provider>', `Expose via tunnel (${TunnelService.supportedProviders.join(', ')})`)
   .action(async (options) => {
     const watchDir = path.resolve(options.dir);
 
@@ -44,12 +44,11 @@ program
 
     server.start();
 
-    // Start tunnel if requested
     if (options.tunnel) {
       const provider = options.tunnel.toLowerCase();
-      if (provider !== 'ngrok' && provider !== 'tailscale') {
-        console.error(`Unknown tunnel provider: ${options.tunnel}`);
-        console.error('Supported providers: ngrok, tailscale');
+      if (!TunnelService.supportedProviders.includes(provider)) {
+        console.error(`Unknown tunnel provider: "${options.tunnel}"`);
+        console.error(`Supported providers: ${TunnelService.supportedProviders.join(', ')}`);
         server.stop();
         process.exit(1);
       }
@@ -59,7 +58,6 @@ program
 
       try {
         const url = await tunnel.start();
-        console.log('');
         console.log(`Remote URL: ${url}`);
         console.log(`Share this URL to access QuickView remotely.`);
         console.log('');
@@ -308,16 +306,18 @@ program
 🌐 Default server: http://localhost:3333
 📁 Watches current directory by default
 
-🔗 Remote Access:
-  --tunnel ngrok       Expose via ngrok (requires @ngrok/ngrok + NGROK_AUTHTOKEN)
-  --tunnel tailscale   Expose via Tailscale Funnel (requires tailscale CLI)
+🔗 Remote Access (--tunnel <provider>):
+  localtunnel   Free, no account required (npm install localtunnel)
+  ngrok         Requires account + authtoken (npm install @ngrok/ngrok)
+  tailscale     Requires Tailscale CLI + Funnel enabled in ACLs
 
 💡 Quick Start:
-  quickview start                    # Start server in current directory
-  quickview start -p 4000            # Use custom port
-  quickview start --tunnel ngrok     # Start with ngrok tunnel
-  quickview start --tunnel tailscale # Start with Tailscale Funnel
-  quickview init                     # Add demo files to project
+  quickview start                       # Start server locally
+  quickview start -p 4000               # Use custom port
+  quickview start --tunnel localtunnel  # Free tunnel, no setup
+  quickview start --tunnel ngrok        # ngrok tunnel
+  quickview start --tunnel tailscale    # Tailscale Funnel
+  quickview init                        # Add demo files to project
     `);
   });
 

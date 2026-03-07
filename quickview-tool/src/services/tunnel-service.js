@@ -1,20 +1,86 @@
 const { spawn } = require('child_process');
 
+const PROVIDERS = {
+  localtunnel: {
+    label: 'localtunnel',
+    description: 'Free, no account required',
+    setup: 'npm install localtunnel',
+  },
+  ngrok: {
+    label: 'ngrok',
+    description: 'Requires account + authtoken',
+    setup: 'npm install @ngrok/ngrok && export NGROK_AUTHTOKEN=your_token',
+  },
+  tailscale: {
+    label: 'Tailscale Funnel',
+    description: 'Requires Tailscale CLI + Funnel enabled',
+    setup: 'tailscale up && enable Funnel in ACL policy',
+  },
+};
+
 class TunnelService {
   constructor(options = {}) {
-    this.provider = options.provider; // 'ngrok' or 'tailscale'
+    this.provider = options.provider;
     this.port = options.port || 3333;
     this.url = null;
     this._cleanup = null;
   }
 
+  static get supportedProviders() {
+    return Object.keys(PROVIDERS);
+  }
+
+  static getProviderInfo(name) {
+    return PROVIDERS[name];
+  }
+
   async start() {
-    if (this.provider === 'ngrok') {
-      return this._startNgrok();
-    } else if (this.provider === 'tailscale') {
-      return this._startTailscale();
+    const startFn = {
+      localtunnel: () => this._startLocaltunnel(),
+      ngrok: () => this._startNgrok(),
+      tailscale: () => this._startTailscale(),
+    }[this.provider];
+
+    if (!startFn) {
+      throw new Error(
+        `Unknown tunnel provider: "${this.provider}". ` +
+        `Supported: ${TunnelService.supportedProviders.join(', ')}`
+      );
     }
-    throw new Error(`Unknown tunnel provider: ${this.provider}`);
+
+    this._printSecurityWarning();
+    return startFn();
+  }
+
+  _printSecurityWarning() {
+    console.warn('');
+    console.warn('WARNING: Tunnel mode exposes this server to the internet.');
+    console.warn('Anyone with the URL can browse files and execute Python scripts.');
+    console.warn('Only use this in trusted environments with non-sensitive files.');
+    console.warn('');
+  }
+
+  async _startLocaltunnel() {
+    let localtunnel;
+    try {
+      localtunnel = require('localtunnel');
+    } catch {
+      console.error('localtunnel package not installed. Install it with:');
+      console.error('  npm install localtunnel');
+      throw new Error('localtunnel package not found');
+    }
+
+    const tunnel = await localtunnel({ port: this.port });
+    this.url = tunnel.url;
+    this._cleanup = async () => {
+      tunnel.close();
+    };
+
+    tunnel.on('close', () => {
+      this.url = null;
+    });
+
+    return this.url;
   }
 
   async _startNgrok() {
@@ -45,7 +111,6 @@ class TunnelService {
 
   async _startTailscale() {
     return new Promise((resolve, reject) => {
-      // Use `tailscale funnel` to expose the port
       const proc = spawn('tailscale', ['funnel', '--bg', String(this.port)], {
         stdio: ['ignore', 'pipe', 'pipe'],
       });
@@ -53,70 +118,58 @@ class TunnelService {
       let stdout = '';
       let stderr = '';
 
-      proc.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
+      proc.stdout.on('data', (data) => { stdout += data.toString(); });
+      proc.stderr.on('data', (data) => { stderr += data.toString(); });
 
-      proc.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
+      const timeout = setTimeout(() => {
+        proc.kill();
+        reject(new Error('Tailscale funnel timed out after 15s'));
+      }, 15000);
 
       proc.on('close', (code) => {
+        clearTimeout(timeout);
+
         if (code !== 0) {
           console.error('Tailscale funnel failed:', stderr || stdout);
           console.error('');
-          console.error('Make sure Tailscale is installed and you are logged in:');
-          console.error('  tailscale up');
-          console.error('');
-          console.error('Funnel must also be enabled in your Tailscale ACLs.');
+          console.error('Make sure Tailscale is installed and logged in (tailscale up).');
+          console.error('Funnel must be enabled in your ACL policy.');
           console.error('See: https://tailscale.com/kb/1223/funnel');
           reject(new Error('Tailscale funnel failed'));
           return;
         }
 
-        // Parse the URL from tailscale funnel output
+        // Parse URL from output
         const urlMatch = (stdout + stderr).match(/https:\/\/[^\s]+/);
         if (urlMatch) {
           this.url = urlMatch[0];
+          this._cleanup = async () => {
+            spawn('tailscale', ['funnel', '--bg', 'off'], { stdio: 'ignore' });
+          };
+          resolve(this.url);
         } else {
-          // Derive from tailscale status if not in output
-          this._getTailscaleUrl().then((url) => {
-            this.url = url;
+          this._getTailscaleDnsName().then((dnsName) => {
+            this.url = `https://${dnsName}`;
+            this._cleanup = async () => {
+              spawn('tailscale', ['funnel', '--bg', 'off'], { stdio: 'ignore' });
+            };
             resolve(this.url);
           }).catch(() => {
-            this.url = `https://<your-machine>.tailnet-name.ts.net:${this.port}`;
-            resolve(this.url);
+            reject(new Error('Tailscale funnel started but could not determine URL'));
           });
-          return;
         }
-
-        this._cleanup = async () => {
-          spawn('tailscale', ['funnel', '--bg', 'off'], {
-            stdio: 'ignore',
-          });
-        };
-
-        resolve(this.url);
       });
-
-      // Timeout after 15 seconds
-      setTimeout(() => {
-        proc.kill();
-        reject(new Error('Tailscale funnel timed out'));
-      }, 15000);
     });
   }
 
-  async _getTailscaleUrl() {
+  async _getTailscaleDnsName() {
     return new Promise((resolve, reject) => {
       const proc = spawn('tailscale', ['status', '--json'], {
         stdio: ['ignore', 'pipe', 'pipe'],
       });
 
       let stdout = '';
-      proc.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
+      proc.stdout.on('data', (data) => { stdout += data.toString(); });
 
       proc.on('close', (code) => {
         if (code !== 0) {
@@ -127,7 +180,7 @@ class TunnelService {
           const status = JSON.parse(stdout);
           const dnsName = status.Self?.DNSName?.replace(/\.$/, '');
           if (dnsName) {
-            resolve(`https://${dnsName}`);
+            resolve(dnsName);
           } else {
             reject(new Error('No DNS name found'));
           }
