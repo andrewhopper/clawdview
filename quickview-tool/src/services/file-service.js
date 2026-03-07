@@ -70,7 +70,8 @@ class FileService {
             type: 'file',
             path: relativePath,
             extension: path.extname(file).toLowerCase(),
-            size: stat.size
+            size: stat.size,
+            mtime: stat.mtimeMs
           });
         }
       }
