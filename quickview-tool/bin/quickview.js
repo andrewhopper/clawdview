@@ -4,6 +4,7 @@ const { Command } = require('commander');
 const path = require('path');
 const fs = require('fs');
 const QuickViewServer = require('../server');
+const TunnelService = require('../src/services/tunnel-service');
 
 const program = new Command();
 
@@ -18,29 +19,64 @@ program
   .option('-p, --port <port>', 'Server port', '3333')
   .option('-d, --dir <directory>', 'Directory to watch', process.cwd())
   .option('--no-open', 'Don\'t auto-open browser')
-  .action((options) => {
+  .option('--tunnel <provider>', 'Expose via tunnel (ngrok or tailscale)')
+  .action(async (options) => {
     const watchDir = path.resolve(options.dir);
-    
+
     if (!fs.existsSync(watchDir)) {
-      console.error(`❌ Directory not found: ${watchDir}`);
+      console.error(`Directory not found: ${watchDir}`);
       process.exit(1);
     }
-    
-    console.log(`🚀 Starting QuickView server...`);
-    console.log(`📁 Watching: ${watchDir}`);
-    console.log(`🌐 Port: ${options.port}`);
-    
+
+    const port = parseInt(options.port);
+    let tunnel = null;
+
+    console.log(`Starting QuickView server...`);
+    console.log(`Watching: ${watchDir}`);
+    console.log(`Port: ${port}`);
+
     const server = new QuickViewServer({
-      port: parseInt(options.port),
+      port: port,
       watchDir: watchDir,
-      autoOpen: options.open
+      autoOpen: options.open,
+      host: options.tunnel ? '0.0.0.0' : 'localhost'
     });
-    
+
     server.start();
-    
+
+    // Start tunnel if requested
+    if (options.tunnel) {
+      const provider = options.tunnel.toLowerCase();
+      if (provider !== 'ngrok' && provider !== 'tailscale') {
+        console.error(`Unknown tunnel provider: ${options.tunnel}`);
+        console.error('Supported providers: ngrok, tailscale');
+        server.stop();
+        process.exit(1);
+      }
+
+      tunnel = new TunnelService({ provider, port });
+      console.log(`Starting ${provider} tunnel...`);
+
+      try {
+        const url = await tunnel.start();
+        console.log('');
+        console.log(`Remote URL: ${url}`);
+        console.log(`Share this URL to access QuickView remotely.`);
+        console.log('');
+      } catch (err) {
+        console.error(`Failed to start tunnel: ${err.message}`);
+        server.stop();
+        process.exit(1);
+      }
+    }
+
     // Graceful shutdown
-    process.on('SIGINT', () => {
-      console.log('\n🛑 Shutting down QuickView Server...');
+    process.on('SIGINT', async () => {
+      console.log('\nShutting down QuickView Server...');
+      if (tunnel) {
+        console.log('Closing tunnel...');
+        await tunnel.stop();
+      }
       server.stop();
       process.exit(0);
     });
@@ -272,10 +308,16 @@ program
 🌐 Default server: http://localhost:3333
 📁 Watches current directory by default
 
+🔗 Remote Access:
+  --tunnel ngrok       Expose via ngrok (requires @ngrok/ngrok + NGROK_AUTHTOKEN)
+  --tunnel tailscale   Expose via Tailscale Funnel (requires tailscale CLI)
+
 💡 Quick Start:
-  quickview start          # Start server in current directory
-  quickview start -p 4000  # Use custom port
-  quickview init           # Add demo files to project
+  quickview start                    # Start server in current directory
+  quickview start -p 4000            # Use custom port
+  quickview start --tunnel ngrok     # Start with ngrok tunnel
+  quickview start --tunnel tailscale # Start with Tailscale Funnel
+  quickview init                     # Add demo files to project
     `);
   });
 

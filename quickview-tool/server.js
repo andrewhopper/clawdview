@@ -15,6 +15,7 @@ const createFormatRoutes = require('./src/routes/format-routes');
 class QuickViewServer {
   constructor(options = {}) {
     this.port = options.port || 3333;
+    this.host = options.host || 'localhost';
     this.watchDir = options.watchDir || process.cwd();
 
     this.app = express();
@@ -72,10 +73,10 @@ class QuickViewServer {
   }
 
   start() {
-    this.server.listen(this.port, () => {
-      console.log(`🚀 QuickView Server running at http://localhost:${this.port}`);
-      console.log(`📁 Watching directory: ${this.watchDir}`);
-      console.log('💡 Open http://localhost:' + this.port + ' in your browser');
+    this.server.listen(this.port, this.host, () => {
+      console.log(`QuickView Server running at http://${this.host}:${this.port}`);
+      console.log(`Watching directory: ${this.watchDir}`);
+      console.log('Open http://localhost:' + this.port + ' in your browser');
     });
   }
 
