@@ -53,6 +53,9 @@ export class FileTreeManager {
     // Batch rendering
     this._renderQueue = [];
     this._renderRAF = null;
+
+    // Keyboard focus index (-1 = none)
+    this._focusIndex = -1;
   }
 
   /* ------------------------------------------------------------------
@@ -93,6 +96,155 @@ export class FileTreeManager {
         this.renderCurrentView();
       });
     }
+
+    this._setupKeyboard();
+  }
+
+  /* ------------------------------------------------------------------
+   * Keyboard navigation & shortcuts
+   * ----------------------------------------------------------------*/
+  _setupKeyboard() {
+    // Make the file tree container focusable
+    this.container.setAttribute('tabindex', '0');
+
+    // Global keyboard shortcuts (work from anywhere on the page)
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd+P or Ctrl/Cmd+F → focus search
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'f')) {
+        // Only intercept if not in an input/textarea already, except our own search
+        const tag = document.activeElement?.tagName;
+        if (tag === 'TEXTAREA' || (tag === 'INPUT' && document.activeElement !== this.searchInput)) return;
+        e.preventDefault();
+        this.searchInput?.focus();
+        this.searchInput?.select();
+        return;
+      }
+
+      // Escape — clear search and return focus to tree
+      if (e.key === 'Escape') {
+        if (document.activeElement === this.searchInput) {
+          if (this.searchInput.value) {
+            this.searchInput.value = '';
+            this.searchQuery = '';
+            this.renderCurrentView();
+          }
+          this.container.focus();
+          return;
+        }
+      }
+
+      // Alt+1/2/3 → switch views
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        const viewMap = { '1': 'tree', '2': 'recent', '3': 'type' };
+        if (viewMap[e.key]) {
+          e.preventDefault();
+          this.setViewMode(viewMap[e.key]);
+          return;
+        }
+      }
+    });
+
+    // Search-specific: Enter moves focus to file list, Down arrow too
+    if (this.searchInput) {
+      this.searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'Enter') {
+          e.preventDefault();
+          this.container.focus();
+          this._setFocusIndex(0);
+        }
+      });
+    }
+
+    // Tree container keyboard navigation
+    this.container.addEventListener('keydown', (e) => {
+      const items = this._getNavigableItems();
+      if (items.length === 0) return;
+
+      switch (e.key) {
+        case 'ArrowDown':
+        case 'j':
+          e.preventDefault();
+          this._setFocusIndex(Math.min(this._focusIndex + 1, items.length - 1));
+          break;
+
+        case 'ArrowUp':
+        case 'k':
+          e.preventDefault();
+          this._setFocusIndex(Math.max(this._focusIndex - 1, 0));
+          break;
+
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          if (this._focusIndex >= 0 && this._focusIndex < items.length) {
+            items[this._focusIndex].click();
+          }
+          break;
+
+        case 'ArrowRight':
+        case 'l': {
+          // Expand directory if focused on a collapsed one
+          e.preventDefault();
+          const el = items[this._focusIndex];
+          if (el?.classList.contains('directory')) {
+            const chevron = el.querySelector('.nav-chevron');
+            if (chevron && !chevron.classList.contains('open')) {
+              el.click(); // toggle open
+            }
+          }
+          break;
+        }
+
+        case 'ArrowLeft':
+        case 'h': {
+          // Collapse directory if focused on an open one
+          e.preventDefault();
+          const el = items[this._focusIndex];
+          if (el?.classList.contains('directory')) {
+            const chevron = el.querySelector('.nav-chevron');
+            if (chevron && chevron.classList.contains('open')) {
+              el.click(); // toggle closed
+            }
+          }
+          break;
+        }
+
+        case 'Home':
+          e.preventDefault();
+          this._setFocusIndex(0);
+          break;
+
+        case 'End':
+          e.preventDefault();
+          this._setFocusIndex(items.length - 1);
+          break;
+
+        case '/':
+          // Focus search (vim-style)
+          e.preventDefault();
+          this.searchInput?.focus();
+          this.searchInput?.select();
+          break;
+      }
+    });
+  }
+
+  _getNavigableItems() {
+    return Array.from(this.container.querySelectorAll('.file-item, .nav-group-header'));
+  }
+
+  _setFocusIndex(index) {
+    const items = this._getNavigableItems();
+
+    // Remove previous focus
+    const prev = this.container.querySelector('.nav-focused');
+    if (prev) prev.classList.remove('nav-focused');
+
+    this._focusIndex = index;
+    if (index >= 0 && index < items.length) {
+      items[index].classList.add('nav-focused');
+      items[index].scrollIntoView({ block: 'nearest' });
+    }
   }
 
   /* ------------------------------------------------------------------
@@ -124,6 +276,7 @@ export class FileTreeManager {
     if (this._renderRAF) cancelAnimationFrame(this._renderRAF);
 
     this.container.innerHTML = '';
+    this._focusIndex = -1;
 
     const filtered = this._applyFilters();
 
