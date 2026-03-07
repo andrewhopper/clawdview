@@ -18,18 +18,20 @@
     "test:report": "playwright show-report tests/playwright-report"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
+    "@aws-sdk/client-s3": "^3.1004.0",
+    "@aws-sdk/s3-request-presigner": "^3.1004.0",
     "chokidar": "^3.5.3",
-    "open": "^9.1.0",
     "commander": "^11.0.0",
-    "marked": "^5.1.1",
+    "express": "^4.18.2",
     "highlight.js": "^11.8.0",
-    "live-server": "^1.2.2"
+    "live-server": "^1.2.2",
+    "marked": "^5.1.1",
+    "open": "^9.1.0",
+    "socket.io": "^4.7.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
-    "@playwright/test": "^1.44.0"
+    "@playwright/test": "^1.44.0",
+    "nodemon": "^3.0.1"
   },
   "keywords": [
     "preview",

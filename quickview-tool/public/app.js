@@ -25,6 +25,7 @@ const FORMATTABLE_EXTENSIONS = ['.js', '.jsx', '.json', '.html', '.css'];
 class QuickViewApp {
   constructor() {
     this.currentFile = null;
+    this.s3Enabled = false;
 
     this.tabManager = new TabManager();
 
@@ -42,6 +43,7 @@ class QuickViewApp {
     );
 
     this.setupUIHandlers();
+    this.checkS3Status();
   }
 
   setupUIHandlers() {
@@ -52,6 +54,15 @@ class QuickViewApp {
     document.getElementById('run-code').addEventListener('click', () => this.runCode());
     document.getElementById('format-code').addEventListener('click', () => this.formatCode());
     document.getElementById('open-external').addEventListener('click', () => this.openExternal());
+    document.getElementById('share-file').addEventListener('click', () => this.openShareModal());
+    document.getElementById('share-modal-close').addEventListener('click', () => this.closeShareModal());
+    document.getElementById('share-presign-btn').addEventListener('click', () => this.sharePresigned());
+    document.getElementById('share-publish-btn').addEventListener('click', () => this.sharePublish());
+    document.getElementById('share-copy-btn').addEventListener('click', () => this.copyShareUrl());
+
+    document.getElementById('share-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'share-modal') this.closeShareModal();
+    });
   }
 
   async loadFile(file) {
@@ -116,6 +127,7 @@ class QuickViewApp {
     document.getElementById('run-code').style.display = extension === '.py' ? 'block' : 'none';
     document.getElementById('format-code').style.display = FORMATTABLE_EXTENSIONS.includes(extension) ? 'block' : 'none';
     document.getElementById('open-external').style.display = extension === '.html' ? 'block' : 'none';
+    document.getElementById('share-file').style.display = this.s3Enabled ? 'block' : 'none';
   }
 
   async runCode() {
@@ -189,6 +201,115 @@ class QuickViewApp {
     if (this.currentFile && this.currentFile.extension === '.html') {
       window.open(`/preview/${this.currentFile.path}`, '_blank');
     }
+  }
+
+  async checkS3Status() {
+    try {
+      const response = await fetch('/api/share/status');
+      const data = await response.json();
+      this.s3Enabled = data.enabled;
+    } catch {
+      this.s3Enabled = false;
+    }
+  }
+
+  openShareModal() {
+    if (!this.currentFile) return;
+    document.getElementById('share-filename').textContent = `File: ${this.currentFile.name}`;
+    document.getElementById('share-result').style.display = 'none';
+    document.getElementById('share-error').style.display = 'none';
+    document.getElementById('share-modal').style.display = 'flex';
+  }
+
+  closeShareModal() {
+    document.getElementById('share-modal').style.display = 'none';
+  }
+
+  async sharePresigned() {
+    if (!this.currentFile) return;
+
+    const expiresIn = parseInt(document.getElementById('share-expiry').value, 10);
+    this.setShareLoading(true);
+
+    try {
+      const response = await fetch('/api/share/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath: this.currentFile.path, expiresIn })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Failed to create share link');
+
+      this.showShareResult(data.url, `Pre-signed URL expires in ${this.formatExpiry(data.expiresIn)}`);
+    } catch (error) {
+      this.showShareError(error.message);
+    } finally {
+      this.setShareLoading(false);
+    }
+  }
+
+  async sharePublish() {
+    if (!this.currentFile) return;
+
+    this.setShareLoading(true);
+
+    try {
+      const response = await fetch('/api/share/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath: this.currentFile.path })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Failed to publish file');
+
+      this.showShareResult(data.publicUrl, 'Published publicly — this URL does not expire');
+    } catch (error) {
+      this.showShareError(error.message);
+    } finally {
+      this.setShareLoading(false);
+    }
+  }
+
+  showShareResult(url, info) {
+    document.getElementById('share-url').value = url;
+    document.getElementById('share-info').textContent = info;
+    document.getElementById('share-result').style.display = 'block';
+    document.getElementById('share-error').style.display = 'none';
+  }
+
+  showShareError(message) {
+    document.getElementById('share-error').textContent = message;
+    document.getElementById('share-error').style.display = 'block';
+    document.getElementById('share-result').style.display = 'none';
+  }
+
+  setShareLoading(loading) {
+    document.getElementById('share-presign-btn').disabled = loading;
+    document.getElementById('share-publish-btn').disabled = loading;
+  }
+
+  async copyShareUrl() {
+    const url = document.getElementById('share-url').value;
+    try {
+      await navigator.clipboard.writeText(url);
+      const btn = document.getElementById('share-copy-btn');
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.style.background = '#10b981';
+      setTimeout(() => { btn.textContent = original; btn.style.background = ''; }, 2000);
+    } catch {
+      document.getElementById('share-url').select();
+    }
+  }
+
+  formatExpiry(seconds) {
+    if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+    if (seconds < 86400) return `${Math.round(seconds / 3600)} hour(s)`;
+    return `${Math.round(seconds / 86400)} day(s)`;
   }
 
   showLoading(show) {

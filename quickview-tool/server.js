@@ -7,10 +7,12 @@ const FileService = require('./src/services/file-service');
 const PythonExecutor = require('./src/services/python-executor');
 const CodeFormatter = require('./src/services/code-formatter');
 const FileWatcher = require('./src/services/file-watcher');
+const S3Service = require('./src/services/s3-service');
 
 const createFileRoutes = require('./src/routes/file-routes');
 const createExecuteRoutes = require('./src/routes/execute-routes');
 const createFormatRoutes = require('./src/routes/format-routes');
+const createShareRoutes = require('./src/routes/share-routes');
 
 class QuickViewServer {
   constructor(options = {}) {
@@ -25,6 +27,7 @@ class QuickViewServer {
     this.pythonExecutor = new PythonExecutor();
     this.codeFormatter = new CodeFormatter();
     this.fileWatcher = new FileWatcher(this.watchDir);
+    this.s3Service = new S3Service(options.s3 || {});
 
     this.setupMiddleware();
     this.setupRoutes();
@@ -46,6 +49,7 @@ class QuickViewServer {
     this.app.use('/api', createFileRoutes(this.fileService));
     this.app.use('/api/execute', createExecuteRoutes(this.pythonExecutor));
     this.app.use('/api/format', createFormatRoutes(this.fileService, this.codeFormatter));
+    this.app.use('/api', createShareRoutes(this.s3Service, this.fileService));
   }
 
   setupSocketHandlers() {

@@ -128,8 +128,43 @@
                     <button id="run-code" class="action-btn" style="display: none;">▶️ Run</button>
                     <button id="format-code" class="action-btn" style="display: none;">✨ Format</button>
                     <button id="open-external" class="action-btn" style="display: none;">🔗 Open External</button>
+                    <button id="share-file" class="action-btn" style="display: none;">📤 Share</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="share-modal" style="display: none;" class="fixed inset-0 bg-black/80 flex justify-center items-center z-50">
+        <div class="bg-card border border-border rounded-lg p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-base font-semibold">Share Asset via S3</h2>
+                <button id="share-modal-close" class="text-muted-foreground hover:text-foreground text-lg leading-none p-1">&times;</button>
+            </div>
+            <p id="share-filename" class="text-sm text-muted-foreground mb-4"></p>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1 block">Pre-signed URL expiry</label>
+                    <select id="share-expiry" class="w-full bg-secondary text-secondary-foreground border border-border rounded-md px-3 py-2 text-sm">
+                        <option value="900">15 minutes</option>
+                        <option value="3600" selected>1 hour</option>
+                        <option value="86400">24 hours</option>
+                        <option value="604800">7 days</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button id="share-presign-btn" class="action-btn flex-1">📋 Pre-signed URL</button>
+                    <button id="share-publish-btn" class="action-btn flex-1">🌐 Publish Public</button>
+                </div>
+            </div>
+            <div id="share-result" style="display: none;" class="mt-4">
+                <label class="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1 block">Share URL</label>
+                <div class="flex gap-2">
+                    <input id="share-url" type="text" readonly class="flex-1 bg-secondary text-secondary-foreground border border-border rounded-md px-3 py-2 text-sm font-mono">
+                    <button id="share-copy-btn" class="action-btn">Copy</button>
+                </div>
+                <p id="share-info" class="text-xs text-muted-foreground mt-2"></p>
+            </div>
+            <div id="share-error" style="display: none;" class="mt-4 text-sm text-destructive-foreground bg-destructive/20 border border-destructive/30 rounded-md px-3 py-2"></div>
         </div>
     </div>
 
