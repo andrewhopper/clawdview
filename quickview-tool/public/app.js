@@ -42,6 +42,7 @@ class QuickViewApp {
     );
 
     this.setupUIHandlers();
+    this.setupKeyboardNavigation();
   }
 
   setupUIHandlers() {
@@ -52,6 +53,51 @@ class QuickViewApp {
     document.getElementById('run-code').addEventListener('click', () => this.runCode());
     document.getElementById('format-code').addEventListener('click', () => this.formatCode());
     document.getElementById('open-external').addEventListener('click', () => this.openExternal());
+
+    document.getElementById('nav-prev').addEventListener('click', () => {
+      this.fileTreeManager.selectPrevious();
+      this.updateNavIndicator();
+    });
+    document.getElementById('nav-next').addEventListener('click', () => {
+      this.fileTreeManager.selectNext();
+      this.updateNavIndicator();
+    });
+  }
+
+  setupKeyboardNavigation() {
+    document.addEventListener('keydown', (e) => {
+      // Don't intercept when user is typing in an input/textarea
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+      // Don't intercept when inside an iframe
+      if (e.target.closest('iframe')) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        this.fileTreeManager.selectPrevious();
+        this.updateNavIndicator();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        this.fileTreeManager.selectNext();
+        this.updateNavIndicator();
+      }
+    });
+  }
+
+  updateNavIndicator() {
+    const count = this.fileTreeManager.getFileCount();
+    const index = this.fileTreeManager.getCurrentIndex();
+    const indicator = document.getElementById('nav-indicator');
+    if (count > 0 && index >= 0) {
+      indicator.textContent = `${index + 1} / ${count}`;
+      indicator.style.display = '';
+      document.getElementById('nav-prev').style.display = '';
+      document.getElementById('nav-next').style.display = '';
+    } else {
+      indicator.style.display = 'none';
+      document.getElementById('nav-prev').style.display = 'none';
+      document.getElementById('nav-next').style.display = 'none';
+    }
   }
 
   async loadFile(file) {
@@ -69,6 +115,7 @@ class QuickViewApp {
       this.updateCodePanel(data.content, data.extension);
       this.updatePreviewPanel(data.content, data.extension, file.name);
       this.updateActionButtons(data.extension);
+      this.updateNavIndicator();
     } catch (error) {
       this.showError('Failed to load file: ' + error.message);
     } finally {
