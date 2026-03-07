@@ -42,6 +42,7 @@ class QuickViewApp {
     );
 
     this.setupUIHandlers();
+    this.initTheme();
   }
 
   setupUIHandlers() {
@@ -52,6 +53,31 @@ class QuickViewApp {
     document.getElementById('run-code').addEventListener('click', () => this.runCode());
     document.getElementById('format-code').addEventListener('click', () => this.formatCode());
     document.getElementById('open-external').addEventListener('click', () => this.openExternal());
+    document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
+  }
+
+  initTheme() {
+    const saved = localStorage.getItem('quickview-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = saved === 'dark' || (!saved && prefersDark);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    }
+    this.updateThemeUI(isDark);
+  }
+
+  toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('quickview-theme', isDark ? 'dark' : 'light');
+    this.updateThemeUI(isDark);
+  }
+
+  updateThemeUI(isDark) {
+    document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
+    const hljsLink = document.getElementById('hljs-theme');
+    hljsLink.href = isDark
+      ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css'
+      : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css';
   }
 
   async loadFile(file) {
@@ -105,8 +131,8 @@ class QuickViewApp {
       renderer();
     } else {
       previewContent.innerHTML = `
-        <div style="padding: 20px; color: #333;">
-          <pre style="white-space: pre-wrap; font-family: monospace;">${escapeHtml(content)}</pre>
+        <div class="preview-text">
+          <pre style="white-space: pre-wrap;">${escapeHtml(content)}</pre>
         </div>
       `;
     }
@@ -170,7 +196,7 @@ class QuickViewApp {
         const formatBtn = document.getElementById('format-code');
         const originalText = formatBtn.textContent;
         formatBtn.textContent = '✓ Formatted';
-        formatBtn.style.background = '#10b981';
+        formatBtn.style.background = 'hsl(142 71% 45%)';
         setTimeout(() => {
           formatBtn.textContent = originalText;
           formatBtn.style.background = '';
