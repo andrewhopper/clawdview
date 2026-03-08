@@ -101,6 +101,7 @@ export class TunnelService {
 
     tunnel.on('close', () => {
       this._url = null;
+      this._cleanup = null;
     });
 
     return this._url!;

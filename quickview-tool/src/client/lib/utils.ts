@@ -19,3 +19,11 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return parseFloat((bytes / Math.pow(1024, i)).toFixed(1)) + ' ' + units[i];
 }
+
+export function sanitizeSvg(svg: string): string {
+  // Remove script tags and event handler attributes
+  return svg
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<script[\s\S]*?\/?>/gi, '')
+    .replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '');
+}

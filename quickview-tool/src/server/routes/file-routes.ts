@@ -30,12 +30,6 @@ function validateFileRequest(
   }
 
   const filePath = fileService.getFilePath(requestedPath);
-
-  if (!fileService.fileExists(filePath)) {
-    res.status(404).json({ error: 'File not found' });
-    return null;
-  }
-
   return { requestedPath, filename, ext, filePath };
 }
 
@@ -49,7 +43,8 @@ export function createFileRoutes(fileService: FileService): Router {
     try {
       const content = fileService.readFile(file.filePath);
       res.json({ content, extension: file.ext, filename: file.filename, path: file.requestedPath });
-    } catch {
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') return res.status(404).json({ error: 'File not found' });
       res.status(500).json({ error: 'Unable to read file' });
     }
   });
@@ -61,7 +56,8 @@ export function createFileRoutes(fileService: FileService): Router {
     try {
       const info = fileService.getFileInfo(file.filePath);
       res.json({ ...info, filename: file.filename, path: file.requestedPath, extension: file.ext });
-    } catch {
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') return res.status(404).json({ error: 'File not found' });
       res.status(500).json({ error: 'Unable to read file info' });
     }
   });

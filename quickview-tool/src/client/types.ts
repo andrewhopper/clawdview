@@ -1,5 +1,4 @@
 import type { GitInfo, ExifData } from '../shared/types';
-
 export type { FileTreeItem, GitInfo, ExifData } from '../shared/types';
 
 export interface FileData {

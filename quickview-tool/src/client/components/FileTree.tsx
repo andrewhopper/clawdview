@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { FileTreeItem, ViewMode } from '../types';
-import { ChevronRight, RefreshCw, Eye, Search, FolderTree, Clock, LayoutList } from 'lucide-react';
+import { ChevronRight, RefreshCw, Eye, Search, FolderTree, Clock, LayoutList, type LucideIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -34,6 +34,12 @@ const FILE_ICONS: Record<string, string> = {
   html: '🌐', js: '📜', jsx: '📜', py: '🐍',
   json: '📊', md: '📝', svg: '🎨', css: '🎨',
 };
+
+const VIEW_MODES: { mode: ViewMode; icon: LucideIcon; label: string }[] = [
+  { mode: 'tree', icon: FolderTree, label: 'Tree' },
+  { mode: 'recent', icon: Clock, label: 'Recent' },
+  { mode: 'type', icon: LayoutList, label: 'Type' },
+];
 
 interface FileTreeProps {
   tree: FileTreeItem[];
@@ -144,12 +150,6 @@ export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTy
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const VIEW_MODES: { mode: ViewMode; icon: typeof FolderTree; label: string }[] = [
-    { mode: 'tree', icon: FolderTree, label: 'Tree' },
-    { mode: 'recent', icon: Clock, label: 'Recent' },
-    { mode: 'type', icon: LayoutList, label: 'Type' },
-  ];
-
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col overflow-hidden shrink-0">
       {/* Header */}
@@ -249,11 +249,10 @@ export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTy
               onToggleCollapse={toggleCollapse}
             />
           ) : viewMode === 'recent' ? (
-            <FlatList
-              files={[...displayFiles].sort((a, b) => (b.mtime || 0) - (a.mtime || 0))}
+            <RecentView
+              files={displayFiles}
               selectedPath={selectedPath}
               onFileSelect={onFileSelect}
-              showPath
             />
           ) : (
             <TypeView
@@ -336,6 +335,20 @@ function TreeView({
   return <>{renderItems(tree, 0)}</>;
 }
 
+function RecentView({
+  files, selectedPath, onFileSelect,
+}: {
+  files: FileTreeItem[];
+  selectedPath: string | null;
+  onFileSelect: (file: FileTreeItem) => void;
+}) {
+  const sorted = useMemo(
+    () => [...files].sort((a, b) => (b.mtime || 0) - (a.mtime || 0)),
+    [files],
+  );
+  return <FlatList files={sorted} selectedPath={selectedPath} onFileSelect={onFileSelect} showPath />;
+}
+
 function FlatList({
   files, selectedPath, onFileSelect, showPath,
 }: {
@@ -385,6 +398,12 @@ function TypeView({
       if (!placed) ungrouped.push(f);
     }
 
+    // Pre-sort each group by name
+    for (const items of Object.values(grouped)) {
+      items.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    ungrouped.sort((a, b) => a.name.localeCompare(b.name));
+
     return { grouped, ungrouped };
   }, [files]);
 
@@ -403,9 +422,7 @@ function TypeView({
               {icon} {groupName} ({items.length})
             </CollapsibleTrigger>
             <CollapsibleContent>
-              {items
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((f) => (
+              {items.map((f) => (
                   <FileItem
                     key={f.path}
                     item={f}

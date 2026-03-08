@@ -1,15 +1,8 @@
 import { useMemo } from 'react';
+import { sanitizeSvg } from '@/lib/utils';
 
 interface SvgRendererProps {
   content: string;
-}
-
-function sanitizeSvg(svg: string): string {
-  // Remove script tags and event handler attributes
-  return svg
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<script[\s\S]*?\/?>/gi, '')
-    .replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '');
 }
 
 export function SvgRenderer({ content }: SvgRendererProps) {
