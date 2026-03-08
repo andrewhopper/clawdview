@@ -17,11 +17,16 @@ const createShareRoutes = require('./src/routes/share-routes');
 class QuickViewServer {
   constructor(options = {}) {
     this.port = options.port || 3333;
+    this.host = options.host || 'localhost';
     this.watchDir = options.watchDir || process.cwd();
 
     this.app = express();
     this.server = http.createServer(this.app);
-    this.io = socketIo(this.server);
+    this.io = socketIo(this.server, {
+      cors: {
+        origin: [`http://localhost:${this.port}`, `http://127.0.0.1:${this.port}`]
+      }
+    });
 
     this.fileService = new FileService(this.watchDir);
     this.pythonExecutor = new PythonExecutor();
@@ -76,10 +81,10 @@ class QuickViewServer {
   }
 
   start() {
-    this.server.listen(this.port, () => {
-      console.log(`🚀 QuickView Server running at http://localhost:${this.port}`);
-      console.log(`📁 Watching directory: ${this.watchDir}`);
-      console.log('💡 Open http://localhost:' + this.port + ' in your browser');
+    this.server.listen(this.port, this.host, () => {
+      console.log(`QuickView Server running at http://${this.host}:${this.port}`);
+      console.log(`Watching directory: ${this.watchDir}`);
+      console.log('Open http://localhost:' + this.port + ' in your browser');
     });
   }
 

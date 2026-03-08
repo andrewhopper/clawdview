@@ -56,7 +56,18 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <script>
+        // Blocking theme init — prevents flash of wrong theme
+        (function() {
+            var saved = localStorage.getItem('quickview-theme');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -71,16 +82,45 @@
             <div class="flex items-center gap-2.5 text-sm text-muted-foreground">
                 <span id="status" class="status">●</span>
                 <span id="current-file">No file selected</span>
+                <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode">🌙</button>
+                <button id="settings-btn" title="Preferences" class="text-muted-foreground hover:text-foreground hover:bg-accent p-1.5 rounded-md transition-colors text-sm leading-none ml-2">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/>
+                        <path d="M13.6 10a1.2 1.2 0 0 0 .24 1.32l.04.04a1.44 1.44 0 1 1-2.04 2.04l-.04-.04a1.2 1.2 0 0 0-1.32-.24 1.2 1.2 0 0 0-.72 1.1v.12a1.44 1.44 0 1 1-2.88 0v-.06a1.2 1.2 0 0 0-.78-1.1 1.2 1.2 0 0 0-1.32.24l-.04.04a1.44 1.44 0 1 1-2.04-2.04l.04-.04A1.2 1.2 0 0 0 2.98 10a1.2 1.2 0 0 0-1.1-.72h-.12a1.44 1.44 0 0 1 0-2.88h.06a1.2 1.2 0 0 0 1.1-.78 1.2 1.2 0 0 0-.24-1.32l-.04-.04a1.44 1.44 0 1 1 2.04-2.04l.04.04a1.2 1.2 0 0 0 1.32.24h.06a1.2 1.2 0 0 0 .72-1.1v-.12a1.44 1.44 0 0 1 2.88 0v.06a1.2 1.2 0 0 0 .72 1.1 1.2 1.2 0 0 0 1.32-.24l.04-.04a1.44 1.44 0 1 1 2.04 2.04l-.04.04a1.2 1.2 0 0 0-.24 1.32v.06a1.2 1.2 0 0 0 1.1.72h.12a1.44 1.44 0 0 1 0 2.88h-.06a1.2 1.2 0 0 0-1.1.72Z"/>
+                    </svg>
+                </button>
             </div>
         </header>
 
         <div class="flex flex-1 overflow-hidden min-h-0">
             <aside class="w-72 bg-card border-r border-border flex flex-col overflow-hidden shrink-0">
-                <div class="px-4 py-3 border-b border-border flex justify-between items-center">
+                <!-- Header -->
+                <div class="px-3 py-2.5 border-b border-border flex justify-between items-center">
                     <h3 class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Files</h3>
-                    <button id="refresh-files" title="Refresh file tree" class="text-muted-foreground hover:text-foreground hover:bg-accent p-1.5 rounded-md transition-colors text-sm leading-none">🔄</button>
+                    <div class="flex items-center gap-1">
+                        <span id="nav-file-count" class="text-[10px] text-muted-foreground mr-1"></span>
+                        <button id="nav-toggle-ignored" title="Show ignored dirs (node_modules, etc.)" class="nav-icon-btn">👁</button>
+                        <button id="refresh-files" title="Refresh file tree" class="nav-icon-btn">🔄</button>
+                    </div>
                 </div>
-                <div id="file-tree" class="flex-1 overflow-y-auto p-2"></div>
+
+                <!-- Search -->
+                <div class="px-3 py-2 border-b border-border">
+                    <input id="nav-search" type="text" placeholder="Search files... (Ctrl+F)" class="nav-search-input" />
+                </div>
+
+                <!-- View mode toggle -->
+                <div class="px-3 py-1.5 border-b border-border flex items-center gap-1">
+                    <button id="nav-view-tree" class="nav-view-btn active" title="Tree view (Alt+1)">🗂 Tree</button>
+                    <button id="nav-view-recent" class="nav-view-btn" title="Recent files (Alt+2)">🕐 Recent</button>
+                    <button id="nav-view-type" class="nav-view-btn" title="Group by type (Alt+3)">📋 Type</button>
+                </div>
+
+                <!-- Extension filter chips -->
+                <div id="nav-filter-chips" class="nav-filter-bar"></div>
+
+                <!-- File tree -->
+                <div id="file-tree" class="flex-1 overflow-y-auto p-1.5"></div>
             </aside>
 
             <div class="flex-1 flex flex-col overflow-hidden min-w-0">
@@ -92,19 +132,19 @@
 
                 <div class="flex-1 relative overflow-hidden">
                     <div id="preview-panel" class="panel active">
-                        <div id="preview-content" class="h-full bg-white">
-                            <div class="px-10 py-16 text-center text-gray-500">
-                                <h2 class="text-2xl font-semibold text-gray-800 mb-3">Welcome to QuickView!</h2>
-                                <p class="text-gray-500 text-sm">Select a file from the sidebar to start previewing</p>
+                        <div id="preview-content" class="h-full bg-background">
+                            <div class="px-10 py-16 text-center text-muted-foreground">
+                                <h2 class="text-2xl font-semibold text-foreground mb-3">Welcome to QuickView!</h2>
+                                <p class="text-muted-foreground text-sm">Select a file from the sidebar to start previewing</p>
                                 <div class="mt-8 text-left max-w-xs mx-auto">
-                                    <h3 class="text-xs font-medium uppercase tracking-wider text-gray-400 mb-3">Supported formats</h3>
+                                    <h3 class="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Supported formats</h3>
                                     <ul class="space-y-2">
-                                        <li class="text-sm text-gray-600">🌐 HTML/CSS/JavaScript</li>
-                                        <li class="text-sm text-gray-600">⚛️ React Components (JSX)</li>
-                                        <li class="text-sm text-gray-600">🐍 Python Scripts</li>
-                                        <li class="text-sm text-gray-600">🎨 SVG Graphics</li>
-                                        <li class="text-sm text-gray-600">📝 Markdown</li>
-                                        <li class="text-sm text-gray-600">📊 JSON/YAML</li>
+                                        <li class="text-sm text-muted-foreground">🌐 HTML/CSS/JavaScript</li>
+                                        <li class="text-sm text-muted-foreground">⚛️ React Components (JSX)</li>
+                                        <li class="text-sm text-muted-foreground">🐍 Python Scripts</li>
+                                        <li class="text-sm text-muted-foreground">🎨 SVG Graphics</li>
+                                        <li class="text-sm text-muted-foreground">📝 Markdown</li>
+                                        <li class="text-sm text-muted-foreground">📊 JSON/YAML</li>
                                     </ul>
                                 </div>
                             </div>
@@ -129,6 +169,7 @@
                     <button id="format-code" class="action-btn" style="display: none;">✨ Format</button>
                     <button id="open-external" class="action-btn" style="display: none;">🔗 Open External</button>
                     <button id="share-file" class="action-btn" style="display: none;">📤 Share</button>
+                    <button id="file-info" class="action-btn" style="display: none;">ℹ️ Info</button>
                 </div>
             </div>
         </div>
@@ -151,10 +192,7 @@
                         <option value="604800">7 days</option>
                     </select>
                 </div>
-                <div class="flex gap-2">
-                    <button id="share-presign-btn" class="action-btn flex-1">📋 Pre-signed URL</button>
-                    <button id="share-publish-btn" class="action-btn flex-1">🌐 Publish Public</button>
-                </div>
+                <button id="share-presign-btn" class="action-btn">📋 Get Pre-signed URL</button>
             </div>
             <div id="share-result" style="display: none;" class="mt-4">
                 <label class="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1 block">Share URL</label>
@@ -166,6 +204,30 @@
             </div>
             <div id="share-error" style="display: none;" class="mt-4 text-sm text-destructive-foreground bg-destructive/20 border border-destructive/30 rounded-md px-3 py-2"></div>
         </div>
+    </div>
+
+    <div id="file-info-modal" style="display: none;" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
+        <div class="file-info-panel bg-card border border-border rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center px-5 py-3 border-b border-border">
+                <h2 class="text-sm font-semibold" id="file-info-title">File Info</h2>
+                <button id="file-info-close" class="text-muted-foreground hover:text-foreground hover:bg-accent p-1.5 rounded-md transition-colors text-sm leading-none">✕</button>
+            </div>
+            <div id="file-info-body" class="px-5 py-4 space-y-3 text-sm">
+            </div>
+        </div>
+    </div>
+
+    <div id="preferences-overlay" class="prefs-overlay"></div>
+    <div id="preferences-panel" class="prefs-panel">
+        <div class="prefs-header">
+            <h2 class="prefs-title">Preferences</h2>
+            <button id="prefs-close-btn" class="prefs-close-btn">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                    <path d="M4 4l8 8M12 4l-8 8"/>
+                </svg>
+            </button>
+        </div>
+        <div class="prefs-content"></div>
     </div>
 
     <div id="loading" style="display: none;" class="fixed inset-0 bg-black/80 flex flex-col justify-center items-center z-50">

@@ -22,12 +22,17 @@
     "@aws-sdk/s3-request-presigner": "^3.1004.0",
     "chokidar": "^3.5.3",
     "commander": "^11.0.0",
+    "exif-parser": "^0.1.12",
     "express": "^4.18.2",
     "highlight.js": "^11.8.0",
     "live-server": "^1.2.2",
     "marked": "^5.1.1",
     "open": "^9.1.0",
     "socket.io": "^4.7.2"
+  },
+  "optionalDependencies": {
+    "@ngrok/ngrok": "^1.4.1",
+    "localtunnel": "^2.0.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0",
