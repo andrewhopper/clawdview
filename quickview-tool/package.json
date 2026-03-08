@@ -1,5 +1,5 @@
 {
-  "name": "clawdview",
+  "name": "@andrewhopper/clawdview",
   "version": "2.0.0",
   "description": "Universal rapid prototyping tool for instant code preview",
   "main": "dist/server/server.js",
