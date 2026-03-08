@@ -7,5 +7,5 @@ export function renderMarkdown(container, content) {
     .replace(/\*(.*)\*/gim, '<em>$1</em>')
     .replace(/\n/gim, '<br>');
 
-  container.innerHTML = `<div style="padding: 20px; color: #333;">${html}</div>`;
+  container.innerHTML = `<div class="preview-text">${html}</div>`;
 }

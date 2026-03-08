@@ -56,7 +56,18 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <script>
+        // Blocking theme init — prevents flash of wrong theme
+        (function() {
+            var saved = localStorage.getItem('quickview-theme');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -71,6 +82,7 @@
             <div class="flex items-center gap-2.5 text-sm text-muted-foreground">
                 <span id="status" class="status">●</span>
                 <span id="current-file">No file selected</span>
+                <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode">🌙</button>
                 <button id="settings-btn" title="Preferences" class="text-muted-foreground hover:text-foreground hover:bg-accent p-1.5 rounded-md transition-colors text-sm leading-none ml-2">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/>
@@ -120,19 +132,19 @@
 
                 <div class="flex-1 relative overflow-hidden">
                     <div id="preview-panel" class="panel active">
-                        <div id="preview-content" class="h-full bg-white">
-                            <div class="px-10 py-16 text-center text-gray-500">
-                                <h2 class="text-2xl font-semibold text-gray-800 mb-3">Welcome to QuickView!</h2>
-                                <p class="text-gray-500 text-sm">Select a file from the sidebar to start previewing</p>
+                        <div id="preview-content" class="h-full bg-background">
+                            <div class="px-10 py-16 text-center text-muted-foreground">
+                                <h2 class="text-2xl font-semibold text-foreground mb-3">Welcome to QuickView!</h2>
+                                <p class="text-muted-foreground text-sm">Select a file from the sidebar to start previewing</p>
                                 <div class="mt-8 text-left max-w-xs mx-auto">
-                                    <h3 class="text-xs font-medium uppercase tracking-wider text-gray-400 mb-3">Supported formats</h3>
+                                    <h3 class="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Supported formats</h3>
                                     <ul class="space-y-2">
-                                        <li class="text-sm text-gray-600">🌐 HTML/CSS/JavaScript</li>
-                                        <li class="text-sm text-gray-600">⚛️ React Components (JSX)</li>
-                                        <li class="text-sm text-gray-600">🐍 Python Scripts</li>
-                                        <li class="text-sm text-gray-600">🎨 SVG Graphics</li>
-                                        <li class="text-sm text-gray-600">📝 Markdown</li>
-                                        <li class="text-sm text-gray-600">📊 JSON/YAML</li>
+                                        <li class="text-sm text-muted-foreground">🌐 HTML/CSS/JavaScript</li>
+                                        <li class="text-sm text-muted-foreground">⚛️ React Components (JSX)</li>
+                                        <li class="text-sm text-muted-foreground">🐍 Python Scripts</li>
+                                        <li class="text-sm text-muted-foreground">🎨 SVG Graphics</li>
+                                        <li class="text-sm text-muted-foreground">📝 Markdown</li>
+                                        <li class="text-sm text-muted-foreground">📊 JSON/YAML</li>
                                     </ul>
                                 </div>
                             </div>

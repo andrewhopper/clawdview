@@ -50,6 +50,7 @@ class QuickViewApp {
     );
 
     this.setupUIHandlers();
+    this.updateThemeUI();
   }
 
   onPreferencesChanged(prefs) {
@@ -71,10 +72,24 @@ class QuickViewApp {
     document.getElementById('file-info-modal').addEventListener('click', (e) => {
       if (e.target.id === 'file-info-modal') this.hideFileInfo();
     });
+    document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
 
     document.getElementById('settings-btn').addEventListener('click', () => {
       this.preferencesManager.toggle();
     });
+  }
+
+  toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('quickview-theme', isDark ? 'dark' : 'light');
+    this.updateThemeUI();
+  }
+
+  updateThemeUI() {
+    const isDark = document.documentElement.classList.contains('dark');
+    document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
+    document.getElementById('hljs-light').disabled = isDark;
+    document.getElementById('hljs-dark').disabled = !isDark;
   }
 
   async loadFile(file) {
@@ -128,8 +143,8 @@ class QuickViewApp {
       renderer();
     } else {
       previewContent.innerHTML = `
-        <div style="padding: 20px; color: #333;">
-          <pre style="white-space: pre-wrap; font-family: monospace;">${escapeHtml(content)}</pre>
+        <div class="preview-text">
+          <pre style="white-space: pre-wrap;">${escapeHtml(content)}</pre>
         </div>
       `;
     }
@@ -194,7 +209,7 @@ class QuickViewApp {
         const formatBtn = document.getElementById('format-code');
         const originalText = formatBtn.textContent;
         formatBtn.textContent = '✓ Formatted';
-        formatBtn.style.background = '#10b981';
+        formatBtn.style.background = 'hsl(142 71% 45%)';
         setTimeout(() => {
           formatBtn.textContent = originalText;
           formatBtn.style.background = '';
