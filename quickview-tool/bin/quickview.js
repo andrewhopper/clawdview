@@ -22,6 +22,7 @@ program
   .option('--s3-region <region>', 'AWS region for S3', 'us-east-1')
   .option('--s3-prefix <prefix>', 'S3 key prefix for shared assets', 'quickview-shares')
   .option('--s3-endpoint <endpoint>', 'Custom S3 endpoint (for S3-compatible services)')
+  .option('--project-name <name>', 'Project name for organizing S3 assets')
   .action((options) => {
     const watchDir = path.resolve(options.dir);
 
@@ -39,6 +40,8 @@ program
     if (options.s3Region) s3Options.region = options.s3Region;
     if (options.s3Prefix) s3Options.prefix = options.s3Prefix;
     if (options.s3Endpoint) s3Options.endpoint = options.s3Endpoint;
+    if (options.projectName) s3Options.projectName = options.projectName;
+    s3Options.projectName = s3Options.projectName || path.basename(watchDir);
 
     if (s3Options.bucket || process.env.QV_S3_BUCKET) {
       console.log(`📤 S3 sharing: enabled (bucket: ${s3Options.bucket || process.env.QV_S3_BUCKET})`);
