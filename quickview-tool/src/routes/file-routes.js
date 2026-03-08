@@ -40,7 +40,7 @@ function createFileRoutes(fileService) {
     }
 
     const ext = path.extname(filename).toLowerCase();
-    if (ext && !fileService.isAllowedExtension(ext)) {
+    if (ext && !fileService.isAllowedForInfo(ext)) {
       return res.status(403).json({ error: 'File type not supported for security reasons' });
     }
 

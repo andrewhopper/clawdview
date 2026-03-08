@@ -226,6 +226,21 @@
     overflow-y: auto;
 }
 
+.file-info-section-header {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(var(--muted-foreground));
+    padding: 8px 0 4px;
+    margin-top: 4px;
+}
+
+.file-info-section-header:first-child {
+    margin-top: 0;
+    padding-top: 0;
+}
+
 .file-info-row {
     display: flex;
     justify-content: space-between;

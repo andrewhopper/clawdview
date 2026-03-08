@@ -218,23 +218,62 @@ class QuickViewApp {
         ['Filename', data.filename],
         ['Path', data.path],
         ['Extension', data.extension || 'None'],
+        ['Inode', data.inode],
         ['Size', this.formatFileSize(data.size)],
-        ['Lines', data.lines.toLocaleString()],
-        ['Modified', new Date(data.modifiedAt).toLocaleString()],
-        ['Created', new Date(data.createdAt).toLocaleString()],
-        ['Permissions', data.permissions],
-        ['Encoding', data.encoding],
       ];
 
-      body.innerHTML = rows.map(([label, value]) =>
-        `<div class="file-info-row">
-          <span class="file-info-label">${escapeHtml(label)}</span>
-          <span class="file-info-value">${escapeHtml(String(value))}</span>
-        </div>`
-      ).join('');
+      if (data.lines != null) rows.push(['Lines', data.lines.toLocaleString()]);
+      rows.push(['Modified', new Date(data.modifiedAt).toLocaleString()]);
+      rows.push(['Created', new Date(data.createdAt).toLocaleString()]);
+      rows.push(['Permissions', data.permissions]);
+      if (data.encoding) rows.push(['Encoding', data.encoding]);
+
+      let html = this.renderInfoSection('File', rows);
+
+      if (data.uuids && data.uuids.length > 0) {
+        const uuidRows = data.uuids.map((uuid, i) => [`UUID ${data.uuids.length > 1 ? i + 1 : ''}`.trim(), uuid]);
+        html += this.renderInfoSection('UUIDs Found', uuidRows);
+      }
+
+      if (data.exif) {
+        const exifLabels = {
+          width: 'Width', height: 'Height',
+          cameraMake: 'Camera Make', cameraModel: 'Camera Model',
+          dateTaken: 'Date Taken', exposureTime: 'Exposure',
+          fNumber: 'Aperture', iso: 'ISO',
+          focalLength: 'Focal Length',
+          gpsLatitude: 'GPS Lat', gpsLongitude: 'GPS Lon',
+          software: 'Software', copyright: 'Copyright',
+          description: 'Description',
+        };
+        const exifRows = Object.entries(data.exif)
+          .filter(([, v]) => v != null)
+          .map(([key, value]) => {
+            const label = exifLabels[key] || key;
+            if (key === 'dateTaken') value = new Date(value).toLocaleString();
+            if (key === 'width' || key === 'height') value = `${value}px`;
+            return [label, value];
+          });
+        if (exifRows.length > 0) {
+          html += this.renderInfoSection('EXIF Data', exifRows);
+        }
+      }
+
+      body.innerHTML = html;
     } catch (error) {
       body.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
     }
+  }
+
+  renderInfoSection(title, rows) {
+    const header = `<div class="file-info-section-header">${escapeHtml(title)}</div>`;
+    const rowsHtml = rows.map(([label, value]) =>
+      `<div class="file-info-row">
+        <span class="file-info-label">${escapeHtml(String(label))}</span>
+        <span class="file-info-value">${escapeHtml(String(value))}</span>
+      </div>`
+    ).join('');
+    return header + rowsHtml;
   }
 
   hideFileInfo() {
