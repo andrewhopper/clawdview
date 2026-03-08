@@ -19,7 +19,11 @@ class QuickViewServer {
 
     this.app = express();
     this.server = http.createServer(this.app);
-    this.io = socketIo(this.server);
+    this.io = socketIo(this.server, {
+      cors: {
+        origin: [`http://localhost:${this.port}`, `http://127.0.0.1:${this.port}`]
+      }
+    });
 
     this.fileService = new FileService(this.watchDir);
     this.pythonExecutor = new PythonExecutor();
@@ -72,7 +76,7 @@ class QuickViewServer {
   }
 
   start() {
-    this.server.listen(this.port, () => {
+    this.server.listen(this.port, '127.0.0.1', () => {
       console.log(`🚀 QuickView Server running at http://localhost:${this.port}`);
       console.log(`📁 Watching directory: ${this.watchDir}`);
       console.log('💡 Open http://localhost:' + this.port + ' in your browser');

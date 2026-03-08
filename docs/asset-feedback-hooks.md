@@ -487,12 +487,13 @@ naively uses this path for file operations, an attacker could submit
 `../../etc/passwd` as the file path. The current design only reads the path
 as a string, but it's one careless edit away from being exploitable.
 
-**3. No authentication on feedback endpoint**
-`POST /api/feedback` has no auth. Anyone on the local network (or with access
-to port 3333) can submit fake feedback that gets injected into the Claude
-conversation. On shared machines or when port-forwarded, this is a real attack
-vector — an attacker could inject instructions like "delete all files" as
-fake user feedback.
+**3. No authentication on feedback endpoint** *(mitigated)*
+`POST /api/feedback` has no auth. Previously, anyone on the local network could
+submit fake feedback. **Mitigated:** the server now binds to `127.0.0.1` only
+(not `0.0.0.0`), and Socket.io CORS is restricted to localhost origins. This
+prevents remote network access. On shared multi-user machines, local processes
+from other users could still reach the endpoint, but this is acceptable for a
+development tool.
 
 **4. Feedback content injected as trusted context**
 The hook injects user feedback directly into Claude's context window. If the
