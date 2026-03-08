@@ -406,6 +406,301 @@
     100% { transform: rotate(360deg); }
 }
 
+/* Preferences overlay */
+.prefs-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 90;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.prefs-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Preferences panel — slide from right */
+.prefs-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 380px;
+    max-width: 100vw;
+    background: hsl(var(--card));
+    border-left: 1px solid hsl(var(--border));
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
+}
+
+.prefs-panel.open {
+    transform: translateX(0);
+}
+
+.prefs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid hsl(var(--border));
+    flex-shrink: 0;
+}
+
+.prefs-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
+
+.prefs-close-btn {
+    background: none;
+    border: none;
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    padding: 4px;
+    border-radius: calc(var(--radius) - 2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.prefs-close-btn:hover {
+    color: hsl(var(--foreground));
+    background: hsl(var(--accent));
+}
+
+.prefs-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+/* Sections */
+.prefs-section {
+    padding: 12px 20px 16px;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.prefs-section:last-child {
+    border-bottom: none;
+}
+
+.prefs-section-title {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 12px;
+}
+
+.prefs-section-desc {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    margin: -4px 0 12px;
+    line-height: 1.4;
+}
+
+/* Toggle switch */
+.prefs-toggle {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    padding: 8px 0;
+}
+
+.prefs-toggle-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.prefs-toggle-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+}
+
+.prefs-toggle-desc {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.4;
+}
+
+.prefs-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.prefs-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: hsl(var(--muted));
+    border-radius: 10px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: background 0.2s ease;
+}
+
+.prefs-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: hsl(var(--foreground));
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+.prefs-toggle input:checked + .prefs-switch {
+    background: hsl(142 71% 45%);
+}
+
+.prefs-toggle input:checked + .prefs-switch::after {
+    transform: translateX(16px);
+}
+
+/* Number input field */
+.prefs-field {
+    padding: 8px 0;
+}
+
+.prefs-field-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    display: block;
+}
+
+.prefs-field-desc {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    display: block;
+    margin: 2px 0 8px;
+    line-height: 1.4;
+}
+
+.prefs-input-number {
+    width: 72px;
+    padding: 5px 8px;
+    font-size: 0.8125rem;
+    font-family: inherit;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) - 2px);
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.prefs-input-number:focus {
+    border-color: hsl(var(--ring));
+}
+
+/* File type checkboxes */
+.prefs-file-types-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.prefs-link-btn {
+    background: none;
+    border: none;
+    color: hsl(210 100% 65%);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: inherit;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.prefs-link-btn:hover {
+    color: hsl(210 100% 75%);
+}
+
+.prefs-file-types-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.prefs-file-type {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: calc(var(--radius) - 2px);
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
+.prefs-file-type:hover {
+    background: hsl(var(--accent));
+}
+
+.prefs-file-type input[type="checkbox"] {
+    accent-color: hsl(142 71% 45%);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.prefs-file-type-icon {
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.prefs-file-type-label {
+    font-size: 0.8125rem;
+    color: hsl(var(--foreground));
+    flex: 1;
+}
+
+.prefs-file-type-ext {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Reset button */
+.prefs-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.prefs-reset-btn {
+    background: hsl(var(--secondary));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
+    padding: 6px 14px;
+    border-radius: calc(var(--radius) - 2px);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.prefs-reset-btn:hover {
+    background: hsl(var(--accent));
+    color: hsl(var(--foreground));
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;

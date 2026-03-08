@@ -8,6 +8,7 @@ import { escapeHtml } from './js/utils.js';
 import { FileTreeManager } from './js/managers/file-tree-manager.js';
 import { TabManager } from './js/managers/tab-manager.js';
 import { SocketManager } from './js/managers/socket-manager.js';
+import { PreferencesManager } from './js/managers/preferences-manager.js';
 
 const HIGHLIGHT_LANG_MAP = {
   '.js': 'javascript',
@@ -26,24 +27,35 @@ class QuickViewApp {
   constructor() {
     this.currentFile = null;
 
+    this.preferencesManager = new PreferencesManager((prefs) => {
+      this.onPreferencesChanged(prefs);
+    });
+
     this.tabManager = new TabManager();
 
     this.fileTreeManager = new FileTreeManager('file-tree', (file) => {
       this.loadFile(file);
-    });
+    }, this.preferencesManager);
 
     this.fileTreeManager.initControls();
 
     this.socketManager = new SocketManager(
       (tree) => this.fileTreeManager.render(tree),
       (data) => {
-        if (this.currentFile && data.relativePath === this.currentFile.path) {
+        if (this.preferencesManager.get('autoOpenOnChange') &&
+            this.currentFile && data.relativePath === this.currentFile.path) {
           this.loadFile(this.currentFile);
         }
       }
     );
 
     this.setupUIHandlers();
+  }
+
+  onPreferencesChanged(prefs) {
+    if (this.fileTreeManager.lastTree) {
+      this.fileTreeManager.render(this.fileTreeManager.lastTree);
+    }
   }
 
   setupUIHandlers() {
@@ -54,6 +66,10 @@ class QuickViewApp {
     document.getElementById('run-code').addEventListener('click', () => this.runCode());
     document.getElementById('format-code').addEventListener('click', () => this.formatCode());
     document.getElementById('open-external').addEventListener('click', () => this.openExternal());
+
+    document.getElementById('settings-btn').addEventListener('click', () => {
+      this.preferencesManager.toggle();
+    });
   }
 
   async loadFile(file) {

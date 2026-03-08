@@ -27,12 +27,14 @@ const VIEW_MODES = { TREE: 'tree', RECENT: 'recent', TYPE: 'type' };
 const RENDER_BATCH = 200;
 
 export class FileTreeManager {
-  constructor(containerId, onFileSelect) {
+  constructor(containerId, onFileSelect, preferencesManager) {
     this.container = document.getElementById(containerId);
     this.onFileSelect = onFileSelect;
+    this.preferencesManager = preferencesManager || null;
 
     // State
     this.rawTree = [];
+    this.lastTree = null;
     this.flatFiles = [];           // flattened list of all files (no dirs)
     this.collapsedPaths = new Set();
     this.viewMode = VIEW_MODES.TREE;
@@ -98,6 +100,29 @@ export class FileTreeManager {
     }
 
     this._setupKeyboard();
+  }
+
+  /* ------------------------------------------------------------------
+   * Preferences-based tree filtering (from preferencesManager)
+   * ----------------------------------------------------------------*/
+  filterTree(items) {
+    if (!items || !this.preferencesManager) return items;
+
+    return items
+      .map(item => {
+        if (item.type === 'directory') {
+          const children = this.filterTree(item.children);
+          if (children && children.length > 0) {
+            return { ...item, children };
+          }
+          return null;
+        }
+        if (this.preferencesManager.isFileTypeWatched(item.extension)) {
+          return item;
+        }
+        return null;
+      })
+      .filter(Boolean);
   }
 
   /* ------------------------------------------------------------------
@@ -251,7 +276,8 @@ export class FileTreeManager {
    * Receive a new file tree from the server
    * ----------------------------------------------------------------*/
   render(fileTree) {
-    this.rawTree = fileTree || [];
+    this.lastTree = fileTree;
+    this.rawTree = this.filterTree(fileTree || []);
     this.flatFiles = this._flatten(this.rawTree);
     this._buildFilterChips();
     this.renderCurrentView();
