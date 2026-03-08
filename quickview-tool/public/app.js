@@ -37,6 +37,8 @@ class QuickViewApp {
       this.loadFile(file);
     }, this.preferencesManager);
 
+    this.fileTreeManager.initControls();
+
     this.socketManager = new SocketManager(
       (tree) => this.fileTreeManager.render(tree),
       (data) => {

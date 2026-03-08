@@ -95,7 +95,7 @@
     font-weight: 500;
 }
 
-.file-item.directory::before { content: '📁'; font-size: 0.875rem; }
+.file-item.directory::before { content: '📁'; font-size: 0.875rem; display: none; }
 .file-item.html::before      { content: '🌐'; font-size: 0.875rem; }
 .file-item.js::before        { content: '📜'; font-size: 0.875rem; }
 .file-item.py::before        { content: '🐍'; font-size: 0.875rem; }
@@ -113,6 +113,177 @@
     font-size: 0.8125rem;
     text-align: center;
     padding: 24px 12px;
+}
+
+/* ---- Left nav controls ---- */
+
+.nav-icon-btn {
+    background: none;
+    border: none;
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    padding: 3px 4px;
+    border-radius: calc(var(--radius) - 4px);
+    font-size: 0.8125rem;
+    line-height: 1;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.nav-icon-btn:hover {
+    color: hsl(var(--foreground));
+    background: hsl(var(--accent));
+}
+
+.nav-icon-btn.active {
+    color: hsl(var(--foreground));
+    background: hsl(var(--accent));
+}
+
+/* Search input */
+.nav-search-input {
+    width: 100%;
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+    border-radius: calc(var(--radius) - 2px);
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.nav-search-input::placeholder {
+    color: hsl(var(--muted-foreground));
+}
+
+.nav-search-input:focus {
+    border-color: hsl(var(--ring));
+}
+
+/* View mode buttons */
+.nav-view-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    padding: 3px 7px;
+    border-radius: calc(var(--radius) - 4px);
+    font-size: 0.6875rem;
+    font-family: inherit;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.nav-view-btn:hover {
+    color: hsl(var(--foreground));
+    background: hsl(var(--accent));
+}
+
+.nav-view-btn.active {
+    color: hsl(var(--foreground));
+    background: hsl(var(--secondary));
+    border-color: hsl(var(--border));
+}
+
+/* Filter chip bar */
+.nav-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 10px;
+    border-bottom: 1px solid hsl(var(--border));
+    max-height: 64px;
+    overflow-y: auto;
+}
+
+.nav-filter-bar:empty {
+    display: none;
+}
+
+/* Extension filter chips */
+.nav-chip {
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    padding: 1px 7px;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+    white-space: nowrap;
+}
+
+.nav-chip:hover {
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--muted-foreground));
+}
+
+.nav-chip.active {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-color: hsl(var(--primary));
+}
+
+/* Directory chevron */
+.nav-chevron {
+    display: inline-block;
+    font-size: 0.5rem;
+    margin-right: 4px;
+    transition: transform 0.15s ease;
+    color: hsl(var(--muted-foreground));
+}
+
+.nav-chevron.open {
+    transform: rotate(90deg);
+}
+
+/* Group header (type view) */
+.nav-group-header {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+    padding: 8px 12px 4px;
+    cursor: pointer;
+    user-select: none;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-group-header::before {
+    content: '▼';
+    font-size: 0.5rem;
+    transition: transform 0.15s ease;
+}
+
+.nav-group-header.collapsed::before {
+    transform: rotate(-90deg);
+}
+
+.nav-group-header:hover {
+    color: hsl(var(--foreground));
+}
+
+/* Keyboard focus highlight */
+.nav-focused {
+    outline: 1px solid hsl(var(--ring));
+    outline-offset: -1px;
+    background: hsl(var(--accent));
+}
+
+#file-tree:focus {
+    outline: none;
+}
+
+/* File path prefix (shown in flat views) */
+.nav-file-dir {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.6875rem;
+    opacity: 0.7;
 }
 
 /* Code panel */
