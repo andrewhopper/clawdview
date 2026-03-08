@@ -139,10 +139,10 @@ export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTy
         searchInputRef.current?.select();
       }
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
-        const viewMap: Record<string, ViewMode> = { '1': 'tree', '2': 'recent', '3': 'type' };
-        if (viewMap[e.key]) {
+        const idx = parseInt(e.key) - 1;
+        if (idx >= 0 && idx < VIEW_MODES.length) {
           e.preventDefault();
-          setViewMode(viewMap[e.key]);
+          setViewMode(VIEW_MODES[idx].mode);
         }
       }
     }

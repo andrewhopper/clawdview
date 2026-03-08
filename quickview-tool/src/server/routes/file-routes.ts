@@ -29,7 +29,13 @@ function validateFileRequest(
     return null;
   }
 
-  const filePath = fileService.getFilePath(requestedPath);
+  let filePath: string;
+  try {
+    filePath = fileService.getFilePath(requestedPath);
+  } catch {
+    res.status(403).json({ error: 'Invalid file path' });
+    return null;
+  }
   return { requestedPath, filename, ext, filePath };
 }
 

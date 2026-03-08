@@ -32,7 +32,7 @@ export class FileService {
   private watchDir: string;
 
   constructor(watchDir: string) {
-    this.watchDir = watchDir;
+    this.watchDir = path.resolve(watchDir);
   }
 
   isAllowedExtension(ext: string): boolean {
@@ -52,7 +52,11 @@ export class FileService {
   }
 
   getFilePath(requestedPath: string): string {
-    return path.join(this.watchDir, requestedPath);
+    const resolved = path.resolve(this.watchDir, requestedPath);
+    if (!resolved.startsWith(this.watchDir)) {
+      throw new Error('Path traversal not allowed');
+    }
+    return resolved;
   }
 
   readFile(filePath: string): string {
@@ -69,10 +73,6 @@ export class FileService {
 
   writeFile(filePath: string, content: string): void {
     fs.writeFileSync(filePath, content, 'utf8');
-  }
-
-  fileExists(filePath: string): boolean {
-    return fs.existsSync(filePath);
   }
 
   getFileInfo(filePath: string): FileInfo {
