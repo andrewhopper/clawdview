@@ -27,6 +27,10 @@
     "highlight.js": "^11.8.0",
     "live-server": "^1.2.2"
   },
+  "optionalDependencies": {
+    "@ngrok/ngrok": "^1.4.1",
+    "localtunnel": "^2.0.2"
+  },
   "devDependencies": {
     "nodemon": "^3.0.1",
     "@playwright/test": "^1.44.0"
