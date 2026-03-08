@@ -444,6 +444,54 @@
     font-size: 0.8125rem;
 }
 
+/* File info modal */
+.file-info-panel {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.file-info-section-header {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(var(--muted-foreground));
+    padding: 8px 0 4px;
+    margin-top: 4px;
+}
+
+.file-info-section-header:first-child {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.file-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+.file-info-row:last-child {
+    border-bottom: none;
+}
+
+.file-info-label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8125rem;
+    flex-shrink: 0;
+}
+
+.file-info-value {
+    color: hsl(var(--foreground));
+    font-size: 0.8125rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Menlo', monospace;
+    text-align: right;
+    word-break: break-all;
+    margin-left: 16px;
+}
+
 /* Theme toggle button */
 .theme-toggle {
     background: none;

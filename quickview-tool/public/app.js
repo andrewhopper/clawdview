@@ -67,6 +67,11 @@ class QuickViewApp {
     document.getElementById('run-code').addEventListener('click', () => this.runCode());
     document.getElementById('format-code').addEventListener('click', () => this.formatCode());
     document.getElementById('open-external').addEventListener('click', () => this.openExternal());
+    document.getElementById('file-info').addEventListener('click', () => this.showFileInfo());
+    document.getElementById('file-info-close').addEventListener('click', () => this.hideFileInfo());
+    document.getElementById('file-info-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'file-info-modal') this.hideFileInfo();
+    });
     document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
 
     document.getElementById('settings-btn').addEventListener('click', () => {
@@ -149,6 +154,7 @@ class QuickViewApp {
     document.getElementById('run-code').style.display = extension === '.py' ? 'block' : 'none';
     document.getElementById('format-code').style.display = FORMATTABLE_EXTENSIONS.includes(extension) ? 'block' : 'none';
     document.getElementById('open-external').style.display = extension === '.html' ? 'block' : 'none';
+    document.getElementById('file-info').style.display = 'block';
   }
 
   async runCode() {
@@ -222,6 +228,108 @@ class QuickViewApp {
     if (this.currentFile && this.currentFile.extension === '.html') {
       window.open(`/preview/${this.currentFile.path}`, '_blank');
     }
+  }
+
+  async showFileInfo() {
+    if (!this.currentFile) return;
+
+    const modal = document.getElementById('file-info-modal');
+    const title = document.getElementById('file-info-title');
+    const body = document.getElementById('file-info-body');
+
+    title.textContent = this.currentFile.name;
+    body.innerHTML = '<div style="text-align:center;padding:12px;color:hsl(var(--muted-foreground))">Loading...</div>';
+    modal.style.display = 'flex';
+
+    try {
+      const response = await fetch(`/api/file-info/${this.currentFile.path}`);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Failed to load file info');
+
+      const rows = [
+        ['Filename', data.filename],
+        ['Path', data.path],
+        ['Extension', data.extension || 'None'],
+        ['Inode', data.inode],
+        ['Size', this.formatFileSize(data.size)],
+      ];
+
+      if (data.lines != null) rows.push(['Lines', data.lines.toLocaleString()]);
+      rows.push(['Modified', new Date(data.modifiedAt).toLocaleString()]);
+      rows.push(['Created', new Date(data.createdAt).toLocaleString()]);
+      rows.push(['Permissions', data.permissions]);
+      if (data.encoding) rows.push(['Encoding', data.encoding]);
+
+      let html = this.renderInfoSection('File', rows);
+
+      if (data.git) {
+        const gitRows = [['Status', data.git.status]];
+        if (data.git.branch) gitRows.push(['Branch', data.git.branch]);
+        if (data.git.lastCommit) {
+          gitRows.push(['Last Commit', data.git.lastCommit.hash.substring(0, 8)]);
+          gitRows.push(['Author', data.git.lastCommit.author]);
+          gitRows.push(['Date', new Date(data.git.lastCommit.date).toLocaleString()]);
+          gitRows.push(['Message', data.git.lastCommit.subject]);
+        }
+        html += this.renderInfoSection('Git', gitRows);
+      }
+
+      if (data.uuids && data.uuids.length > 0) {
+        const uuidRows = data.uuids.map((uuid, i) => [`UUID ${data.uuids.length > 1 ? i + 1 : ''}`.trim(), uuid]);
+        html += this.renderInfoSection('UUIDs Found', uuidRows);
+      }
+
+      if (data.exif) {
+        const exifLabels = {
+          width: 'Width', height: 'Height',
+          cameraMake: 'Camera Make', cameraModel: 'Camera Model',
+          dateTaken: 'Date Taken', exposureTime: 'Exposure',
+          fNumber: 'Aperture', iso: 'ISO',
+          focalLength: 'Focal Length',
+          gpsLatitude: 'GPS Lat', gpsLongitude: 'GPS Lon',
+          software: 'Software', copyright: 'Copyright',
+          description: 'Description',
+        };
+        const exifRows = Object.entries(data.exif)
+          .filter(([, v]) => v != null)
+          .map(([key, value]) => {
+            const label = exifLabels[key] || key;
+            if (key === 'dateTaken') value = new Date(value).toLocaleString();
+            if (key === 'width' || key === 'height') value = `${value}px`;
+            return [label, value];
+          });
+        if (exifRows.length > 0) {
+          html += this.renderInfoSection('EXIF Data', exifRows);
+        }
+      }
+
+      body.innerHTML = html;
+    } catch (error) {
+      body.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+    }
+  }
+
+  renderInfoSection(title, rows) {
+    const header = `<div class="file-info-section-header">${escapeHtml(title)}</div>`;
+    const rowsHtml = rows.map(([label, value]) =>
+      `<div class="file-info-row">
+        <span class="file-info-label">${escapeHtml(String(label))}</span>
+        <span class="file-info-value">${escapeHtml(String(value))}</span>
+      </div>`
+    ).join('');
+    return header + rowsHtml;
+  }
+
+  hideFileInfo() {
+    document.getElementById('file-info-modal').style.display = 'none';
+  }
+
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return parseFloat((bytes / Math.pow(1024, i)).toFixed(1)) + ' ' + units[i];
   }
 
   showLoading(show) {
