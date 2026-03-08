@@ -28,6 +28,10 @@
     "open": "^9.1.0",
     "socket.io": "^4.7.2"
   },
+  "optionalDependencies": {
+    "@ngrok/ngrok": "^1.4.1",
+    "localtunnel": "^2.0.2"
+  },
   "devDependencies": {
     "@playwright/test": "^1.44.0",
     "nodemon": "^3.0.1"

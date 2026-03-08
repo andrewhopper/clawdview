@@ -3,6 +3,7 @@ export class TabManager {
     this.tabs = document.querySelectorAll('.tab');
     this.panels = document.querySelectorAll('.panel');
     this.setup();
+    this.setupKeyboardShortcuts();
   }
 
   setup() {
@@ -14,6 +15,25 @@ export class TabManager {
         tab.classList.add('active');
         document.getElementById(`${targetPanel}-panel`).classList.add('active');
       });
+    });
+  }
+
+  setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        const tabsArray = Array.from(this.tabs);
+        const activeIndex = tabsArray.findIndex(t => t.classList.contains('active'));
+        let nextIndex;
+
+        if (e.key === 'ArrowRight') {
+          nextIndex = (activeIndex + 1) % tabsArray.length;
+        } else {
+          nextIndex = (activeIndex - 1 + tabsArray.length) % tabsArray.length;
+        }
+
+        tabsArray[nextIndex].click();
+      }
     });
   }
 

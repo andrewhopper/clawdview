@@ -71,16 +71,44 @@
             <div class="flex items-center gap-2.5 text-sm text-muted-foreground">
                 <span id="status" class="status">●</span>
                 <span id="current-file">No file selected</span>
+                <button id="settings-btn" title="Preferences" class="text-muted-foreground hover:text-foreground hover:bg-accent p-1.5 rounded-md transition-colors text-sm leading-none ml-2">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/>
+                        <path d="M13.6 10a1.2 1.2 0 0 0 .24 1.32l.04.04a1.44 1.44 0 1 1-2.04 2.04l-.04-.04a1.2 1.2 0 0 0-1.32-.24 1.2 1.2 0 0 0-.72 1.1v.12a1.44 1.44 0 1 1-2.88 0v-.06a1.2 1.2 0 0 0-.78-1.1 1.2 1.2 0 0 0-1.32.24l-.04.04a1.44 1.44 0 1 1-2.04-2.04l.04-.04A1.2 1.2 0 0 0 2.98 10a1.2 1.2 0 0 0-1.1-.72h-.12a1.44 1.44 0 0 1 0-2.88h.06a1.2 1.2 0 0 0 1.1-.78 1.2 1.2 0 0 0-.24-1.32l-.04-.04a1.44 1.44 0 1 1 2.04-2.04l.04.04a1.2 1.2 0 0 0 1.32.24h.06a1.2 1.2 0 0 0 .72-1.1v-.12a1.44 1.44 0 0 1 2.88 0v.06a1.2 1.2 0 0 0 .72 1.1 1.2 1.2 0 0 0 1.32-.24l.04-.04a1.44 1.44 0 1 1 2.04 2.04l-.04.04a1.2 1.2 0 0 0-.24 1.32v.06a1.2 1.2 0 0 0 1.1.72h.12a1.44 1.44 0 0 1 0 2.88h-.06a1.2 1.2 0 0 0-1.1.72Z"/>
+                    </svg>
+                </button>
             </div>
         </header>
 
         <div class="flex flex-1 overflow-hidden min-h-0">
             <aside class="w-72 bg-card border-r border-border flex flex-col overflow-hidden shrink-0">
-                <div class="px-4 py-3 border-b border-border flex justify-between items-center">
+                <!-- Header -->
+                <div class="px-3 py-2.5 border-b border-border flex justify-between items-center">
                     <h3 class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Files</h3>
-                    <button id="refresh-files" title="Refresh file tree" class="text-muted-foreground hover:text-foreground hover:bg-accent p-1.5 rounded-md transition-colors text-sm leading-none">🔄</button>
+                    <div class="flex items-center gap-1">
+                        <span id="nav-file-count" class="text-[10px] text-muted-foreground mr-1"></span>
+                        <button id="nav-toggle-ignored" title="Show ignored dirs (node_modules, etc.)" class="nav-icon-btn">👁</button>
+                        <button id="refresh-files" title="Refresh file tree" class="nav-icon-btn">🔄</button>
+                    </div>
                 </div>
-                <div id="file-tree" class="flex-1 overflow-y-auto p-2"></div>
+
+                <!-- Search -->
+                <div class="px-3 py-2 border-b border-border">
+                    <input id="nav-search" type="text" placeholder="Search files... (Ctrl+F)" class="nav-search-input" />
+                </div>
+
+                <!-- View mode toggle -->
+                <div class="px-3 py-1.5 border-b border-border flex items-center gap-1">
+                    <button id="nav-view-tree" class="nav-view-btn active" title="Tree view (Alt+1)">🗂 Tree</button>
+                    <button id="nav-view-recent" class="nav-view-btn" title="Recent files (Alt+2)">🕐 Recent</button>
+                    <button id="nav-view-type" class="nav-view-btn" title="Group by type (Alt+3)">📋 Type</button>
+                </div>
+
+                <!-- Extension filter chips -->
+                <div id="nav-filter-chips" class="nav-filter-bar"></div>
+
+                <!-- File tree -->
+                <div id="file-tree" class="flex-1 overflow-y-auto p-1.5"></div>
             </aside>
 
             <div class="flex-1 flex flex-col overflow-hidden min-w-0">
@@ -143,6 +171,19 @@
             <div id="file-info-body" class="px-5 py-4 space-y-3 text-sm">
             </div>
         </div>
+    </div>
+
+    <div id="preferences-overlay" class="prefs-overlay"></div>
+    <div id="preferences-panel" class="prefs-panel">
+        <div class="prefs-header">
+            <h2 class="prefs-title">Preferences</h2>
+            <button id="prefs-close-btn" class="prefs-close-btn">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                    <path d="M4 4l8 8M12 4l-8 8"/>
+                </svg>
+            </button>
+        </div>
+        <div class="prefs-content"></div>
     </div>
 
     <div id="loading" style="display: none;" class="fixed inset-0 bg-black/80 flex flex-col justify-center items-center z-50">
