@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { Play, Sparkles, ExternalLink, Info } from 'lucide-react';
 import { Header } from './components/Header';
 import { FileTree } from './components/FileTree';
 import { PreferencesPanel } from './components/PreferencesPanel';
@@ -9,6 +10,10 @@ import { PythonRenderer } from './components/renderers/PythonRenderer';
 import { SvgRenderer } from './components/renderers/SvgRenderer';
 import { MarkdownRenderer } from './components/renderers/MarkdownRenderer';
 import { JsonRenderer } from './components/renderers/JsonRenderer';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
+import { Button } from './components/ui/button';
+import { Separator } from './components/ui/separator';
+import { TooltipProvider } from './components/ui/tooltip';
 import { useSocket } from './hooks/useSocket';
 import { usePreferences } from './hooks/usePreferences';
 import { useTheme } from './hooks/useTheme';
@@ -24,14 +29,6 @@ const HIGHLIGHT_LANG_MAP: Record<string, string> = {
 };
 
 const FORMATTABLE_EXTENSIONS = ['.js', '.jsx', '.json', '.html', '.css'];
-
-const TABS: { name: TabName; label: string; icon: string }[] = [
-  { name: 'preview', label: 'Preview', icon: '🖥️' },
-  { name: 'code', label: 'Code', icon: '📝' },
-  { name: 'output', label: 'Output', icon: '📊' },
-];
-
-const ACTION_BTN = 'bg-secondary text-secondary-foreground border border-border px-3.5 py-1 rounded-md cursor-pointer text-[13px] font-medium transition-colors hover:bg-accent';
 
 interface OutputResult {
   success: boolean;
@@ -208,117 +205,131 @@ export function App() {
   }, [fileContent, fileExtension, currentFile?.name]);
 
   return (
-    <div className="flex flex-col h-screen">
-      <Header
-        currentFileName={currentFile?.name || ''}
-        connected={connected}
-        isDark={isDark}
-        onToggleTheme={toggleTheme}
-        onOpenSettings={() => setPrefsOpen(true)}
-      />
-
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        <FileTree
-          tree={fileTree}
-          selectedPath={currentFile?.path ?? null}
-          onFileSelect={loadFile}
-          onRefresh={requestRefresh}
-          isFileTypeWatched={isFileTypeWatched}
+    <TooltipProvider delayDuration={300}>
+      <div className="flex flex-col h-screen">
+        <Header
+          currentFileName={currentFile?.name || ''}
+          connected={connected}
+          isDark={isDark}
+          onToggleTheme={toggleTheme}
+          onOpenSettings={() => setPrefsOpen(true)}
         />
 
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <div className="flex bg-card border-b border-border shrink-0">
-            {TABS.map((tab) => (
-              <button
-                key={tab.name}
-                onClick={() => setActiveTab(tab.name)}
-                className={cn(
-                  'bg-transparent border-none text-muted-foreground py-2.5 px-4.5 cursor-pointer text-sm border-b-2 border-b-transparent transition-colors hover:text-foreground hover:bg-accent',
-                  activeTab === tab.name && 'text-foreground border-b-primary',
-                )}
-              >
-                {tab.icon} {tab.label}
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-1 overflow-hidden min-h-0">
+          <FileTree
+            tree={fileTree}
+            selectedPath={currentFile?.path ?? null}
+            onFileSelect={loadFile}
+            onRefresh={requestRefresh}
+            isFileTypeWatched={isFileTypeWatched}
+          />
 
-          <div className="flex-1 relative overflow-hidden">
-            <div className={cn('absolute inset-0 overflow-auto', activeTab !== 'preview' && 'hidden')}>
-              <div className="h-full bg-background">
-                {previewContent}
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabName)} className="flex-1 flex flex-col overflow-hidden">
+              <div className="bg-card border-b border-border px-2 shrink-0">
+                <TabsList className="h-9 bg-transparent gap-1 rounded-none">
+                  <TabsTrigger value="preview" className="data-[state=active]:shadow-none data-[state=active]:bg-accent rounded-md text-xs gap-1.5">
+                    🖥️ Preview
+                  </TabsTrigger>
+                  <TabsTrigger value="code" className="data-[state=active]:shadow-none data-[state=active]:bg-accent rounded-md text-xs gap-1.5">
+                    📝 Code
+                  </TabsTrigger>
+                  <TabsTrigger value="output" className="data-[state=active]:shadow-none data-[state=active]:bg-accent rounded-md text-xs gap-1.5">
+                    📊 Output
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            </div>
 
-            <div className={cn('absolute inset-0 overflow-auto', activeTab !== 'code' && 'hidden')}>
-              <pre className="min-h-full">
-                <code
-                  ref={codeRef}
-                  className="block bg-background text-foreground p-5 font-mono text-sm leading-relaxed min-h-full overflow-auto whitespace-pre"
-                />
-              </pre>
-            </div>
+              <div className="flex-1 relative overflow-hidden">
+                <TabsContent value="preview" className="absolute inset-0 overflow-auto mt-0 ring-0 focus-visible:ring-0">
+                  <div className="h-full bg-background">
+                    {previewContent}
+                  </div>
+                </TabsContent>
 
-            <div className={cn('absolute inset-0 overflow-auto', activeTab !== 'output' && 'hidden')}>
-              <div className="bg-background text-green-600 dark:text-green-400 font-mono text-sm leading-relaxed p-5 min-h-full">
-                {outputResult ? (
-                  <div className={cn(
-                    'p-3.5 m-3 rounded-md border-l-3 text-sm',
-                    outputResult.success
-                      ? 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500'
-                      : 'bg-destructive/10 text-red-700 dark:text-red-400 border-destructive',
-                  )}>
-                    <strong>{outputResult.success ? 'Execution completed successfully' : 'Execution failed'}</strong>
-                    <pre className={cn(
-                      'mt-2 p-2.5 rounded-sm text-[13px] font-mono overflow-x-auto',
-                      outputResult.success ? 'bg-green-500/10' : 'bg-destructive/10',
-                    )}>{outputResult.text}</pre>
+                <TabsContent value="code" className="absolute inset-0 overflow-auto mt-0 ring-0 focus-visible:ring-0">
+                  <pre className="min-h-full">
+                    <code
+                      ref={codeRef}
+                      className="block bg-background text-foreground p-5 font-mono text-sm leading-relaxed min-h-full overflow-auto whitespace-pre"
+                    />
+                  </pre>
+                </TabsContent>
+
+                <TabsContent value="output" className="absolute inset-0 overflow-auto mt-0 ring-0 focus-visible:ring-0">
+                  <div className="bg-background text-green-600 dark:text-green-400 font-mono text-sm leading-relaxed p-5 min-h-full">
+                    {outputResult ? (
+                      <div className={cn(
+                        'p-3.5 m-3 rounded-md border-l-3 text-sm',
+                        outputResult.success
+                          ? 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500'
+                          : 'bg-destructive/10 text-red-700 dark:text-red-400 border-destructive',
+                      )}>
+                        <strong>{outputResult.success ? 'Execution completed successfully' : 'Execution failed'}</strong>
+                        <pre className={cn(
+                          'mt-2 p-2.5 rounded-sm text-[13px] font-mono overflow-x-auto',
+                          outputResult.success ? 'bg-green-500/10' : 'bg-destructive/10',
+                        )}>{outputResult.text}</pre>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground text-center mt-12 text-sm">
+                        Script output will appear here...
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="text-muted-foreground text-center mt-12 text-sm">
-                    Script output will appear here...
-                  </div>
-                )}
+                </TabsContent>
               </div>
-            </div>
-          </div>
+            </Tabs>
 
-          <div className="bg-card border-t border-border px-4 py-2 flex gap-2 shrink-0">
-            {currentFile?.extension === '.py' && (
-              <button onClick={runCode} className={ACTION_BTN}>▶️ Run</button>
-            )}
-            {currentFile && FORMATTABLE_EXTENSIONS.includes(currentFile.extension) && (
-              <button onClick={formatCode} className={ACTION_BTN}>✨ Format</button>
-            )}
-            {currentFile?.extension === '.html' && (
-              <button onClick={openExternal} className={ACTION_BTN}>🔗 Open External</button>
-            )}
-            {currentFile && (
-              <button onClick={() => setFileInfoOpen(true)} className={ACTION_BTN}>ℹ️ Info</button>
-            )}
+            <div className="bg-card border-t border-border px-3 py-1.5 flex items-center gap-1.5 shrink-0">
+              {currentFile?.extension === '.py' && (
+                <Button variant="secondary" size="sm" onClick={runCode} className="gap-1.5 text-xs">
+                  <Play className="h-3 w-3" /> Run
+                </Button>
+              )}
+              {currentFile && FORMATTABLE_EXTENSIONS.includes(currentFile.extension) && (
+                <Button variant="secondary" size="sm" onClick={formatCode} className="gap-1.5 text-xs">
+                  <Sparkles className="h-3 w-3" /> Format
+                </Button>
+              )}
+              {currentFile?.extension === '.html' && (
+                <Button variant="secondary" size="sm" onClick={openExternal} className="gap-1.5 text-xs">
+                  <ExternalLink className="h-3 w-3" /> Open External
+                </Button>
+              )}
+              {currentFile && (
+                <>
+                  <Separator orientation="vertical" className="h-4 mx-0.5" />
+                  <Button variant="ghost" size="sm" onClick={() => setFileInfoOpen(true)} className="gap-1.5 text-xs">
+                    <Info className="h-3 w-3" /> Info
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
+
+        {loading && (
+          <div className="fixed inset-0 bg-black/80 flex flex-col justify-center items-center z-50">
+            <div className="w-8 h-8 border-2 border-border border-t-primary rounded-full animate-spin" />
+            <p className="text-sm text-foreground mt-4">Processing...</p>
+          </div>
+        )}
+
+        <PreferencesPanel
+          isOpen={prefsOpen}
+          preferences={preferences}
+          onClose={() => setPrefsOpen(false)}
+          onUpdatePreference={updatePreference}
+          onReset={resetPreferences}
+        />
+
+        <FileInfoModal
+          file={currentFile}
+          isOpen={fileInfoOpen}
+          onClose={() => setFileInfoOpen(false)}
+        />
       </div>
-
-      {loading && (
-        <div className="fixed inset-0 bg-black/80 flex flex-col justify-center items-center z-50">
-          <div className="w-8 h-8 border-2 border-border border-t-primary rounded-full animate-spin" />
-          <p className="text-sm text-foreground mt-4">Processing...</p>
-        </div>
-      )}
-
-      <PreferencesPanel
-        isOpen={prefsOpen}
-        preferences={preferences}
-        onClose={() => setPrefsOpen(false)}
-        onUpdatePreference={updatePreference}
-        onReset={resetPreferences}
-      />
-
-      <FileInfoModal
-        file={currentFile}
-        isOpen={fileInfoOpen}
-        onClose={() => setFileInfoOpen(false)}
-      />
-    </div>
+    </TooltipProvider>
   );
 }

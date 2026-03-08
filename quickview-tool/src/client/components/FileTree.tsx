@@ -1,7 +1,13 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { FileTreeItem, ViewMode } from '../types';
-import { ChevronRight, RefreshCw, Eye } from 'lucide-react';
+import { ChevronRight, RefreshCw, Eye, Search, FolderTree, Clock, LayoutList } from 'lucide-react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { ScrollArea } from './ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 const IGNORED_DIRS = new Set([
   'node_modules', '.git', '__pycache__', '.svn', '.hg',
@@ -44,7 +50,6 @@ export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTy
   const [activeExtFilters, setActiveExtFilters] = useState<Set<string>>(new Set());
   const [showIgnored, setShowIgnored] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const filteredTree = useMemo(() => {
     function filterByPrefs(items: FileTreeItem[]): FileTreeItem[] {
@@ -139,60 +144,73 @@ export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTy
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const VIEW_MODES: { mode: ViewMode; icon: typeof FolderTree; label: string }[] = [
+    { mode: 'tree', icon: FolderTree, label: 'Tree' },
+    { mode: 'recent', icon: Clock, label: 'Recent' },
+    { mode: 'type', icon: LayoutList, label: 'Type' },
+  ];
+
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col overflow-hidden shrink-0">
       {/* Header */}
-      <div className="px-3 py-2.5 border-b border-border flex justify-between items-center">
+      <div className="px-3 py-2 border-b border-border flex justify-between items-center">
         <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Files</h3>
-        <div className="flex items-center gap-1">
-          <span className="text-[10px] text-muted-foreground mr-1">
-            {displayFiles.length > 0 ? `${displayFiles.length} file${displayFiles.length !== 1 ? 's' : ''}` : ''}
-          </span>
-          <button
-            onClick={() => setShowIgnored(!showIgnored)}
-            className={cn(
-              'p-1 rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors',
-              showIgnored && 'text-foreground bg-accent',
-            )}
-            title={showIgnored ? 'Showing ignored dirs' : 'Show ignored dirs (node_modules, etc.)'}
-          >
-            <Eye className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={onRefresh}
-            className="p-1 rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            title="Refresh file tree"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
+        <div className="flex items-center gap-0.5">
+          {displayFiles.length > 0 && (
+            <span className="text-[10px] text-muted-foreground mr-1">
+              {displayFiles.length} file{displayFiles.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={showIgnored ? 'secondary' : 'ghost'}
+                size="icon-sm"
+                onClick={() => setShowIgnored(!showIgnored)}
+              >
+                <Eye className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{showIgnored ? 'Showing ignored dirs' : 'Show ignored dirs'}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-sm" onClick={onRefresh}>
+                <RefreshCw className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Refresh file tree</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
       {/* Search */}
       <div className="px-3 py-2 border-b border-border">
-        <input
-          ref={searchInputRef}
-          type="text"
-          placeholder="Search files... (Ctrl+F)"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-background border border-border text-foreground rounded-md px-2 py-1.5 text-xs font-sans outline-none transition-colors focus:border-ring placeholder:text-muted-foreground"
-        />
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            ref={searchInputRef}
+            placeholder="Search files... (Ctrl+F)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-7 pl-7 text-xs"
+          />
+        </div>
       </div>
 
       {/* View mode toggle */}
       <div className="px-3 py-1.5 border-b border-border flex items-center gap-1">
-        {(['tree', 'recent', 'type'] as ViewMode[]).map((mode) => (
-          <button
+        {VIEW_MODES.map(({ mode, icon: Icon, label }) => (
+          <Button
             key={mode}
+            variant={viewMode === mode ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-6 px-2 text-[11px] gap-1"
             onClick={() => setViewMode(mode)}
-            className={cn(
-              'px-2 py-0.5 rounded-sm text-[11px] border border-transparent transition-colors text-muted-foreground hover:text-foreground hover:bg-accent',
-              viewMode === mode && 'text-foreground bg-secondary border-border',
-            )}
           >
-            {mode === 'tree' ? '🗂 Tree' : mode === 'recent' ? '🕐 Recent' : '📋 Type'}
-          </button>
+            <Icon className="w-3 h-3" />
+            {label}
+          </Button>
         ))}
       </div>
 
@@ -200,61 +218,59 @@ export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTy
       {extCounts.length > 0 && (
         <div className="flex flex-wrap gap-1 px-2.5 py-1.5 border-b border-border max-h-16 overflow-y-auto">
           {extCounts.map(([ext, count]) => (
-            <button
+            <Badge
               key={ext}
+              variant={activeExtFilters.has(ext) ? 'default' : 'outline'}
+              className="cursor-pointer text-[10px] px-2 py-0"
               onClick={() => toggleExtFilter(ext)}
-              className={cn(
-                'px-2 py-px rounded-full text-[10px] font-medium border transition-colors whitespace-nowrap',
-                activeExtFilters.has(ext)
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground',
-              )}
               title={`${count} file${count > 1 ? 's' : ''}`}
             >
               {EXT_LABELS[ext] || ext.replace('.', '').toUpperCase()}
-            </button>
+            </Badge>
           ))}
         </div>
       )}
 
-      {/* File tree */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto p-1.5" tabIndex={0}>
-        {displayFiles.length === 0 ? (
-          <div className="text-muted-foreground text-[13px] text-center py-6 px-3">No matching files</div>
-        ) : viewMode === 'tree' ? (
-          <TreeView
-            tree={filteredTree}
-            displayFiles={displayFiles}
-            collapsedPaths={collapsedPaths}
-            selectedPath={selectedPath}
-            showIgnored={showIgnored}
-            searchQuery={searchQuery}
-            activeExtFilters={activeExtFilters}
-            onFileSelect={onFileSelect}
-            onToggleCollapse={toggleCollapse}
-          />
-        ) : viewMode === 'recent' ? (
-          <FlatList
-            files={[...displayFiles].sort((a, b) => (b.mtime || 0) - (a.mtime || 0))}
-            selectedPath={selectedPath}
-            onFileSelect={onFileSelect}
-            showPath
-          />
-        ) : (
-          <TypeView
-            files={displayFiles}
-            collapsedPaths={collapsedPaths}
-            selectedPath={selectedPath}
-            onFileSelect={onFileSelect}
-            onToggleCollapse={toggleCollapse}
-          />
-        )}
-      </div>
+      {/* File tree content */}
+      <ScrollArea className="flex-1">
+        <div className="p-1.5">
+          {displayFiles.length === 0 ? (
+            <div className="text-muted-foreground text-sm text-center py-6 px-3">No matching files</div>
+          ) : viewMode === 'tree' ? (
+            <TreeView
+              tree={filteredTree}
+              displayFiles={displayFiles}
+              collapsedPaths={collapsedPaths}
+              selectedPath={selectedPath}
+              showIgnored={showIgnored}
+              searchQuery={searchQuery}
+              activeExtFilters={activeExtFilters}
+              onFileSelect={onFileSelect}
+              onToggleCollapse={toggleCollapse}
+            />
+          ) : viewMode === 'recent' ? (
+            <FlatList
+              files={[...displayFiles].sort((a, b) => (b.mtime || 0) - (a.mtime || 0))}
+              selectedPath={selectedPath}
+              onFileSelect={onFileSelect}
+              showPath
+            />
+          ) : (
+            <TypeView
+              files={displayFiles}
+              collapsedPaths={collapsedPaths}
+              selectedPath={selectedPath}
+              onFileSelect={onFileSelect}
+              onToggleCollapse={toggleCollapse}
+            />
+          )}
+        </div>
+      </ScrollArea>
     </aside>
   );
 }
 
-// Tree view sub-component
+// Tree view using shadcn Collapsible
 function TreeView({
   tree, displayFiles, collapsedPaths, selectedPath, showIgnored,
   searchQuery, activeExtFilters, onFileSelect, onToggleCollapse,
@@ -290,21 +306,17 @@ function TreeView({
         if (!showIgnored && IGNORED_DIRS.has(item.name)) return null;
         if ((searchQuery || activeExtFilters.size > 0) && !ancestorPaths.has(item.path)) return null;
 
-        const isCollapsed = collapsedPaths.has(item.path);
+        const isOpen = !collapsedPaths.has(item.path);
         return (
-          <div key={item.path}>
-            <div
-              className="flex items-center gap-1.5 py-1 px-2.5 cursor-pointer rounded-md text-[13px] font-medium text-foreground hover:bg-accent select-none"
-              style={{ paddingLeft: `${12 + level * 16}px` }}
-              onClick={() => onToggleCollapse(item.path)}
-            >
-              <ChevronRight
-                className={cn('w-3 h-3 text-muted-foreground transition-transform', !isCollapsed && 'rotate-90')}
-              />
-              <span>{item.name}</span>
-            </div>
-            {!isCollapsed && item.children && renderItems(item.children, level + 1)}
-          </div>
+          <Collapsible key={item.path} open={isOpen} onOpenChange={() => onToggleCollapse(item.path)}>
+            <CollapsibleTrigger className="flex items-center gap-1.5 w-full py-1 px-2 cursor-pointer rounded-md text-sm font-medium text-foreground hover:bg-accent select-none" style={{ paddingLeft: `${8 + level * 16}px` }}>
+              <ChevronRight className={cn('w-3 h-3 text-muted-foreground transition-transform', isOpen && 'rotate-90')} />
+              <span className="truncate">{item.name}</span>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              {item.children && renderItems(item.children, level + 1)}
+            </CollapsibleContent>
+          </Collapsible>
         );
       }
 
@@ -382,23 +394,16 @@ function TypeView({
         const items = groups.grouped[groupName];
         if (!items || items.length === 0) return null;
         const groupKey = `__group__${groupName}`;
-        const isCollapsed = collapsedPaths.has(groupKey);
+        const isOpen = !collapsedPaths.has(groupKey);
 
         return (
-          <div key={groupName}>
-            <div
-              className={cn(
-                'text-[11px] font-semibold text-muted-foreground py-2 px-3 cursor-pointer select-none uppercase tracking-wide flex items-center gap-1 hover:text-foreground',
-              )}
-              onClick={() => onToggleCollapse(groupKey)}
-            >
-              <ChevronRight
-                className={cn('w-2.5 h-2.5 transition-transform', !isCollapsed && 'rotate-90')}
-              />
+          <Collapsible key={groupName} open={isOpen} onOpenChange={() => onToggleCollapse(groupKey)}>
+            <CollapsibleTrigger className="flex items-center gap-1 w-full text-xs font-semibold text-muted-foreground py-2 px-3 cursor-pointer select-none uppercase tracking-wide hover:text-foreground">
+              <ChevronRight className={cn('w-2.5 h-2.5 transition-transform', isOpen && 'rotate-90')} />
               {icon} {groupName} ({items.length})
-            </div>
-            {!isCollapsed &&
-              items
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              {items
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map((f) => (
                   <FileItem
@@ -409,12 +414,13 @@ function TypeView({
                     onClick={() => onFileSelect(f)}
                   />
                 ))}
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         );
       })}
       {groups.ungrouped.length > 0 && (
         <div>
-          <div className="text-[11px] font-semibold text-muted-foreground py-2 px-3 uppercase tracking-wide">
+          <div className="text-xs font-semibold text-muted-foreground py-2 px-3 uppercase tracking-wide">
             📄 Other ({groups.ungrouped.length})
           </div>
           {groups.ungrouped.map((f) => (
@@ -447,12 +453,12 @@ function FileItem({
   return (
     <div
       className={cn(
-        'flex items-center gap-1.5 py-1 px-2.5 cursor-pointer rounded-md text-[13px] transition-colors select-none',
+        'flex items-center gap-1.5 py-1 px-2 cursor-pointer rounded-md text-sm transition-colors select-none',
         isSelected
           ? 'bg-primary text-primary-foreground'
           : 'text-foreground hover:bg-accent',
       )}
-      style={{ paddingLeft: `${12 + level * 16}px` }}
+      style={{ paddingLeft: `${8 + level * 16}px` }}
       onClick={onClick}
     >
       <span className="text-sm shrink-0">{icon}</span>
