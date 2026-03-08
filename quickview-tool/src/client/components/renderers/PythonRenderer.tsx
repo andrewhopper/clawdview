@@ -1,5 +1,3 @@
-import { escapeHtml } from '@/lib/utils';
-
 interface PythonRendererProps {
   content: string;
   filename: string;

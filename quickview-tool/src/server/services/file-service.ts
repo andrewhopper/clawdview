@@ -246,7 +246,7 @@ export class FileService {
       const files = fs.readdirSync(dir);
 
       for (const file of files) {
-        if (file.startsWith('.') && !file.endsWith('.html')) continue;
+        if (this.isHiddenFile(file)) continue;
         if (file === 'node_modules') continue;
 
         const fullPath = path.join(dir, file);
