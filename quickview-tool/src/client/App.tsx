@@ -12,7 +12,7 @@ import { JsonRenderer } from './components/renderers/JsonRenderer';
 import { useSocket } from './hooks/useSocket';
 import { usePreferences } from './hooks/usePreferences';
 import { useTheme } from './hooks/useTheme';
-import { escapeHtml, cn } from './lib/utils';
+import { cn } from './lib/utils';
 import type { FileTreeItem, FileData, CurrentFile, TabName } from './types';
 
 declare const hljs: any;
@@ -33,23 +33,28 @@ const TABS: { name: TabName; label: string; icon: string }[] = [
 
 const ACTION_BTN = 'bg-secondary text-secondary-foreground border border-border px-3.5 py-1 rounded-md cursor-pointer text-[13px] font-medium transition-colors hover:bg-accent';
 
+interface OutputResult {
+  success: boolean;
+  text: string;
+}
+
 export function App() {
   const [fileTree, setFileTree] = useState<FileTreeItem[]>([]);
   const [currentFile, setCurrentFile] = useState<CurrentFile | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
-  const [fileExtension, setFileExtension] = useState<string>('');
   const [activeTab, setActiveTab] = useState<TabName>('preview');
-  const [outputContent, setOutputContent] = useState<string>('');
+  const [outputResult, setOutputResult] = useState<OutputResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [fileInfoOpen, setFileInfoOpen] = useState(false);
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
 
   const codeRef = useRef<HTMLElement>(null);
   const currentFileRef = useRef(currentFile);
   currentFileRef.current = currentFile;
   const fileContentRef = useRef(fileContent);
   fileContentRef.current = fileContent;
+
+  const fileExtension = currentFile?.extension || '';
 
   const { isDark, toggleTheme } = useTheme();
   const { preferences, updatePreference, resetPreferences, isFileTypeWatched } = usePreferences();
@@ -62,12 +67,9 @@ export function App() {
       if (!response.ok) throw new Error((data as any).error || 'Failed to load file');
 
       setCurrentFile({ name: file.name, path: file.path, extension: data.extension });
-      setSelectedPath(file.path);
       setFileContent(data.content);
-      setFileExtension(data.extension);
     } catch {
       setFileContent('');
-      setFileExtension('');
     } finally {
       setLoading(false);
     }
@@ -114,12 +116,12 @@ export function App() {
       setActiveTab('output');
 
       if (result.success) {
-        setOutputContent(`<div class="p-3.5 m-3 bg-green-500/10 text-green-700 dark:text-green-400 rounded-md border-l-3 border-green-500 text-sm"><strong>Execution completed successfully</strong><pre class="mt-2 p-2.5 bg-green-500/10 rounded-sm text-[13px] font-mono overflow-x-auto">${escapeHtml(result.output || 'No output')}</pre></div>`);
+        setOutputResult({ success: true, text: result.output || 'No output' });
       } else {
-        setOutputContent(`<div class="p-3.5 m-3 bg-destructive/10 text-red-700 dark:text-red-400 rounded-md border-l-3 border-destructive text-sm"><strong>Execution failed</strong><pre class="mt-2 p-2.5 bg-destructive/10 rounded-sm text-[13px] font-mono overflow-x-auto">${escapeHtml(result.error || 'Unknown error')}</pre></div>`);
+        setOutputResult({ success: false, text: result.error || 'Unknown error' });
       }
     } catch (error: any) {
-      setOutputContent(`<div class="p-4 m-3 text-destructive">Failed to execute: ${escapeHtml(error.message)}</div>`);
+      setOutputResult({ success: false, text: `Failed to execute: ${error.message}` });
     } finally {
       setLoading(false);
     }
@@ -218,7 +220,7 @@ export function App() {
       <div className="flex flex-1 overflow-hidden min-h-0">
         <FileTree
           tree={fileTree}
-          selectedPath={selectedPath}
+          selectedPath={currentFile?.path ?? null}
           onFileSelect={loadFile}
           onRefresh={requestRefresh}
           isFileTypeWatched={isFileTypeWatched}
@@ -258,8 +260,19 @@ export function App() {
 
             <div className={cn('absolute inset-0 overflow-auto', activeTab !== 'output' && 'hidden')}>
               <div className="bg-background text-green-600 dark:text-green-400 font-mono text-sm leading-relaxed p-5 min-h-full">
-                {outputContent ? (
-                  <div dangerouslySetInnerHTML={{ __html: outputContent }} />
+                {outputResult ? (
+                  <div className={cn(
+                    'p-3.5 m-3 rounded-md border-l-3 text-sm',
+                    outputResult.success
+                      ? 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500'
+                      : 'bg-destructive/10 text-red-700 dark:text-red-400 border-destructive',
+                  )}>
+                    <strong>{outputResult.success ? 'Execution completed successfully' : 'Execution failed'}</strong>
+                    <pre className={cn(
+                      'mt-2 p-2.5 rounded-sm text-[13px] font-mono overflow-x-auto',
+                      outputResult.success ? 'bg-green-500/10' : 'bg-destructive/10',
+                    )}>{outputResult.text}</pre>
+                  </div>
                 ) : (
                   <div className="text-muted-foreground text-center mt-12 text-sm">
                     Script output will appear here...

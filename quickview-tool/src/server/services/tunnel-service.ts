@@ -32,14 +32,18 @@ interface TunnelServiceOptions {
 export class TunnelService {
   private provider: string;
   private port: number;
-  url: string | null;
+  private _url: string | null;
   private _cleanup: (() => Promise<void>) | null;
 
   constructor(options: TunnelServiceOptions) {
     this.provider = options.provider;
     this.port = options.port || 3333;
-    this.url = null;
+    this._url = null;
     this._cleanup = null;
+  }
+
+  get url(): string | null {
+    return this._url;
   }
 
   static get supportedProviders(): string[] {
@@ -77,6 +81,11 @@ export class TunnelService {
     console.warn('');
   }
 
+  private _setTunnel(url: string, cleanup: () => Promise<void>): void {
+    this._url = url;
+    this._cleanup = cleanup;
+  }
+
   private async _startLocaltunnel(): Promise<string> {
     let localtunnel: any;
     try {
@@ -88,16 +97,13 @@ export class TunnelService {
     }
 
     const tunnel = await localtunnel({ port: this.port });
-    this.url = tunnel.url;
-    this._cleanup = async () => {
-      tunnel.close();
-    };
+    this._setTunnel(tunnel.url, async () => { tunnel.close(); });
 
     tunnel.on('close', () => {
-      this.url = null;
+      this._url = null;
     });
 
-    return this.url!;
+    return this._url!;
   }
 
   private async _startNgrok(): Promise<string> {
@@ -118,13 +124,13 @@ export class TunnelService {
       authtoken_from_env: true,
     });
 
-    this.url = listener.url();
-    this._cleanup = async () => {
-      await ngrok.disconnect();
-    };
-
-    return this.url!;
+    this._setTunnel(listener.url(), async () => { await ngrok.disconnect(); });
+    return this._url!;
   }
+
+  private _tailscaleCleanup = async (): Promise<void> => {
+    spawn('tailscale', ['funnel', '--bg', 'off'], { stdio: 'ignore' });
+  };
 
   private async _startTailscale(): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -162,19 +168,13 @@ export class TunnelService {
 
         const urlMatch = (stdout + stderr).match(/https:\/\/[^\s]+/);
         if (urlMatch) {
-          this.url = urlMatch[0];
-          this._cleanup = async () => {
-            spawn('tailscale', ['funnel', '--bg', 'off'], { stdio: 'ignore' });
-          };
-          resolve(this.url);
+          this._setTunnel(urlMatch[0], this._tailscaleCleanup);
+          resolve(this._url!);
         } else {
           this._getTailscaleDnsName()
             .then((dnsName) => {
-              this.url = `https://${dnsName}`;
-              this._cleanup = async () => {
-                spawn('tailscale', ['funnel', '--bg', 'off'], { stdio: 'ignore' });
-              };
-              resolve(this.url!);
+              this._setTunnel(`https://${dnsName}`, this._tailscaleCleanup);
+              resolve(this._url!);
             })
             .catch(() => {
               reject(new Error('Tailscale funnel started but could not determine URL'));
@@ -224,6 +224,6 @@ export class TunnelService {
       }
       this._cleanup = null;
     }
-    this.url = null;
+    this._url = null;
   }
 }

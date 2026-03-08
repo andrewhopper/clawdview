@@ -2,6 +2,9 @@ import path from 'path';
 import fs from 'fs';
 import { execSync, ExecSyncOptions } from 'child_process';
 import exifParser from 'exif-parser';
+import type { FileTreeItem, GitInfo, ExifData } from '../../shared/types';
+
+export type { FileTreeItem, GitInfo, ExifData };
 
 const ALLOWED_EXTENSIONS = [
   '.html', '.jsx', '.js', '.py', '.css', '.json',
@@ -11,44 +14,6 @@ const ALLOWED_EXTENSIONS = [
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.webp', '.gif'];
 
 const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
-
-export interface FileTreeItem {
-  name: string;
-  type: 'file' | 'directory';
-  path: string;
-  extension?: string;
-  size?: number;
-  mtime?: number;
-  children?: FileTreeItem[];
-}
-
-export interface GitInfo {
-  status: string;
-  branch?: string;
-  lastCommit?: {
-    hash: string;
-    author: string;
-    date: string;
-    subject: string;
-  };
-}
-
-export interface ExifData {
-  width?: number;
-  height?: number;
-  cameraMake?: string;
-  cameraModel?: string;
-  dateTaken?: string;
-  exposureTime?: string;
-  fNumber?: string;
-  iso?: number;
-  focalLength?: string;
-  gpsLatitude?: number;
-  gpsLongitude?: number;
-  software?: string;
-  copyright?: string;
-  description?: string;
-}
 
 export interface FileInfo {
   size: number;
