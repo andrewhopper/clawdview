@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { escapeHtml, formatFileSize } from '@/lib/utils';
+import { formatFileSize } from '@/lib/utils';
 import type { FileInfoResponse, CurrentFile } from '../types';
 
 interface FileInfoModalProps {
