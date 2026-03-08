@@ -17,17 +17,22 @@ export function FileInfoModal({ file, isOpen, onClose }: FileInfoModalProps) {
   useEffect(() => {
     if (!isOpen || !file) return;
 
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
 
-    fetch(`/api/file-info/${file.path}`)
+    fetch(`/api/file-info/${file.path}`, { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error('Failed to load file info');
         return res.json();
       })
       .then((data) => setInfo(data))
-      .catch((err) => setError(err.message))
+      .catch((err) => {
+        if (err.name !== 'AbortError') setError(err.message);
+      })
       .finally(() => setLoading(false));
+
+    return () => controller.abort();
   }, [isOpen, file]);
 
   if (!isOpen) return null;

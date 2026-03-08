@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Header } from './components/Header';
 import { FileTree } from './components/FileTree';
 import { PreferencesPanel } from './components/PreferencesPanel';
@@ -12,8 +12,7 @@ import { JsonRenderer } from './components/renderers/JsonRenderer';
 import { useSocket } from './hooks/useSocket';
 import { usePreferences } from './hooks/usePreferences';
 import { useTheme } from './hooks/useTheme';
-import { escapeHtml } from './lib/utils';
-import { cn } from './lib/utils';
+import { escapeHtml, cn } from './lib/utils';
 import type { FileTreeItem, FileData, CurrentFile, TabName } from './types';
 
 declare const hljs: any;
@@ -25,6 +24,14 @@ const HIGHLIGHT_LANG_MAP: Record<string, string> = {
 };
 
 const FORMATTABLE_EXTENSIONS = ['.js', '.jsx', '.json', '.html', '.css'];
+
+const TABS: { name: TabName; label: string; icon: string }[] = [
+  { name: 'preview', label: 'Preview', icon: '🖥️' },
+  { name: 'code', label: 'Code', icon: '📝' },
+  { name: 'output', label: 'Output', icon: '📊' },
+];
+
+const ACTION_BTN = 'bg-secondary text-secondary-foreground border border-border px-3.5 py-1 rounded-md cursor-pointer text-[13px] font-medium transition-colors hover:bg-accent';
 
 export function App() {
   const [fileTree, setFileTree] = useState<FileTreeItem[]>([]);
@@ -41,9 +48,30 @@ export function App() {
   const codeRef = useRef<HTMLElement>(null);
   const currentFileRef = useRef(currentFile);
   currentFileRef.current = currentFile;
+  const fileContentRef = useRef(fileContent);
+  fileContentRef.current = fileContent;
 
   const { isDark, toggleTheme } = useTheme();
   const { preferences, updatePreference, resetPreferences, isFileTypeWatched } = usePreferences();
+
+  const loadFile = useCallback(async (file: CurrentFile | FileTreeItem) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/file/${file.path}`);
+      const data: FileData = await response.json();
+      if (!response.ok) throw new Error((data as any).error || 'Failed to load file');
+
+      setCurrentFile({ name: file.name, path: file.path, extension: data.extension });
+      setSelectedPath(file.path);
+      setFileContent(data.content);
+      setFileExtension(data.extension);
+    } catch {
+      setFileContent('');
+      setFileExtension('');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const onFileTree = useCallback((tree: FileTreeItem[]) => {
     setFileTree(tree);
@@ -57,33 +85,9 @@ export function App() {
     ) {
       loadFile(currentFileRef.current);
     }
-  }, [preferences.autoOpenOnChange]);
+  }, [preferences.autoOpenOnChange, loadFile]);
 
   const { connected, requestRefresh } = useSocket(onFileTree, onFileChange);
-
-  const loadFile = useCallback(async (file: CurrentFile | FileTreeItem) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/file/${file.path}`);
-      const data: FileData = await response.json();
-      if (!response.ok) throw new Error((data as any).error || 'Failed to load file');
-
-      const current: CurrentFile = {
-        name: file.name,
-        path: file.path,
-        extension: data.extension,
-      };
-      setCurrentFile(current);
-      setSelectedPath(file.path);
-      setFileContent(data.content);
-      setFileExtension(data.extension);
-    } catch (error: any) {
-      setFileContent('');
-      setFileExtension('');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   // Highlight code when content or tab changes
   useEffect(() => {
@@ -101,13 +105,10 @@ export function App() {
     if (!currentFile || currentFile.extension !== '.py') return;
     setLoading(true);
     try {
-      const fileResponse = await fetch(`/api/file/${currentFile.path}`);
-      const fileData = await fileResponse.json();
-
       const execResponse = await fetch('/api/execute/python', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: fileData.content, filename: currentFile.name }),
+        body: JSON.stringify({ code: fileContentRef.current, filename: currentFile.name }),
       });
       const result = await execResponse.json();
       setActiveTab('output');
@@ -150,24 +151,25 @@ export function App() {
     }
   }, [currentFile]);
 
-  // Keyboard shortcuts for tabs
+  // Keyboard shortcuts for tabs - no deps needed, uses setActiveTab functional form
   useEffect(() => {
+    const tabNames: TabName[] = ['preview', 'code', 'output'];
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         e.preventDefault();
-        const tabs: TabName[] = ['preview', 'code', 'output'];
-        const idx = tabs.indexOf(activeTab);
-        const next = e.key === 'ArrowRight'
-          ? tabs[(idx + 1) % tabs.length]
-          : tabs[(idx - 1 + tabs.length) % tabs.length];
-        setActiveTab(next);
+        setActiveTab((prev) => {
+          const idx = tabNames.indexOf(prev);
+          return e.key === 'ArrowRight'
+            ? tabNames[(idx + 1) % tabNames.length]
+            : tabNames[(idx - 1 + tabNames.length) % tabNames.length];
+        });
       }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab]);
+  }, []);
 
-  const renderPreview = () => {
+  const previewContent = useMemo(() => {
     if (!fileContent) {
       return (
         <div className="px-10 py-16 text-center text-muted-foreground">
@@ -201,13 +203,7 @@ export function App() {
         </div>
       );
     }
-  };
-
-  const tabs: { name: TabName; label: string; icon: string }[] = [
-    { name: 'preview', label: 'Preview', icon: '🖥️' },
-    { name: 'code', label: 'Code', icon: '📝' },
-    { name: 'output', label: 'Output', icon: '📊' },
-  ];
+  }, [fileContent, fileExtension, currentFile?.name]);
 
   return (
     <div className="flex flex-col h-screen">
@@ -229,9 +225,8 @@ export function App() {
         />
 
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          {/* Tab bar */}
           <div className="flex bg-card border-b border-border shrink-0">
-            {tabs.map((tab) => (
+            {TABS.map((tab) => (
               <button
                 key={tab.name}
                 onClick={() => setActiveTab(tab.name)}
@@ -245,16 +240,13 @@ export function App() {
             ))}
           </div>
 
-          {/* Panel content */}
           <div className="flex-1 relative overflow-hidden">
-            {/* Preview */}
             <div className={cn('absolute inset-0 overflow-auto', activeTab !== 'preview' && 'hidden')}>
               <div className="h-full bg-background">
-                {renderPreview()}
+                {previewContent}
               </div>
             </div>
 
-            {/* Code */}
             <div className={cn('absolute inset-0 overflow-auto', activeTab !== 'code' && 'hidden')}>
               <pre className="min-h-full">
                 <code
@@ -264,7 +256,6 @@ export function App() {
               </pre>
             </div>
 
-            {/* Output */}
             <div className={cn('absolute inset-0 overflow-auto', activeTab !== 'output' && 'hidden')}>
               <div className="bg-background text-green-600 dark:text-green-400 font-mono text-sm leading-relaxed p-5 min-h-full">
                 {outputContent ? (
@@ -278,33 +269,23 @@ export function App() {
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="bg-card border-t border-border px-4 py-2 flex gap-2 shrink-0">
             {currentFile?.extension === '.py' && (
-              <button onClick={runCode} className="bg-secondary text-secondary-foreground border border-border px-3.5 py-1 rounded-md cursor-pointer text-[13px] font-medium transition-colors hover:bg-accent">
-                ▶️ Run
-              </button>
+              <button onClick={runCode} className={ACTION_BTN}>▶️ Run</button>
             )}
             {currentFile && FORMATTABLE_EXTENSIONS.includes(currentFile.extension) && (
-              <button onClick={formatCode} className="bg-secondary text-secondary-foreground border border-border px-3.5 py-1 rounded-md cursor-pointer text-[13px] font-medium transition-colors hover:bg-accent">
-                ✨ Format
-              </button>
+              <button onClick={formatCode} className={ACTION_BTN}>✨ Format</button>
             )}
             {currentFile?.extension === '.html' && (
-              <button onClick={openExternal} className="bg-secondary text-secondary-foreground border border-border px-3.5 py-1 rounded-md cursor-pointer text-[13px] font-medium transition-colors hover:bg-accent">
-                🔗 Open External
-              </button>
+              <button onClick={openExternal} className={ACTION_BTN}>🔗 Open External</button>
             )}
             {currentFile && (
-              <button onClick={() => setFileInfoOpen(true)} className="bg-secondary text-secondary-foreground border border-border px-3.5 py-1 rounded-md cursor-pointer text-[13px] font-medium transition-colors hover:bg-accent">
-                ℹ️ Info
-              </button>
+              <button onClick={() => setFileInfoOpen(true)} className={ACTION_BTN}>ℹ️ Info</button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Loading overlay */}
       {loading && (
         <div className="fixed inset-0 bg-black/80 flex flex-col justify-center items-center z-50">
           <div className="w-8 h-8 border-2 border-border border-t-primary rounded-full animate-spin" />

@@ -75,6 +75,9 @@ export class QuickViewServer {
     this.io.on('connection', (socket) => {
       console.log('Client connected');
       socket.on('disconnect', () => console.log('Client disconnected'));
+      socket.on('refreshFiles', () => {
+        socket.emit('fileTree', this.fileService.getFileTree());
+      });
       socket.emit('fileTree', this.fileService.getFileTree());
     });
   }
@@ -87,7 +90,6 @@ export class QuickViewServer {
         event,
         path: filePath,
         relativePath: path.relative(this.watchDir, filePath),
-        content: event !== 'unlink' ? this.fileService.readFileIfExists(filePath) : null,
       });
 
       this.io.emit('fileTree', this.fileService.getFileTree());

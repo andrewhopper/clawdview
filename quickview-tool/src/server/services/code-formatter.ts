@@ -8,16 +8,15 @@ export class CodeFormatter {
       .replace(/([^\s])\}/g, '$1 }')
       .split('\n')
       .map((line) => line.trim())
-      .map((line, i, arr) => {
-        let indent = 0;
-        for (let j = 0; j < i; j++) {
-          const prevLine = arr[j];
-          if (prevLine.includes('{')) indent += 2;
-          if (prevLine.includes('}')) indent -= 2;
-        }
-        if (line.includes('}')) indent -= 2;
-        return ' '.repeat(Math.max(0, indent)) + line;
-      })
+      .reduce<string[]>((result, line) => {
+        const indent = result.length > 0
+          ? (result[result.length - 1].search(/\S/) || 0) +
+            (result[result.length - 1].includes('{') ? 2 : 0) +
+            (line.includes('}') ? -2 : 0)
+          : (line.includes('}') ? 0 : 0);
+        result.push(' '.repeat(Math.max(0, indent)) + line);
+        return result;
+      }, [])
       .join('\n');
   }
 
@@ -30,20 +29,19 @@ export class CodeFormatter {
   }
 
   formatHTML(content: string): string {
-    return content
+    const lines = content
       .replace(/></g, '>\n<')
       .split('\n')
       .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .map((line, i, arr) => {
-        let indent = 0;
-        for (let j = 0; j < i; j++) {
-          const prevLine = arr[j];
-          if (prevLine.match(/<[^/][^>]*[^/]>/)) indent += 2;
-          if (prevLine.match(/<\/[^>]*>/)) indent -= 2;
-        }
+      .filter((line) => line.length > 0);
+
+    let indent = 0;
+    return lines
+      .map((line) => {
         if (line.match(/<\/[^>]*>/)) indent -= 2;
-        return ' '.repeat(Math.max(0, indent)) + line;
+        const result = ' '.repeat(Math.max(0, indent)) + line;
+        if (line.match(/<[^/][^>]*[^/]>/) && !line.match(/<\/[^>]*>/)) indent += 2;
+        return result;
       })
       .join('\n');
   }
