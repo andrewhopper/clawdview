@@ -230,6 +230,18 @@ class QuickViewApp {
 
       let html = this.renderInfoSection('File', rows);
 
+      if (data.git) {
+        const gitRows = [['Status', data.git.status]];
+        if (data.git.branch) gitRows.push(['Branch', data.git.branch]);
+        if (data.git.lastCommit) {
+          gitRows.push(['Last Commit', data.git.lastCommit.hash.substring(0, 8)]);
+          gitRows.push(['Author', data.git.lastCommit.author]);
+          gitRows.push(['Date', new Date(data.git.lastCommit.date).toLocaleString()]);
+          gitRows.push(['Message', data.git.lastCommit.subject]);
+        }
+        html += this.renderInfoSection('Git', gitRows);
+      }
+
       if (data.uuids && data.uuids.length > 0) {
         const uuidRows = data.uuids.map((uuid, i) => [`UUID ${data.uuids.length > 1 ? i + 1 : ''}`.trim(), uuid]);
         html += this.renderInfoSection('UUIDs Found', uuidRows);
