@@ -7,16 +7,20 @@ import { FileService } from './services/file-service';
 import { PythonExecutor } from './services/python-executor';
 import { CodeFormatter } from './services/code-formatter';
 import { FileWatcher } from './services/file-watcher';
+import { S3Service } from './services/s3-service';
+import type { S3ServiceOptions } from './services/s3-service';
 
 import { createFileRoutes } from './routes/file-routes';
 import { createExecuteRoutes } from './routes/execute-routes';
 import { createFormatRoutes } from './routes/format-routes';
+import { createShareRoutes } from './routes/share-routes';
 
 interface QuickViewServerOptions {
   port?: number;
   host?: string;
   watchDir?: string;
   autoOpen?: boolean;
+  s3?: S3ServiceOptions;
 }
 
 export class QuickViewServer {
@@ -30,6 +34,7 @@ export class QuickViewServer {
   private pythonExecutor: PythonExecutor;
   private codeFormatter: CodeFormatter;
   private fileWatcher: FileWatcher;
+  private s3Service: S3Service;
 
   constructor(options: QuickViewServerOptions = {}) {
     this.port = options.port || 3333;
@@ -48,6 +53,7 @@ export class QuickViewServer {
     this.pythonExecutor = new PythonExecutor();
     this.codeFormatter = new CodeFormatter();
     this.fileWatcher = new FileWatcher(this.watchDir);
+    this.s3Service = new S3Service(options.s3 || {});
 
     this.setupMiddleware();
     this.setupRoutes();
@@ -69,6 +75,7 @@ export class QuickViewServer {
     this.app.use('/api', createFileRoutes(this.fileService));
     this.app.use('/api/execute', createExecuteRoutes(this.pythonExecutor));
     this.app.use('/api/format', createFormatRoutes(this.fileService, this.codeFormatter));
+    this.app.use('/api', createShareRoutes(this.s3Service, this.fileService));
   }
 
   private setupSocketHandlers(): void {

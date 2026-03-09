@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Play, Sparkles, ExternalLink, Info } from 'lucide-react';
+import { Play, Sparkles, ExternalLink, Info, Share2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { FileTree } from './components/FileTree';
 import { PreferencesPanel } from './components/PreferencesPanel';
 import { FileInfoModal } from './components/FileInfoModal';
+import { ShareModal } from './components/ShareModal';
 import { HtmlRenderer } from './components/renderers/HtmlRenderer';
 import { ReactRenderer } from './components/renderers/ReactRenderer';
 import { PythonRenderer } from './components/renderers/PythonRenderer';
@@ -44,6 +45,8 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [fileInfoOpen, setFileInfoOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [s3Enabled, setS3Enabled] = useState(false);
 
   const codeRef = useRef<HTMLElement>(null);
   const currentFileRef = useRef(currentFile);
@@ -87,6 +90,13 @@ export function App() {
   }, [preferences.autoOpenOnChange, loadFile]);
 
   const { connected, requestRefresh } = useSocket(onFileTree, onFileChange);
+
+  useEffect(() => {
+    fetch('/api/share/status')
+      .then((res) => res.json())
+      .then((data) => setS3Enabled(data.enabled))
+      .catch(() => setS3Enabled(false));
+  }, []);
 
   // Highlight code when content or tab changes
   useEffect(() => {
@@ -297,6 +307,11 @@ export function App() {
                   <ExternalLink className="h-3 w-3" /> Open External
                 </Button>
               )}
+              {currentFile && s3Enabled && (
+                <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)} className="gap-1.5 text-xs">
+                  <Share2 className="h-3 w-3" /> Share
+                </Button>
+              )}
               {currentFile && (
                 <>
                   <Separator orientation="vertical" className="h-4 mx-0.5" />
@@ -328,6 +343,12 @@ export function App() {
           file={currentFile}
           isOpen={fileInfoOpen}
           onClose={() => setFileInfoOpen(false)}
+        />
+
+        <ShareModal
+          file={currentFile}
+          isOpen={shareOpen}
+          onClose={() => setShareOpen(false)}
         />
       </div>
     </TooltipProvider>

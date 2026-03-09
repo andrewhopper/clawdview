@@ -34,6 +34,11 @@ program
   .option('-p, --port <port>', 'Server port', '3333')
   .option('-d, --dir <directory>', 'Directory to watch', process.cwd())
   .option('--no-open', 'Don\'t auto-open browser')
+  .option('--s3-bucket <bucket>', 'S3 bucket for asset sharing')
+  .option('--s3-region <region>', 'AWS region for S3', 'us-east-1')
+  .option('--s3-prefix <prefix>', 'S3 key prefix for shared assets', 'quickview-shares')
+  .option('--s3-endpoint <endpoint>', 'Custom S3 endpoint (for S3-compatible services)')
+  .option('--project-name <name>', 'Project name for organizing S3 assets')
   .option('--tunnel <provider>', `Expose via tunnel (${TunnelService.supportedProviders.join(', ')})`)
   .action(async (options) => {
     const watchDir = path.resolve(options.dir);
@@ -50,10 +55,23 @@ program
     console.log(`Watching: ${watchDir}`);
     console.log(`Port: ${port}`);
 
+    const s3Options = {};
+    if (options.s3Bucket) s3Options.bucket = options.s3Bucket;
+    if (options.s3Region) s3Options.region = options.s3Region;
+    if (options.s3Prefix) s3Options.prefix = options.s3Prefix;
+    if (options.s3Endpoint) s3Options.endpoint = options.s3Endpoint;
+    if (options.projectName) s3Options.projectName = options.projectName;
+    s3Options.projectName = s3Options.projectName || path.basename(watchDir);
+
+    if (s3Options.bucket || process.env.QV_S3_BUCKET) {
+      console.log(`S3 sharing: enabled (bucket: ${s3Options.bucket || process.env.QV_S3_BUCKET})`);
+    }
+
     const server = new QuickViewServer({
       port: port,
       watchDir: watchDir,
       autoOpen: options.open,
+      s3: s3Options,
       host: options.tunnel ? '0.0.0.0' : 'localhost'
     });
 
