@@ -1,1 +1,0 @@
-function messyFunction(x,y){if(x>y){return x*2}else{return y/2}}const data={name:"test",values:[1,2,3,4,5],settings:{theme:"dark",enabled:true}};let result=messyFunction(10,5);console.log("Result:",result);
