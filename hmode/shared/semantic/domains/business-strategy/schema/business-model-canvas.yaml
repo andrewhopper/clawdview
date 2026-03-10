@@ -1,0 +1,126 @@
+# Business Model Canvas Entities
+# Source: Business Model Generation (Osterwalder & Pigneur, 2010)
+
+entities:
+
+  BusinessModelCanvas:
+    description: Nine building blocks describing how an organization creates, delivers, and captures value
+    source: "Business Model Generation (Osterwalder & Pigneur, 2010)"
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      version: { type: string }
+      customerSegments: { type: array, items: CustomerSegment, required: true }
+      valuePropositions: { type: array, items: ValueProposition, required: true }
+      channels: { type: array, items: Channel, required: true }
+      customerRelationships: { type: array, items: CustomerRelationship, required: true }
+      revenueStreams: { type: array, items: RevenueStream, required: true }
+      keyResources: { type: array, items: KeyResource, required: true }
+      keyActivities: { type: array, items: KeyActivity, required: true }
+      keyPartnerships: { type: array, items: KeyPartnership, required: true }
+      costStructure: { type: CostStructure, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CustomerSegment:
+    description: Groups of people or organizations an enterprise aims to reach and serve
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: CustomerSegmentType, required: true }
+      description: { type: string }
+      characteristics: { type: array, items: string }
+      needs: { type: array, items: string }
+      size: { type: string, description: "TAM/SAM/SOM estimate" }
+      priority: { type: SegmentPriority }
+
+  ValueProposition:
+    description: Bundle of products/services creating value for a specific customer segment
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      targetSegmentId: { type: string, required: true }
+      valueType: { type: ValueType, required: true }
+      description: { type: string }
+      gains: { type: array, items: string, description: "Benefits customer expects" }
+      painRelievers: { type: array, items: string, description: "How product alleviates pains" }
+      products: { type: array, items: string, description: "Products/services delivering value" }
+
+  Channel:
+    description: How a company communicates with and reaches its customer segments
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ChannelType, required: true }
+      phase: { type: ChannelPhase, required: true }
+      ownership: { type: ChannelOwnership, required: true }
+      description: { type: string }
+      targetSegmentIds: { type: array, items: string }
+
+  CustomerRelationship:
+    description: Types of relationships a company establishes with customer segments
+    properties:
+      id: { type: string, required: true }
+      type: { type: RelationshipType, required: true }
+      targetSegmentId: { type: string, required: true }
+      motivation: { type: RelationshipMotivation, required: true }
+      description: { type: string }
+
+  RevenueStream:
+    description: Cash a company generates from each customer segment
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: RevenueType, required: true }
+      pricingMechanism: { type: PricingMechanism, required: true }
+      targetSegmentId: { type: string, required: true }
+      amount: { type: decimal }
+      frequency: { type: RevenueFrequency }
+      description: { type: string }
+
+  KeyResource:
+    description: Most important assets required to make a business model work
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ResourceType, required: true }
+      ownership: { type: ResourceOwnership }
+      description: { type: string }
+
+  KeyActivity:
+    description: Most important things a company must do to make its business model work
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ActivityType, required: true }
+      description: { type: string }
+      relatedResources: { type: array, items: string }
+
+  KeyPartnership:
+    description: Network of suppliers and partners that make the business model work
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: PartnershipType, required: true }
+      motivation: { type: PartnershipMotivation, required: true }
+      description: { type: string }
+      contributions: { type: array, items: string }
+
+  CostStructure:
+    description: All costs incurred to operate a business model
+    properties:
+      id: { type: string, required: true }
+      type: { type: CostStructureType, required: true }
+      fixedCosts: { type: array, items: CostItem }
+      variableCosts: { type: array, items: CostItem }
+      economiesOfScale: { type: boolean }
+      economiesOfScope: { type: boolean }
+
+  CostItem:
+    description: Individual cost component
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      amount: { type: decimal }
+      frequency: { type: string }
+      category: { type: string }

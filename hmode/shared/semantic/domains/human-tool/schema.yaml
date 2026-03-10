@@ -1,0 +1,347 @@
+# =============================================================================
+# Domain: human-tool
+# Version: 1.0.0
+# Status: stable
+# Dependencies: primitive-tool@^1.0.0, human-task@^1.2.0, approval-queue@^1.0.0
+# Created: 2025-12-10
+# Updated: 2025-12-10
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# =============================================================================
+#
+# Human Tool: Real-time wire protocol for AI ↔ Human communication.
+#
+# This domain provides the **transport layer** for human-in-the-loop:
+# - XML serialization format for IoT Core MQTT pub/sub
+# - Lightweight stimulus/response protocol
+# - Aligns with human-task (workflow) and approval-queue (review types)
+#
+# Relationship to other domains:
+# - human-task: Defines Task, TaskInput, TaskDecision (persistence/workflow)
+# - approval-queue: Defines ReviewTypes (Binary, Rating, Comparison, etc.)
+# - human-tool: Defines wire format for real-time communication
+#
+# Use case: Claude Code `/ask-human` skill via AWS IoT Core WebSockets
+#
+# =============================================================================
+
+domain:
+  name: human-tool
+  version: "1.0.0"
+  description: "Real-time wire protocol for AI ↔ Human communication via IoT"
+  namespace: "https://protoflow.ai/ontology/human-tool#"
+  created_at: "2025-12-10"
+  updated_at: "2025-12-10"
+  dependencies:
+    primitive-tool: "^1.0.0"
+    human-task: "^1.2.0"
+    approval-queue: "^1.0.0"
+
+  changelog:
+    "1.0.0": "Initial release - wire protocol aligned with human-task/approval-queue"
+
+# =============================================================================
+# ENTITIES - Wire Protocol Layer
+# =============================================================================
+
+entities:
+
+  # ============================================
+  # CORE INVOCATION (maps to human-task.Task)
+  # ============================================
+
+  HumanToolInvocation:
+    description: "Wire format for a human input request"
+    maps_to: human-task.Task
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Session/invocation ID (maps to Task.id)"
+      modality:
+        type: human-task.Modality
+        required: true
+        description: "How interaction occurs (from human-task domain)"
+      status:
+        type: InvocationStatus
+        required: true
+        default: pending
+      stimulus:
+        type: Stimulus
+        required: true
+        description: "What is presented to human (maps to Task.input)"
+      response:
+        type: Response
+        description: "Human's response (maps to TaskDecision)"
+
+  # ============================================
+  # STIMULUS - Maps to approval-queue.ReviewType
+  # ============================================
+
+  Stimulus:
+    description: "Content presented to human - aligns with approval-queue review_types"
+    maps_to: human-task.TaskInput
+    properties:
+      type:
+        type: StimulusType
+        required: true
+        description: "Maps to approval-queue ReviewTypeName"
+      question:
+        type: string
+        required: true
+        description: "Primary question (maps to TaskInput.brief)"
+      description:
+        type: string
+        description: "Extended description (maps to TaskInput.summary)"
+      # Type-specific content
+      options:
+        type: array
+        items: Option
+        description: "For single_choice, multi_choice (maps to Category[])"
+      scale:
+        type: Scale
+        description: "For slider, rating (maps to Rating.properties)"
+
+  Option:
+    description: "Choice option - maps to approval-queue.Category"
+    maps_to: approval-queue.Category
+    properties:
+      id:
+        type: string
+        required: true
+      label:
+        type: string
+        required: true
+      value:
+        type: string
+        required: true
+      imageUrl:
+        type: string
+        description: "For image_select"
+
+  Scale:
+    description: "Scale definition - maps to approval-queue.Rating.properties"
+    maps_to: approval-queue.Rating
+    properties:
+      min:
+        type: number
+        required: true
+        default: 0
+      max:
+        type: number
+        required: true
+        default: 100
+      minLabel:
+        type: string
+      maxLabel:
+        type: string
+
+  # ============================================
+  # RESPONSE - Maps to human-task.TaskDecision
+  # ============================================
+
+  Response:
+    description: "Human's response - maps to TaskDecision"
+    maps_to: human-task.TaskDecision
+    properties:
+      type:
+        type: ResponseType
+        required: true
+        description: "Data type of response value"
+      value:
+        type: any
+        required: true
+        description: "The actual response"
+
+  # ============================================
+  # BUNDLE - Maps to human-task.TaskBundle
+  # ============================================
+
+  HumanToolBundle:
+    description: "Multiple invocations - maps to TaskBundle"
+    maps_to: human-task.TaskBundle
+    properties:
+      session:
+        type: string
+        required: true
+        description: "Session identifier"
+      invocations:
+        type: array
+        items: HumanToolInvocation
+        required: true
+
+# =============================================================================
+# ENUMS - Aligned with approval-queue
+# =============================================================================
+
+enums:
+
+  StimulusType:
+    description: "Maps to approval-queue.ReviewTypeName"
+    alignment: approval-queue.ReviewTypeName
+    values:
+      - binary           # approval-queue: Binary (yes/no)
+      - single_choice    # approval-queue: Classification (pick one)
+      - multi_choice     # approval-queue: MultiLabel (pick multiple)
+      - text_input       # approval-queue: Freeform
+      - slider           # approval-queue: Rating (continuous)
+      - rating           # approval-queue: Rating (discrete stars)
+      - comparison       # approval-queue: Comparison (A/B)
+      - ranking          # approval-queue: Ranking (order items)
+      - image_select     # Classification with images
+      - custom           # Custom HTML form
+
+  ResponseType:
+    description: "Data type of response value"
+    values:
+      - boolean          # For binary
+      - string           # For text_input, single_choice
+      - number           # For slider, rating
+      - array            # For multi_choice, ranking
+      - object           # For complex structured responses
+
+  InvocationStatus:
+    description: "Maps to human-task.TaskStatus"
+    alignment: human-task.TaskStatus
+    values:
+      - pending          # TaskStatus.Pending
+      - presented        # TaskStatus.Active
+      - completed        # TaskStatus.Completed
+      - timeout          # TaskStatus.Expired
+      - cancelled        # TaskStatus.Cancelled
+
+# =============================================================================
+# XML WIRE FORMAT
+# =============================================================================
+
+serialization:
+
+  xml:
+    namespace: "https://protoflow.ai/ontology/human-tool#"
+    description: "Compact wire format for MQTT pub/sub"
+
+    # Single invocation
+    single:
+      root: "human-tool"
+      example: |
+        <human-tool id="1" modality="form" status="completed">
+          <stimulus type="binary">
+            <question>Deploy to production?</question>
+          </stimulus>
+          <response type="boolean">true</response>
+        </human-tool>
+
+    # Bundle of invocations
+    bundle:
+      root: "human-tool-bundle"
+      example: |
+        <human-tool-bundle session="abc123">
+          <human-tool id="1" modality="form" status="completed">
+            <stimulus type="binary">
+              <question>Approve deployment?</question>
+            </stimulus>
+            <response type="boolean">true</response>
+          </human-tool>
+          <human-tool id="2" modality="form" status="completed">
+            <stimulus type="slider">
+              <question>Confidence level?</question>
+              <scale min="0" max="100"/>
+            </stimulus>
+            <response type="number">85</response>
+          </human-tool>
+        </human-tool-bundle>
+
+    # Single choice example
+    single_choice_example: |
+      <human-tool id="color" modality="form" status="completed">
+        <stimulus type="single_choice">
+          <question>Pick a color</question>
+          <options>
+            <option id="r" label="Red" value="red"/>
+            <option id="g" label="Green" value="green"/>
+            <option id="b" label="Blue" value="blue"/>
+          </options>
+        </stimulus>
+        <response type="string">blue</response>
+      </human-tool>
+
+    # Multi-choice example
+    multi_choice_example: |
+      <human-tool id="features" modality="form" status="completed">
+        <stimulus type="multi_choice">
+          <question>Select features to enable</question>
+          <options>
+            <option id="dark" label="Dark Mode" value="dark-mode"/>
+            <option id="notify" label="Notifications" value="notifications"/>
+            <option id="sync" label="Cloud Sync" value="sync"/>
+          </options>
+        </stimulus>
+        <response type="array">["dark-mode", "sync"]</response>
+      </human-tool>
+
+    # Comparison (A/B) example
+    comparison_example: |
+      <human-tool id="ab-test" modality="form" status="completed">
+        <stimulus type="comparison">
+          <question>Which response is better?</question>
+          <options>
+            <option id="a" label="Response A" value="a">The quick brown fox...</option>
+            <option id="b" label="Response B" value="b">A swift auburn fox...</option>
+          </options>
+        </stimulus>
+        <response type="string">b</response>
+      </human-tool>
+
+# =============================================================================
+# DOMAIN MAPPING
+# =============================================================================
+
+mapping:
+  description: "How human-tool maps to persistence domains"
+
+  to_human_task:
+    HumanToolInvocation: human-task.Task
+    Stimulus: human-task.TaskInput
+    Response: human-task.TaskDecision
+    HumanToolBundle: human-task.TaskBundle
+
+  to_approval_queue:
+    binary: approval-queue.Binary
+    single_choice: approval-queue.Classification
+    multi_choice: approval-queue.MultiLabel
+    slider: approval-queue.Rating
+    rating: approval-queue.Rating
+    comparison: approval-queue.Comparison
+    ranking: approval-queue.Ranking
+    text_input: approval-queue.Freeform
+
+  to_behavior_reinforcement:
+    comparison: behavior-reinforcement.LearnedPattern.chosen/rejected
+    description: "A/B comparison responses can feed RLHF training"
+
+# =============================================================================
+# META
+# =============================================================================
+
+meta:
+  theoretical_basis:
+    philosophy: "Human-in-the-loop as control mechanism for AI agency"
+    cybernetics: "Feedback loop between autonomous and supervised systems"
+
+  patterns:
+    - "Tool use (MCP, function calling)"
+    - "Human-in-the-loop (HITL)"
+    - "Wire protocol (MQTT pub/sub)"
+
+  composition_role: "Transport layer between AI agents and human actors"
+
+  related_domains:
+    human-task: "Persistence and workflow (Task, TaskDecision)"
+    approval-queue: "Review types and approval patterns"
+    behavior-reinforcement: "RLHF training from comparisons"
+    notification: "Alerting humans"
+
+  implementation:
+    transport: "AWS IoT Core MQTT WebSockets"
+    form_server: "Lambda Function URL"
+    storage: "DynamoDB with 1-hour TTL"
+    auth: "SigV4 for MQTT, IAM for Lambda"

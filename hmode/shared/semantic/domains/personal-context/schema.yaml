@@ -1,0 +1,907 @@
+# =============================================================================
+# Domain: personal-context (PCM - Personal Context Manager)
+# Version: 1.0.0
+# Status: development
+# Dependencies: core@^1.0.0
+# Created: 2025-12-05
+# Updated: 2025-12-05
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# =============================================================================
+
+domain:
+  name: personal-context
+  version: "1.1.0"
+  description: |
+    Probabilistic personal context model - tracks user state at a point in time with
+    confidence intervals and temporal decay. Supports three input modes:
+    - Self-reported (quiz, structured input)
+    - Observed (GPS, sensors)
+    - Inferred (LLM extraction from free text/voice)
+
+    Each context value carries provenance metadata including confidence score that
+    decays over time based on the nature of the data (location decays fast when
+    traveling, preferences decay slowly).
+  namespace: "https://protoflow.ai/ontology/personal-context#"
+  created_at: "2025-12-05"
+  updated_at: "2025-12-05"
+  dependencies:
+    core: "^1.0.0"
+
+  changelog:
+    "1.1.0": "Add provenance, confidence decay, LLM extraction from text/voice"
+    "1.0.0": "Initial version with location, state dimensions, activity, and preferences"
+
+  use_cases:
+    - "AI productivity tools - suggest activities based on context (e.g., driving-friendly tasks)"
+    - "Meal planning apps - know hunger level + dietary preferences"
+    - "Focus apps - respect deep work state, block interruptions"
+    - "Health apps - understand energy levels and activity"
+    - "Smart home - adjust environment based on context"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ============================================
+  # CORE CONTEXT
+  # ============================================
+
+  UserContext:
+    description: "Current context snapshot for a user - the primary entity AI apps query"
+    extends: core.Entity
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Context snapshot ID"
+      user_id:
+        type: uuid
+        required: true
+        description: "User this context belongs to"
+      timestamp:
+        type: datetime
+        required: true
+        description: "When this context was captured"
+      location:
+        type: LocationContext
+        description: "Current location state"
+      activity:
+        type: ActivityContext
+        description: "Current activity state"
+      state:
+        type: StateContext
+        description: "Physiological/psychological state"
+      environment:
+        type: EnvironmentContext
+        description: "Surroundings context"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ============================================
+  # LOCATION
+  # ============================================
+
+  LocationContext:
+    description: "Current location with coordinates, semantic label, and motion state"
+    properties:
+      coordinates:
+        type: Coordinates
+        description: "GPS coordinates"
+      label:
+        type: LocationLabel
+        description: "Semantic label (home, work, gym, etc.)"
+      named_location_id:
+        type: uuid
+        description: "FK to NamedLocation if within a defined zone"
+      motion:
+        type: MotionState
+        required: true
+        default: stationary
+        description: "Current motion state"
+      speed_mps:
+        type: decimal
+        description: "Speed in meters per second (for motion inference)"
+      indoor:
+        type: boolean
+        description: "Whether user is indoors"
+      accuracy_meters:
+        type: decimal
+        description: "GPS accuracy radius"
+
+  Coordinates:
+    description: "Geographic coordinates (WGS84)"
+    properties:
+      latitude:
+        type: decimal
+        required: true
+        minimum: -90
+        maximum: 90
+        description: "Latitude in decimal degrees"
+      longitude:
+        type: decimal
+        required: true
+        minimum: -180
+        maximum: 180
+        description: "Longitude in decimal degrees"
+      altitude_meters:
+        type: decimal
+        description: "Altitude above sea level"
+
+  NamedLocation:
+    description: "User-defined named location with bounding box for zone detection"
+    extends: core.Entity
+    properties:
+      id:
+        type: uuid
+        required: true
+      user_id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Display name (e.g., 'Home', 'Mom's House', 'Office')"
+      label:
+        type: LocationLabel
+        required: true
+        description: "Semantic label category"
+      bounding_box:
+        type: BoundingBox
+        required: true
+        description: "Geographic bounds defining this location"
+      address:
+        type: string
+        description: "Human-readable address"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  BoundingBox:
+    description: "Rectangular geographic bounds for zone detection"
+    properties:
+      north:
+        type: decimal
+        required: true
+        description: "Northern latitude boundary"
+      south:
+        type: decimal
+        required: true
+        description: "Southern latitude boundary"
+      east:
+        type: decimal
+        required: true
+        description: "Eastern longitude boundary"
+      west:
+        type: decimal
+        required: true
+        description: "Western longitude boundary"
+
+  # ============================================
+  # ACTIVITY
+  # ============================================
+
+  ActivityContext:
+    description: "Current activity and focus state"
+    properties:
+      activity:
+        type: ActivityType
+        required: true
+        description: "What the user is currently doing"
+      activity_custom:
+        type: string
+        description: "Custom activity description if activity=other"
+      focus:
+        type: FocusLevel
+        required: true
+        default: casual
+        description: "Current focus/attention level"
+      started_at:
+        type: datetime
+        description: "When this activity started"
+
+  # ============================================
+  # STATE DIMENSIONS
+  # ============================================
+
+  StateContext:
+    description: "Physiological and psychological state dimensions"
+    properties:
+      bipolar:
+        type: BipolarDimensions
+        description: "Dimensions on -5 to +5 scale"
+      unipolar:
+        type: UnipolarDimensions
+        description: "Dimensions on 1-5 scale"
+
+  BipolarDimensions:
+    description: "State dimensions with neutral midpoint (-5 to +5)"
+    properties:
+      energy:
+        type: BipolarValue
+        description: "-5 depleted, 0 baseline, +5 energized"
+      mood:
+        type: BipolarValue
+        description: "-5 negative, 0 neutral, +5 positive"
+      stress:
+        type: BipolarValue
+        description: "-5 calm, 0 baseline, +5 overwhelmed"
+      social_battery:
+        type: BipolarValue
+        description: "-5 drained, 0 neutral, +5 recharged"
+
+  UnipolarDimensions:
+    description: "State dimensions with intensity scale (1-5)"
+    properties:
+      hunger:
+        type: UnipolarValue
+        description: "1 not hungry, 5 starving"
+      alertness:
+        type: UnipolarValue
+        description: "1 drowsy, 5 hyper-alert"
+      focus_capacity:
+        type: UnipolarValue
+        description: "1 scattered, 5 laser-focused"
+      cognitive_load:
+        type: UnipolarValue
+        description: "1 clear-headed, 5 overloaded"
+      physical_comfort:
+        type: UnipolarValue
+        description: "1 uncomfortable, 5 very comfortable"
+
+  BipolarValue:
+    description: "Value on bipolar scale with optional label"
+    properties:
+      value:
+        type: integer
+        required: true
+        minimum: -5
+        maximum: 5
+        description: "Numeric value from -5 to +5"
+      label:
+        type: string
+        description: "Human-readable label for this value"
+      recorded_at:
+        type: datetime
+        description: "When this was recorded"
+      provenance:
+        type: ContextProvenance
+        description: "How this value was obtained"
+
+  UnipolarValue:
+    description: "Value on unipolar scale with optional label"
+    properties:
+      value:
+        type: integer
+        required: true
+        minimum: 1
+        maximum: 5
+        description: "Numeric value from 1 to 5"
+      label:
+        type: string
+        description: "Human-readable label for this value"
+      recorded_at:
+        type: datetime
+        description: "When this was recorded"
+      provenance:
+        type: ContextProvenance
+        description: "How this value was obtained"
+
+  # ============================================
+  # PROVENANCE & CONFIDENCE
+  # ============================================
+
+  ContextProvenance:
+    description: "Origin and confidence of a context value - supports decay over time"
+    properties:
+      category:
+        type: ContextCategory
+        required: true
+        description: "Self-reported, observed, or inferred"
+      source:
+        type: ContextSource
+        required: true
+        description: "How this was captured"
+      confidence:
+        type: decimal
+        required: true
+        minimum: 0.0
+        maximum: 1.0
+        description: "Confidence score (0.0-1.0)"
+      recorded_at:
+        type: datetime
+        required: true
+        description: "When this value was recorded"
+      decay_rate:
+        type: DecayRate
+        default: normal
+        description: "How quickly confidence decays"
+      raw_input:
+        type: string
+        description: "Original user input (for LLM-extracted values)"
+      extraction_model:
+        type: string
+        description: "Model used for extraction (if inferred)"
+
+  ConfidenceScore:
+    description: "Confidence with time-based decay calculation"
+    properties:
+      initial_confidence:
+        type: decimal
+        required: true
+        minimum: 0.0
+        maximum: 1.0
+        description: "Confidence when recorded"
+      current_confidence:
+        type: decimal
+        required: true
+        minimum: 0.0
+        maximum: 1.0
+        description: "Confidence after decay (computed)"
+      recorded_at:
+        type: datetime
+        required: true
+      decay_rate:
+        type: DecayRate
+        default: normal
+    computed:
+      current_confidence:
+        formula: "initial_confidence * decay_factor(recorded_at, decay_rate)"
+        description: "Decays based on time elapsed and decay rate"
+
+  # ============================================
+  # ENVIRONMENT
+  # ============================================
+
+  EnvironmentContext:
+    description: "Surroundings and environmental factors"
+    properties:
+      noise_level:
+        type: NoiseLevel
+        description: "Ambient noise level"
+      social_context:
+        type: SocialContext
+        description: "Who the user is with"
+      indoor:
+        type: boolean
+        description: "Whether user is indoors"
+      weather:
+        type: string
+        description: "Current weather conditions (if relevant)"
+
+  # ============================================
+  # PREFERENCES
+  # ============================================
+
+  UserPreferences:
+    description: "User preferences for scheduling, diet, and activities"
+    extends: core.Entity
+    properties:
+      id:
+        type: uuid
+        required: true
+      user_id:
+        type: uuid
+        required: true
+      schedule:
+        type: SchedulePreferences
+      dietary:
+        type: DietaryPreferences
+      activity:
+        type: ActivityPreferences
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  SchedulePreferences:
+    description: "Typical schedule and timing preferences"
+    properties:
+      typical_wake_time:
+        type: string
+        format: time
+        description: "Typical wake time (HH:MM)"
+      typical_bedtime:
+        type: string
+        format: time
+        description: "Typical bedtime (HH:MM)"
+      preferred_work_start:
+        type: string
+        format: time
+        description: "Preferred work start time"
+      preferred_work_end:
+        type: string
+        format: time
+        description: "Preferred work end time"
+      do_not_disturb:
+        type: array
+        items: TimeWindow
+        description: "DND time windows"
+      timezone:
+        type: string
+        description: "IANA timezone identifier"
+
+  TimeWindow:
+    description: "Time range with optional day-of-week restrictions"
+    properties:
+      start_time:
+        type: string
+        format: time
+        required: true
+      end_time:
+        type: string
+        format: time
+        required: true
+      days:
+        type: array
+        items: DayOfWeek
+        description: "Days this applies (empty = all days)"
+
+  DietaryPreferences:
+    description: "Food preferences and restrictions"
+    properties:
+      restrictions:
+        type: array
+        items: DietaryRestriction
+        description: "Dietary restrictions (allergies, intolerances)"
+      diets:
+        type: array
+        items: DietType
+        description: "Diet types followed (vegetarian, keto, etc.)"
+      typical_meal_times:
+        type: MealSchedule
+        description: "Typical meal times"
+      notes:
+        type: string
+        description: "Additional dietary notes"
+
+  MealSchedule:
+    description: "Typical meal times"
+    properties:
+      breakfast:
+        type: string
+        format: time
+      lunch:
+        type: string
+        format: time
+      dinner:
+        type: string
+        format: time
+      snacks:
+        type: array
+        items: string
+        description: "Typical snack times"
+
+  ActivityPreferences:
+    description: "Exercise and hobby preferences"
+    properties:
+      preferred_exercises:
+        type: array
+        items: string
+        description: "Preferred exercise types"
+      exercise_times:
+        type: array
+        items: TimeWindow
+        description: "Preferred exercise times"
+      hobbies:
+        type: array
+        items: string
+        description: "Hobbies and interests"
+      social_preferences:
+        type: SocialPreference
+        description: "Social activity preferences"
+
+  # ============================================
+  # CONTEXT HISTORY (stored but not analyzed)
+  # ============================================
+
+  ContextSnapshot:
+    description: "Historical context snapshot for storage"
+    extends: core.Entity
+    properties:
+      id:
+        type: uuid
+        required: true
+      user_id:
+        type: uuid
+        required: true
+      context:
+        type: UserContext
+        required: true
+        description: "Full context at this point in time"
+      source:
+        type: ContextSource
+        description: "How this context was captured"
+      created_at:
+        type: datetime
+        required: true
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  # Location
+  LocationLabel:
+    description: "Semantic labels for locations"
+    values:
+      - home
+      - work
+      - gym
+      - commute        # In transit between locations
+      - shopping
+      - restaurant
+      - outdoors
+      - medical
+      - school
+      - entertainment
+      - other
+
+  MotionState:
+    description: "Motion/movement state (derived from speed)"
+    values:
+      - stationary     # <0.5 m/s
+      - walking        # 0.5-2.5 m/s
+      - running        # 2.5-6 m/s
+      - cycling        # Variable, detected by pattern
+      - driving        # >6 m/s in vehicle pattern
+      - transit        # Public transportation
+      - unknown
+
+  # Activity
+  ActivityType:
+    description: "Current activity type"
+    values:
+      - sleeping
+      - waking_up
+      - working
+      - working_deep_focus
+      - meeting
+      - commuting
+      - driving
+      - exercising
+      - eating
+      - cooking
+      - relaxing
+      - socializing
+      - shopping
+      - errands
+      - childcare
+      - self_care
+      - entertainment
+      - learning
+      - creating
+      - other
+
+  FocusLevel:
+    description: "Attention/focus level"
+    values:
+      - distracted     # Unable to focus, many interruptions
+      - casual         # Light attention, easily interruptible
+      - focused        # Engaged, prefer fewer interruptions
+      - deep_work      # Deep focus, do not disturb
+
+  # Environment
+  NoiseLevel:
+    description: "Ambient noise level"
+    values:
+      - silent
+      - quiet
+      - moderate
+      - noisy
+      - very_noisy
+
+  SocialContext:
+    description: "Who the user is with"
+    values:
+      - alone
+      - with_partner
+      - with_family
+      - with_friends
+      - with_coworkers
+      - with_strangers  # Public setting
+      - in_meeting
+
+  # Preferences
+  DietaryRestriction:
+    description: "Dietary restrictions and allergies"
+    values:
+      - gluten_free
+      - dairy_free
+      - nut_allergy
+      - shellfish_allergy
+      - soy_free
+      - egg_free
+      - kosher
+      - halal
+      - no_pork
+      - no_beef
+      - no_alcohol
+      - other
+
+  DietType:
+    description: "Diet types/philosophies"
+    values:
+      - omnivore
+      - vegetarian
+      - vegan
+      - pescatarian
+      - keto
+      - paleo
+      - mediterranean
+      - low_carb
+      - low_sodium
+      - diabetic_friendly
+      - heart_healthy
+      - other
+
+  SocialPreference:
+    description: "Social activity preference"
+    values:
+      - very_introverted
+      - introverted
+      - ambivert
+      - extroverted
+      - very_extroverted
+
+  DayOfWeek:
+    description: "Days of the week"
+    values:
+      - monday
+      - tuesday
+      - wednesday
+      - thursday
+      - friday
+      - saturday
+      - sunday
+
+  ContextCategory:
+    description: "How the context value was obtained"
+    values:
+      - self_reported   # User explicitly stated (quiz, text, voice)
+      - observed        # Detected from sensors (GPS, accelerometer)
+      - inferred        # Derived by LLM or algorithm from other data
+
+  ContextSource:
+    description: "Specific source of context capture"
+    values:
+      - manual_quiz     # User completed questionnaire
+      - manual_text     # User sent free-text, LLM extracted
+      - manual_voice    # User sent voice, transcribed + LLM extracted
+      - device_sensor   # From device sensors
+      - calendar_sync   # Inferred from calendar
+      - location_auto   # Auto-detected from GPS
+      - api_push        # External system pushed context
+
+  DecayRate:
+    description: "How quickly confidence decays over time"
+    values:
+      - none            # No decay (preferences, stable facts)
+      - slow            # Half-life ~24 hours (home location)
+      - normal          # Half-life ~4 hours (activity, mood)
+      - fast            # Half-life ~1 hour (GPS when traveling)
+      - very_fast       # Half-life ~15 minutes (real-time state)
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+
+  CaptureContext:
+    type: create
+    description: "Capture current user context (from quiz, text, or voice)"
+    operatesOn: UserContext
+    params:
+      user_id:
+        type: uuid
+        required: true
+      location:
+        type: LocationContext
+      activity:
+        type: ActivityContext
+      state:
+        type: StateContext
+      environment:
+        type: EnvironmentContext
+      source:
+        type: ContextSource
+        default: manual_quiz
+    returns: UserContext
+    permission: context:write
+
+  GetCurrentContext:
+    type: read
+    description: "Get current context for a user (what AI apps call)"
+    operatesOn: UserContext
+    params:
+      user_id:
+        type: uuid
+        required: true
+    returns: UserContext
+    permission: context:read
+
+  UpdateLocation:
+    type: update
+    description: "Update location context (e.g., from GPS)"
+    operatesOn: LocationContext
+    params:
+      user_id:
+        type: uuid
+        required: true
+      coordinates:
+        type: Coordinates
+      motion:
+        type: MotionState
+      speed_mps:
+        type: decimal
+    returns: LocationContext
+    permission: context:write
+
+  UpdateActivity:
+    type: update
+    description: "Update activity context"
+    operatesOn: ActivityContext
+    params:
+      user_id:
+        type: uuid
+        required: true
+      activity:
+        type: ActivityType
+        required: true
+      focus:
+        type: FocusLevel
+    returns: ActivityContext
+    permission: context:write
+
+  UpdateStateDimension:
+    type: update
+    description: "Update a single state dimension"
+    operatesOn: StateContext
+    params:
+      user_id:
+        type: uuid
+        required: true
+      dimension:
+        type: string
+        required: true
+        description: "Dimension name (energy, mood, hunger, etc.)"
+      value:
+        type: integer
+        required: true
+        description: "Value (-5 to +5 for bipolar, 1-5 for unipolar)"
+    returns: StateContext
+    permission: context:write
+
+  CreateNamedLocation:
+    type: create
+    description: "Create a named location with bounding box"
+    operatesOn: NamedLocation
+    params:
+      user_id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      label:
+        type: LocationLabel
+        required: true
+      bounding_box:
+        type: BoundingBox
+        required: true
+      address:
+        type: string
+    returns: NamedLocation
+    permission: preferences:write
+
+  UpdatePreferences:
+    type: update
+    description: "Update user preferences"
+    operatesOn: UserPreferences
+    params:
+      user_id:
+        type: uuid
+        required: true
+      schedule:
+        type: SchedulePreferences
+      dietary:
+        type: DietaryPreferences
+      activity:
+        type: ActivityPreferences
+    returns: UserPreferences
+    permission: preferences:write
+
+  ExtractContextFromText:
+    type: create
+    description: "Parse free-text input via LLM to extract structured context"
+    operatesOn: UserContext
+    params:
+      user_id:
+        type: uuid
+        required: true
+      text:
+        type: string
+        required: true
+        description: "Free-text input from user (e.g., 'I'm at home, feeling tired')"
+      model:
+        type: string
+        default: "claude-sonnet"
+        description: "LLM model to use for extraction"
+    returns: UserContext
+    permission: context:write
+    notes: |
+      Extraction flow:
+      1. Send text + schema to LLM
+      2. LLM returns structured JSON matching UserContext
+      3. Each extracted field gets provenance:
+         - category: inferred (from self_reported text)
+         - source: manual_text
+         - confidence: LLM-assigned (0.0-1.0)
+         - raw_input: original text
+         - extraction_model: model used
+      4. Merge with existing context (higher confidence wins)
+
+  ExtractContextFromVoice:
+    type: create
+    description: "Transcribe voice input, then extract structured context via LLM"
+    operatesOn: UserContext
+    params:
+      user_id:
+        type: uuid
+        required: true
+      audio_url:
+        type: uri
+        required: true
+        description: "URL to audio file"
+      transcription_model:
+        type: string
+        default: "whisper"
+      extraction_model:
+        type: string
+        default: "claude-sonnet"
+    returns: UserContext
+    permission: context:write
+    notes: |
+      Flow: audio → transcribe → ExtractContextFromText
+
+# =============================================================================
+# META
+# =============================================================================
+
+meta:
+  use_cases:
+    - "AI productivity tool queries PCM, learns user is driving, suggests voice-based tasks"
+    - "Meal planning app queries PCM, knows user is hungry + dietary preferences"
+    - "Focus app queries PCM, knows user is in deep work mode, blocks interruptions"
+    - "Smart home adjusts lighting based on energy level and time of day"
+
+  integrations:
+    - "Mobile apps (iOS/Android) for GPS and sensors"
+    - "Wearables for activity and health data"
+    - "Calendar systems for schedule inference"
+    - "Smart home platforms"
+
+  related_domains:
+    - health: "Can extend state dimensions with health metrics"
+    - calendar: "Schedule preferences relate to calendar"
+    - spatial-zone: "Named locations are similar to zones"
+
+  api_pattern:
+    description: "Simple REST API for context queries"
+    endpoints:
+      - "GET /context/{user_id} - Current context"
+      - "POST /context/{user_id} - Update context"
+      - "GET /preferences/{user_id} - User preferences"
+      - "PUT /preferences/{user_id} - Update preferences"

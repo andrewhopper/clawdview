@@ -1,0 +1,86 @@
+# =============================================================================
+# Process Net - Level 0: Mathematical Primitives
+# Petri net foundations for deterministic process execution
+# =============================================================================
+
+schema_version: "1.0.0"
+layer: primitives
+
+primitives:
+
+  Place:
+    description: |
+      A condition or state where tokens rest.
+      Represented as a circle in Petri net diagrams.
+    properties:
+      id: { type: string, required: true }
+      name: { type: string }
+      capacity: { type: integer, description: "Max tokens (null = unbounded)" }
+
+  Transition:
+    description: |
+      An atomic action that consumes tokens from input places
+      and produces tokens in output places. Represented as a
+      rectangle or bar in diagrams.
+    properties:
+      id: { type: string, required: true }
+      name: { type: string }
+
+  Arc:
+    description: |
+      Directed edge connecting Place->Transition or Transition->Place.
+      Never Place->Place or Transition->Transition (bipartite graph).
+    properties:
+      id: { type: string, required: true }
+      source_id: { type: string, required: true }
+      target_id: { type: string, required: true }
+      source_type: { type: NodeType, required: true }
+      target_type: { type: NodeType, required: true }
+      weight: { type: integer, default: 1, description: "Tokens consumed/produced" }
+
+  Token:
+    description: |
+      A marker in a place. The atomic unit of "work" or "case"
+      flowing through the net. Can carry attributes (colored token).
+    properties:
+      id: { type: string, required: true }
+      place_id: { type: string, required: true }
+      attributes: { type: object, description: "Colored token data" }
+      created_at: { type: datetime, required: true }
+
+  Marking:
+    description: |
+      The distribution of tokens across places at a point in time.
+      Represents the complete state of the net.
+    properties:
+      id: { type: string, required: true }
+      net_id: { type: string, required: true }
+      tokens: { type: map, keyType: string, valueType: integer, description: "place_id -> token_count" }
+      timestamp: { type: datetime, required: true }
+
+  Guard:
+    description: |
+      Boolean condition that must be true for transition to fire.
+      Evaluated against token attributes and external context.
+    properties:
+      id: { type: string, required: true }
+      transition_id: { type: string, required: true }
+      expression: { type: string, required: true }
+      description: { type: string }
+
+  Inhibitor:
+    description: |
+      Arc that prevents transition if source place has tokens.
+      Extends basic Petri net expressiveness.
+    properties:
+      id: { type: string, required: true }
+      place_id: { type: string, required: true }
+      transition_id: { type: string, required: true }
+      threshold: { type: integer, default: 1 }
+
+enums:
+
+  NodeType:
+    values:
+      - place
+      - transition

@@ -1,0 +1,58 @@
+{
+  "domain": "human-task",
+  "version": "1.1.0",
+  "description": "Human task queue, review workflows, decisions, and multi-reviewer approval patterns",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.1.0": "Extend work-item abstract base domain for shared primitives",
+    "1.0.0": "Initial release - human-in-the-loop review system with multi-reviewer approval patterns"
+  },
+  "entities": [
+    "Task",
+    "TaskInput",
+    "TaskDecision",
+    "Reminder",
+    "TaskBundle",
+    "TaskAssignment",
+    "AggregateDecision",
+    "ReviewAuditLog",
+    "TaskType",
+    "ActionType",
+    "FeedbackDimension",
+    "ApprovalPattern",
+    "Actor",
+    "Priority",
+    "Recommendation",
+    "FeedbackSignal"
+  ],
+  "actions": [
+    "CreateTask",
+    "SubmitDecision",
+    "DeferTask",
+    "GetQueue",
+    "AssignReviewer",
+    "ComputeAggregateDecision"
+  ],
+  "enums": [
+    "TaskStatus",
+    "ReminderStatus",
+    "BundleType",
+    "BundleStatus",
+    "ReviewerRole",
+    "AssignmentStatus",
+    "ApprovalPatternType",
+    "TieBreakerStrategy",
+    "RecommendationStrength",
+    "ScaleType",
+    "DependencyType",
+    "ImpactType",
+    "ImpactSeverity",
+    "ActorType",
+    "Modality",
+    "AuditEventType"
+  ],
+  "dependencies": ["core", "auth", "notification", "work-item"],
+  "extends": "work-item",
+  "use_case": "Human-in-the-loop review system for AI-generated content",
+  "w3c_standards": ["RDF", "OWL", "SHACL"]
+}

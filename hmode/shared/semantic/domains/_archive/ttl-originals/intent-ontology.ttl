@@ -1,0 +1,375 @@
+@prefix intent: <http://hopperlabs.ai/ontology/intent#> .
+@prefix behavior: <http://hopperlabs.ai/ontology/behavior#> .
+@prefix context: <http://hopperlabs.ai/ontology/context#> .
+@prefix action: <http://hopperlabs.ai/ontology/action#> .
+@prefix email: <http://hopperlabs.ai/ontology/email#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+# ============================================
+# Intent Domain Ontology
+# Models human intentions, behaviors, and context
+# The breakthrough: Define software as human behavior patterns
+# ============================================
+
+# ----------------
+# CORE: Human Intent
+# ----------------
+
+intent:HumanIntent a owl:Class ;
+    rdfs:label "Human Intent" ;
+    rdfs:comment "What a human wants to accomplish, independent of implementation" .
+
+intent:goal a owl:DatatypeProperty ;
+    rdfs:domain intent:HumanIntent ;
+    rdfs:range xsd:string ;
+    rdfs:comment "The desired outcome" .
+
+intent:trigger a owl:DatatypeProperty ;
+    rdfs:domain intent:HumanIntent ;
+    rdfs:range xsd:string ;
+    rdfs:comment "What prompts this intent" .
+
+intent:implements a owl:ObjectProperty ;
+    rdfs:domain intent:HumanIntent ;
+    rdfs:range action:Action ;
+    rdfs:comment "Technical actions that can fulfill this intent" .
+
+intent:choosesAction a owl:DatatypeProperty ;
+    rdfs:domain intent:HumanIntent ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Logic for choosing between implementation options" .
+
+intent:requiredContext a owl:ObjectProperty ;
+    rdfs:domain intent:HumanIntent ;
+    rdfs:range context:Context ;
+    rdfs:comment "Context required for this intent to be relevant" .
+
+# ----------------
+# EXAMPLE INTENTS
+# ----------------
+
+intent:StayInTouch a intent:HumanIntent ;
+    rdfs:label "Stay In Touch" ;
+    intent:goal "Maintain meaningful connection with someone" ;
+    intent:trigger "Days since last contact exceeds relationship frequency preference" ;
+    intent:implements email:SendEmailAction, call:MakePhoneCall, sms:SendMessage, visit:ScheduleVisit ;
+    intent:choosesAction """
+        Priority order based on context:
+        1. PhoneCall IF has_time AND good_signal AND relationship_closeness > 0.7
+        2. VideoCall IF both_available AND quality_matters
+        3. Email IF need_to_share_details OR long_form
+        4. TextMessage IF just_checking_in OR quick_update
+    """ ;
+    intent:requiredContext context:NotInMeeting, context:RecipientAwake .
+
+intent:RememberSomething a intent:HumanIntent ;
+    rdfs:label "Remember Something" ;
+    intent:goal "Don't forget task or commitment" ;
+    intent:trigger "Task created or commitment made" ;
+    intent:implements task:CreateTask, calendar:CreateEvent, note:CreateNote, reminder:SetReminder ;
+    intent:choosesAction """
+        Based on type:
+        - Appointment/meeting → calendar:CreateEvent
+        - Action item → task:CreateTask
+        - Information → note:CreateNote
+        - Simple reminder → reminder:SetReminder
+    """ .
+
+intent:GetProductiveWork a intent:HumanIntent ;
+    rdfs:label "Get Productive Work Done" ;
+    intent:goal "Accomplish focused, deep work" ;
+    intent:trigger "Calendar shows focus block OR user requests focus time" ;
+    intent:implements calendar:BlockTime, email:PauseNotifications, phone:EnableDND, music:PlayFocusPlaylist ;
+    intent:choosesAction "Execute all in parallel to create distraction-free environment" ;
+    intent:requiredContext context:HasTimeBlock, context:NotInMeeting .
+
+intent:FeelAccomplished a intent:HumanIntent ;
+    rdfs:label "Feel Accomplished" ;
+    intent:goal "Sense of progress and achievement" ;
+    intent:trigger "End of day OR end of week OR milestone reached" ;
+    intent:implements journal:ReflectOnDay, task:ReviewCompleted, analytics:ShowProgress ;
+    intent:choosesAction "Show wins, not just remaining tasks" .
+
+intent:AvoidDistraction a intent:HumanIntent ;
+    rdfs:label "Avoid Distraction" ;
+    intent:goal "Stay focused on current priority" ;
+    intent:trigger "In focus time OR working on important task" ;
+    intent:implements browser:BlockSites, phone:EnableDND, app:HideNotifications ;
+    intent:choosesAction "Block based on distraction_history" ;
+    intent:requiredContext context:FocusTime .
+
+# ----------------
+# BEHAVIOR PATTERNS (Routines)
+# ----------------
+
+behavior:BehaviorPattern a owl:Class ;
+    rdfs:label "Behavior Pattern" ;
+    rdfs:comment "Recurring pattern of human behavior (routine, workflow, habit)" .
+
+behavior:trigger a owl:DatatypeProperty ;
+    rdfs:domain behavior:BehaviorPattern ;
+    rdfs:range xsd:string ;
+    rdfs:comment "What initiates this behavior pattern" .
+
+behavior:steps a owl:ObjectProperty ;
+    rdfs:domain behavior:BehaviorPattern ;
+    rdfs:range intent:HumanIntent ;
+    rdfs:comment "Sequence of intents that make up this behavior" .
+
+behavior:duration a owl:DatatypeProperty ;
+    rdfs:domain behavior:BehaviorPattern ;
+    rdfs:range xsd:duration ;
+    rdfs:comment "Typical time this behavior takes" .
+
+behavior:adaptsTo a owl:ObjectProperty ;
+    rdfs:domain behavior:BehaviorPattern ;
+    rdfs:range context:Context ;
+    rdfs:comment "Contextual factors this behavior adapts to" .
+
+behavior:completionCriteria a owl:DatatypeProperty ;
+    rdfs:domain behavior:BehaviorPattern ;
+    rdfs:range xsd:string ;
+    rdfs:comment "How to know this behavior is complete" .
+
+# ----------------
+# EXAMPLE BEHAVIORS
+# ----------------
+
+behavior:MorningRoutine a behavior:BehaviorPattern ;
+    rdfs:label "Morning Routine" ;
+    behavior:trigger "User wakes up" ;
+    behavior:duration "PT30M"^^xsd:duration ;
+    behavior:steps intent:CheckWeather, intent:ReviewCalendar, intent:TriageEmail, intent:PlanDay ;
+    behavior:adaptsTo context:TimeAvailable, context:DayOfWeek ;
+    behavior:completionCriteria "Day plan created AND email inbox < 10" .
+
+behavior:EndOfDay a behavior:BehaviorPattern ;
+    rdfs:label "End of Day Routine" ;
+    behavior:trigger "Work day ending (5pm OR calendar clear)" ;
+    behavior:duration "PT15M"^^xsd:duration ;
+    behavior:steps intent:ReviewAccomplishments, intent:CaptureOpenLoops, intent:PrepareForTomorrow, intent:Disconnect ;
+    behavior:completionCriteria "All tasks captured AND tomorrow prepared" .
+
+behavior:EmailProcessing a behavior:BehaviorPattern ;
+    rdfs:label "Process Inbox to Zero" ;
+    behavior:trigger "Unprocessed emails > threshold" ;
+    behavior:steps intent:ReadEmail, intent:DecideAction, intent:ExecuteAction, intent:MoveToNext ;
+    behavior:adaptsTo context:AvailableTime, context:EmailCount ;
+    behavior:completionCriteria "Inbox count = 0" .
+
+behavior:WeeklyReview a behavior:BehaviorPattern ;
+    rdfs:label "Weekly Review" ;
+    behavior:trigger "Friday afternoon OR Sunday evening" ;
+    behavior:duration "PT60M"^^xsd:duration ;
+    behavior:steps intent:ReviewWeek, intent:CelebrateWins, intent:CaptureInsights, intent:PlanNextWeek ;
+    behavior:completionCriteria "Next week planned AND insights captured" .
+
+behavior:DeepWorkSession a behavior:BehaviorPattern ;
+    rdfs:label "Deep Work Session" ;
+    behavior:trigger "Calendar focus block" ;
+    behavior:duration "PT90M"^^xsd:duration ;
+    behavior:steps intent:GetProductiveWork, intent:AvoidDistraction, intent:MaintainFocus ;
+    behavior:adaptsTo context:EnergyLevel, context:TaskComplexity ;
+    behavior:completionCriteria "Focus time completed OR significant progress made" .
+
+# ----------------
+# CONTEXT (Situational Awareness)
+# ----------------
+
+context:Context a owl:Class ;
+    rdfs:label "Context" ;
+    rdfs:comment "Situational factors that influence intent and behavior" .
+
+context:when a owl:DatatypeProperty ;
+    rdfs:domain context:Context ;
+    rdfs:range xsd:string ;
+    rdfs:comment "When this context applies" .
+
+context:enables a owl:ObjectProperty ;
+    rdfs:domain context:Context ;
+    rdfs:range intent:HumanIntent ;
+    rdfs:comment "Intents that are appropriate in this context" .
+
+context:disables a owl:ObjectProperty ;
+    rdfs:domain context:Context ;
+    rdfs:range intent:HumanIntent ;
+    rdfs:comment "Intents that should be blocked in this context" .
+
+context:automates a owl:ObjectProperty ;
+    rdfs:domain context:Context ;
+    rdfs:range action:Action ;
+    rdfs:comment "Actions automatically executed when entering this context" .
+
+context:reminderMessage a owl:DatatypeProperty ;
+    rdfs:domain context:Context ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Message to show if user violates context rules" .
+
+# ----------------
+# EXAMPLE CONTEXTS
+# ----------------
+
+context:WorkingHours a context:Context ;
+    rdfs:label "Working Hours" ;
+    context:when "Monday-Friday 9am-5pm" ;
+    context:enables intent:GetProductiveWork, intent:CollaborateWithTeam, intent:AttendMeeting ;
+    context:disables intent:PersonalErrand, intent:SocialBrowsing .
+
+context:FocusTime a context:Context ;
+    rdfs:label "Focus Time" ;
+    context:when "Calendar shows Deep Work block" ;
+    context:enables intent:GetProductiveWork, intent:ResearchTopic ;
+    context:disables intent:CheckEmail, intent:CheckSlack, intent:BrowseSocial ;
+    context:automates email:PauseNotifications, phone:EnableDND, slack:SetStatus ;
+    context:reminderMessage "You're in focus time. Is this urgent?" .
+
+context:WithFamily a context:Context ;
+    rdfs:label "With Family" ;
+    context:when "Evening OR weekend, at home location" ;
+    context:enables intent:PlayWithKids, intent:CookDinner, intent:QualityTime ;
+    context:disables intent:CheckWorkEmail, intent:TakeWorkCall ;
+    context:reminderMessage "You chose family time. Can work wait?" .
+
+context:Commuting a context:Context ;
+    rdfs:label "Commuting" ;
+    context:when "GPS moving, car connected" ;
+    context:enables intent:ListenToPodcast, intent:ReflectOnDay, intent:PlanDay ;
+    context:disables intent:WriteEmail, intent:ReadDocument ;  # Safety
+    context:automates phone:EnableDriveMode .
+
+context:LowEnergy a context:Context ;
+    rdfs:label "Low Energy" ;
+    context:when "Time of day OR biometric indicators" ;
+    context:enables intent:TakeBreak, intent:LightTasks, intent:AdminWork ;
+    context:disables intent:CreativeWork, intent:ImportantDecisions ;
+    context:reminderMessage "Your energy is low. Save complex work for later?" .
+
+context:HighEnergy a context:Context ;
+    rdfs:label "High Energy" ;
+    context:when "Morning OR after exercise" ;
+    context:enables intent:TackleHardProblem, intent:CreativeWork, intent:ImportantDecisions ;
+    context:disables intent:BusyWork, intent:AdminWork ;  # Don't waste high energy
+    context:reminderMessage "Great energy! Focus on your most important work." .
+
+# ----------------
+# JOBS TO BE DONE (User Goals)
+# ----------------
+
+job:Job a owl:Class ;
+    rdfs:label "Job To Be Done" ;
+    rdfs:comment "High-level job user hires software to accomplish" .
+
+job:when a owl:DatatypeProperty ;
+    rdfs:domain job:Job ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Situation triggering this job" .
+
+job:want a owl:DatatypeProperty ;
+    rdfs:domain job:Job ;
+    rdfs:range xsd:string ;
+    rdfs:comment "What user wants to achieve" .
+
+job:outcome a owl:DatatypeProperty ;
+    rdfs:domain job:Job ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Desired emotional/functional outcome" .
+
+job:frustrations a owl:DatatypeProperty ;
+    rdfs:domain job:Job ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Current frustrations with existing solutions" .
+
+job:hiresSoftwareFor a owl:ObjectProperty ;
+    rdfs:domain job:Job ;
+    rdfs:range intent:HumanIntent ;
+    rdfs:comment "Specific intents software should support" .
+
+# ----------------
+# EXAMPLE JOBS
+# ----------------
+
+job:StayConnectedToLovedOnes a job:Job ;
+    rdfs:label "Stay Connected to Loved Ones" ;
+    job:when "Physically distant from family/friends" ;
+    job:want "Maintain close emotional connection" ;
+    job:outcome "Feel connected, loved ones feel valued" ;
+    job:frustrations "Forget to reach out, don't know what to say, time zone differences" ;
+    job:hiresSoftwareFor intent:StayInTouch, intent:RememberBirthday, intent:ShareMoment .
+
+job:FeelProductive a job:Job ;
+    rdfs:label "Feel Productive" ;
+    job:when "Want to accomplish meaningful work" ;
+    job:want "Make progress on important goals" ;
+    job:outcome "Sense of accomplishment, reduced stress" ;
+    job:frustrations "Too many distractions, unclear priorities, interrupted focus" ;
+    job:hiresSoftwareFor intent:GetProductiveWork, intent:AvoidDistraction, intent:FeelAccomplished .
+
+job:ManageOverwhelm a job:Job ;
+    rdfs:label "Manage Overwhelm" ;
+    job:when "Too much to do, feeling stressed" ;
+    job:want "Clarity on what matters, confidence in plan" ;
+    job:outcome "Feel in control, reduced anxiety" ;
+    job:frustrations "Can't remember everything, conflicting priorities, no system" ;
+    job:hiresSoftwareFor intent:CaptureEverything, intent:PrioritizeTasks, intent:CreatePlan .
+
+# ----------------
+# INTENT LEARNING
+# ----------------
+
+intent:UserPreference a owl:Class ;
+    rdfs:label "User Preference" ;
+    rdfs:comment "Learned preferences for how user wants intents fulfilled" .
+
+intent:preferredTime a owl:DatatypeProperty ;
+    rdfs:domain intent:UserPreference ;
+    rdfs:range xsd:time ;
+    rdfs:comment "User's preferred time for this intent" .
+
+intent:preferredMethod a owl:ObjectProperty ;
+    rdfs:domain intent:UserPreference ;
+    rdfs:range action:Action ;
+    rdfs:comment "User's preferred implementation method" .
+
+intent:adaptationHistory a owl:DatatypeProperty ;
+    rdfs:domain intent:UserPreference ;
+    rdfs:range xsd:string ;
+    rdfs:comment "History of user's choices to learn from" .
+
+# Example: Learned preference
+:JohnPreference_StayInTouch a intent:UserPreference ;
+    intent:forIntent intent:StayInTouch ;
+    intent:forRelationship :Mom ;
+    intent:preferredTime "10:00:00"^^xsd:time ;  # Sunday mornings
+    intent:preferredMethod call:PhoneCall ;  # Prefers calls over email
+    intent:adaptationHistory "Accepted Sunday morning reminders 8/10 times, chose calls 9/10 times" .
+
+# ----------------
+# INTENT COMPILATION
+# ----------------
+
+intent:IntentCompiler a owl:Class ;
+    rdfs:label "Intent Compiler" ;
+    rdfs:comment "System that compiles human intent into technical actions" .
+
+intent:compilesTo a owl:ObjectProperty ;
+    rdfs:domain intent:HumanIntent ;
+    rdfs:range action:Action ;
+    rdfs:comment "Intent compiles to these actions based on context" .
+
+# Example compilation rules
+intent:StayInTouch intent:compilesTo [
+    a intent:ConditionalAction ;
+    intent:condition "context:HasPhoneSignal AND context:HasTime" ;
+    intent:action call:MakePhoneCall
+] , [
+    a intent:ConditionalAction ;
+    intent:condition "context:Busy OR context:NoSignal" ;
+    intent:action email:SendEmail
+] , [
+    a intent:ConditionalAction ;
+    intent:condition "context:VeryBusy" ;
+    intent:action sms:SendMessage
+] .

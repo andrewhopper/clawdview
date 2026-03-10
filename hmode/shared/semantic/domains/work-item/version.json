@@ -1,0 +1,44 @@
+{
+  "domain": "work-item",
+  "version": "1.0.0",
+  "description": "Abstract base domain for work items - shared primitives for todos, review tasks, and assignable work",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - abstract base with WorkItem, Priority, Deadline, Reminder, Assignment, Attachment, ActivityLogEntry, Recurrence"
+  },
+  "abstract": true,
+  "entities": [
+    "WorkItem",
+    "Priority",
+    "Deadline",
+    "Reminder",
+    "Assignment",
+    "Attachment",
+    "ActivityLogEntry",
+    "Recurrence"
+  ],
+  "actions": [
+    "CreateWorkItem",
+    "UpdateWorkItem",
+    "CompleteWorkItem",
+    "AssignWorkItem",
+    "SetReminder",
+    "AddAttachment"
+  ],
+  "enums": [
+    "WorkItemStatus",
+    "PriorityLevel",
+    "ReminderTriggerType",
+    "NotificationChannel",
+    "ActorType",
+    "AssignmentRole",
+    "AttachmentType",
+    "ActivityType",
+    "RecurrencePattern",
+    "DayOfWeek",
+    "CompletionBehavior"
+  ],
+  "dependencies": ["core", "auth"],
+  "extended_by": ["task-management", "human-task"],
+  "w3c_standards": ["RDF", "OWL", "SHACL"]
+}

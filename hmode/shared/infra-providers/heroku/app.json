@@ -1,0 +1,42 @@
+{
+  "name": "my-app",
+  "description": "Application description",
+  "repository": "https://github.com/username/repo",
+  "keywords": ["node", "express"],
+  "website": "https://example.com",
+  "success_url": "/",
+  "scripts": {
+    "postdeploy": "npm run seed"
+  },
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    },
+    "SECRET_KEY": {
+      "description": "Secret key for sessions",
+      "generator": "secret"
+    },
+    "API_KEY": {
+      "description": "External API key",
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql:essential-0"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "stack": "heroku-24"
+}

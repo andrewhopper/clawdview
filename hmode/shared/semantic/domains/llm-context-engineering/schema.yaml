@@ -1,0 +1,222 @@
+# LLM Context Engineering Domain Model
+# Compaction, just-in-time retrieval, RAG, and advanced context techniques
+# Source: Anthropic context engineering guide, RAG research
+
+domain:
+  name: llm-context-engineering
+  version: "1.0.0"
+  description: Advanced context techniques - compaction, JIT retrieval, RAG, sub-agents
+  dependencies: [core, llm-context-window, llm-message]
+  sources:
+    - "Anthropic: anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+    - "Multi-agent research systems"
+    - "RAG research papers"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  SystemPrompt:
+    description: System-level instructions for the LLM
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      content: { type: string, required: true }
+      version: { type: string }
+      category: { type: SystemPromptCategory }
+      variables: { type: array, items: PromptVariable }
+      tokenCount: { type: integer }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PromptVariable:
+    description: A variable in a prompt template
+    properties:
+      name: { type: string, required: true }
+      type: { type: string }
+      source: { type: VariableSource }
+      defaultValue: { type: string }
+      description: { type: string }
+
+  Compaction:
+    description: Compression/summarization of context (Anthropic technique)
+    properties:
+      id: { type: string, required: true }
+      sessionId: { type: string, required: true }
+      inputTokens: { type: integer, required: true }
+      outputTokens: { type: integer, required: true }
+      compressionRatio: { type: decimal }
+      strategy: { type: CompactionStrategy, required: true }
+      preservedElements: { type: array, items: string }
+      summary: { type: string }
+      compactedAt: { type: datetime, required: true }
+
+  CompactionRule:
+    description: Rule for what to preserve during compaction
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      priority: { type: integer }
+      preserveType: { type: PreserveType }
+      pattern: { type: string, description: "Regex pattern to match" }
+      description: { type: string }
+
+  JustInTimeRetrieval:
+    description: Dynamic context loading at runtime (JIT pattern)
+    properties:
+      id: { type: string, required: true }
+      triggerId: { type: string, description: "What triggered the retrieval" }
+      referenceType: { type: ReferenceType, required: true }
+      reference: { type: string, required: true, description: "File path, URL, query, etc." }
+      retrievedContent: { type: string }
+      tokenCount: { type: integer }
+      retrievedAt: { type: datetime }
+      latencyMs: { type: integer }
+
+  RAGContext:
+    description: Retrieval-Augmented Generation context
+    properties:
+      id: { type: string, required: true }
+      query: { type: string, required: true }
+      retrievedChunks: { type: array, items: RAGChunk }
+      totalTokens: { type: integer }
+      retrievalMethod: { type: RetrievalMethod }
+      rerankingApplied: { type: boolean }
+      retrievedAt: { type: datetime }
+
+  RAGChunk:
+    description: A chunk of retrieved content
+    properties:
+      id: { type: string, required: true }
+      content: { type: string, required: true }
+      source: { type: string, required: true }
+      score: { type: decimal, description: "Relevance score 0-1" }
+      tokenCount: { type: integer }
+      metadata: { type: object }
+      position: { type: integer, description: "Position in original document" }
+
+  FewShotExample:
+    description: Example for few-shot prompting
+    properties:
+      id: { type: string, required: true }
+      name: { type: string }
+      input: { type: string, required: true }
+      output: { type: string, required: true }
+      category: { type: string }
+      tokenCount: { type: integer }
+      isCanonical: { type: boolean, default: false }
+
+  ExamplesPool:
+    description: Pool of examples for dynamic selection (RAISE pattern)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      examples: { type: array, items: string, description: "FewShotExample IDs" }
+      selectionStrategy: { type: ExampleSelectionStrategy }
+      maxExamples: { type: integer }
+
+  SubAgentContext:
+    description: Context for a sub-agent in multi-agent system
+    properties:
+      id: { type: string, required: true }
+      parentSessionId: { type: string, required: true }
+      agentRole: { type: string }
+      delegatedTask: { type: string }
+      contextSubset: { type: array, items: string, description: "Slot types to include" }
+      resultSummary: { type: string }
+      tokenBudget: { type: integer }
+
+  StructuredNotes:
+    description: Persistent notes written by agent (Anthropic agentic memory)
+    properties:
+      id: { type: string, required: true }
+      sessionId: { type: string, required: true }
+      category: { type: NoteCategory }
+      key: { type: string, required: true }
+      value: { type: string, required: true }
+      importance: { type: integer, description: "1-10 importance score" }
+      expiresAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+enums:
+
+  SystemPromptCategory:
+    description: Category of system prompt
+    values:
+      - Identity       # Who the assistant is
+      - Instructions   # How to behave
+      - Constraints    # What not to do
+      - Format         # Output formatting
+      - Tools          # Tool usage instructions
+      - Examples       # Example interactions
+      - Domain         # Domain-specific knowledge
+
+  VariableSource:
+    description: Source of variable value
+    values:
+      - Static         # Hardcoded value
+      - Session        # From session context
+      - User           # From user profile
+      - Environment    # From environment
+      - Dynamic        # Computed at runtime
+      - Retrieved      # From retrieval system
+
+  CompactionStrategy:
+    description: Strategy for compacting context
+    values:
+      - Summarization  # LLM summarizes content
+      - Extraction     # Extract key information
+      - Pruning        # Remove low-priority items
+      - Hierarchical   # Keep hierarchical summary
+      - Sliding        # Sliding window over content
+
+  PreserveType:
+    description: Type of content to preserve during compaction
+    values:
+      - ArchitecturalDecisions
+      - UnresolvedBugs
+      - ImplementationDetails
+      - UserPreferences
+      - RecentInteractions
+      - KeyEntities
+      - Citations
+
+  ReferenceType:
+    description: Type of just-in-time reference
+    values:
+      - FilePath       # Local file path
+      - URL            # Web URL
+      - DatabaseQuery  # Database query
+      - APICall        # API endpoint
+      - SearchQuery    # Search query
+      - MemoryKey      # Memory storage key
+
+  RetrievalMethod:
+    description: Method used for RAG retrieval
+    values:
+      - SemanticSearch    # Vector similarity search
+      - KeywordSearch     # BM25/keyword matching
+      - Hybrid            # Combination of methods
+      - GraphTraversal    # Knowledge graph traversal
+      - HyDE              # Hypothetical document embeddings
+
+  ExampleSelectionStrategy:
+    description: Strategy for selecting few-shot examples
+    values:
+      - Random         # Random selection
+      - Similarity     # Most similar to query
+      - Diversity      # Diverse set of examples
+      - Recency        # Most recent examples
+      - Performance    # Best performing examples
+
+  NoteCategory:
+    description: Category of structured notes
+    values:
+      - Decision       # Decisions made
+      - Finding        # Information discovered
+      - Todo           # Tasks to complete
+      - Question       # Unresolved questions
+      - Error          # Errors encountered
+      - Preference     # User preferences learned

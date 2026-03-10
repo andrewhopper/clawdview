@@ -1,0 +1,313 @@
+# Screenshot Domain Model
+# Captures web page screenshots with performance and resource metadata
+# Version: 1.0.0
+
+domain: screenshot
+version: "1.0.0"
+status: production
+description: Web page screenshot capture with performance metrics, resource analysis, and viewport configurations
+owner: platform
+dependencies:
+  core: "^1.0.0"
+
+entities:
+
+  Screenshot:
+    extends: core.MediaObject
+    description: Captured screenshot of a web page with associated metadata
+    properties:
+      url:
+        type: uri
+        required: true
+        description: Original URL requested
+      finalUrl:
+        type: uri
+        required: true
+        description: Final URL after redirects
+      title:
+        type: string
+        description: Page title from document.title
+      viewport:
+        type: Viewport
+        required: true
+        description: Viewport configuration used for capture
+      document:
+        type: DocumentDimensions
+        required: true
+        description: Full document dimensions
+      performance:
+        type: PerformanceMetrics
+        required: true
+        description: Web vitals and timing metrics
+      resources:
+        type: ResourceMetrics
+        required: true
+        description: Page resource loading statistics
+      screenshot:
+        type: ScreenshotFile
+        required: true
+        description: Screenshot file details
+      capturedAt:
+        type: datetime
+        required: true
+        description: ISO 8601 timestamp of capture
+
+  Viewport:
+    description: Browser viewport configuration
+    properties:
+      name:
+        type: ViewportPreset
+        required: true
+        description: Named preset (desktop, tablet, mobile)
+      width:
+        type: integer
+        required: true
+        min: 1
+        description: Viewport width in pixels
+      height:
+        type: integer
+        required: true
+        min: 1
+        description: Viewport height in pixels
+
+  DocumentDimensions:
+    description: Full document scroll dimensions
+    properties:
+      width:
+        type: integer
+        required: true
+        min: 1
+        description: Document width in pixels
+      height:
+        type: integer
+        required: true
+        min: 1
+        description: Document height in pixels (scroll height)
+
+  PerformanceMetrics:
+    description: Web performance timing metrics (Web Vitals)
+    properties:
+      loadTimeMs:
+        type: integer
+        description: Total page load time in milliseconds
+      domContentLoadedMs:
+        type: integer
+        description: DOMContentLoaded event time in milliseconds
+      firstPaintMs:
+        type: integer
+        nullable: true
+        description: First Paint (FP) time in milliseconds
+      firstContentfulPaintMs:
+        type: integer
+        nullable: true
+        description: First Contentful Paint (FCP) time in milliseconds
+      largestContentfulPaintMs:
+        type: integer
+        nullable: true
+        description: Largest Contentful Paint (LCP) time in milliseconds
+      timeToInteractiveMs:
+        type: integer
+        nullable: true
+        description: Time to Interactive (TTI) in milliseconds
+
+  ResourceMetrics:
+    description: Page resource loading statistics
+    properties:
+      count:
+        type: integer
+        required: true
+        min: 0
+        description: Total number of resources loaded
+      totalSizeBytes:
+        type: long
+        required: true
+        min: 0
+        description: Total transfer size in bytes
+      byType:
+        type: map
+        keyType: ResourceType
+        valueType: ResourceTypeMetrics
+        description: Resource counts and sizes grouped by type
+
+  ResourceTypeMetrics:
+    description: Metrics for a specific resource type
+    properties:
+      count:
+        type: integer
+        required: true
+        min: 0
+        description: Number of resources of this type
+      sizeBytes:
+        type: long
+        required: true
+        min: 0
+        description: Total size in bytes for this type
+
+  ScreenshotFile:
+    description: Screenshot file output details
+    properties:
+      path:
+        type: string
+        required: true
+        description: Relative path to screenshot file
+      format:
+        type: ImageFormat
+        required: true
+        description: Image format (png, jpeg)
+      fullPage:
+        type: boolean
+        required: true
+        description: Whether full page was captured
+      fileSizeBytes:
+        type: long
+        required: true
+        min: 0
+        description: Screenshot file size in bytes
+
+  ScreenshotBatch:
+    description: Collection of screenshots from a single capture session
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: Unique batch identifier
+      screenshots:
+        type: array
+        items: Screenshot
+        required: true
+        description: List of captured screenshots
+      startedAt:
+        type: datetime
+        required: true
+        description: Batch start timestamp
+      completedAt:
+        type: datetime
+        description: Batch completion timestamp
+      outputDir:
+        type: string
+        required: true
+        description: Output directory path
+      options:
+        type: CaptureOptions
+        required: true
+        description: Options used for this batch
+
+  CaptureOptions:
+    description: Screenshot capture configuration options
+    properties:
+      viewports:
+        type: array
+        items: ViewportPreset
+        required: true
+        description: Viewport presets to capture
+      fullPage:
+        type: boolean
+        default: true
+        description: Capture full page or viewport only
+      scroll:
+        type: boolean
+        default: false
+        description: Scroll page before capture (for lazy content)
+      scrollDelayMs:
+        type: integer
+        default: 500
+        min: 0
+        description: Delay between scroll steps in milliseconds
+      waitTimeMs:
+        type: integer
+        default: 2000
+        min: 0
+        description: Wait time after page load in milliseconds
+      format:
+        type: ImageFormat
+        default: png
+        description: Output image format
+      quality:
+        type: integer
+        min: 0
+        max: 100
+        description: JPEG quality (0-100, only for jpeg format)
+
+enums:
+
+  ViewportPreset:
+    description: Named viewport configuration presets
+    values:
+      - name: desktop
+        description: Desktop browser (1280x720)
+        width: 1280
+        height: 720
+      - name: tablet
+        description: Tablet portrait (768x1024)
+        width: 768
+        height: 1024
+      - name: mobile
+        description: Mobile phone (375x667)
+        width: 375
+        height: 667
+
+  ImageFormat:
+    description: Screenshot output image formats
+    values:
+      - name: png
+        description: PNG format (lossless)
+        mimeType: image/png
+      - name: jpeg
+        description: JPEG format (lossy, smaller files)
+        mimeType: image/jpeg
+
+  ResourceType:
+    description: Web resource initiator types
+    values:
+      - name: script
+        description: JavaScript files
+      - name: link
+        description: CSS and linked resources
+      - name: img
+        description: Images
+      - name: fetch
+        description: Fetch/XHR requests
+      - name: css
+        description: CSS stylesheets
+      - name: font
+        description: Web fonts
+      - name: video
+        description: Video files
+      - name: audio
+        description: Audio files
+      - name: beacon
+        description: Analytics beacons
+      - name: other
+        description: Other resource types
+
+actions:
+
+  CaptureScreenshot:
+    description: Capture a single URL with specified viewport
+    input:
+      url:
+        type: uri
+        required: true
+      viewport:
+        type: ViewportPreset
+        required: true
+      options:
+        type: CaptureOptions
+    output:
+      type: Screenshot
+
+  CaptureScreenshotBatch:
+    description: Capture multiple URLs with multiple viewports
+    input:
+      urls:
+        type: array
+        items: uri
+        required: true
+      options:
+        type: CaptureOptions
+        required: true
+      outputDir:
+        type: string
+        required: true
+    output:
+      type: ScreenshotBatch

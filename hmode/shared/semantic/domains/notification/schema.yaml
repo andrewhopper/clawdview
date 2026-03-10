@@ -1,0 +1,331 @@
+# Notification Domain Model
+# Push notifications, device bindings, and user preferences
+# Extracted from mobile domain, inspired by Twilio Notify and FCM
+
+domain:
+  name: notification
+  version: "1.0.0"
+  description: Push notifications for mobile, web, and desktop platforms
+  dependencies: [core, auth]
+  source: Twilio Notify, Firebase Cloud Messaging, Apple Push Notification Service
+  created_at: "2025-11-22"
+  updated_at: "2025-11-22"
+
+entities:
+
+  Notification:
+    description: Push notification sent to devices or users
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      serviceId: { type: string, required: true }
+      identities: { type: array, items: string, description: "Target user identities" }
+      tags: { type: array, items: string, description: "Tags for binding selection" }
+      segments: { type: array, items: string, description: "User segments" }
+      title: { type: string }
+      body: { type: string, required: true }
+      sound: { type: string, description: "Sound name or 'default'" }
+      action: { type: string, description: "Deep link or URL on tap" }
+      imageUrl: { type: uri }
+      data: { type: object, description: "Custom payload" }
+      priority: { type: NotificationPriority, default: Normal }
+      ttlSeconds: { type: integer, description: "Time-to-live" }
+      collapseKey: { type: string, description: "Group/replace notifications" }
+      status: { type: NotificationStatus, required: true }
+      deliveredCount: { type: integer }
+      failedCount: { type: integer }
+      sentAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  NotificationService:
+    description: Configuration for sending notifications
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      name: { type: string, required: true }
+      apnCredentialId: { type: string }
+      fcmCredentialId: { type: string }
+      webPushCredentialId: { type: string }
+      smsServiceId: { type: string, description: "SMS fallback service" }
+      deliveryCallbackUrl: { type: uri }
+      deliveryCallbackEnabled: { type: boolean, default: false }
+      logEnabled: { type: boolean, default: true }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  DeviceBinding:
+    description: Associates a user identity with a device for notifications
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      serviceId: { type: string, required: true }
+      identity: { type: string, required: true, description: "User identity" }
+      bindingType: { type: BindingType, required: true }
+      address: { type: string, required: true, description: "Device token or endpoint" }
+      tags: { type: array, items: string }
+      credentialId: { type: string }
+      endpoint: { type: string, description: "Unique endpoint identifier" }
+      isActive: { type: boolean, default: true }
+      lastSeenAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Device:
+    description: Mobile or web device information
+    properties:
+      id: { type: string, required: true }
+      userId: { type: string, required: true }
+      deviceId: { type: string, required: true, description: "Hardware device ID" }
+      platform: { type: DevicePlatform, required: true }
+      model: { type: string }
+      manufacturer: { type: string }
+      osVersion: { type: string }
+      appVersion: { type: string }
+      pushEnabled: { type: boolean }
+      pushToken: { type: string }
+      locale: { type: string }
+      timezone: { type: string }
+      lastActiveAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PushCredential:
+    description: Platform credentials for sending push notifications
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      name: { type: string }
+      type: { type: CredentialType, required: true }
+      # APNs
+      apnTeamId: { type: string }
+      apnKeyId: { type: string }
+      apnBundleId: { type: string }
+      apnSandbox: { type: boolean }
+      # FCM
+      fcmProjectId: { type: string }
+      # Web Push
+      vapidPublicKey: { type: string }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  UserNotificationPreferences:
+    description: User notification preferences
+    properties:
+      id: { type: string, required: true }
+      userId: { type: string, required: true }
+      globalEnabled: { type: boolean, default: true }
+      channels: { type: array, items: ChannelPreference }
+      quietHours: { type: QuietHours }
+      frequency: { type: NotificationFrequency, default: Realtime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ChannelPreference:
+    description: Preference for a notification channel/category
+    properties:
+      channel: { type: string, required: true }
+      enabled: { type: boolean, default: true }
+      push: { type: boolean, default: true }
+      sms: { type: boolean, default: false }
+      email: { type: boolean, default: true }
+      inApp: { type: boolean, default: true }
+
+  QuietHours:
+    description: Do not disturb settings
+    properties:
+      enabled: { type: boolean, default: false }
+      startTime: { type: string, description: "HH:MM format" }
+      endTime: { type: string, description: "HH:MM format" }
+      timezone: { type: string }
+      allowUrgent: { type: boolean, default: true }
+
+  Segment:
+    description: User segment for targeting notifications
+    properties:
+      id: { type: string, required: true }
+      serviceId: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      criteria: { type: SegmentCriteria }
+      memberCount: { type: integer }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  SegmentCriteria:
+    description: Rules for segment membership
+    properties:
+      rules: { type: array, items: SegmentRule }
+      operator: { type: LogicalOperator, default: AND }
+
+  SegmentRule:
+    description: Single rule for segment matching
+    properties:
+      field: { type: string, required: true }
+      operator: { type: ComparisonOperator, required: true }
+      value: { type: string, required: true }
+
+  DeliveryEvent:
+    description: Delivery status event for a notification
+    properties:
+      id: { type: string, required: true }
+      notificationId: { type: string, required: true }
+      bindingId: { type: string, required: true }
+      identity: { type: string, required: true }
+      bindingType: { type: BindingType, required: true }
+      status: { type: DeliveryStatus, required: true }
+      errorCode: { type: string }
+      errorMessage: { type: string }
+      createdAt: { type: datetime, required: true }
+
+enums:
+
+  NotificationPriority:
+    values:
+      - High      # Immediate, wakes device
+      - Normal    # Standard delivery
+      - Low       # May be batched/throttled
+
+  NotificationStatus:
+    values:
+      - Queued
+      - Processing
+      - Sent
+      - Delivered
+      - Failed
+      - Canceled
+
+  BindingType:
+    values:
+      - APNs          # Apple Push Notification
+      - FCM           # Firebase Cloud Messaging
+      - WebPush       # Web Push (VAPID)
+      - SMS           # SMS fallback
+      - Email         # Email fallback
+
+  DevicePlatform:
+    values:
+      - iOS
+      - Android
+      - Web
+      - Windows
+      - macOS
+      - Linux
+      - tvOS
+      - watchOS
+
+  CredentialType:
+    values:
+      - APNsKey       # APNs token-based auth
+      - APNsCert      # APNs certificate auth
+      - FCM           # Firebase
+      - WebPush       # VAPID keys
+
+  NotificationFrequency:
+    values:
+      - Realtime      # Immediate
+      - Batched       # Batch similar
+      - Hourly
+      - Daily
+      - Weekly
+
+  DeliveryStatus:
+    values:
+      - Queued
+      - Sent
+      - Delivered
+      - Confirmed     # User interaction
+      - Undelivered
+      - Failed
+
+  LogicalOperator:
+    values: [AND, OR]
+
+  ComparisonOperator:
+    values:
+      - Equals
+      - NotEquals
+      - Contains
+      - NotContains
+      - StartsWith
+      - EndsWith
+      - GreaterThan
+      - LessThan
+      - In
+      - NotIn
+
+actions:
+
+  SendNotification:
+    description: Send a push notification
+    parameters:
+      serviceId: { type: string, required: true }
+      identity: { type: string, description: "Single user" }
+      identities: { type: array, items: string, description: "Multiple users" }
+      tags: { type: array, items: string }
+      segmentId: { type: string }
+      title: { type: string }
+      body: { type: string, required: true }
+      action: { type: string }
+      imageUrl: { type: uri }
+      data: { type: object }
+      priority: { type: NotificationPriority }
+      ttlSeconds: { type: integer }
+      collapseKey: { type: string }
+    result: Notification
+
+  RegisterDevice:
+    description: Register or update a device
+    parameters:
+      userId: { type: string, required: true }
+      deviceId: { type: string, required: true }
+      platform: { type: DevicePlatform, required: true }
+      pushToken: { type: string }
+      appVersion: { type: string }
+      osVersion: { type: string }
+      locale: { type: string }
+      timezone: { type: string }
+    result: Device
+
+  CreateBinding:
+    description: Create a device binding for push
+    parameters:
+      serviceId: { type: string, required: true }
+      identity: { type: string, required: true }
+      bindingType: { type: BindingType, required: true }
+      address: { type: string, required: true }
+      tags: { type: array, items: string }
+    result: DeviceBinding
+
+  DeleteBinding:
+    description: Remove a device binding
+    parameters:
+      bindingId: { type: string, required: true }
+    result: { type: boolean }
+
+  UpdatePreferences:
+    description: Update user notification preferences
+    parameters:
+      userId: { type: string, required: true }
+      globalEnabled: { type: boolean }
+      channels: { type: array, items: ChannelPreference }
+      quietHours: { type: QuietHours }
+      frequency: { type: NotificationFrequency }
+    result: UserNotificationPreferences
+
+  CreateSegment:
+    description: Create a user segment
+    parameters:
+      serviceId: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      criteria: { type: SegmentCriteria }
+    result: Segment
+
+  GetDeliveryStatus:
+    description: Get delivery status for a notification
+    parameters:
+      notificationId: { type: string, required: true }
+    result: { type: array, items: DeliveryEvent }

@@ -1,0 +1,78 @@
+# Enums for user-research domain
+
+enums:
+  # Demographics
+  LocationType:
+    values: [urban, suburban, exurban, rural, remote]
+
+  EducationLevel:
+    values: [high_school, some_college, bachelors, masters, doctorate, trade_school]
+
+  HouseholdType:
+    values: [single, couple, family_young_children, family_teens, empty_nest, multi_generational]
+
+  LifeStage:
+    values: [student, early_career, mid_career, late_career, semi_retired, retired]
+
+  DeviceType:
+    values: [desktop, laptop, tablet, smartphone, smart_tv, wearable]
+
+  ContactMethod:
+    values: [phone, email, text, chat, in_person, video_call]
+
+  ConnectionType:
+    values: [broadband, fiber, mobile_5g, mobile_4g, mobile_3g, satellite, limited_rural]
+
+  # Accessibility
+  VisionAcuity:
+    values: [normal, corrected, low_vision, legally_blind, blind]
+
+  ColorVision:
+    values: [normal, protanopia, deuteranopia, tritanopia, monochromacy]
+
+  SensitivityLevel:
+    values: [normal, reduced, heightened]
+
+  CapabilityLevel:
+    values: [excellent, good, standard, limited, severely_limited]
+
+  InputMethod:
+    values: [mouse, trackpad, touch, keyboard_only, voice, switch, eye_tracking]
+
+  ReadingLevel:
+    values: [elementary, middle_school, high_school, college, graduate, expert]
+
+  HearingRange:
+    values: [normal, mild_loss, moderate_loss, severe_loss, profound_loss, deaf]
+
+  CaptionNeed:
+    values: [not_needed, helpful, required]
+
+  WCAGLevel:
+    values: [A, AA, AAA]
+
+  # Motivation
+  MotivationType:
+    values: [functional, social, emotional, supporting]
+
+  PainType:
+    values: [undesired_outcome, obstacle, risk]
+
+  GainType:
+    values: [required, expected, desired, unexpected]
+
+  Severity:
+    values: [extreme, high, moderate, low]
+
+  Frequency:
+    values: [daily, weekly, monthly, quarterly, yearly, rarely, once]
+
+  # Behavior/Emotion
+  Valence:
+    values: [positive, neutral, negative]
+
+  Intensity:
+    values: [intense, strong, moderate, mild, subtle]
+
+  QuadrantType:
+    values: [says, thinks, does, feels]

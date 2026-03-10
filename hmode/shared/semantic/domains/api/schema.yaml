@@ -1,0 +1,345 @@
+# HTTP API Domain Model
+# RESTful and HTTP API endpoints, requests, responses, authentication
+# Source: HTTP/1.1 RFC, REST standards, OpenAPI 3.0 spec
+
+domain:
+  name: api
+  version: "1.0.0"
+  description: HTTP/REST API endpoints, requests, responses, and authentication patterns
+  dependencies: [core]
+  sources:
+    - "HTTP/1.1: RFC 7230-7235"
+    - "REST: Roy Fielding's dissertation"
+    - "OpenAPI 3.0 Specification"
+    - "OAuth 2.0: RFC 6749"
+    - "JWT: RFC 7519"
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+
+entities:
+
+  API:
+    description: A complete HTTP API service
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      version: { type: string, required: true }
+      baseUrl: { type: uri, required: true, description: "Base URL without trailing slash" }
+      description: { type: string }
+      authentication: { type: AuthenticationConfig }
+      endpoints: { type: array, items: Endpoint }
+      rateLimits: { type: RateLimitConfig }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Endpoint:
+    description: An HTTP API endpoint (path + method)
+    properties:
+      id: { type: string, required: true }
+      path: { type: string, required: true, description: "/v1/sessions/{id}" }
+      method: { type: HttpMethod, required: true }
+      operationId: { type: string, description: "Unique operation identifier" }
+      summary: { type: string }
+      description: { type: string }
+      parameters: { type: array, items: Parameter }
+      requestBody: { type: RequestBody }
+      responses: { type: array, items: ResponseDefinition }
+      authentication: { type: array, items: AuthMethod, description: "Required auth methods" }
+      tags: { type: array, items: string }
+      deprecated: { type: boolean, default: false }
+
+  Parameter:
+    description: A parameter for an API endpoint
+    properties:
+      name: { type: string, required: true }
+      location: { type: ParameterLocation, required: true }
+      type: { type: ParameterType, required: true }
+      required: { type: boolean, default: false }
+      description: { type: string }
+      defaultValue: { type: any }
+      example: { type: any }
+      schema: { type: object, description: "JSON Schema for complex types" }
+
+  RequestBody:
+    description: Request body specification
+    properties:
+      contentType: { type: string, required: true, description: "application/json, multipart/form-data, etc." }
+      schema: { type: object, description: "JSON Schema or structure" }
+      required: { type: boolean, default: false }
+      examples: { type: array, items: object }
+
+  ResponseDefinition:
+    description: Expected response structure for status code
+    properties:
+      statusCode: { type: integer, required: true }
+      description: { type: string, required: true }
+      contentType: { type: string, default: "application/json" }
+      schema: { type: object, description: "Response body schema" }
+      headers: { type: array, items: Header }
+      examples: { type: array, items: object }
+
+  HTTPRequest:
+    description: A concrete HTTP request instance
+    properties:
+      id: { type: string, required: true }
+      method: { type: HttpMethod, required: true }
+      url: { type: uri, required: true, description: "Full URL including query params" }
+      headers: { type: array, items: Header }
+      queryParams: { type: object, description: "Query string parameters" }
+      body: { type: any, description: "Request body payload" }
+      authentication: { type: Authentication }
+      timestamp: { type: datetime, required: true }
+      timeout: { type: integer, description: "Timeout in milliseconds" }
+      retryPolicy: { type: RetryPolicy }
+
+  HTTPResponse:
+    description: A concrete HTTP response instance
+    properties:
+      id: { type: string, required: true }
+      requestId: { type: string, required: true, description: "Associated request ID" }
+      statusCode: { type: integer, required: true }
+      statusText: { type: string }
+      headers: { type: array, items: Header }
+      body: { type: any, description: "Response body payload" }
+      contentType: { type: string }
+      timestamp: { type: datetime, required: true }
+      latencyMs: { type: integer, required: true, description: "Response time in ms" }
+      error: { type: HTTPError }
+
+  Header:
+    description: An HTTP header key-value pair
+    properties:
+      name: { type: string, required: true }
+      value: { type: string, required: true }
+      description: { type: string }
+
+  HTTPError:
+    description: HTTP error details
+    properties:
+      statusCode: { type: integer, required: true }
+      errorCode: { type: string, description: "Application error code" }
+      message: { type: string, required: true }
+      details: { type: object, description: "Additional error context" }
+      timestamp: { type: datetime }
+
+  AuthenticationConfig:
+    description: Authentication configuration for an API
+    properties:
+      methods: { type: array, items: AuthMethod, required: true }
+      required: { type: boolean, default: true }
+      description: { type: string }
+
+  Authentication:
+    description: Concrete authentication for a request
+    properties:
+      method: { type: AuthMethod, required: true }
+      credentials: { type: any, description: "Polymorphic based on method" }
+
+  APIKeyAuth:
+    description: API key authentication
+    extends: Authentication
+    properties:
+      apiKey: { type: string, required: true }
+      headerName: { type: string, default: "X-API-Key" }
+
+  BearerTokenAuth:
+    description: Bearer token (JWT) authentication
+    extends: Authentication
+    properties:
+      token: { type: string, required: true }
+      tokenType: { type: string, default: "Bearer" }
+
+  BasicAuth:
+    description: HTTP Basic authentication
+    extends: Authentication
+    properties:
+      username: { type: string, required: true }
+      password: { type: string, required: true }
+
+  OAuth2Auth:
+    description: OAuth 2.0 authentication
+    extends: Authentication
+    properties:
+      accessToken: { type: string, required: true }
+      tokenType: { type: string, default: "Bearer" }
+      scope: { type: string }
+      expiresAt: { type: datetime }
+      refreshToken: { type: string }
+
+  CookieAuth:
+    description: Cookie-based authentication
+    extends: Authentication
+    properties:
+      cookies: { type: object, required: true, description: "Cookie name-value pairs" }
+
+  Pagination:
+    description: Pagination metadata for list endpoints
+    properties:
+      strategy: { type: PaginationStrategy, required: true }
+      pageSize: { type: integer, description: "Items per page" }
+      currentPage: { type: integer, description: "For offset pagination" }
+      totalPages: { type: integer }
+      totalItems: { type: integer }
+      cursor: { type: string, description: "For cursor pagination" }
+      nextCursor: { type: string }
+      prevCursor: { type: string }
+      hasMore: { type: boolean }
+      after: { type: string, description: "Cursor/ID for next page" }
+      before: { type: string, description: "Cursor/ID for previous page" }
+
+  RateLimitConfig:
+    description: Rate limiting configuration
+    properties:
+      requestsPerSecond: { type: integer }
+      requestsPerMinute: { type: integer }
+      requestsPerHour: { type: integer }
+      requestsPerDay: { type: integer }
+      concurrentRequests: { type: integer }
+      burstSize: { type: integer, description: "Burst allowance" }
+      strategy: { type: RateLimitStrategy }
+
+  RateLimitStatus:
+    description: Current rate limit status
+    properties:
+      limit: { type: integer, required: true }
+      remaining: { type: integer, required: true }
+      resetAt: { type: datetime, required: true }
+      retryAfter: { type: integer, description: "Seconds until retry allowed" }
+
+  RetryPolicy:
+    description: Retry configuration for failed requests
+    properties:
+      maxRetries: { type: integer, default: 3 }
+      backoffStrategy: { type: BackoffStrategy, default: exponential }
+      initialDelayMs: { type: integer, default: 1000 }
+      maxDelayMs: { type: integer, default: 30000 }
+      retryableStatusCodes: { type: array, items: integer, default: [429, 500, 502, 503, 504] }
+      retryableErrors: { type: array, items: string, description: "Network error types" }
+
+  Webhook:
+    description: Webhook endpoint for callbacks
+    properties:
+      id: { type: string, required: true }
+      url: { type: uri, required: true }
+      events: { type: array, items: string, required: true }
+      secret: { type: string, description: "HMAC secret for verification" }
+      headers: { type: array, items: Header }
+      active: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  APICall:
+    description: A complete API call with request and response
+    properties:
+      id: { type: string, required: true }
+      endpoint: { type: Endpoint, required: true }
+      request: { type: HTTPRequest, required: true }
+      response: { type: HTTPResponse }
+      duration: { type: integer, description: "Total call duration in ms" }
+      retryCount: { type: integer, default: 0 }
+      success: { type: boolean }
+      createdAt: { type: datetime, required: true }
+
+enums:
+
+  HttpMethod:
+    description: HTTP request methods
+    values:
+      - GET: "Retrieve resource"
+      - POST: "Create resource"
+      - PUT: "Update/replace resource"
+      - PATCH: "Partial update resource"
+      - DELETE: "Delete resource"
+      - HEAD: "Get headers only"
+      - OPTIONS: "Get allowed methods"
+
+  ParameterLocation:
+    description: Where parameter is passed
+    values:
+      - path: "URL path parameter"
+      - query: "Query string parameter"
+      - header: "HTTP header"
+      - cookie: "Cookie value"
+      - body: "Request body"
+
+  ParameterType:
+    description: Parameter data type
+    values:
+      - string: "String value"
+      - integer: "Integer number"
+      - number: "Decimal number"
+      - boolean: "Boolean true/false"
+      - array: "Array of values"
+      - object: "Complex object"
+      - file: "File upload"
+
+  AuthMethod:
+    description: Authentication method
+    values:
+      - api-key: "API key in header/query"
+      - bearer: "Bearer token (JWT)"
+      - basic: "HTTP Basic auth"
+      - oauth2: "OAuth 2.0"
+      - cookie: "Session cookie"
+      - custom: "Custom authentication"
+      - none: "No authentication"
+
+  PaginationStrategy:
+    description: Pagination implementation strategy
+    values:
+      - offset: "Offset/limit (page number)"
+      - cursor: "Cursor-based (opaque token)"
+      - keyset: "Key-based (ID/timestamp)"
+      - link-header: "RFC 5988 Link headers"
+
+  RateLimitStrategy:
+    description: Rate limiting algorithm
+    values:
+      - fixed-window: "Fixed time window"
+      - sliding-window: "Sliding time window"
+      - token-bucket: "Token bucket algorithm"
+      - leaky-bucket: "Leaky bucket algorithm"
+
+  BackoffStrategy:
+    description: Retry backoff strategy
+    values:
+      - fixed: "Fixed delay"
+      - linear: "Linear increase"
+      - exponential: "Exponential backoff"
+      - jitter: "Exponential with jitter"
+
+actions:
+
+  CallEndpoint:
+    description: Make an HTTP API call
+    input:
+      endpoint: { type: Endpoint, required: true }
+      parameters: { type: object }
+      body: { type: any }
+      authentication: { type: Authentication }
+    output:
+      call: { type: APICall }
+
+  GetRateLimitStatus:
+    description: Check current rate limit status
+    input:
+      api: { type: API, required: true }
+    output:
+      status: { type: RateLimitStatus }
+
+  RetryRequest:
+    description: Retry a failed request with backoff
+    input:
+      request: { type: HTTPRequest, required: true }
+      policy: { type: RetryPolicy, required: true }
+    output:
+      response: { type: HTTPResponse }
+
+  ValidateResponse:
+    description: Validate response against schema
+    input:
+      response: { type: HTTPResponse, required: true }
+      expectedSchema: { type: object, required: true }
+    output:
+      valid: { type: boolean }
+      errors: { type: array, items: string }

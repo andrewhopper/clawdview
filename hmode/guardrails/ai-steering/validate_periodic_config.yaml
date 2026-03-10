@@ -1,0 +1,187 @@
+# Periodic Validation Configuration
+# Configure how often and what to validate
+
+version: "1.0.0"
+lastUpdated: "2025-11-24"
+
+# =============================================================================
+# Execution Frequency
+# =============================================================================
+
+frequency:
+  # How many turns between validation runs
+  # 1 = every turn (very strict, may slow down)
+  # 5 = every 5 turns (balanced)
+  # 10 = every 10 turns (relaxed)
+  turns: 5
+
+  # Alternative: Time-based (in minutes)
+  # minutes: 30
+
+  # Trigger on specific events
+  triggerOn:
+    - file_write      # When files are written
+    - commit_attempt  # Before git commits
+    - session_end     # At end of session
+
+# =============================================================================
+# Validator Configuration
+# =============================================================================
+
+validators:
+  s3_publish:
+    enabled: true
+    severity: error     # off | warn | error
+    autoFix: false
+    skipDirectories:
+      - node_modules
+      - dist
+      - build
+      - .venv
+      - venv
+    skipFiles:
+      - "*.test.html"
+      - "*.draft.pdf"
+
+  shared_models:
+    enabled: true
+    severity: error
+    autoFix: true       # Can auto-generate imports
+    checkLanguages:
+      - typescript
+      - python
+    skipDirectories:
+      - node_modules
+      - .venv
+      - shared/semantic/domains  # Skip the registry itself
+
+  url_format:
+    enabled: true
+    severity: warn      # Less critical
+    autoFix: true       # Can auto-convert URLs
+    fileTypes:
+      - "*.md"
+      - "*.ts"
+      - "*.py"
+
+  tech_preferences:
+    enabled: true
+    severity: warn
+    autoFix: false
+    checkFiles:
+      - package.json
+      - pyproject.toml
+      - requirements.txt
+
+# =============================================================================
+# Strictness Settings
+# =============================================================================
+
+strictness:
+  # Overall strictness level
+  level: moderate      # relaxed | moderate | strict
+
+  # Fail build/commit on errors
+  failOnErrors: true
+
+  # Fail build/commit on warnings (strict mode)
+  failOnWarnings: false
+
+  # Allow override with marker files
+  allowSkipMarkers: true
+  skipMarkers:
+    - .validation-skip
+    - .s3-skip
+    - .no-publish
+
+# =============================================================================
+# Output Configuration
+# =============================================================================
+
+output:
+  format: stylish      # stylish | json | compact | html
+  verbose: true
+  showSuggestions: true
+  showRuleIds: true
+  colorize: true
+
+# =============================================================================
+# Integration Settings
+# =============================================================================
+
+integration:
+  # Git pre-commit hook
+  preCommitHook:
+    enabled: true
+    blocking: true    # Block commit on errors
+
+  # Claude Code hooks
+  claudeCodeHooks:
+    userPromptSubmit: false     # Before AI processes request
+    toolResult: true            # After tool execution
+    sessionEnd: true            # At session end
+
+  # CI/CD (GitHub Actions, etc.)
+  cicd:
+    enabled: true
+    failOnWarnings: true
+    createPRComments: true
+
+# =============================================================================
+# Exemptions and Overrides
+# =============================================================================
+
+exemptions:
+  # Exempt specific files/directories from all checks
+  paths:
+    - archive/
+    - backup/
+    - .git/
+    - node_modules/
+
+  # Exempt by file pattern
+  patterns:
+    - "*.backup.*"
+    - "*.old.*"
+    - "*.tmp"
+
+  # Exempt specific prototypes (by name)
+  prototypes:
+    - proto-test-*    # Test prototypes exempt
+
+# =============================================================================
+# Notification Settings
+# =============================================================================
+
+notifications:
+  # Show desktop notification on violations
+  desktop: false
+
+  # Write violations to log file
+  logFile: .guardrails/validation.log
+
+  # Send to monitoring/analytics
+  analytics: false
+
+# =============================================================================
+# Auto-Fix Settings
+# =============================================================================
+
+autoFix:
+  # Global auto-fix toggle
+  enabled: true
+
+  # Require confirmation before fixing
+  requireConfirmation: true
+
+  # Backup files before fixing
+  createBackups: true
+
+  # Which violation types can be auto-fixed
+  allowedTypes:
+    - url_not_clickable
+    - shared_model_not_used  # With caution
+
+  # Which cannot be auto-fixed
+  blockedTypes:
+    - tech_not_approved     # Requires human review

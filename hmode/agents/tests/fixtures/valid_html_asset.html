@@ -1,0 +1,41 @@
+<!-- File UUID: b10f6ad8-b8bd-44e5-bb17-d5be7cb32aee -->
+<!--
+  Asset: Stats Card - Revenue
+  Project: test-fixture
+  Asset ID: st-a7f3b2c1.v1
+  Date: 2025-01-24
+  Design System: shared/design-system
+
+  Atomic Level: molecule
+
+  Tokens Used:
+  - Colors: --background, --foreground, --primary, --muted-foreground, --border
+  - Spacing: space-4 (p-4), space-2 (gap-2)
+  - Typography: text-sm, text-3xl, font-bold
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stats Card - Valid Fixture</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --border: 240 5.9% 90%;
+    }
+  </style>
+</head>
+<body class="bg-background p-8">
+  <!-- Stats Card Molecule -->
+  <div class="rounded-lg border border-border bg-background p-4 shadow-sm">
+    <p class="text-sm text-muted-foreground">Revenue</p>
+    <p class="text-3xl font-bold text-foreground">$12,450</p>
+    <p class="text-sm text-primary">+12% from last month</p>
+  </div>
+</body>
+</html>

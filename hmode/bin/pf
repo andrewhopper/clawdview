@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+// uuid: bin-proto-launch-5m6n7o8p
+
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// The launcher expects to run from a projects directory (so ../../.system/ points to monorepo root)
+// We need to cd into the project directory first
+const projectDir = join(__dirname, '..');
+const tsxPath = join(projectDir, 'node_modules/.bin/tsx');
+const launcherPath = join(projectDir, 'src/cli/launcher.tsx');
+
+const child = spawn(tsxPath, [launcherPath], {
+  stdio: 'inherit',
+  cwd: projectDir // Run from project directory, not monorepo root
+});
+
+child.on('exit', (code) => {
+  process.exit(code || 0);
+});

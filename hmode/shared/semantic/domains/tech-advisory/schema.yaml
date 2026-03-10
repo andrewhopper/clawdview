@@ -1,0 +1,447 @@
+# Tech Advisory Domain Model
+# Technology consulting, assessments, recommendations, and CRM integration
+
+domain:
+  name: tech-advisory
+  version: "1.0.0"
+  description: Technology advisory consulting - engagements, assessments, recommendations, Salesforce CRM
+  dependencies: [core]
+  created_at: "2025-11-21"
+  updated_at: "2025-11-22"
+
+entities:
+
+  # ============================================
+  # CORE CONSULTING ENTITIES
+  # ============================================
+
+  Consultant:
+    description: Individual providing technology advisory services
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      email: { type: string }
+      specializations: { type: array, items: string, description: "Cloud Architecture, AI/ML, Security, DevOps" }
+      expertise: { type: array, items: string }
+      yearsExperience: { type: integer }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Client:
+    description: Organization receiving advisory services
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      legalName: { type: string }
+      industry: { type: string }
+      companySize: { type: CompanySize }
+      annualRevenue: { type: decimal }
+      website: { type: uri }
+      contacts: { type: array, items: Contact }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Contact:
+    description: Person associated with client or engagement
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      email: { type: string }
+      phone: { type: string }
+      title: { type: string, description: "Job title (CTO, VP Engineering)" }
+      role: { type: ContactRole }
+      isPrimaryContact: { type: boolean, default: false }
+      clientId: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Engagement:
+    description: Advisory project or consulting engagement
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      engagementType: { type: EngagementType, required: true }
+      status: { type: EngagementStatus, required: true }
+      clientId: { type: string, required: true }
+      consultants: { type: array, items: string }
+      startDate: { type: date, required: true }
+      endDate: { type: date }
+      assessments: { type: array, items: Assessment }
+      recommendations: { type: array, items: Recommendation }
+      deliverables: { type: array, items: Deliverable }
+      roadmap: { type: Roadmap }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # ASSESSMENT ENTITIES
+  # ============================================
+
+  Assessment:
+    description: Evaluation of current state (architecture, technology, processes)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      assessmentType: { type: AssessmentType, required: true }
+      assessmentDate: { type: date, required: true }
+      score: { type: decimal, description: "0.0 - 5.0" }
+      capabilities: { type: array, items: Capability }
+      risks: { type: array, items: Risk }
+      observations: { type: array, items: Observation }
+      technologyStack: { type: TechnologyStack }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Capability:
+    description: Business or technical capability being assessed
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      currentMaturityLevel: { type: MaturityLevel, required: true }
+      targetMaturityLevel: { type: MaturityLevel }
+
+  Risk:
+    description: Technical or business risk identified
+    properties:
+      id: { type: string, required: true }
+      category: { type: RiskCategory, required: true }
+      severity: { type: RiskSeverity, required: true }
+      description: { type: string, required: true }
+      mitigation: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Observation:
+    description: Field note, finding, or insight captured during engagement
+    properties:
+      id: { type: string, required: true }
+      date: { type: date, required: true }
+      observedBy: { type: string, description: "Consultant ID" }
+      category: { type: ObservationCategory }
+      description: { type: string, required: true }
+      severity: { type: ObservationSeverity }
+      actionRequired: { type: boolean, default: false }
+      relatedAssessmentId: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # RECOMMENDATION ENTITIES
+  # ============================================
+
+  Recommendation:
+    description: Advisory guidance based on assessment findings
+    properties:
+      id: { type: string, required: true }
+      title: { type: string, required: true }
+      description: { type: string }
+      recommendationType: { type: RecommendationType }
+      priority: { type: Priority, required: true }
+      estimatedEffort: { type: string, description: "Person-days or story points" }
+      expectedBenefit: { type: string }
+      recommendedOption: { type: TechnologyOption }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  TechnologyOption:
+    description: Technology alternative being evaluated
+    properties:
+      id: { type: string, required: true }
+      optionId: { type: string, required: true, description: "A, B, C, etc." }
+      description: { type: string, required: true }
+      technologyStack: { type: TechnologyStack }
+      totalScore: { type: decimal }
+      isSelected: { type: boolean, default: false }
+      tradeOffs: { type: string }
+      decisionCriteria: { type: array, items: DecisionCriterion }
+
+  DecisionCriterion:
+    description: Criteria used to evaluate options
+    properties:
+      id: { type: string, required: true }
+      category: { type: CriteriaCategory }
+      criterion: { type: string, required: true }
+      weight: { type: DecisionWeight, required: true }
+      score: { type: integer }
+
+  # ============================================
+  # TECHNOLOGY ENTITIES
+  # ============================================
+
+  TechnologyStack:
+    description: Collection of technologies used or recommended
+    properties:
+      id: { type: string, required: true }
+      name: { type: string }
+      languages: { type: array, items: string }
+      frameworks: { type: array, items: string }
+      databases: { type: array, items: string }
+      cloudProvider: { type: CloudProvider }
+      deploymentPattern: { type: DeploymentPattern }
+
+  ArchitecturePattern:
+    description: Architectural approach or design pattern
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      pros: { type: array, items: string }
+      cons: { type: array, items: string }
+
+  Workload:
+    description: Infrastructure workload (ML inference, data pipeline, web app)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      workloadType: { type: WorkloadType }
+      status: { type: WorkloadStatus }
+      environment: { type: Environment }
+      computeRequirements: { type: string }
+      storageRequirements: { type: string }
+      scalingConfiguration: { type: string }
+      runtimeEnvironment: { type: string }
+      technologyStack: { type: TechnologyStack }
+      dependencies: { type: array, items: string, description: "Other workload IDs" }
+      costPerMonth: { type: decimal }
+      throughput: { type: string }
+      latencyRequirement: { type: string, description: "e.g., p99 < 100ms" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Product:
+    description: Cloud service or technology product
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      category: { type: ProductCategory }
+      vendor: { type: string, description: "AWS, Azure, GCP, third-party" }
+      serviceName: { type: string, description: "Specific service (Textract, Aurora, EKS)" }
+      price: { type: decimal }
+      isActive: { type: boolean, default: true }
+
+  # ============================================
+  # DELIVERABLE ENTITIES
+  # ============================================
+
+  Deliverable:
+    description: Artifact produced during engagement
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      deliverableType: { type: DeliverableType }
+      filePath: { type: string }
+      prototypeId: { type: string, description: "Links to SDLC prototype" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Roadmap:
+    description: Strategic plan with timeline and milestones
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      timeframe: { type: RoadmapTimeframe }
+      milestones: { type: array, items: Milestone }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Milestone:
+    description: Key milestone in roadmap
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      targetDate: { type: date }
+      status: { type: MilestoneStatus }
+
+  # ============================================
+  # SALESFORCE CRM ENTITIES
+  # ============================================
+
+  Account:
+    description: Salesforce Account - organization or company in CRM
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      accountType: { type: AccountType }
+      industry: { type: string }
+      owner: { type: string, description: "Consultant ID" }
+      annualRevenue: { type: decimal }
+      numberOfEmployees: { type: integer }
+      contacts: { type: array, items: Contact }
+      opportunities: { type: array, items: Opportunity }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Opportunity:
+    description: Salesforce Opportunity - potential sales deal or engagement
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      stage: { type: OpportunityStage, required: true }
+      amount: { type: decimal }
+      probability: { type: decimal, description: "0-100%" }
+      closeDate: { type: date }
+      accountId: { type: string, required: true }
+      owner: { type: string }
+      products: { type: array, items: string, description: "Product IDs" }
+      engagementId: { type: string, description: "Converts to engagement" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Activity:
+    description: Salesforce Activity - task, call, email, or meeting
+    properties:
+      id: { type: string, required: true }
+      activityType: { type: ActivityType, required: true }
+      subject: { type: string, required: true }
+      description: { type: string }
+      date: { type: datetime, required: true }
+      duration: { type: integer, description: "Minutes" }
+      status: { type: ActivityStatus }
+      performedBy: { type: string, description: "Consultant ID" }
+      opportunityId: { type: string }
+      contactId: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+enums:
+
+  # Engagement & Assessment
+  EngagementType:
+    values:
+      - TechnologyStrategy
+      - ArchitectureReview
+      - CloudMigration
+      - DigitalTransformation
+      - AIMLStrategy
+      - SecurityAssessment
+
+  EngagementStatus:
+    values: [Planning, Active, OnHold, Completed, Cancelled]
+
+  AssessmentType:
+    values:
+      - Technology
+      - Architecture
+      - Security
+      - Capability
+      - Maturity
+
+  # Maturity & Risk
+  MaturityLevel:
+    values:
+      - Initial        # Level 1: Ad-hoc processes
+      - Developing     # Level 2: Some processes defined
+      - Defined        # Level 3: Well-characterized
+      - Managed        # Level 4: Measured and controlled
+      - Optimizing     # Level 5: Continuous improvement
+
+  RiskCategory:
+    values: [Technical, Security, Operational, Business, Compliance]
+
+  RiskSeverity:
+    values: [Critical, High, Medium, Low, Minimal]
+
+  # Recommendations
+  RecommendationType:
+    values: [Strategic, Tactical, QuickWin, LongTerm]
+
+  Priority:
+    values: [Critical, High, Medium, Low]
+
+  DecisionWeight:
+    values:
+      - ALWAYS          # Non-negotiable (+10)
+      - STRONGLY_PREFER # Strong preference (+5)
+      - PREFER          # Preferred (+2)
+      - NEUTRAL         # No preference (0)
+      - AVOID           # Avoid if alternatives (-2)
+      - STRONGLY_AVOID  # Strong avoidance (-5)
+      - NEVER           # Unacceptable (-10)
+
+  CriteriaCategory:
+    values: [Architecture, TechStack, Performance, Security, Cost, Scalability]
+
+  # Technology
+  CloudProvider:
+    values: [AWS, Azure, GCP, MultiCloud, OnPremise, Hybrid]
+
+  DeploymentPattern:
+    values: [Containers, Serverless, VM, Kubernetes, Hybrid]
+
+  WorkloadType:
+    values:
+      - MLInference
+      - DataPipeline
+      - WebApplication
+      - BatchProcessing
+      - Streaming
+      - Microservices
+      - API
+
+  WorkloadStatus:
+    values: [Development, Staging, Production, Deprecated]
+
+  Environment:
+    values: [Development, Staging, Production]
+
+  ProductCategory:
+    values: [Compute, Storage, Database, MLAI, Analytics, Networking, Security]
+
+  # Observations
+  ObservationCategory:
+    values: [Technical, Process, Organizational, Cultural, Risk]
+
+  ObservationSeverity:
+    values: [Critical, High, Medium, Low, Info]
+
+  # Deliverables
+  DeliverableType:
+    values:
+      - AssessmentReport
+      - ArchitectureDiagram
+      - Roadmap
+      - Prototype
+      - Documentation
+      - Presentation
+
+  RoadmapTimeframe:
+    values: [ThreeMonths, SixMonths, OneYear, ThreeYears]
+
+  MilestoneStatus:
+    values: [NotStarted, InProgress, Completed, Delayed, Cancelled]
+
+  # Contacts & CRM
+  ContactRole:
+    values:
+      - PrimaryContact
+      - Stakeholder
+      - DecisionMaker
+      - TechnicalLead
+      - Executive
+
+  CompanySize:
+    values: [Startup, SMB, MidMarket, Enterprise]
+
+  AccountType:
+    values: [Customer, Prospect, Partner, Vendor]
+
+  OpportunityStage:
+    values:
+      - Prospecting
+      - Qualification
+      - Proposal
+      - Negotiation
+      - ClosedWon
+      - ClosedLost
+
+  ActivityType:
+    values: [Call, Email, Meeting, Task]
+
+  ActivityStatus:
+    values: [Planned, Completed, Cancelled]

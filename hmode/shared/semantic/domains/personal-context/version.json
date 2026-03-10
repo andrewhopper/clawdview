@@ -1,0 +1,10 @@
+{
+  "version": "1.1.0",
+  "status": "development",
+  "created": "2025-12-05",
+  "updated": "2025-12-05",
+  "changelog": {
+    "1.1.0": "Add provenance, confidence decay, LLM extraction from text/voice",
+    "1.0.0": "Initial version with location, state dimensions, activity, and preferences"
+  }
+}

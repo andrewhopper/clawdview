@@ -1,0 +1,561 @@
+# Device Binding Domain Model
+# Device registration and binding for push notifications
+# Inspired by Twilio Notify Bindings
+# https://www.twilio.com/docs/notify/api/binding-resource
+
+entities:
+
+  Binding:
+    description: Associates a user identity with a device for notifications
+    extends: Entity
+    properties:
+      sid:
+        type: string
+        required: true
+        description: Unique binding identifier
+      accountSid:
+        type: string
+        required: true
+      serviceSid:
+        type: string
+        required: true
+        description: Notification service SID
+      identity:
+        type: string
+        required: true
+        description: User identity (your user ID)
+      bindingType:
+        type: BindingType
+        required: true
+        description: apn, fcm, gcm, sms, etc.
+      address:
+        type: string
+        required: true
+        description: Device token, phone number, or endpoint
+      notificationProtocolVersion:
+        type: string
+        description: Protocol version (e.g., "3" for APNs HTTP/2)
+      endpoint:
+        type: string
+        description: Unique endpoint identifier
+      credentialSid:
+        type: string
+        description: Credential used for this binding
+      tags:
+        type: array
+        items: string
+        description: Tags for targeting notifications
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  DeviceToken:
+    description: Platform-specific device token for push notifications
+    properties:
+      token:
+        type: string
+        required: true
+        description: The actual device token
+      platform:
+        type: DevicePlatform
+        required: true
+      bundleId:
+        type: string
+        description: iOS bundle ID or Android package name
+      sandbox:
+        type: boolean
+        description: True for development/sandbox environment
+      appVersion:
+        type: string
+        description: App version that registered this token
+      deviceModel:
+        type: string
+        description: Device model (iPhone 14, Pixel 7, etc.)
+      osVersion:
+        type: string
+        description: Operating system version
+      validatedAt:
+        type: datetime
+        description: Last successful validation
+      invalidatedAt:
+        type: datetime
+        description: When token was invalidated
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  Device:
+    description: Mobile device information
+    properties:
+      sid:
+        type: string
+        required: true
+        description: Unique device identifier
+      userId:
+        type: string
+        required: true
+        description: Owner user ID
+      deviceId:
+        type: string
+        required: true
+        description: Hardware device ID (IDFV, Android ID)
+      platform:
+        type: DevicePlatform
+        required: true
+      model:
+        type: string
+        description: Device model name
+      manufacturer:
+        type: string
+        description: Device manufacturer
+      osVersion:
+        type: string
+        description: Operating system version
+      appVersion:
+        type: string
+        description: Installed app version
+      pushEnabled:
+        type: boolean
+        description: User has granted push permission
+      pushToken:
+        type: string
+        description: Current push token
+      locale:
+        type: string
+        description: Device locale (en_US, fr_FR)
+      timezone:
+        type: string
+        description: Device timezone (America/New_York)
+      lastActiveAt:
+        type: datetime
+        description: Last app activity
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  Credential:
+    description: Platform credentials for sending push notifications
+    properties:
+      sid:
+        type: string
+        required: true
+        description: Unique credential identifier
+      accountSid:
+        type: string
+        required: true
+      friendlyName:
+        type: string
+        description: Human-readable name
+      type:
+        type: CredentialType
+        required: true
+      # APNs credentials
+      certificate:
+        type: string
+        description: APNs certificate (PEM format)
+      privateKey:
+        type: string
+        description: APNs private key (PEM format)
+      # APNs token-based auth
+      apnTeamId:
+        type: string
+        description: Apple Developer Team ID
+      apnKeyId:
+        type: string
+        description: APNs key identifier
+      apnAuthKey:
+        type: string
+        description: APNs auth key (.p8 content)
+      apnBundleId:
+        type: string
+        description: iOS app bundle identifier
+      # FCM credentials
+      fcmProjectId:
+        type: string
+        description: Firebase project ID
+      fcmServiceAccountJson:
+        type: string
+        description: Firebase service account JSON
+      # Legacy GCM
+      gcmApiKey:
+        type: string
+        description: GCM/FCM legacy server key
+      sandbox:
+        type: boolean
+        description: Use sandbox/development environment
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  UserPreferences:
+    description: User notification preferences
+    properties:
+      userId:
+        type: string
+        required: true
+        description: User identifier
+      globalEnabled:
+        type: boolean
+        required: true
+        description: Master notification switch
+      channels:
+        type: array
+        items: ChannelPreference
+        description: Per-channel preferences
+      quietHours:
+        type: QuietHours
+        description: Do not disturb settings
+      frequency:
+        type: NotificationFrequency
+        description: Digest/throttle settings
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  ChannelPreference:
+    description: Preference for a notification channel/category
+    properties:
+      channel:
+        type: string
+        required: true
+        description: Channel identifier (marketing, transactional, social)
+      enabled:
+        type: boolean
+        required: true
+      push:
+        type: boolean
+        description: Receive push for this channel
+      sms:
+        type: boolean
+        description: Receive SMS for this channel
+      email:
+        type: boolean
+        description: Receive email for this channel
+      inApp:
+        type: boolean
+        description: Show in-app for this channel
+
+  QuietHours:
+    description: Do not disturb time windows
+    properties:
+      enabled:
+        type: boolean
+        required: true
+      startTime:
+        type: string
+        description: Start time (HH:MM format)
+      endTime:
+        type: string
+        description: End time (HH:MM format)
+      timezone:
+        type: string
+        description: User's timezone
+      allowUrgent:
+        type: boolean
+        description: Allow time-sensitive notifications
+
+  Segment:
+    description: User segment for targeting notifications
+    properties:
+      sid:
+        type: string
+        required: true
+      serviceSid:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: Segment identifier
+      description:
+        type: string
+      criteria:
+        type: SegmentCriteria
+        description: Rules for segment membership
+      memberCount:
+        type: integer
+        description: Cached count of members
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  SegmentCriteria:
+    description: Rules for segment membership
+    properties:
+      rules:
+        type: array
+        items: SegmentRule
+      operator:
+        type: LogicalOperator
+        description: AND or OR between rules
+
+  SegmentRule:
+    description: Single rule for segment matching
+    properties:
+      field:
+        type: string
+        required: true
+        description: Field to match (tag, attribute)
+      operator:
+        type: ComparisonOperator
+        required: true
+      value:
+        type: string
+        required: true
+
+enums:
+
+  BindingType:
+    description: Type of notification binding
+    values:
+      - apn           # Apple Push Notification Service
+      - fcm           # Firebase Cloud Messaging
+      - gcm           # Google Cloud Messaging (legacy)
+      - sms           # SMS fallback
+      - facebook-messenger
+      - alexa
+      - email         # Email notifications
+      - web-push      # Web push notifications
+
+  DevicePlatform:
+    description: Mobile operating system
+    values:
+      - ios         # Apple iOS
+      - android     # Google Android
+      - web         # Web browser
+      - windows     # Windows Mobile/Desktop
+      - macos       # macOS desktop
+      - linux       # Linux desktop
+      - tvos        # Apple TV
+      - watchos     # Apple Watch
+      - wearos      # Wear OS (Android)
+
+  CredentialType:
+    description: Type of push credential
+    values:
+      - apn           # Apple Push Notification (certificate)
+      - apn_token     # APNs token-based auth
+      - fcm           # Firebase Cloud Messaging v1
+      - gcm           # Legacy GCM/FCM
+      - web_push      # Web push VAPID keys
+
+  NotificationFrequency:
+    description: How often to send notifications
+    values:
+      - realtime      # Send immediately
+      - batched       # Batch similar notifications
+      - hourly        # Digest every hour
+      - daily         # Daily digest
+      - weekly        # Weekly digest
+
+  LogicalOperator:
+    values: [AND, OR]
+
+  ComparisonOperator:
+    values:
+      - equals
+      - not_equals
+      - contains
+      - not_contains
+      - starts_with
+      - ends_with
+      - greater_than
+      - less_than
+      - in
+      - not_in
+
+actions:
+
+  CreateBindingAction:
+    description: Register a device for push notifications
+    parameters:
+      serviceSid:
+        type: string
+        required: true
+      identity:
+        type: string
+        required: true
+        description: Your user identifier
+      bindingType:
+        type: BindingType
+        required: true
+      address:
+        type: string
+        required: true
+        description: Device token or phone number
+      tag:
+        type: array
+        items: string
+        description: Tags for targeting
+      credentialSid:
+        type: string
+        description: Specific credential to use
+    result:
+      type: Binding
+
+  FetchBindingAction:
+    description: Get binding details
+    parameters:
+      serviceSid:
+        type: string
+        required: true
+      sid:
+        type: string
+        required: true
+    result:
+      type: Binding
+
+  DeleteBindingAction:
+    description: Remove a device binding
+    parameters:
+      serviceSid:
+        type: string
+        required: true
+      sid:
+        type: string
+        required: true
+    result:
+      type: boolean
+
+  ListBindingsAction:
+    description: List bindings with filters
+    parameters:
+      serviceSid:
+        type: string
+        required: true
+      identity:
+        type: string
+        description: Filter by user identity
+      tag:
+        type: string
+        description: Filter by tag
+      bindingType:
+        type: BindingType
+        description: Filter by type
+      pageSize:
+        type: integer
+    result:
+      type: array
+      items: Binding
+
+  RegisterDeviceAction:
+    description: Register or update a device
+    parameters:
+      userId:
+        type: string
+        required: true
+      deviceId:
+        type: string
+        required: true
+      platform:
+        type: DevicePlatform
+        required: true
+      pushToken:
+        type: string
+      model:
+        type: string
+      osVersion:
+        type: string
+      appVersion:
+        type: string
+      locale:
+        type: string
+      timezone:
+        type: string
+    result:
+      type: Device
+
+  UpdateDeviceTokenAction:
+    description: Update push token for a device
+    parameters:
+      deviceSid:
+        type: string
+        required: true
+      pushToken:
+        type: string
+        required: true
+    result:
+      type: Device
+
+  CreateCredentialAction:
+    description: Create push notification credentials
+    parameters:
+      type:
+        type: CredentialType
+        required: true
+      friendlyName:
+        type: string
+      # APNs
+      certificate:
+        type: string
+      privateKey:
+        type: string
+      apnTeamId:
+        type: string
+      apnKeyId:
+        type: string
+      apnAuthKey:
+        type: string
+      apnBundleId:
+        type: string
+      # FCM
+      fcmProjectId:
+        type: string
+      fcmServiceAccountJson:
+        type: string
+      sandbox:
+        type: boolean
+    result:
+      type: Credential
+
+  UpdateUserPreferencesAction:
+    description: Update user notification preferences
+    parameters:
+      userId:
+        type: string
+        required: true
+      globalEnabled:
+        type: boolean
+      channels:
+        type: array
+        items: ChannelPreference
+      quietHours:
+        type: QuietHours
+      frequency:
+        type: NotificationFrequency
+    result:
+      type: UserPreferences
+
+  CreateSegmentAction:
+    description: Create a user segment
+    parameters:
+      serviceSid:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      criteria:
+        type: SegmentCriteria
+    result:
+      type: Segment

@@ -1,0 +1,206 @@
+# Health Domain Model
+# Physical exercise, health metrics, and fitness tracking
+
+domain:
+  name: health
+  version: "1.0.0"
+  description: Health/fitness entities - workouts, heart rate, activity analysis
+  dependencies: [core, action]
+  use_case: Generate consistent health apps across mobile, web, wearables
+  created_at: "2025-11-21"
+  updated_at: "2025-11-22"
+
+entities:
+
+  Workout:
+    description: Physical exercise session
+    properties:
+      id: { type: string, required: true }
+      userId: { type: string, required: true }
+      activityType: { type: ActivityType, required: true }
+      duration: { type: duration, required: true, description: "ISO 8601 format (PT30M)" }
+      caloriesBurned: { type: integer, description: "Estimated calories burned" }
+      distance: { type: decimal, description: "Distance in kilometers" }
+      averageHeartRate: { type: integer, description: "Average BPM during workout" }
+      maxHeartRate: { type: integer, description: "Maximum BPM during workout" }
+      startedAt: { type: datetime, required: true }
+      completedAt: { type: datetime }
+      notes: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  HeartRate:
+    description: Heart rate measurement in beats per minute
+    properties:
+      id: { type: string, required: true }
+      userId: { type: string, required: true }
+      bpm: { type: integer, required: true, min: 30, max: 250 }
+      context: { type: HeartRateContext }
+      timestamp: { type: datetime, required: true }
+      source: { type: string, description: "Device or manual entry" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Activity:
+    description: Daily activity summary
+    properties:
+      id: { type: string, required: true }
+      userId: { type: string, required: true }
+      date: { type: date, required: true }
+      steps: { type: integer }
+      activeMinutes: { type: integer }
+      caloriesBurned: { type: integer }
+      distance: { type: decimal, description: "Total distance in km" }
+      floorsClimbed: { type: integer }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ActivityAnalysis:
+    description: Analysis report with trends, insights, recommendations
+    properties:
+      id: { type: string, required: true }
+      userId: { type: string, required: true }
+      dateFrom: { type: date, required: true }
+      dateTo: { type: date, required: true }
+      totalWorkouts: { type: integer }
+      averageDuration: { type: duration }
+      totalCalories: { type: integer }
+      totalDistance: { type: decimal }
+      trend: { type: TrendDirection }
+      insights: { type: array, items: string }
+      recommendations: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+
+  RecoveryEstimate:
+    description: Estimated recovery time after workout
+    properties:
+      id: { type: string, required: true }
+      workoutId: { type: string, required: true }
+      recoveryTime: { type: duration, description: "Estimated recovery in hours" }
+      nextWorkoutRecommended: { type: datetime }
+      recommendedIntensity: { type: WorkoutIntensity }
+      createdAt: { type: datetime, required: true }
+
+enums:
+
+  ActivityType:
+    values:
+      - Running
+      - Cycling
+      - Swimming
+      - Strength
+      - Yoga
+      - Walking
+      - HIIT
+      - Hiking
+      - Rowing
+      - Elliptical
+
+  HeartRateContext:
+    values:
+      - Resting
+      - Active
+      - PostWorkout
+      - Sleep
+
+  TrendDirection:
+    values:
+      - Improving
+      - Stable
+      - Declining
+
+  WorkoutIntensity:
+    values:
+      - Light
+      - Moderate
+      - Intense
+      - Recovery
+
+actions:
+
+  LogWorkout:
+    description: Record a completed workout session
+    parameters:
+      activityType: { type: ActivityType, required: true }
+      duration: { type: duration, required: true, description: "ISO 8601 (PT30M for 30 min)" }
+      caloriesBurned: { type: integer }
+      distance: { type: decimal }
+      averageHeartRate: { type: integer }
+    result: Workout
+    permission: health:write
+    idempotent: false
+    sideEffects: Creates workout record, updates user statistics, calculates recovery time
+    errors: [INVALID_DURATION, INVALID_HEART_RATE, USER_NOT_FOUND]
+
+  TrackHeartRate:
+    description: Record heart rate measurement
+    parameters:
+      bpm: { type: integer, required: true }
+      timestamp: { type: datetime, default: "NOW()" }
+      context: { type: HeartRateContext }
+    result: HeartRate
+    permission: health:write
+    idempotent: false
+    sideEffects: Creates heart rate data point, triggers alerts if abnormal
+    errors: [INVALID_HEART_RATE, SENSOR_ERROR]
+
+  AnalyzeActivity:
+    description: Analyze workout trends and provide insights
+    parameters:
+      userId: { type: string, required: true }
+      dateFrom: { type: date, default: "30_DAYS_AGO" }
+      dateTo: { type: date, default: "TODAY" }
+    result: ActivityAnalysis
+    permission: health:read
+    idempotent: true
+    sideEffects: None (read-only analysis)
+    errors: [INSUFFICIENT_DATA, USER_NOT_FOUND]
+
+  CalculateRecoveryTime:
+    description: Estimate recovery time needed based on workout intensity
+    parameters:
+      workoutId: { type: string, required: true }
+    result: RecoveryEstimate
+    permission: health:read
+    idempotent: true
+    sideEffects: None (calculation only)
+    errors: [INVALID_WORKOUT_DATA]
+
+  GetWorkoutHistory:
+    description: Retrieve workout history for user
+    parameters:
+      userId: { type: string, required: true }
+      activityType: { type: ActivityType }
+      dateFrom: { type: date }
+      dateTo: { type: date }
+      limit: { type: integer, default: 50 }
+      offset: { type: integer, default: 0 }
+    result: { type: array, items: Workout }
+    permission: health:read
+    idempotent: true
+
+workflows:
+
+  PostWorkoutProcessing:
+    description: Automated processing after workout completion
+    steps:
+      - LogWorkout
+      - CalculateRecoveryTime
+      - AnalyzeActivity
+
+agent_capability:
+  name: HealthDomain
+  description: |
+    You can perform the following health/fitness operations:
+    - Log workouts with activity type, duration, calories, distance, heart rate
+    - Track heart rate measurements (resting, active, post-workout)
+    - Analyze activity trends over time periods
+    - Calculate recovery time after workouts
+    - Generate insights and recommendations
+
+    All operations require health data permissions (health:read, health:write).
+  examples:
+    - input: '{ activityType: "Running", duration: "PT45M", distance: 7.5, averageHeartRate: 145 }'
+      output: '{ id: "workout-789", caloriesBurned: 520, recoveryTime: "18 hours" }'
+    - input: '{ userId: "user-123", dateFrom: "2025-10-18", dateTo: "2025-11-18" }'
+      output: '{ totalWorkouts: 24, avgDuration: "PT38M", trend: "improving" }'

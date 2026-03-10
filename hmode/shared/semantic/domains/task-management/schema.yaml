@@ -1,0 +1,681 @@
+# Task Management Domain Model
+# Personal and team task management with todos, categories, tags, and deadlines
+
+domain:
+  name: task-management
+  version: "1.2.0"
+  description: Task management primitives - todos, categories, tags, projects, deadlines, and checklists
+  dependencies: [core, work-item]
+  extends: work-item
+  use_case: Personal and team productivity, todo lists, project task tracking
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+
+entities:
+
+  # ============================================
+  # CORE TASK ENTITIES
+  # ============================================
+
+  Todo:
+    description: A task or action item to be completed
+    extends: work-item:WorkItem
+    properties:
+      id: { type: uuid, required: true }
+      title: { type: string, required: true, maxLength: 500 }
+      description: { type: string, description: "Detailed notes or context (supports markdown with embedded media)" }
+      descriptionFormat: { type: DescriptionFormat, default: markdown }
+      status: { type: TodoStatus, required: true, default: pending }
+      priority: { type: Priority, required: true, default: medium }
+      projectId: { type: uuid, description: "FK to Project" }
+      categoryId: { type: uuid, description: "FK to Category" }
+      parentId: { type: uuid, description: "FK to parent Todo for subtasks" }
+      tags: { type: array, items: uuid, description: "FK to Tag[]" }
+      attachments: { type: array, items: Attachment, description: "Files attached to this todo" }
+      embeddedMedia: { type: array, items: EmbeddedMedia, description: "Media embedded in description" }
+      deadline: { type: Deadline }
+      recurrence: { type: TaskRecurrence }
+      estimatedMinutes: { type: integer, description: "Time estimate in minutes" }
+      actualMinutes: { type: integer, description: "Tracked time spent" }
+      assigneeId: { type: string, description: "FK to auth:User" }
+      sortOrder: { type: integer, description: "Position within list" }
+      completedAt: { type: datetime }
+      archivedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Subtask:
+    description: A checklist item within a todo
+    properties:
+      id: { type: uuid, required: true }
+      todoId: { type: uuid, required: true, description: "FK to Todo" }
+      title: { type: string, required: true, maxLength: 255 }
+      isCompleted: { type: boolean, required: true, default: false }
+      sortOrder: { type: integer, required: true }
+      completedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # ORGANIZATION ENTITIES
+  # ============================================
+
+  Project:
+    description: A collection of related todos toward a goal
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true, maxLength: 100 }
+      description: { type: string }
+      color: { type: string, description: "Hex color code" }
+      icon: { type: string, description: "Icon identifier or emoji" }
+      status: { type: ProjectStatus, required: true, default: active }
+      parentId: { type: uuid, description: "FK to parent Project for nesting" }
+      ownerId: { type: string, description: "FK to auth:User" }
+      sortOrder: { type: integer }
+      deadline: { type: Deadline }
+      archivedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Category:
+    description: A logical grouping or list for todos (e.g., Work, Personal, Errands)
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true, maxLength: 50 }
+      description: { type: string }
+      color: { type: string, description: "Hex color code" }
+      icon: { type: string, description: "Icon identifier or emoji" }
+      isDefault: { type: boolean, default: false, description: "Default category for new todos" }
+      sortOrder: { type: integer }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Tag:
+    description: A label for cross-cutting categorization
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true, maxLength: 30 }
+      slug: { type: string, required: true, description: "URL-safe identifier" }
+      color: { type: string, description: "Hex color code" }
+      description: { type: string }
+      usageCount: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  TodoTag:
+    description: Junction table for Todo-Tag many-to-many relationship
+    properties:
+      todoId: { type: uuid, required: true }
+      tagId: { type: uuid, required: true }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # TIME & SCHEDULING
+  # ============================================
+
+  Deadline:
+    description: Due date with optional time and reminder settings
+    properties:
+      dueDate: { type: date, required: true }
+      dueTime: { type: time, description: "Optional specific time" }
+      hasTime: { type: boolean, required: true, default: false }
+      timezone: { type: string, description: "IANA timezone" }
+      reminders: { type: array, items: Reminder }
+
+  Reminder:
+    description: A notification trigger before deadline
+    properties:
+      id: { type: uuid, required: true }
+      type: { type: ReminderType, required: true }
+      offsetMinutes: { type: integer, required: true, description: "Minutes before deadline" }
+      channel: { type: ReminderChannel, required: true, default: push }
+      sentAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+
+  TaskRecurrence:
+    description: Pattern for repeating tasks
+    properties:
+      pattern: { type: RecurrencePattern, required: true }
+      interval: { type: integer, required: true, default: 1 }
+      daysOfWeek: { type: array, items: DayOfWeek, description: "For weekly recurrence" }
+      dayOfMonth: { type: integer, description: "For monthly recurrence (1-31)" }
+      monthOfYear: { type: integer, description: "For yearly recurrence (1-12)" }
+      endDate: { type: date, description: "When recurrence stops" }
+      maxOccurrences: { type: integer, description: "Maximum number of instances" }
+      completionBehavior: { type: CompletionBehavior, required: true, default: next_scheduled }
+      lastGeneratedAt: { type: datetime }
+
+  # ============================================
+  # ATTACHMENTS & MEDIA
+  # ============================================
+
+  Attachment:
+    description: A file attached to a todo (references core:MediaObject)
+    properties:
+      id: { type: uuid, required: true }
+      todoId: { type: uuid, required: true, description: "FK to Todo" }
+      name: { type: string, required: true, description: "Display name" }
+      fileName: { type: string, required: true, description: "Original file name" }
+      url: { type: uri, required: true, description: "Storage URL (S3, etc.)" }
+      mimeType: { type: string, required: true }
+      fileSize: { type: integer, description: "Size in bytes" }
+      attachmentType: { type: AttachmentType, required: true }
+      thumbnailUrl: { type: uri, description: "Preview image URL" }
+      metadata: { type: object, description: "Type-specific metadata (dimensions, duration, etc.)" }
+      uploadedById: { type: string, description: "FK to auth:User" }
+      createdAt: { type: datetime, required: true }
+
+  EmbeddedMedia:
+    description: Media embedded inline in description (images, videos, audio)
+    properties:
+      id: { type: uuid, required: true }
+      mediaType: { type: MediaType, required: true }
+      url: { type: uri, required: true }
+      altText: { type: string, description: "Accessibility text" }
+      caption: { type: string }
+      width: { type: integer, description: "For images/videos" }
+      height: { type: integer, description: "For images/videos" }
+      duration: { type: integer, description: "For audio/video in seconds" }
+      position: { type: integer, description: "Character position in description" }
+      createdAt: { type: datetime, required: true }
+
+  Comment:
+    description: A comment or note on a todo
+    properties:
+      id: { type: uuid, required: true }
+      todoId: { type: uuid, required: true, description: "FK to Todo" }
+      authorId: { type: string, required: true, description: "FK to auth:User" }
+      content: { type: string, required: true }
+      contentFormat: { type: DescriptionFormat, default: markdown }
+      attachments: { type: array, items: Attachment }
+      embeddedMedia: { type: array, items: EmbeddedMedia }
+      parentCommentId: { type: uuid, description: "FK for threaded replies" }
+      editedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # ACTIVITY & HISTORY
+  # ============================================
+
+  TodoActivity:
+    description: Audit log of changes to a todo
+    properties:
+      id: { type: uuid, required: true }
+      todoId: { type: uuid, required: true }
+      actorId: { type: string, description: "FK to auth:User" }
+      action: { type: ActivityAction, required: true }
+      field: { type: string, description: "Field that changed" }
+      oldValue: { type: string }
+      newValue: { type: string }
+      timestamp: { type: datetime, required: true }
+
+  # ============================================
+  # VIEWS & FILTERS
+  # ============================================
+
+  SavedFilter:
+    description: Reusable filter/view configuration
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true, maxLength: 50 }
+      isSmartList: { type: boolean, default: false, description: "Auto-populated based on rules" }
+      filters: { type: FilterCriteria, required: true }
+      sortBy: { type: SortField, default: deadline }
+      sortDirection: { type: SortDirection, default: asc }
+      groupBy: { type: GroupField }
+      icon: { type: string }
+      color: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  FilterCriteria:
+    description: Query conditions for filtering todos
+    properties:
+      statuses: { type: array, items: TodoStatus }
+      priorities: { type: array, items: Priority }
+      projectIds: { type: array, items: uuid }
+      categoryIds: { type: array, items: uuid }
+      tagIds: { type: array, items: uuid }
+      assigneeIds: { type: array, items: string }
+      dueDateRange: { type: DateRangeFilter }
+      hasDeadline: { type: boolean }
+      isOverdue: { type: boolean }
+      searchQuery: { type: string }
+
+  DateRangeFilter:
+    description: Date range filter options
+    properties:
+      type: { type: DateRangeType, required: true }
+      startDate: { type: date, description: "For custom range" }
+      endDate: { type: date, description: "For custom range" }
+
+enums:
+
+  # Task Status
+  TodoStatus:
+    values:
+      - pending       # Not started
+      - in_progress   # Work has begun
+      - completed     # Done
+      - cancelled     # Won't do
+      - deferred      # Postponed indefinitely
+      - waiting       # Blocked on external dependency
+
+  Priority:
+    values:
+      - none          # No priority set
+      - low           # Nice to have
+      - medium        # Standard priority
+      - high          # Important
+      - urgent        # Time-sensitive, critical
+
+  ProjectStatus:
+    values:
+      - active        # In progress
+      - paused        # Temporarily on hold
+      - completed     # All tasks done
+      - archived      # Historical, not active
+
+  # Recurrence
+  RecurrencePattern:
+    values:
+      - daily
+      - weekly
+      - biweekly
+      - monthly
+      - quarterly
+      - yearly
+      - custom
+
+  DayOfWeek:
+    values: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+
+  CompletionBehavior:
+    values:
+      - next_scheduled   # Move to next occurrence date
+      - from_completion  # Calculate next from completion date
+
+  # Reminders
+  ReminderType:
+    values:
+      - at_time       # At exact deadline
+      - before        # Minutes before deadline
+
+  ReminderChannel:
+    values:
+      - push          # Push notification
+      - email         # Email reminder
+      - sms           # Text message
+      - in_app        # In-app notification
+
+  # Attachments & Media
+  AttachmentType:
+    values:
+      - file          # Generic file
+      - image         # Image file (png, jpg, gif, etc.)
+      - document      # Document (pdf, doc, xls, etc.)
+      - video         # Video file
+      - audio         # Audio file
+      - archive       # Compressed archive (zip, tar, etc.)
+      - link          # External URL/bookmark
+
+  MediaType:
+    values:
+      - image
+      - video
+      - audio
+      - iframe        # Embedded content (YouTube, etc.)
+
+  DescriptionFormat:
+    values:
+      - plain         # Plain text
+      - markdown      # Markdown with media support
+      - html          # Rich HTML
+
+  # Activity Tracking
+  ActivityAction:
+    values:
+      - created
+      - updated
+      - completed
+      - uncompleted
+      - deleted
+      - restored
+      - moved         # Changed project/category
+      - tagged
+      - untagged
+      - assigned
+      - unassigned
+      - deadline_set
+      - deadline_cleared
+      - priority_changed
+      - commented
+      - attachment_added
+      - attachment_removed
+      - media_embedded
+
+  # Filtering & Sorting
+  SortField:
+    values:
+      - deadline
+      - priority
+      - created_at
+      - updated_at
+      - title
+      - sort_order
+      - estimated_time
+
+  SortDirection:
+    values: [asc, desc]
+
+  GroupField:
+    values:
+      - none
+      - project
+      - category
+      - priority
+      - deadline_date
+      - assignee
+      - status
+
+  DateRangeType:
+    values:
+      - today
+      - tomorrow
+      - this_week
+      - next_week
+      - this_month
+      - overdue
+      - no_date
+      - custom
+
+actions:
+
+  # Todo CRUD
+  CreateTodo:
+    description: Create a new todo item
+    parameters:
+      title: { type: string, required: true }
+      description: { type: string }
+      projectId: { type: uuid }
+      categoryId: { type: uuid }
+      tagIds: { type: array, items: uuid }
+      deadline: { type: Deadline }
+      priority: { type: Priority }
+      assigneeId: { type: string }
+    result: Todo
+    permission: todo:create
+    idempotent: false
+
+  UpdateTodo:
+    description: Update an existing todo
+    parameters:
+      id: { type: uuid, required: true }
+      title: { type: string }
+      description: { type: string }
+      projectId: { type: uuid }
+      categoryId: { type: uuid }
+      deadline: { type: Deadline }
+      priority: { type: Priority }
+      assigneeId: { type: string }
+      status: { type: TodoStatus }
+    result: Todo
+    permission: todo:update
+    idempotent: true
+
+  CompleteTodo:
+    description: Mark a todo as completed
+    parameters:
+      id: { type: uuid, required: true }
+      completeSubtasks: { type: boolean, default: true }
+    result: Todo
+    permission: todo:update
+    idempotent: true
+
+  DeleteTodo:
+    description: Delete a todo (soft delete)
+    parameters:
+      id: { type: uuid, required: true }
+      permanent: { type: boolean, default: false }
+    result: { type: boolean }
+    permission: todo:delete
+    idempotent: true
+
+  # Subtask Operations
+  AddSubtask:
+    description: Add a subtask/checklist item to a todo
+    parameters:
+      todoId: { type: uuid, required: true }
+      title: { type: string, required: true }
+    result: Subtask
+    permission: todo:update
+    idempotent: false
+
+  ToggleSubtask:
+    description: Toggle subtask completion
+    parameters:
+      id: { type: uuid, required: true }
+    result: Subtask
+    permission: todo:update
+    idempotent: true
+
+  # Tag Operations
+  TagTodo:
+    description: Add a tag to a todo
+    parameters:
+      todoId: { type: uuid, required: true }
+      tagId: { type: uuid, required: true }
+    result: TodoTag
+    permission: todo:update
+    idempotent: true
+
+  UntagTodo:
+    description: Remove a tag from a todo
+    parameters:
+      todoId: { type: uuid, required: true }
+      tagId: { type: uuid, required: true }
+    result: { type: boolean }
+    permission: todo:update
+    idempotent: true
+
+  # Query Operations
+  ListTodos:
+    description: Get filtered list of todos
+    parameters:
+      filters: { type: FilterCriteria }
+      sortBy: { type: SortField, default: deadline }
+      sortDirection: { type: SortDirection, default: asc }
+      limit: { type: integer, default: 50 }
+      cursor: { type: string }
+    result: { type: object, description: "TodoList with items and pagination" }
+    permission: todo:read
+    idempotent: true
+
+  GetTodosByProject:
+    description: Get all todos for a project
+    parameters:
+      projectId: { type: uuid, required: true }
+      includeCompleted: { type: boolean, default: false }
+    result: { type: array, items: Todo }
+    permission: todo:read
+    idempotent: true
+
+  GetOverdueTodos:
+    description: Get all overdue todos
+    parameters:
+      limit: { type: integer, default: 50 }
+    result: { type: array, items: Todo }
+    permission: todo:read
+    idempotent: true
+
+  # Project Operations
+  CreateProject:
+    description: Create a new project
+    parameters:
+      name: { type: string, required: true }
+      description: { type: string }
+      color: { type: string }
+      icon: { type: string }
+      parentId: { type: uuid }
+    result: Project
+    permission: project:create
+    idempotent: false
+
+  ArchiveProject:
+    description: Archive a project and optionally its todos
+    parameters:
+      id: { type: uuid, required: true }
+      archiveTodos: { type: boolean, default: true }
+    result: Project
+    permission: project:update
+    idempotent: true
+
+  # Category Operations
+  CreateCategory:
+    description: Create a new category/list
+    parameters:
+      name: { type: string, required: true }
+      color: { type: string }
+      icon: { type: string }
+    result: Category
+    permission: category:create
+    idempotent: false
+
+  # Tag Operations
+  CreateTag:
+    description: Create a new tag
+    parameters:
+      name: { type: string, required: true }
+      color: { type: string }
+    result: Tag
+    permission: tag:create
+    idempotent: false
+
+  # Attachment Operations
+  AddAttachment:
+    description: Attach a file to a todo
+    parameters:
+      todoId: { type: uuid, required: true }
+      name: { type: string, required: true }
+      fileName: { type: string, required: true }
+      url: { type: uri, required: true }
+      mimeType: { type: string, required: true }
+      fileSize: { type: integer }
+      attachmentType: { type: AttachmentType }
+      thumbnailUrl: { type: uri }
+    result: Attachment
+    permission: todo:update
+    idempotent: false
+
+  RemoveAttachment:
+    description: Remove an attachment from a todo
+    parameters:
+      attachmentId: { type: uuid, required: true }
+      deleteFile: { type: boolean, default: false, description: "Also delete from storage" }
+    result: { type: boolean }
+    permission: todo:update
+    idempotent: true
+
+  EmbedMedia:
+    description: Embed media in todo description
+    parameters:
+      todoId: { type: uuid, required: true }
+      mediaType: { type: MediaType, required: true }
+      url: { type: uri, required: true }
+      altText: { type: string }
+      caption: { type: string }
+      position: { type: integer }
+    result: EmbeddedMedia
+    permission: todo:update
+    idempotent: false
+
+  # Comment Operations
+  AddComment:
+    description: Add a comment to a todo
+    parameters:
+      todoId: { type: uuid, required: true }
+      content: { type: string, required: true }
+      contentFormat: { type: DescriptionFormat, default: markdown }
+      parentCommentId: { type: uuid }
+    result: Comment
+    permission: todo:comment
+    idempotent: false
+
+  UpdateComment:
+    description: Edit a comment
+    parameters:
+      commentId: { type: uuid, required: true }
+      content: { type: string, required: true }
+    result: Comment
+    permission: todo:comment
+    idempotent: true
+
+  DeleteComment:
+    description: Delete a comment
+    parameters:
+      commentId: { type: uuid, required: true }
+    result: { type: boolean }
+    permission: todo:comment
+    idempotent: true
+
+relationships:
+  - type: one_to_many
+    from: Project
+    to: Todo
+    foreign_key: projectId
+    description: A project contains many todos
+
+  - type: one_to_many
+    from: Category
+    to: Todo
+    foreign_key: categoryId
+    description: A category groups many todos
+
+  - type: one_to_many
+    from: Todo
+    to: Subtask
+    foreign_key: todoId
+    description: A todo can have many subtasks
+
+  - type: one_to_many
+    from: Todo
+    to: Todo
+    foreign_key: parentId
+    description: A todo can have nested subtasks (self-referential)
+
+  - type: many_to_many
+    from: Todo
+    to: Tag
+    through: TodoTag
+    description: Todos can have multiple tags, tags can be on multiple todos
+
+  - type: one_to_many
+    from: Project
+    to: Project
+    foreign_key: parentId
+    description: Projects can be nested (self-referential)
+
+  - type: one_to_many
+    from: Todo
+    to: Attachment
+    foreign_key: todoId
+    description: A todo can have many file attachments
+
+  - type: one_to_many
+    from: Todo
+    to: EmbeddedMedia
+    foreign_key: todoId
+    description: A todo can have many embedded media items
+
+  - type: one_to_many
+    from: Todo
+    to: Comment
+    foreign_key: todoId
+    description: A todo can have many comments
+
+  - type: one_to_many
+    from: Comment
+    to: Comment
+    foreign_key: parentCommentId
+    description: Comments can be threaded (self-referential)

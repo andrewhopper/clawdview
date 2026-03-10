@@ -1,0 +1,1023 @@
+# Data Pipeline Domain Model
+# ETL pipelines, data orchestration, transformations, data quality, and observability
+# Source: Apache Airflow, dbt, AWS Glue, Databricks, Fivetran
+
+domain:
+  name: data-pipeline
+  version: "1.0.0"
+  description: Data pipelines, ETL/ELT workflows, orchestration, transformations, data quality, and lineage tracking
+  dependencies: [core, database, infrastructure]
+  sources:
+    - "Apache Airflow: https://airflow.apache.org/docs/"
+    - "dbt (data build tool): https://docs.getdbt.com/"
+    - "AWS Glue: https://docs.aws.amazon.com/glue/"
+    - "Databricks: https://docs.databricks.com/"
+    - "Fivetran: https://fivetran.com/docs/"
+    - "Great Expectations: https://greatexpectations.io/"
+    - "Apache NiFi: https://nifi.apache.org/"
+  created_at: "2025-11-25"
+  updated_at: "2025-11-25"
+
+entities:
+
+  # ============================================
+  # PIPELINE ORCHESTRATION
+  # ============================================
+
+  Pipeline:
+    description: Data pipeline definition with tasks and dependencies
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      type: { type: PipelineType, required: true }
+      schedule: { type: Schedule }
+      tasks: { type: array, items: Task }
+      parameters: { type: object, description: "Pipeline-level parameters" }
+      tags: { type: array, items: string }
+      owner: { type: string }
+      isEnabled: { type: boolean, default: true }
+      retryPolicy: { type: RetryPolicy }
+      timeoutSeconds: { type: integer }
+      sla: { type: SLA }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Schedule:
+    description: Pipeline scheduling configuration
+    properties:
+      id: { type: string, required: true }
+      type: { type: ScheduleType, required: true }
+      cronExpression: { type: string, description: "Cron expression for schedule" }
+      interval: { type: duration, description: "Interval for periodic schedules" }
+      startDate: { type: datetime }
+      endDate: { type: datetime }
+      timezone: { type: string }
+      catchup: { type: boolean, default: false, description: "Run missed executions" }
+      maxActiveRuns: { type: integer, default: 1 }
+
+  Task:
+    description: Individual task within a pipeline
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      pipelineId: { type: string, required: true }
+      type: { type: TaskType, required: true }
+      operator: { type: string, description: "Task operator/executor type" }
+      config: { type: object, description: "Task-specific configuration" }
+      dependencies: { type: array, items: string, description: "Task IDs this depends on" }
+      retries: { type: integer, default: 0 }
+      retryDelay: { type: duration }
+      timeoutSeconds: { type: integer }
+      pool: { type: string, description: "Resource pool for execution" }
+      priority: { type: integer }
+      trigger: { type: TriggerRule, default: AllSuccess }
+
+  PipelineRun:
+    description: Execution instance of a pipeline
+    properties:
+      id: { type: string, required: true }
+      pipelineId: { type: string, required: true }
+      runType: { type: RunType, required: true }
+      status: { type: RunStatus, required: true }
+      startedAt: { type: datetime }
+      completedAt: { type: datetime }
+      duration: { type: duration }
+      triggeredBy: { type: string }
+      parameters: { type: object }
+      taskRuns: { type: array, items: TaskRun }
+      metrics: { type: RunMetrics }
+      errorMessage: { type: string }
+
+  TaskRun:
+    description: Execution instance of a task
+    properties:
+      id: { type: string, required: true }
+      taskId: { type: string, required: true }
+      pipelineRunId: { type: string, required: true }
+      status: { type: RunStatus, required: true }
+      attemptNumber: { type: integer, default: 1 }
+      startedAt: { type: datetime }
+      completedAt: { type: datetime }
+      duration: { type: duration }
+      logs: { type: array, items: LogEntry }
+      metrics: { type: TaskMetrics }
+      errorMessage: { type: string }
+      errorStackTrace: { type: string }
+
+  # ============================================
+  # DATA SOURCES & DESTINATIONS
+  # ============================================
+
+  DataSource:
+    description: Source system for data extraction
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: DataSourceType, required: true }
+      connectionConfig: { type: ConnectionConfig, required: true }
+      schema: { type: SourceSchema }
+      extractionMode: { type: ExtractionMode, default: Full }
+      incrementalKey: { type: string, description: "Column for incremental extraction" }
+      watermark: { type: string, description: "Last extracted value" }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  DataDestination:
+    description: Target system for data loading
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: DataDestinationType, required: true }
+      connectionConfig: { type: ConnectionConfig, required: true }
+      loadMode: { type: LoadMode, default: Append }
+      schema: { type: DestinationSchema }
+      partitionSpec: { type: PartitionSpec }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ConnectionConfig:
+    description: Connection configuration for data sources/destinations
+    properties:
+      host: { type: string }
+      port: { type: integer }
+      database: { type: string }
+      schema: { type: string }
+      username: { type: string }
+      passwordSecretId: { type: string, description: "Reference to secret manager" }
+      connectionString: { type: string }
+      authType: { type: AuthType }
+      sslEnabled: { type: boolean, default: true }
+      extraParams: { type: object }
+
+  SourceSchema:
+    description: Schema definition for data source
+    properties:
+      tables: { type: array, items: TableConfig }
+      excludePatterns: { type: array, items: string }
+      includePatterns: { type: array, items: string }
+
+  TableConfig:
+    description: Configuration for extracting a table
+    properties:
+      name: { type: string, required: true }
+      columns: { type: array, items: string }
+      whereClause: { type: string }
+      orderBy: { type: string }
+      primaryKey: { type: array, items: string }
+
+  DestinationSchema:
+    description: Schema definition for data destination
+    properties:
+      tableName: { type: string, required: true }
+      databaseName: { type: string }
+      schemaName: { type: string }
+      createIfNotExists: { type: boolean, default: true }
+
+  PartitionSpec:
+    description: Partitioning specification for destination
+    properties:
+      columns: { type: array, items: string, required: true }
+      strategy: { type: PartitionStrategy }
+      format: { type: string, description: "Date format for time partitions" }
+
+  # ============================================
+  # TRANSFORMATIONS
+  # ============================================
+
+  Transformation:
+    description: Data transformation definition
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: TransformationType, required: true }
+      inputSource: { type: string, required: true }
+      outputDestination: { type: string, required: true }
+      logic: { type: TransformationLogic, required: true }
+      dependencies: { type: array, items: string }
+      isIncremental: { type: boolean, default: false }
+      materialization: { type: MaterializationType, default: View }
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  TransformationLogic:
+    description: Logic for data transformation
+    properties:
+      language: { type: TransformationLanguage, required: true }
+      code: { type: string, required: true, description: "SQL, Python, Spark, etc." }
+      template: { type: string }
+      variables: { type: object }
+      compiledCode: { type: string }
+
+  DataModel:
+    description: dbt-style data model definition
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      modelType: { type: ModelType, required: true }
+      sql: { type: string, required: true }
+      materialization: { type: MaterializationType, required: true }
+      dependencies: { type: array, items: string }
+      columns: { type: array, items: ColumnDefinition }
+      tests: { type: array, items: DataTest }
+      tags: { type: array, items: string }
+      metadata: { type: object }
+
+  ColumnDefinition:
+    description: Column definition in data model
+    properties:
+      name: { type: string, required: true }
+      dataType: { type: string }
+      description: { type: string }
+      tests: { type: array, items: string }
+      constraints: { type: array, items: string }
+
+  # ============================================
+  # DATA QUALITY
+  # ============================================
+
+  DataQualityCheck:
+    description: Data quality validation check
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: QualityCheckType, required: true }
+      target: { type: string, required: true, description: "Table or dataset" }
+      rule: { type: QualityRule, required: true }
+      severity: { type: Severity, required: true }
+      schedule: { type: Schedule }
+      isBlocking: { type: boolean, default: false }
+      notificationConfig: { type: NotificationConfig }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  QualityRule:
+    description: Rule definition for data quality check
+    properties:
+      ruleType: { type: RuleType, required: true }
+      column: { type: string }
+      expression: { type: string }
+      threshold: { type: decimal }
+      expectedValue: { type: string }
+      allowedValues: { type: array, items: string }
+      regex: { type: string }
+      comparisonOperator: { type: ComparisonOperator }
+
+  QualityCheckResult:
+    description: Result of data quality check execution
+    properties:
+      id: { type: string, required: true }
+      checkId: { type: string, required: true }
+      status: { type: QualityStatus, required: true }
+      executedAt: { type: datetime, required: true }
+      rowsChecked: { type: integer }
+      rowsPassed: { type: integer }
+      rowsFailed: { type: integer }
+      passRate: { type: decimal }
+      failedRows: { type: array, items: object }
+      metrics: { type: object }
+      errorMessage: { type: string }
+
+  DataTest:
+    description: dbt-style data test
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      testType: { type: TestType, required: true }
+      modelId: { type: string, required: true }
+      column: { type: string }
+      config: { type: object }
+      severity: { type: Severity, default: Error }
+
+  DataProfile:
+    description: Statistical profile of a dataset
+    properties:
+      id: { type: string, required: true }
+      datasetId: { type: string, required: true }
+      profiledAt: { type: datetime, required: true }
+      rowCount: { type: integer }
+      columnCount: { type: integer }
+      sizeBytes: { type: integer }
+      columns: { type: array, items: ColumnProfile }
+      correlations: { type: array, items: ColumnCorrelation }
+
+  ColumnProfile:
+    description: Statistical profile of a column
+    properties:
+      name: { type: string, required: true }
+      dataType: { type: string }
+      nullCount: { type: integer }
+      nullPercentage: { type: decimal }
+      distinctCount: { type: integer }
+      distinctPercentage: { type: decimal }
+      min: { type: string }
+      max: { type: string }
+      mean: { type: decimal }
+      median: { type: decimal }
+      stdDev: { type: decimal }
+      topValues: { type: array, items: ValueFrequency }
+
+  ValueFrequency:
+    description: Value frequency in column profiling
+    properties:
+      value: { type: string, required: true }
+      count: { type: integer, required: true }
+      percentage: { type: decimal }
+
+  ColumnCorrelation:
+    description: Correlation between two columns
+    properties:
+      column1: { type: string, required: true }
+      column2: { type: string, required: true }
+      correlation: { type: decimal, description: "Correlation coefficient" }
+
+  # ============================================
+  # DATA LINEAGE
+  # ============================================
+
+  DataLineage:
+    description: Data lineage tracking from source to destination
+    properties:
+      id: { type: string, required: true }
+      datasetId: { type: string, required: true }
+      upstreamDatasets: { type: array, items: LineageEdge }
+      downstreamDatasets: { type: array, items: LineageEdge }
+      transformations: { type: array, items: string }
+      capturedAt: { type: datetime, required: true }
+      metadata: { type: object }
+
+  LineageEdge:
+    description: Edge in lineage graph
+    properties:
+      datasetId: { type: string, required: true }
+      relationshipType: { type: LineageRelationship, required: true }
+      transformationId: { type: string }
+      columns: { type: array, items: ColumnLineage }
+
+  ColumnLineage:
+    description: Column-level lineage tracking
+    properties:
+      sourceColumn: { type: string, required: true }
+      targetColumn: { type: string, required: true }
+      transformation: { type: string }
+
+  # ============================================
+  # CHANGE DATA CAPTURE (CDC)
+  # ============================================
+
+  CDCStream:
+    description: Change data capture stream configuration
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      sourceId: { type: string, required: true }
+      destinationId: { type: string, required: true }
+      captureMode: { type: CaptureMode, required: true }
+      tables: { type: array, items: string }
+      isActive: { type: boolean, default: true }
+      watermark: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ChangeEvent:
+    description: Individual change event captured
+    properties:
+      id: { type: string, required: true }
+      streamId: { type: string, required: true }
+      operationType: { type: OperationType, required: true }
+      tableName: { type: string, required: true }
+      primaryKeyValue: { type: string }
+      beforeData: { type: object }
+      afterData: { type: object }
+      timestamp: { type: datetime, required: true }
+      transactionId: { type: string }
+      sequenceNumber: { type: integer }
+
+  # ============================================
+  # MONITORING & OBSERVABILITY
+  # ============================================
+
+  DataObservability:
+    description: Observability metrics for data pipelines
+    properties:
+      id: { type: string, required: true }
+      pipelineId: { type: string, required: true }
+      metrics: { type: array, items: ObservabilityMetric }
+      alerts: { type: array, items: DataAlert }
+      sla: { type: SLA }
+      incidents: { type: array, items: DataIncident }
+
+  ObservabilityMetric:
+    description: Metric for monitoring data pipelines
+    properties:
+      name: { type: string, required: true }
+      type: { type: MetricType, required: true }
+      value: { type: decimal, required: true }
+      timestamp: { type: datetime, required: true }
+      dimensions: { type: object }
+      unit: { type: string }
+
+  DataAlert:
+    description: Alert for data pipeline anomalies
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: AlertType, required: true }
+      severity: { type: Severity, required: true }
+      condition: { type: AlertCondition, required: true }
+      notificationConfig: { type: NotificationConfig }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+
+  AlertCondition:
+    description: Condition that triggers an alert
+    properties:
+      metricName: { type: string, required: true }
+      operator: { type: ComparisonOperator, required: true }
+      threshold: { type: decimal, required: true }
+      window: { type: duration }
+      aggregation: { type: AggregationType }
+
+  NotificationConfig:
+    description: Configuration for alert notifications
+    properties:
+      channels: { type: array, items: NotificationChannel }
+      recipients: { type: array, items: string }
+      template: { type: string }
+
+  DataIncident:
+    description: Data quality or pipeline incident
+    properties:
+      id: { type: string, required: true }
+      title: { type: string, required: true }
+      description: { type: string }
+      severity: { type: Severity, required: true }
+      status: { type: IncidentStatus, required: true }
+      affectedPipelines: { type: array, items: string }
+      affectedDatasets: { type: array, items: string }
+      rootCause: { type: string }
+      resolution: { type: string }
+      detectedAt: { type: datetime, required: true }
+      resolvedAt: { type: datetime }
+
+  SLA:
+    description: Service level agreement for pipeline
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      maxDuration: { type: duration }
+      maxLatency: { type: duration }
+      minFreshness: { type: duration }
+      availabilityTarget: { type: decimal, description: "Target availability percentage" }
+
+  # ============================================
+  # METADATA & CATALOG
+  # ============================================
+
+  DataCatalog:
+    description: Metadata catalog for datasets
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      datasets: { type: array, items: DatasetMetadata }
+      glossary: { type: array, items: GlossaryTerm }
+
+  DatasetMetadata:
+    description: Metadata for a dataset
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      owner: { type: string }
+      domain: { type: string }
+      tags: { type: array, items: string }
+      classification: { type: DataClassification }
+      schema: { type: object }
+      location: { type: string }
+      format: { type: DataFormat }
+      partitions: { type: array, items: string }
+      statistics: { type: DatasetStatistics }
+      lineage: { type: DataLineage }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  DatasetStatistics:
+    description: Statistics about a dataset
+    properties:
+      rowCount: { type: integer }
+      sizeBytes: { type: integer }
+      columnCount: { type: integer }
+      lastRefreshed: { type: datetime }
+      growthRate: { type: decimal }
+
+  GlossaryTerm:
+    description: Business glossary term
+    properties:
+      id: { type: string, required: true }
+      term: { type: string, required: true }
+      definition: { type: string, required: true }
+      synonyms: { type: array, items: string }
+      relatedTerms: { type: array, items: string }
+      owner: { type: string }
+      domain: { type: string }
+
+  # ============================================
+  # RETRY & ERROR HANDLING
+  # ============================================
+
+  RetryPolicy:
+    description: Retry policy for failed tasks
+    properties:
+      maxRetries: { type: integer, default: 0 }
+      retryDelay: { type: duration }
+      backoffMultiplier: { type: decimal, default: 1.0 }
+      maxRetryDelay: { type: duration }
+      retryableErrors: { type: array, items: string }
+
+  RunMetrics:
+    description: Metrics for pipeline run
+    properties:
+      recordsProcessed: { type: integer }
+      recordsFailed: { type: integer }
+      bytesProcessed: { type: integer }
+      duration: { type: duration }
+      cpuTime: { type: duration }
+      memoryPeakMB: { type: integer }
+      cost: { type: decimal }
+
+  TaskMetrics:
+    description: Metrics for task execution
+    properties:
+      recordsRead: { type: integer }
+      recordsWritten: { type: integer }
+      recordsFiltered: { type: integer }
+      bytesRead: { type: integer }
+      bytesWritten: { type: integer }
+      duration: { type: duration }
+
+  LogEntry:
+    description: Log entry for task execution
+    properties:
+      timestamp: { type: datetime, required: true }
+      level: { type: LogLevel, required: true }
+      message: { type: string, required: true }
+      context: { type: object }
+
+enums:
+
+  PipelineType:
+    description: Type of data pipeline
+    values:
+      - ETL              # Extract-Transform-Load
+      - ELT              # Extract-Load-Transform
+      - Streaming        # Real-time streaming
+      - Batch            # Batch processing
+      - Hybrid           # Mixed batch and streaming
+      - CDC              # Change data capture
+      - Replication      # Data replication
+
+  ScheduleType:
+    description: Type of pipeline schedule
+    values:
+      - Cron             # Cron expression
+      - Interval         # Fixed interval
+      - Event            # Event-driven
+      - Manual           # Manual trigger only
+      - Continuous       # Always running
+
+  TaskType:
+    description: Type of pipeline task
+    values:
+      - Extract          # Data extraction
+      - Transform        # Data transformation
+      - Load             # Data loading
+      - Quality          # Data quality check
+      - Sensor           # Wait for condition
+      - Trigger          # Trigger another pipeline
+      - Script           # Custom script
+      - SQL              # SQL execution
+      - Spark            # Spark job
+      - Python           # Python script
+
+  TriggerRule:
+    description: Rule for when task should run
+    values:
+      - AllSuccess       # All parents succeeded
+      - AllFailed        # All parents failed
+      - AllDone          # All parents completed
+      - OneSuccess       # At least one parent succeeded
+      - OneFailed        # At least one parent failed
+      - NoneSkipped      # No parents skipped
+      - NoneFailedOrSkipped
+
+  RunType:
+    description: Type of pipeline run
+    values:
+      - Scheduled        # Scheduled run
+      - Manual           # Manual trigger
+      - Backfill         # Historical backfill
+      - Retry            # Retry after failure
+      - External         # Externally triggered
+
+  RunStatus:
+    description: Status of pipeline or task run
+    values:
+      - Queued           # Waiting to start
+      - Running          # Currently executing
+      - Success          # Completed successfully
+      - Failed           # Failed with error
+      - Skipped          # Skipped
+      - Upstream_Failed  # Parent failed
+      - Cancelled        # Manually cancelled
+      - Timeout          # Timed out
+
+  DataSourceType:
+    description: Type of data source
+    values:
+      - PostgreSQL
+      - MySQL
+      - SQLServer
+      - Oracle
+      - MongoDB
+      - Cassandra
+      - Snowflake
+      - BigQuery
+      - Redshift
+      - S3
+      - GCS
+      - ADLS             # Azure Data Lake Storage
+      - HTTP_API
+      - Kafka
+      - Kinesis
+      - Salesforce
+      - ServiceNow
+      - CSV
+      - JSON
+      - Parquet
+      - Avro
+      - ORC
+
+  DataDestinationType:
+    description: Type of data destination
+    values:
+      - PostgreSQL
+      - MySQL
+      - SQLServer
+      - Snowflake
+      - BigQuery
+      - Redshift
+      - Databricks
+      - S3
+      - GCS
+      - ADLS
+      - ElasticSearch
+      - Kafka
+      - Kinesis
+
+  ExtractionMode:
+    description: Mode for data extraction
+    values:
+      - Full             # Full table extract
+      - Incremental      # Incremental based on key
+      - CDC              # Change data capture
+      - Snapshot         # Point-in-time snapshot
+      - Delta            # Delta/changes only
+
+  LoadMode:
+    description: Mode for loading data to destination
+    values:
+      - Append           # Append new rows
+      - Overwrite        # Replace entire table
+      - Upsert           # Insert or update (merge)
+      - Delete           # Delete matching rows
+      - SCD_Type1        # Slowly changing dimension type 1
+      - SCD_Type2        # Slowly changing dimension type 2
+
+  AuthType:
+    description: Authentication type for connections
+    values:
+      - UsernamePassword
+      - ApiKey
+      - OAuth2
+      - IAM              # AWS IAM
+      - ServiceAccount   # GCP service account
+      - Certificate
+      - JWT
+
+  TransformationType:
+    description: Type of data transformation
+    values:
+      - SQL              # SQL-based
+      - Python           # Python script
+      - Spark            # Spark job
+      - dbt              # dbt model
+      - Custom           # Custom code
+      - NoCode           # Visual/no-code
+
+  TransformationLanguage:
+    description: Language for transformation logic
+    values:
+      - SQL
+      - Python
+      - Scala
+      - Java
+      - R
+      - JavaScript
+      - Jinja            # Jinja templating
+
+  MaterializationType:
+    description: How transformed data is materialized
+    values:
+      - View             # Database view
+      - Table            # Physical table
+      - Incremental      # Incremental table
+      - Ephemeral        # Temporary/CTE
+      - Snapshot         # Snapshot table
+
+  ModelType:
+    description: Type of data model (dbt-style)
+    values:
+      - Staging          # Raw data cleanup
+      - Intermediate     # Business logic
+      - Mart             # Final analytics tables
+      - Snapshot         # Historical snapshots
+
+  QualityCheckType:
+    description: Type of data quality check
+    values:
+      - Completeness     # No null values
+      - Uniqueness       # No duplicates
+      - Validity         # Valid values/format
+      - Consistency      # Cross-table consistency
+      - Accuracy         # Matches expected values
+      - Timeliness       # Data freshness
+      - Schema           # Schema validation
+      - Custom           # Custom rule
+
+  RuleType:
+    description: Type of quality rule
+    values:
+      - NotNull          # Column must not be null
+      - Unique           # Column must be unique
+      - InRange          # Value in numeric range
+      - InList           # Value in allowed list
+      - Regex            # Matches regex pattern
+      - ForeignKey       # Foreign key exists
+      - Expression       # Custom SQL expression
+      - RowCount         # Row count threshold
+      - Freshness        # Data recency check
+
+  ComparisonOperator:
+    description: Comparison operator for rules
+    values:
+      - Equals
+      - NotEquals
+      - GreaterThan
+      - GreaterThanOrEqual
+      - LessThan
+      - LessThanOrEqual
+      - Between
+      - In
+      - NotIn
+      - Contains
+      - StartsWith
+      - EndsWith
+      - Matches          # Regex match
+
+  QualityStatus:
+    description: Status of quality check
+    values:
+      - Passed
+      - Failed
+      - Warning
+      - Skipped
+      - Error
+
+  TestType:
+    description: Type of data test (dbt-style)
+    values:
+      - NotNull
+      - Unique
+      - AcceptedValues
+      - Relationships    # Foreign key
+      - Custom
+
+  Severity:
+    description: Severity level
+    values:
+      - Critical
+      - Error
+      - Warning
+      - Info
+
+  CaptureMode:
+    description: Change data capture mode
+    values:
+      - LogBased         # Database transaction log
+      - Trigger          # Database triggers
+      - Timestamp        # Timestamp column
+      - FullRefresh      # Periodic full refresh
+      - Query            # Query-based CDC
+
+  OperationType:
+    description: Type of database operation
+    values:
+      - Insert
+      - Update
+      - Delete
+      - Truncate
+
+  LineageRelationship:
+    description: Type of lineage relationship
+    values:
+      - DirectCopy       # Direct copy
+      - Transformed      # Transformed data
+      - Aggregated       # Aggregated data
+      - Filtered         # Filtered data
+      - Joined           # Joined data
+
+  MetricType:
+    description: Type of observability metric
+    values:
+      - Duration         # Execution duration
+      - RecordCount      # Number of records
+      - ErrorRate        # Error percentage
+      - Throughput       # Records per second
+      - Latency          # Data latency
+      - Freshness        # Data freshness
+      - Cost             # Execution cost
+      - CPU              # CPU usage
+      - Memory           # Memory usage
+
+  AlertType:
+    description: Type of data alert
+    values:
+      - PipelineFailure
+      - DataQuality
+      - SchemaChange
+      - DataFreshness
+      - Anomaly
+      - SLA_Breach
+      - HighCost
+
+  AggregationType:
+    description: Type of metric aggregation
+    values:
+      - Sum
+      - Average
+      - Min
+      - Max
+      - Count
+      - Percentile
+
+  NotificationChannel:
+    description: Channel for sending notifications
+    values:
+      - Email
+      - Slack
+      - PagerDuty
+      - Webhook
+      - SMS
+      - Teams
+
+  IncidentStatus:
+    description: Status of data incident
+    values:
+      - Open
+      - Investigating
+      - Resolved
+      - Closed
+
+  DataClassification:
+    description: Data sensitivity classification
+    values:
+      - Public
+      - Internal
+      - Confidential
+      - Restricted
+      - PII              # Personally identifiable information
+      - PHI              # Protected health information
+
+  DataFormat:
+    description: Data storage format
+    values:
+      - CSV
+      - JSON
+      - Parquet
+      - Avro
+      - ORC
+      - Delta
+      - Iceberg
+
+  PartitionStrategy:
+    description: Data partitioning strategy
+    values:
+      - Daily
+      - Hourly
+      - Monthly
+      - Yearly
+      - Hash
+      - Range
+
+  LogLevel:
+    description: Log severity level
+    values:
+      - DEBUG
+      - INFO
+      - WARNING
+      - ERROR
+      - CRITICAL
+
+actions:
+
+  CreatePipeline:
+    description: Create a new data pipeline
+    parameters:
+      name: { type: string, required: true }
+      type: { type: PipelineType, required: true }
+      tasks: { type: array, items: Task, required: true }
+      schedule: { type: Schedule }
+    result: Pipeline
+
+  RunPipeline:
+    description: Execute a pipeline
+    parameters:
+      pipelineId: { type: string, required: true }
+      runType: { type: RunType, default: Manual }
+      parameters: { type: object }
+    result: PipelineRun
+
+  CreateDataSource:
+    description: Register a new data source
+    parameters:
+      name: { type: string, required: true }
+      type: { type: DataSourceType, required: true }
+      connectionConfig: { type: ConnectionConfig, required: true }
+    result: DataSource
+
+  CreateTransformation:
+    description: Create a data transformation
+    parameters:
+      name: { type: string, required: true }
+      type: { type: TransformationType, required: true }
+      logic: { type: TransformationLogic, required: true }
+    result: Transformation
+
+  CreateQualityCheck:
+    description: Create a data quality check
+    parameters:
+      name: { type: string, required: true }
+      target: { type: string, required: true }
+      rule: { type: QualityRule, required: true }
+      severity: { type: Severity, required: true }
+    result: DataQualityCheck
+
+  RunQualityCheck:
+    description: Execute a data quality check
+    parameters:
+      checkId: { type: string, required: true }
+    result: QualityCheckResult
+
+  ProfileDataset:
+    description: Generate statistical profile of dataset
+    parameters:
+      datasetId: { type: string, required: true }
+      sampleSize: { type: integer }
+    result: DataProfile
+
+  TrackLineage:
+    description: Capture data lineage
+    parameters:
+      datasetId: { type: string, required: true }
+      upstreamDatasets: { type: array, items: string }
+      transformationId: { type: string }
+    result: DataLineage
+
+  CreateCDCStream:
+    description: Create a change data capture stream
+    parameters:
+      name: { type: string, required: true }
+      sourceId: { type: string, required: true }
+      destinationId: { type: string, required: true }
+      captureMode: { type: CaptureMode, required: true }
+    result: CDCStream
+
+  CreateDataAlert:
+    description: Create a data monitoring alert
+    parameters:
+      name: { type: string, required: true }
+      type: { type: AlertType, required: true }
+      condition: { type: AlertCondition, required: true }
+    result: DataAlert
+
+  RegisterDataset:
+    description: Register dataset in catalog
+    parameters:
+      name: { type: string, required: true }
+      description: { type: string }
+      owner: { type: string }
+      schema: { type: object }
+    result: DatasetMetadata

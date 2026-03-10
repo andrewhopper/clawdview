@@ -1,0 +1,193 @@
+# Professional Domain Schema
+# Version: 1.0.0
+# Status: PENDING APPROVAL
+# Generated: 2025-12-12
+#
+# Professional relationships between people and organizations through positions.
+# Includes contact methods (email, phone, social media) linked to individuals.
+
+entities:
+  Position:
+    description: A person's role at an organization (current or historical)
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: Unique identifier
+      person_id:
+        type: uuid
+        references: core:Person.id
+        required: true
+        description: The individual holding this position
+      organization_id:
+        type: uuid
+        references: organization:Organization.id
+        required: true
+        description: The employing organization
+      job_title:
+        type: string
+        maxLength: 255
+        required: true
+        description: Role title (e.g., "Chairman and CEO", "Senior Engineer")
+      job_type:
+        type: JobType
+        required: false
+        description: Functional category of the role
+      seniority_level:
+        type: SeniorityLevel
+        required: true
+        description: Level within organizational hierarchy
+      location_id:
+        type: uuid
+        references: core:Location.id
+        required: false
+        description: Work location for this position
+      time_range:
+        type: core:TimeRange
+        required: true
+        description: Employment period (start_date, end_date, is_current)
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [person_id]
+      - [organization_id]
+      - [person_id, organization_id]
+
+  ContactMethod:
+    description: Any method to contact a person (email, phone, social media profiles)
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: Unique identifier
+      person_id:
+        type: uuid
+        references: core:Person.id
+        required: true
+        description: Person this contact method belongs to
+      method_type:
+        type: ContactMethodType
+        required: true
+        description: Type of contact method
+      value:
+        type: string
+        required: true
+        maxLength: 500
+        description: Email address, phone number, or profile URL
+      username:
+        type: string
+        required: false
+        maxLength: 100
+        description: Username or handle (for social platforms)
+      is_primary:
+        type: boolean
+        required: true
+        default: false
+        description: Whether this is the primary contact method of its type
+      verified:
+        type: boolean
+        required: true
+        default: false
+        description: Whether this contact method has been verified
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [person_id, method_type]
+      - [value]
+      - [person_id, is_primary]
+
+enums:
+  JobType:
+    description: Functional category of a professional role
+    values:
+      - Engineering
+      - Sales
+      - Executive
+      - Marketing
+      - Operations
+      - Product
+      - Finance
+      - Legal
+      - HR
+      - CustomerSuccess
+      - Support
+      - Design
+      - DataScience
+      - Security
+      - Other
+
+  SeniorityLevel:
+    description: Level within organizational hierarchy
+    values:
+      - IC              # Individual Contributor
+      - Manager
+      - SeniorManager
+      - Director
+      - SeniorDirector
+      - VP
+      - SVP
+      - EVP
+      - CLevel          # C-Suite (CEO, CTO, etc.)
+      - Founder
+      - BoardMember
+
+  ContactMethodType:
+    description: Type of contact method
+    values:
+      # Direct contact
+      - Email
+      - Phone
+      - Fax
+      - SMS
+      # Social media platforms
+      - LinkedIn
+      - Twitter
+      - GitHub
+      - Facebook
+      - Instagram
+      - YouTube
+      - TikTok
+      - Medium
+      - Mastodon
+      - Bluesky
+      # Professional
+      - PersonalWebsite
+      - CompanyWebsite
+      - Portfolio
+
+relationships:
+  - type: many_to_one
+    from: Position
+    to: core:Person
+    foreign_key: person_id
+    description: "A person can have multiple positions (current and historical)"
+
+  - type: many_to_one
+    from: Position
+    to: organization:Organization
+    foreign_key: organization_id
+    description: "An organization has many positions"
+
+  - type: many_to_one
+    from: Position
+    to: core:Location
+    foreign_key: location_id
+    description: "A position can have a work location"
+
+  - type: many_to_one
+    from: ContactMethod
+    to: core:Person
+    foreign_key: person_id
+    description: "A person can have multiple contact methods"

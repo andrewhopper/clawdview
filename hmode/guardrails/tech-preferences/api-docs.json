@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Api Docs",
+  "description": "API documentation tools",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "categories": {
+    "api_documentation": {
+      "description": "API documentation tools",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "OpenAPI 3.0 (Swagger)",
+          "version": "3.0+",
+          "rationale": "Industry standard, auto-generated docs, Swagger UI, code generation",
+          "useCases": [
+            "all REST APIs",
+            "auto-generated docs",
+            "client SDKs"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "Scalar",
+          "version": "latest",
+          "rationale": "Beautiful OpenAPI docs, interactive, API client, modern design",
+          "useCases": [
+            "public APIs",
+            "developer portals",
+            "modern documentation"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Postman Collections",
+          "version": "2.1",
+          "rationale": "Postman ecosystem, testing integration, team collaboration",
+          "useCases": [
+            "API testing",
+            "team collaboration",
+            "Postman users"
+          ]
+        }
+      ]
+    }
+  }
+}

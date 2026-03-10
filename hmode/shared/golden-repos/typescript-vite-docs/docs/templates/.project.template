@@ -1,0 +1,58 @@
+# Project Configuration
+# Copy this file to your project root as .project
+
+# Project Identity
+uuid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+id: project-name-xxxxx
+name: Project Name
+classification: [work|personal|shared|oss|unspecified]
+
+# Current Phase
+phase: 1
+phase_name: SEED
+phase_started: YYYY-MM-DD
+
+# Project Metadata
+description: Brief project description (1-2 sentences)
+status: active
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+
+# Technology Stack (update as selected in Phase 5)
+tech_stack:
+  frontend: [e.g., React, Vite, TypeScript]
+  backend: [e.g., Node.js, FastAPI]
+  database: [e.g., PostgreSQL, DynamoDB]
+  infrastructure: [e.g., AWS CDK, Terraform]
+
+# Phase History (update as phases complete)
+phase_history:
+  - phase: 1
+    name: SEED
+    started: YYYY-MM-DD
+    completed: null
+    notes: Initial project idea capture
+
+# Documentation Status
+documentation:
+  seed: docs/SEED.md
+  research: null
+  expansion: null
+  analysis: null
+  selection: null
+  architecture: null
+  api_design: null
+  database_schema: null
+  test_plan: null
+
+# Deployment Environments
+environments:
+  dev:
+    url: null
+    deployed: false
+  staging:
+    url: null
+    deployed: false
+  production:
+    url: null
+    deployed: false

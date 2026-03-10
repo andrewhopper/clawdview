@@ -1,0 +1,88 @@
+{
+  "expo": {
+    "name": "MyApp",
+    "slug": "my-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.myapp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app requires camera access to capture photos and videos.",
+        "NSMicrophoneUsageDescription": "This app requires microphone access to record audio and videos.",
+        "NSPhotoLibraryUsageDescription": "This app requires photo library access to save and retrieve media files.",
+        "NSPhotoLibraryAddUsageDescription": "This app requires permission to save photos to your photo library.",
+        "NSLocationWhenInUseUsageDescription": "This app requires location access to provide location-based features.",
+        "NSLocationAlwaysUsageDescription": "This app requires location access to provide location-based features even when in the background.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app requires location access to provide location-based features.",
+        "NSCalendarsUsageDescription": "This app requires calendar access to create and manage reminders.",
+        "NSRemindersUsageDescription": "This app requires access to reminders to create and manage tasks.",
+        "NSMotionUsageDescription": "This app requires motion and fitness tracking access to use the accelerometer and gyroscope.",
+        "UIRequiredDeviceCapabilities": [
+          "arkit"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.example.myapp",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "READ_MEDIA_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "READ_CALENDAR",
+        "WRITE_CALENDAR",
+        "BODY_SENSORS",
+        "HIGH_SAMPLING_RATE_SENSORS"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-camera",
+      "expo-location",
+      "expo-media-library",
+      "expo-calendar",
+      "expo-sensors",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "This app requires microphone access to record audio and videos."
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

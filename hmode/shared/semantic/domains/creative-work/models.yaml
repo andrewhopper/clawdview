@@ -1,0 +1,765 @@
+# models.yaml - Creative Work Domain Models
+# Generated: 2025-11-25
+# Status: PENDING APPROVAL
+
+entities:
+  StyleGuide:
+    description: "Brand/design guidelines document defining visual identity and usage rules"
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique identifier"
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Style guide name (e.g., 'Acme Brand Guidelines 2024')"
+      version:
+        type: string
+        required: true
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+        description: "Semantic version (e.g., '1.0.0')"
+      description:
+        type: text
+        required: false
+        description: "Overview of the style guide purpose and scope"
+      brand_identity_id:
+        type: uuid
+        required: false
+        references: BrandIdentity.id
+        description: "Associated brand identity"
+      sections:
+        type: json
+        required: false
+        description: "Table of contents sections"
+      published_url:
+        type: string
+        required: false
+        format: url
+        description: "Public URL if published online"
+      status:
+        type: enum
+        enum_ref: StyleGuideStatus
+        required: true
+        default: draft
+      created_by:
+        type: uuid
+        required: true
+        description: "Author/creator identifier"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [name, version]
+
+  DesignBrief:
+    description: "Creative project brief outlining objectives, audience, and deliverables"
+    properties:
+      id:
+        type: uuid
+        required: true
+      title:
+        type: string
+        required: true
+        max_length: 255
+        description: "Brief title"
+      objective:
+        type: text
+        required: true
+        description: "Primary goal and purpose of the creative work"
+      background:
+        type: text
+        required: false
+        description: "Context and background information"
+      target_audience:
+        type: text
+        required: true
+        description: "Intended audience demographics and psychographics"
+      key_message:
+        type: text
+        required: false
+        description: "Core message to communicate"
+      deliverables:
+        type: json
+        required: true
+        description: "List of expected outputs and formats"
+      constraints:
+        type: json
+        required: false
+        description: "Budget, timeline, technical, or regulatory constraints"
+      success_metrics:
+        type: json
+        required: false
+        description: "KPIs and success criteria"
+      references:
+        type: json
+        required: false
+        description: "Inspiration, competitors, mood boards"
+      campaign_id:
+        type: uuid
+        required: false
+        references: Campaign.id
+      status:
+        type: enum
+        enum_ref: BriefStatus
+        required: true
+        default: draft
+      due_date:
+        type: date
+        required: false
+      created_by:
+        type: uuid
+        required: true
+      approved_by:
+        type: uuid
+        required: false
+      approved_at:
+        type: datetime
+        required: false
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [status]
+      - [due_date]
+
+  BrandIdentity:
+    description: "Brand identity system defining visual and verbal brand elements"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Brand name"
+      tagline:
+        type: string
+        required: false
+        max_length: 255
+        description: "Brand tagline or slogan"
+      mission:
+        type: text
+        required: false
+        description: "Brand mission statement"
+      values:
+        type: json
+        required: false
+        description: "Core brand values"
+      voice_tone:
+        type: json
+        required: false
+        description: "Brand voice and tone guidelines"
+      personality_traits:
+        type: json
+        required: false
+        description: "Brand personality attributes"
+      logo_primary_url:
+        type: string
+        required: false
+        format: url
+        description: "Primary logo file URL"
+      logo_variations:
+        type: json
+        required: false
+        description: "Logo variants (light, dark, icon, etc.)"
+      color_palette_id:
+        type: uuid
+        required: false
+        references: TokenSet.id
+        description: "Brand color palette token set"
+      typography_id:
+        type: uuid
+        required: false
+        references: TokenSet.id
+        description: "Typography system token set"
+      imagery_style:
+        type: text
+        required: false
+        description: "Photography and imagery guidelines"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [name]
+
+  DesignToken:
+    description: "Design system primitive value (color, spacing, typography, etc.)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Token name (e.g., 'color-primary-500', 'spacing-md')"
+      type:
+        type: enum
+        enum_ref: DesignTokenType
+        required: true
+        description: "Token type (color, spacing, etc.)"
+      scope:
+        type: enum
+        enum_ref: TokenScope
+        required: true
+        default: primitive
+        description: "Token scope level"
+      value:
+        type: string
+        required: true
+        description: "Token value (e.g., '#3B82F6', '16px', '1.5rem')"
+      description:
+        type: text
+        required: false
+        description: "Usage notes and guidelines"
+      category:
+        type: string
+        required: false
+        max_length: 100
+        description: "Token category grouping"
+      token_set_id:
+        type: uuid
+        required: true
+        references: TokenSet.id
+      aliases:
+        type: json
+        required: false
+        description: "Alternative names or references"
+      platforms:
+        type: json
+        required: false
+        description: "Platform-specific overrides (web, ios, android)"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [token_set_id, name]
+      - [type]
+
+  TokenSet:
+    description: "Collection of related design tokens (e.g., color palette, spacing scale)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Token set name (e.g., 'Brand Colors', 'Spacing System')"
+      description:
+        type: text
+        required: false
+      design_system_id:
+        type: uuid
+        required: false
+        references: DesignSystem.id
+      platform:
+        type: string
+        required: false
+        max_length: 50
+        description: "Target platform (web, ios, android, all)"
+      export_format:
+        type: string
+        required: false
+        max_length: 50
+        description: "Export format (style-dictionary, css, scss, json)"
+      file_path:
+        type: string
+        required: false
+        description: "Source file path if exported"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [name]
+      - [design_system_id]
+
+  DesignSystem:
+    description: "Component library and design patterns system"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Design system name (e.g., 'Material Design', 'Primer')"
+      version:
+        type: string
+        required: true
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+      description:
+        type: text
+        required: false
+      brand_identity_id:
+        type: uuid
+        required: false
+        references: BrandIdentity.id
+      documentation_url:
+        type: string
+        required: false
+        format: url
+      storybook_url:
+        type: string
+        required: false
+        format: url
+        description: "Storybook or component explorer URL"
+      repository_url:
+        type: string
+        required: false
+        format: url
+      npm_package:
+        type: string
+        required: false
+        max_length: 255
+        description: "NPM package name if published"
+      status:
+        type: enum
+        enum_ref: DesignSystemStatus
+        required: true
+        default: development
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [name, version]
+
+  Component:
+    description: "Reusable UI component with variants and props"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Component name (e.g., 'Button', 'Card', 'Modal')"
+      design_system_id:
+        type: uuid
+        required: true
+        references: DesignSystem.id
+      category:
+        type: string
+        required: false
+        max_length: 100
+        description: "Component category (e.g., 'Form', 'Navigation')"
+      description:
+        type: text
+        required: false
+      variants:
+        type: json
+        required: false
+        description: "Component variants (primary, secondary, etc.)"
+      props:
+        type: json
+        required: false
+        description: "Component props/parameters schema"
+      tokens_used:
+        type: json
+        required: false
+        description: "List of design token IDs used"
+      figma_url:
+        type: string
+        required: false
+        format: url
+        description: "Figma component URL"
+      storybook_path:
+        type: string
+        required: false
+        description: "Path in Storybook"
+      code_path:
+        type: string
+        required: false
+        description: "Source code file path"
+      accessibility_notes:
+        type: text
+        required: false
+        description: "WCAG compliance and a11y notes"
+      status:
+        type: enum
+        enum_ref: ComponentStatus
+        required: true
+        default: draft
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [design_system_id, name]
+      - [category]
+
+  CreativeAsset:
+    description: "Design artifact (mockup, logo, icon, illustration, photo, video)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      title:
+        type: string
+        required: true
+        max_length: 255
+      description:
+        type: text
+        required: false
+      asset_type:
+        type: enum
+        enum_ref: AssetType
+        required: true
+      format:
+        type: enum
+        enum_ref: AssetFormat
+        required: true
+      file_url:
+        type: string
+        required: true
+        format: url
+        description: "File storage URL"
+      file_size:
+        type: integer
+        required: false
+        description: "File size in bytes"
+      width:
+        type: integer
+        required: false
+        description: "Width in pixels"
+      height:
+        type: integer
+        required: false
+        description: "Height in pixels"
+      thumbnail_url:
+        type: string
+        required: false
+        format: url
+      tags:
+        type: json
+        required: false
+        description: "Searchable tags"
+      campaign_id:
+        type: uuid
+        required: false
+        references: Campaign.id
+      brand_identity_id:
+        type: uuid
+        required: false
+        references: BrandIdentity.id
+      created_by:
+        type: uuid
+        required: true
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [asset_type]
+      - [campaign_id]
+      - [created_at]
+
+  Campaign:
+    description: "Marketing or creative campaign with timeline and assets"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+      objective:
+        type: text
+        required: true
+        description: "Campaign goal and purpose"
+      target_audience:
+        type: text
+        required: false
+      channels:
+        type: json
+        required: false
+        description: "Distribution channels (social, email, web, etc.)"
+      budget:
+        type: decimal
+        precision: 12
+        scale: 2
+        required: false
+      start_date:
+        type: date
+        required: false
+      end_date:
+        type: date
+        required: false
+      brand_identity_id:
+        type: uuid
+        required: false
+        references: BrandIdentity.id
+      design_brief_id:
+        type: uuid
+        required: false
+        references: DesignBrief.id
+      status:
+        type: enum
+        enum_ref: CampaignStatus
+        required: true
+        default: planning
+      metrics:
+        type: json
+        required: false
+        description: "Performance metrics and KPIs"
+      created_by:
+        type: uuid
+        required: true
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [status]
+      - [start_date, end_date]
+
+  BrandGuidelines:
+    description: "Brand usage rules and compliance guidelines"
+    properties:
+      id:
+        type: uuid
+        required: true
+      brand_identity_id:
+        type: uuid
+        required: true
+        references: BrandIdentity.id
+      logo_usage_rules:
+        type: json
+        required: false
+        description: "Logo dos and don'ts"
+      color_usage_rules:
+        type: json
+        required: false
+        description: "Color application guidelines"
+      typography_rules:
+        type: json
+        required: false
+        description: "Font usage and hierarchy rules"
+      spacing_rules:
+        type: json
+        required: false
+        description: "Spacing and layout guidelines"
+      imagery_rules:
+        type: json
+        required: false
+        description: "Photography and illustration guidelines"
+      tone_of_voice_rules:
+        type: json
+        required: false
+        description: "Writing style and voice guidelines"
+      accessibility_requirements:
+        type: json
+        required: false
+        description: "WCAG and accessibility standards"
+      prohibited_uses:
+        type: json
+        required: false
+        description: "Explicit don'ts and violations"
+      approval_workflow:
+        type: json
+        required: false
+        description: "Brand approval process"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [brand_identity_id]
+
+enums:
+  DesignTokenType:
+    values:
+      - color
+      - spacing
+      - typography
+      - shadow
+      - border
+      - radius
+      - animation
+      - opacity
+      - z_index
+    description: "Design token type categories"
+
+  TokenScope:
+    values:
+      - primitive
+      - semantic
+      - component
+    description: "Token scope level (global, contextual, component-specific)"
+
+  AssetType:
+    values:
+      - mockup
+      - logo
+      - icon
+      - illustration
+      - photo
+      - video
+      - prototype
+      - animation
+      - banner
+      - social_post
+    description: "Creative asset type"
+
+  AssetFormat:
+    values:
+      - figma
+      - sketch
+      - adobe_xd
+      - png
+      - jpg
+      - svg
+      - pdf
+      - mp4
+      - gif
+      - webp
+      - ai
+      - psd
+    description: "File format"
+
+  CampaignStatus:
+    values:
+      - planning
+      - in_progress
+      - review
+      - launched
+      - completed
+      - archived
+    description: "Campaign lifecycle state"
+
+  BriefStatus:
+    values:
+      - draft
+      - submitted
+      - approved
+      - in_progress
+      - delivered
+      - archived
+    description: "Design brief status"
+
+  ComponentStatus:
+    values:
+      - draft
+      - in_review
+      - published
+      - deprecated
+    description: "Component lifecycle status"
+
+  StyleGuideStatus:
+    values:
+      - draft
+      - in_review
+      - published
+      - archived
+    description: "Style guide publication status"
+
+  DesignSystemStatus:
+    values:
+      - planning
+      - development
+      - beta
+      - production
+      - deprecated
+    description: "Design system maturity level"
+
+relationships:
+  - type: one_to_many
+    from: BrandIdentity
+    to: StyleGuide
+    foreign_key: brand_identity_id
+    description: "A brand identity can have multiple style guides"
+
+  - type: one_to_many
+    from: DesignSystem
+    to: Component
+    foreign_key: design_system_id
+    description: "A design system contains multiple components"
+
+  - type: one_to_many
+    from: DesignSystem
+    to: TokenSet
+    foreign_key: design_system_id
+    description: "A design system has multiple token sets"
+
+  - type: one_to_many
+    from: TokenSet
+    to: DesignToken
+    foreign_key: token_set_id
+    description: "A token set contains multiple tokens"
+
+  - type: one_to_many
+    from: Campaign
+    to: CreativeAsset
+    foreign_key: campaign_id
+    description: "A campaign has multiple creative assets"
+
+  - type: one_to_one
+    from: Campaign
+    to: DesignBrief
+    foreign_key: design_brief_id
+    description: "A campaign may be initiated by a design brief"
+
+  - type: one_to_one
+    from: BrandIdentity
+    to: BrandGuidelines
+    foreign_key: brand_identity_id
+    description: "A brand identity has usage guidelines"
+
+  - type: one_to_many
+    from: BrandIdentity
+    to: TokenSet
+    foreign_key: brand_identity_id
+    description: "Brand identity references color and typography token sets"

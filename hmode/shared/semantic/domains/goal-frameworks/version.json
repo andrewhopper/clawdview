@@ -1,0 +1,71 @@
+{
+  "domain": "goal-frameworks",
+  "version": "1.0.0",
+  "description": "Corporate and personal goal management frameworks - OKR and MBO",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release with normalized OKR and MBO frameworks - unified Goal entity"
+  },
+  "entities": [
+    "Goal",
+    "GoalOwner",
+    "GoalPeriod",
+    "GoalProgress",
+    "GoalComment",
+    "KeyResult",
+    "KeyResultMilestone",
+    "Initiative",
+    "GoalCycle",
+    "Assessment",
+    "Review",
+    "GoalCascade",
+    "DataSource",
+    "GoalTemplate",
+    "GoalAlignment"
+  ],
+  "actions": [
+    "CreateGoal",
+    "UpdateGoal",
+    "AddKeyResult",
+    "UpdateKeyResultProgress",
+    "ScoreGoal",
+    "CreateAssessment",
+    "SubmitSelfRating",
+    "SubmitManagerRating",
+    "ScheduleReview",
+    "FinalizeReview",
+    "AlignGoals",
+    "RecordProgress"
+  ],
+  "enums": [
+    "GoalFramework",
+    "GoalScope",
+    "GoalVisibility",
+    "OwnerType",
+    "PeriodType",
+    "GoalStatus",
+    "KeyResultStatus",
+    "MilestoneStatus",
+    "InitiativeStatus",
+    "ReviewStatus",
+    "ObjectiveType",
+    "OKRGradingType",
+    "CyclePhase",
+    "MetricType",
+    "MetricDirection",
+    "InitiativePriority",
+    "ConfidenceLevel",
+    "MBOCategory",
+    "MBOPriority",
+    "ReviewType",
+    "CascadeLevel",
+    "DataSourceType",
+    "SyncStatus",
+    "AlignmentType"
+  ],
+  "w3c_standards": ["RDF", "OWL", "SHACL"],
+  "references": {
+    "OKR": "https://www.whatmatters.com/",
+    "MBO": "Peter Drucker - The Practice of Management (1954)"
+  }
+}

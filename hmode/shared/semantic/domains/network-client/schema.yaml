@@ -1,0 +1,990 @@
+# File UUID: 6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c
+#
+# Network Client Domain Model
+# Represents network devices, content filtering, and access control
+# Used for: parental controls, network access control, device management, content filtering
+#
+# Related domains: infrastructure (networking primitives)
+
+domain:
+  name: network-client
+  version: 2.2.0
+  description: Network client/device identification, access control, and content filtering
+  tags: [networking, access-control, parental-controls, home-network, content-filtering]
+
+entities:
+
+  # ═══════════════════════════════════════════════════════════════════
+  # DEVICE ENTITIES
+  # ═══════════════════════════════════════════════════════════════════
+
+  Client:
+    description: A device on the network identified by MAC address
+    properties:
+      id:
+        type: string
+        required: true
+        description: Unique identifier (UUID)
+      mac_address:
+        type: string
+        required: true
+        pattern: "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
+        description: Hardware MAC address (AA:BB:CC:DD:EE:FF)
+      name:
+        type: string
+        required: true
+        description: Human-readable device name
+      hostname:
+        type: string
+        description: Device hostname (if available)
+      ip_address:
+        type: string
+        description: Current IPv4 address
+      ip_address_v6:
+        type: string
+        description: IPv6 address (if available)
+      device_type:
+        type: DeviceType
+        description: Type of device
+      manufacturer:
+        type: string
+        description: Device manufacturer (from OUI lookup)
+      vendor:
+        type: string
+        description: Vendor name from MAC OUI database
+      model:
+        type: string
+        description: Device model (if known)
+      os:
+        type: string
+        description: Operating system (if detected)
+      owner:
+        type: string
+        description: Person who owns/uses this device
+      group_id:
+        type: string
+        description: ClientGroup ID this device belongs to
+      tags:
+        type: array
+        items: string
+        description: Custom tags for categorization
+      access_status:
+        type: AccessStatus
+        required: true
+        description: Current access status
+      online:
+        type: boolean
+        description: Whether device is currently online
+      last_seen:
+        type: datetime
+        description: Last activity timestamp
+      first_seen:
+        type: datetime
+        description: First discovery timestamp
+      connection_type:
+        type: ConnectionType
+        description: How device connects (wifi, ethernet)
+      ssid:
+        type: string
+        description: WiFi network name (if wireless)
+      signal_strength:
+        type: integer
+        description: WiFi signal strength in dBm
+      notes:
+        type: string
+        description: Admin notes about this device
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ClientGroup:
+    description: Group of devices with shared policies (e.g., "Kids Devices", "IoT")
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: Group name
+      description:
+        type: string
+      member_ids:
+        type: array
+        items: string
+        description: Client IDs in this group
+      default_access:
+        type: AccessStatus
+        description: Default access status for group
+      schedule_ids:
+        type: array
+        items: string
+        description: Schedule IDs applied to this group
+      whitelist_id:
+        type: string
+        description: AccessList ID for whitelist
+      blacklist_id:
+        type: string
+        description: AccessList ID for blacklist
+      dns_filtering:
+        type: DNSFilteringLevel
+        description: DNS filtering level for group
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ═══════════════════════════════════════════════════════════════════
+  # CONTENT/SERVICE ENTITIES
+  # ═══════════════════════════════════════════════════════════════════
+
+  Domain:
+    description: Individual internet domain (e.g., facebook.com, fb.com)
+    properties:
+      id:
+        type: string
+        required: true
+      domain:
+        type: string
+        required: true
+        description: Domain name (e.g., "facebook.com")
+      service_id:
+        type: string
+        description: Service this domain belongs to
+      is_primary:
+        type: boolean
+        description: Whether this is the primary domain for the service
+      last_checked:
+        type: datetime
+        description: Last time domain was evaluated
+      evaluation_id:
+        type: string
+        description: Latest SiteEvaluation ID
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Service:
+    description: Online service with one or more domains (e.g., "Facebook" has facebook.com, fb.com, messenger.com)
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: Service name (e.g., "Facebook", "YouTube")
+      description:
+        type: string
+      domain_ids:
+        type: array
+        items: string
+        description: Domain IDs belonging to this service
+      service_group_id:
+        type: string
+        description: ServiceGroup this belongs to
+      icon_url:
+        type: string
+        description: Icon/logo URL
+      content_rating:
+        type: ContentRating
+        description: Age-appropriate content rating
+      tags:
+        type: array
+        items: string
+        description: Custom tags
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ServiceGroup:
+    description: Category of services (e.g., "Social Media", "Video Streaming", "Gaming")
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: Category name
+      description:
+        type: string
+      service_ids:
+        type: array
+        items: string
+        description: Service IDs in this category
+      icon:
+        type: string
+        description: Category icon name
+      color:
+        type: string
+        description: Category color for UI
+      default_action:
+        type: ActionType
+        description: Default action for this category
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  SiteEvaluation:
+    description: AI evaluation record for a domain/site
+    properties:
+      id:
+        type: string
+        required: true
+      domain_id:
+        type: string
+        required: true
+        description: Domain that was evaluated
+      url_checked:
+        type: string
+        description: Specific URL that was checked
+      method:
+        type: EvaluationMethod
+        required: true
+        description: How the evaluation was performed
+      model_used:
+        type: string
+        description: AI model used (e.g., "claude-sonnet-4-20250514")
+      categories_detected:
+        type: array
+        items: ContentCategory
+        description: Content categories detected
+      content_rating:
+        type: ContentRating
+        description: Determined content rating
+      confidence:
+        type: number
+        required: true
+        description: Confidence score (0.0 to 1.0)
+      reasoning:
+        type: string
+        required: true
+        description: AI explanation of why this rating was given
+      flags:
+        type: array
+        items: ContentFlag
+        description: Specific content flags detected
+      safe_for_kids:
+        type: boolean
+        description: Quick flag for kid-safe content
+      checked_at:
+        type: datetime
+        required: true
+        description: When evaluation was performed
+      expires_at:
+        type: datetime
+        description: When evaluation should be refreshed
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ═══════════════════════════════════════════════════════════════════
+  # ACCESS CONTROL ENTITIES
+  # ═══════════════════════════════════════════════════════════════════
+
+  AccessList:
+    description: Whitelist or blacklist containing services and/or domains
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: List name (e.g., "Kids Whitelist", "Work Blacklist")
+      list_type:
+        type: AccessListType
+        required: true
+        description: Whether this is a whitelist or blacklist
+      description:
+        type: string
+      service_ids:
+        type: array
+        items: string
+        description: Services in this list
+      domain_ids:
+        type: array
+        items: string
+        description: Individual domains in this list
+      service_group_ids:
+        type: array
+        items: string
+        description: Entire service groups in this list
+      enabled:
+        type: boolean
+        required: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Schedule:
+    description: Time-based access control schedule
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: Schedule name (e.g., "School Hours", "Bedtime")
+      description:
+        type: string
+      enabled:
+        type: boolean
+        required: true
+      days:
+        type: array
+        items: DayOfWeek
+        description: Days when schedule is active
+      start_time:
+        type: string
+        required: true
+        description: Start time (HH:MM format, 24-hour)
+      end_time:
+        type: string
+        required: true
+        description: End time (HH:MM format, 24-hour)
+      timezone:
+        type: string
+        description: Timezone (default to system timezone)
+      action:
+        type: ScheduleAction
+        required: true
+        description: Action during this schedule
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Session:
+    description: Active access session granting a device/group access to specific services
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        description: Session name (e.g., "Movie Night", "Homework Time")
+      target_client_id:
+        type: string
+        description: Specific Client this session applies to
+      target_client_group_id:
+        type: string
+        description: ClientGroup this session applies to
+      allowed_service_ids:
+        type: array
+        items: string
+        description: Services allowed during this session
+      allowed_service_group_ids:
+        type: array
+        items: string
+        description: ServiceGroups allowed during this session
+      allowed_domain_ids:
+        type: array
+        items: string
+        description: Individual domains allowed during this session
+      started_at:
+        type: datetime
+        required: true
+        description: When session started
+      expires_at:
+        type: datetime
+        description: When session expires (null = manual end)
+      duration_minutes:
+        type: integer
+        description: Session duration in minutes
+      active:
+        type: boolean
+        required: true
+        description: Whether session is currently active
+      created_by:
+        type: string
+        description: Who created this session (parent/admin)
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Rule:
+    description: Access control rule combining clients, content, and schedules
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      enabled:
+        type: boolean
+        required: true
+      priority:
+        type: integer
+        required: true
+        description: Rule priority (lower = higher priority)
+      apply_to_all:
+        type: boolean
+        description: If true, rule applies to ALL devices (baseline rule)
+      client_group_ids:
+        type: array
+        items: string
+        description: ClientGroups this rule applies to (ignored if apply_to_all)
+      client_ids:
+        type: array
+        items: string
+        description: Specific Clients this rule applies to (ignored if apply_to_all)
+      service_group_ids:
+        type: array
+        items: string
+        description: ServiceGroups this rule targets
+      service_ids:
+        type: array
+        items: string
+        description: Services this rule targets
+      domain_ids:
+        type: array
+        items: string
+        description: Domains this rule targets
+      schedule_ids:
+        type: array
+        items: string
+        description: Schedules when rule is active
+      action:
+        type: ActionType
+        required: true
+        description: Action to take
+      redirect_url:
+        type: string
+        description: URL to redirect to (for redirect action)
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ═══════════════════════════════════════════════════════════════════
+  # DNS ENTITIES
+  # ═══════════════════════════════════════════════════════════════════
+
+  StaticDNSEntry:
+    description: Static DNS entry for local name resolution (e.g., printer -> 192.168.0.10)
+    properties:
+      id:
+        type: string
+        required: true
+      hostname:
+        type: string
+        required: true
+        description: Local hostname (e.g., "printer", "nas", "server")
+      ip_address:
+        type: string
+        required: true
+        description: IP address to resolve to
+      description:
+        type: string
+        description: Description of this entry
+      enabled:
+        type: boolean
+        required: true
+      ttl:
+        type: integer
+        description: Time-to-live in seconds (default 300)
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ═══════════════════════════════════════════════════════════════════
+  # ACTIVITY TRACKING ENTITIES
+  # ═══════════════════════════════════════════════════════════════════
+
+  DNSQuery:
+    description: Individual DNS resolution request for tracking service usage
+    properties:
+      id:
+        type: string
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+      client_id:
+        type: string
+        required: true
+        description: Client that made the request
+      domain:
+        type: string
+        required: true
+        description: Domain being resolved (e.g., facebook.com)
+      domain_id:
+        type: string
+        description: Resolved Domain entity ID (if known)
+      service_id:
+        type: string
+        description: Resolved Service entity ID (if domain belongs to a service)
+      query_type:
+        type: DNSQueryType
+        required: true
+        description: Type of DNS query
+      response_ip:
+        type: string
+        description: IP address returned (if resolved)
+      response_time_ms:
+        type: integer
+        description: Time to resolve in milliseconds
+      blocked:
+        type: boolean
+        required: true
+        description: Whether the query was blocked
+      rule_id:
+        type: string
+        description: Rule that blocked it (if blocked)
+      session_id:
+        type: string
+        description: ServiceUsageSession this query belongs to
+
+  ServiceUsageSession:
+    description: Tracks continuous usage of a service by a client
+    properties:
+      id:
+        type: string
+        required: true
+      client_id:
+        type: string
+        required: true
+        description: Client using the service
+      service_id:
+        type: string
+        required: true
+        description: Service being used
+      started_at:
+        type: datetime
+        required: true
+        description: When first DNS query was detected
+      last_activity_at:
+        type: datetime
+        required: true
+        description: Most recent DNS query timestamp
+      ended_at:
+        type: datetime
+        description: When session ended (null = still active)
+      status:
+        type: SessionStatus
+        required: true
+        description: Current session status
+      query_count:
+        type: integer
+        required: true
+        description: Number of DNS queries in this session
+      idle_timeout_minutes:
+        type: integer
+        description: Minutes of inactivity before session ends (default 15)
+
+  # ═══════════════════════════════════════════════════════════════════
+  # AUDIT & LOGGING ENTITIES
+  # ═══════════════════════════════════════════════════════════════════
+
+  AuditLog:
+    description: Track all changes to entities for accountability and rollback
+    properties:
+      id:
+        type: string
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+      entity_type:
+        type: string
+        required: true
+        description: Type of entity changed (e.g., "Rule", "Client", "Schedule")
+      entity_id:
+        type: string
+        required: true
+        description: ID of the entity that was changed
+      action:
+        type: AuditAction
+        required: true
+        description: What action was performed
+      field_changed:
+        type: string
+        description: Which field was modified (for updates)
+      old_value:
+        type: string
+        description: Previous value (JSON serialized)
+      new_value:
+        type: string
+        description: New value (JSON serialized)
+      changed_by:
+        type: string
+        description: Who made the change (IP, user ID, or "system")
+      source:
+        type: string
+        description: Where change originated (api, ui, sync, system)
+
+  BlockedRequest:
+    description: Log of denied access attempts for monitoring and reporting
+    properties:
+      id:
+        type: string
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+      client_id:
+        type: string
+        required: true
+        description: Client that made the request
+      domain:
+        type: string
+        required: true
+        description: Domain that was blocked
+      url:
+        type: string
+        description: Full URL if available
+      rule_id:
+        type: string
+        description: Rule that caused the block
+      reason:
+        type: string
+        required: true
+        description: Human-readable reason (e.g., "adult content", "schedule block")
+      category:
+        type: ContentCategory
+        description: Content category if detected
+      client_ip:
+        type: string
+        description: Client IP at time of request
+
+  # ═══════════════════════════════════════════════════════════════════
+  # DATA SOURCE ENTITIES
+  # ═══════════════════════════════════════════════════════════════════
+
+  DataSource:
+    description: External data source for services, domains, or blocklists
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: Source name (e.g., "StevenBlack Hosts", "Manual")
+      type:
+        type: DataSourceType
+        required: true
+        description: Type of data source
+      url:
+        type: string
+        description: URL for auto-sync sources
+      format:
+        type: DataSourceFormat
+        description: Format of the data
+      auto_update:
+        type: boolean
+        required: true
+        description: Whether to auto-sync from URL
+      update_frequency_hours:
+        type: integer
+        description: How often to sync (in hours)
+      last_synced_at:
+        type: datetime
+        description: Last successful sync timestamp
+      entries_count:
+        type: integer
+        description: Number of entries from this source
+      enabled:
+        type: boolean
+        required: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+# ═══════════════════════════════════════════════════════════════════
+# ENUMERATIONS
+# ═══════════════════════════════════════════════════════════════════
+
+enums:
+
+  DeviceType:
+    description: Type of network device
+    values:
+      - computer
+      - phone
+      - tablet
+      - smart_tv
+      - gaming_console
+      - streaming_device
+      - smart_speaker
+      - iot
+      - camera
+      - thermostat
+      - doorbell
+      - appliance
+      - printer
+      - nas
+      - router
+      - switch
+      - unknown
+
+  AccessStatus:
+    description: Network access status for a device
+    values:
+      - allowed
+      - blocked
+      - limited
+      - paused
+      - quarantined
+
+  ConnectionType:
+    description: How device connects to network
+    values:
+      - ethernet
+      - wifi_2g
+      - wifi_5g
+      - wifi_6
+      - wifi_6e
+      - unknown
+
+  DayOfWeek:
+    values: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+
+  ScheduleAction:
+    description: Action to take during scheduled time
+    values:
+      - block
+      - allow
+      - filter
+      - throttle
+
+  ActionType:
+    description: Type of rule action
+    values:
+      - allow
+      - block
+      - redirect
+      - dns_override
+      - throttle
+      - log
+
+  DNSFilteringLevel:
+    description: Level of DNS-based content filtering
+    values:
+      - none
+      - security
+      - family
+      - strict
+      - custom
+
+  AccessListType:
+    description: Type of access list
+    values:
+      - whitelist
+      - blacklist
+
+  ContentRating:
+    description: Age-appropriate content rating
+    values:
+      - everyone
+      - teen
+      - mature
+      - adult
+      - unrated
+
+  ContentCategory:
+    description: Content category for classification
+    values:
+      - social_media
+      - video_streaming
+      - gaming
+      - news
+      - education
+      - shopping
+      - adult
+      - gambling
+      - malware
+      - phishing
+      - advertising
+      - vpn_proxy
+      - search_engine
+      - email
+      - messaging
+      - productivity
+      - entertainment
+      - sports
+      - finance
+      - health
+      - government
+      - other
+
+  ContentFlag:
+    description: Specific content flags for site evaluation
+    values:
+      - violence
+      - nudity
+      - profanity
+      - drugs
+      - alcohol
+      - gambling
+      - hate_speech
+      - self_harm
+      - misinformation
+      - spam
+      - scam
+      - malware
+      - phishing
+      - tracking
+      - cryptocurrency
+      - weapons
+
+  EvaluationMethod:
+    description: How a site was evaluated
+    values:
+      - ai_analysis
+      - dns_blocklist
+      - manual_review
+      - user_report
+      - third_party_api
+      - heuristic
+      - inherited
+
+  AuditAction:
+    description: Type of audit log action
+    values:
+      - create
+      - update
+      - delete
+      - enable
+      - disable
+
+  DataSourceType:
+    description: Type of external data source
+    values:
+      - manual
+      - blocklist_url
+      - api
+      - dns_provider
+
+  DataSourceFormat:
+    description: Format of data source content
+    values:
+      - hosts
+      - domain_list
+      - json
+      - csv
+
+  DNSQueryType:
+    description: Type of DNS query
+    values:
+      - A
+      - AAAA
+      - CNAME
+      - MX
+      - TXT
+      - PTR
+      - SRV
+      - OTHER
+
+  SessionStatus:
+    description: Status of a service usage session
+    values:
+      - active
+      - idle
+      - ended
+
+# ═══════════════════════════════════════════════════════════════════
+# ACTIONS
+# ═══════════════════════════════════════════════════════════════════
+
+actions:
+
+  DiscoverClients:
+    description: Discover all clients on the network
+    parameters:
+      network:
+        type: string
+        description: Network to scan (CIDR notation)
+      include_offline:
+        type: boolean
+        description: Include previously seen but currently offline clients
+    result:
+      type: array
+      items: Client
+
+  SetClientStatus:
+    description: Set access status for a client
+    parameters:
+      client_id:
+        type: string
+        required: true
+      status:
+        type: AccessStatus
+        required: true
+      duration_minutes:
+        type: integer
+        description: Duration in minutes (null = indefinite)
+    result:
+      type: Client
+
+  EvaluateSite:
+    description: Run AI evaluation on a domain
+    parameters:
+      domain:
+        type: string
+        required: true
+      url:
+        type: string
+        description: Specific URL to evaluate (optional)
+      method:
+        type: EvaluationMethod
+        description: Evaluation method to use
+    result:
+      type: SiteEvaluation
+
+  ApplyRule:
+    description: Apply an access rule
+    parameters:
+      rule_id:
+        type: string
+        required: true
+    result:
+      type: boolean
+
+  SyncAccessLists:
+    description: Sync whitelist/blacklist to DNS server
+    parameters:
+      access_list_id:
+        type: string
+        required: true
+    result:
+      type: boolean

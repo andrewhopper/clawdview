@@ -1,0 +1,381 @@
+# =============================================================================
+# Domain: ux-interaction
+# Version: 0.1.0
+# Status: development
+# Dependencies: core@^1.0.0
+# Created: 2025-12-04
+# Updated: 2025-12-04
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# =============================================================================
+
+domain:
+  name: ux-interaction
+  version: "0.1.0"
+  description: "UX interaction measurement for comparing tool efficiency and cognitive load"
+  namespace: "https://protoflow.ai/ontology/ux-interaction#"
+  created_at: "2025-12-04"
+  updated_at: "2025-12-04"
+  dependencies:
+    core: "^1.0.0"
+
+  changelog:
+    "0.1.0": "Initial version - Cursor vs Claude Code study"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  UserGoal:
+    description: "The objective the user wants to accomplish"
+    extends: core.Entity
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Unique identifier"
+      name:
+        type: string
+        required: true
+        maxLength: 255
+        description: "Short name for the goal"
+      description:
+        type: string
+        required: true
+        description: "Detailed description of what success looks like"
+      standardized_prompt:
+        type: string
+        required: false
+        description: "Exact wording used in studies for consistency"
+      domain:
+        type: string
+        required: false
+        description: "Domain area (e.g., coding, writing, design)"
+      complexity:
+        type: GoalComplexity
+        required: true
+        description: "Estimated complexity level"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  InteractionSession:
+    description: "A single attempt to achieve a goal from start to completion"
+    extends: core.Entity
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Unique session identifier"
+      goal_id:
+        type: string
+        required: true
+        description: "Reference to UserGoal"
+      tool:
+        type: string
+        required: true
+        description: "Tool being measured (e.g., Cursor, Claude Code)"
+      tool_version:
+        type: string
+        required: false
+        description: "Version of the tool"
+      participant_id:
+        type: string
+        required: false
+        description: "Anonymous participant identifier"
+      started_at:
+        type: datetime
+        required: true
+        description: "Session start timestamp"
+      completed_at:
+        type: datetime
+        required: false
+        description: "Session completion timestamp"
+      total_duration_ms:
+        type: integer
+        required: false
+        description: "Total time in milliseconds"
+      outcome:
+        type: SessionOutcome
+        required: true
+        description: "Success, failure, or abandoned"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  InteractionStep:
+    description: "A single discrete action within a session"
+    extends: core.Entity
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Unique step identifier"
+      session_id:
+        type: string
+        required: true
+        description: "Reference to InteractionSession"
+      sequence:
+        type: integer
+        required: true
+        description: "Order of this step in the session (1-indexed)"
+      action:
+        type: string
+        required: true
+        description: "Description of the action taken"
+      action_type:
+        type: ActionType
+        required: true
+        description: "Category of action"
+      started_at:
+        type: datetime
+        required: true
+      completed_at:
+        type: datetime
+        required: false
+      duration_ms:
+        type: integer
+        required: false
+        description: "Time spent on this step in milliseconds"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  FrictionMeasurement:
+    description: "Quantified friction metrics for a step or session"
+    extends: core.Entity
+    properties:
+      id:
+        type: string
+        required: true
+      step_id:
+        type: string
+        required: false
+        description: "Reference to InteractionStep (if step-level)"
+      session_id:
+        type: string
+        required: false
+        description: "Reference to InteractionSession (if session-level)"
+      # Input metrics
+      click_count:
+        type: integer
+        required: false
+        default: 0
+        description: "Number of mouse clicks"
+      keystroke_count:
+        type: integer
+        required: false
+        default: 0
+        description: "Number of keyboard inputs"
+      scroll_events:
+        type: integer
+        required: false
+        default: 0
+        description: "Number of scroll actions"
+      # Context switching
+      mode_switches:
+        type: integer
+        required: false
+        default: 0
+        description: "Context changes (mouse↔keyboard, window switches)"
+      window_switches:
+        type: integer
+        required: false
+        default: 0
+        description: "Application or window focus changes"
+      # Error metrics
+      error_count:
+        type: integer
+        required: false
+        default: 0
+        description: "Number of errors encountered"
+      undo_count:
+        type: integer
+        required: false
+        default: 0
+        description: "Number of undo operations"
+      reprompt_count:
+        type: integer
+        required: false
+        default: 0
+        description: "Number of times user had to re-ask AI"
+      # Cognitive load (NASA-TLX subscales, 0-100)
+      mental_demand:
+        type: integer
+        required: false
+        min: 0
+        max: 100
+        description: "NASA-TLX: Mental demand"
+      physical_demand:
+        type: integer
+        required: false
+        min: 0
+        max: 100
+        description: "NASA-TLX: Physical demand"
+      temporal_demand:
+        type: integer
+        required: false
+        min: 0
+        max: 100
+        description: "NASA-TLX: Time pressure"
+      performance:
+        type: integer
+        required: false
+        min: 0
+        max: 100
+        description: "NASA-TLX: Perceived success"
+      effort:
+        type: integer
+        required: false
+        min: 0
+        max: 100
+        description: "NASA-TLX: Effort required"
+      frustration:
+        type: integer
+        required: false
+        min: 0
+        max: 100
+        description: "NASA-TLX: Frustration level"
+      # Derived scores
+      friction_score:
+        type: float
+        required: false
+        description: "Calculated overall friction (0-100)"
+      cognitive_load_score:
+        type: float
+        required: false
+        description: "Calculated cognitive load (0-100)"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  GoalComplexity:
+    description: "Complexity level of a user goal"
+    values:
+      - trivial      # Single action, no thinking
+      - simple       # Few steps, clear path
+      - moderate     # Multiple steps, some decisions
+      - complex      # Many steps, significant decisions
+      - expert       # Requires domain expertise
+
+  SessionOutcome:
+    description: "Result of an interaction session"
+    values:
+      - success      # Goal achieved
+      - partial      # Partially achieved
+      - failure      # Could not achieve
+      - abandoned    # User gave up
+      - timeout      # Exceeded time limit
+
+  ActionType:
+    description: "Category of user action"
+    values:
+      - navigation   # Moving between views/contexts
+      - input        # Typing, clicking, selecting
+      - command      # Executing a command or shortcut
+      - review       # Reading, comprehending output
+      - decision     # Accept/reject, choose option
+      - correction   # Fixing an error
+      - wait         # Waiting for system response
+
+  FrictionType:
+    description: "Categories of friction"
+    values:
+      - launch       # Starting the tool/task
+      - input        # Getting intent into system
+      - output       # Understanding system response
+      - execution    # Running/applying changes
+      - context      # Switching contexts or modes
+      - cognitive    # Mental effort required
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+
+  StartSession:
+    type: create
+    description: "Begin a new interaction measurement session"
+    operatesOn: InteractionSession
+    params:
+      goal_id:
+        type: string
+        required: true
+      tool:
+        type: string
+        required: true
+      participant_id:
+        type: string
+        required: false
+    returns: InteractionSession
+
+  RecordStep:
+    type: create
+    description: "Record an interaction step within a session"
+    operatesOn: InteractionStep
+    params:
+      session_id:
+        type: string
+        required: true
+      action:
+        type: string
+        required: true
+      action_type:
+        type: ActionType
+        required: true
+    returns: InteractionStep
+
+  MeasureFriction:
+    type: create
+    description: "Record friction measurements for a step or session"
+    operatesOn: FrictionMeasurement
+    params:
+      step_id:
+        type: string
+        required: false
+      session_id:
+        type: string
+        required: false
+      click_count:
+        type: integer
+        required: false
+      keystroke_count:
+        type: integer
+        required: false
+      mode_switches:
+        type: integer
+        required: false
+    returns: FrictionMeasurement
+
+  CompleteSession:
+    type: update
+    description: "Mark a session as complete and calculate totals"
+    operatesOn: InteractionSession
+    params:
+      session_id:
+        type: string
+        required: true
+      outcome:
+        type: SessionOutcome
+        required: true
+    returns: InteractionSession

@@ -1,0 +1,484 @@
+# =============================================================================
+# Domain: future-narrative
+# Version: 1.0.0
+# Status: production
+# Dependencies: core@^1.0.0
+# Created: 2025-12-04
+# Updated: 2025-12-04
+# Purpose: Transform abstract ideas into concrete, engaging future vignettes
+# =============================================================================
+
+domain:
+  name: future-narrative
+  version: "1.0.0"
+  description: "Capsule narratives that make abstract futures tangible through concrete human moments"
+  namespace: "https://protoflow.ai/ontology/future-narrative#"
+  created_at: "2025-12-04"
+  updated_at: "2025-12-04"
+  dependencies:
+    core: "^1.0.0"
+
+  # Design principles
+  principles:
+    - "30 seconds to 2 minutes reading time (75-300 words)"
+    - "Drop reader INTO the moment - no setup, no preamble"
+    - "Named protagonists only - never 'a user' or 'someone'"
+    - "First principles woven into action, not explained separately"
+    - "Sensory details that make it visceral"
+    - "Show the transformation through behavior, not description"
+
+  changelog:
+    "1.0.0": "Initial production version - capsule vignette structure"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  FutureVignette:
+    description: "A compact, immersive capsule that makes an abstract concept tangible"
+    extends: core.Entity
+    properties:
+      id:
+        type: string
+        required: true
+        format: uuid
+        description: "Unique identifier"
+      title:
+        type: string
+        required: true
+        maxLength: 100
+        description: "Evocative, specific title (not generic)"
+        examples:
+          - "The Day Ben Stopped Going to School"
+          - "Sarah's Last Hold Music"
+          - "The Pitch That Wrote Itself"
+      abstract_concept:
+        type: AbstractConcept
+        required: true
+        description: "The idea being made concrete"
+      protagonist:
+        type: Protagonist
+        required: true
+        description: "Named human at center of vignette"
+      setting:
+        type: Setting
+        required: true
+        description: "When and where"
+      transformation:
+        type: TransformationArc
+        required: true
+        description: "The before/after shift"
+      scene:
+        type: Scene
+        required: true
+        description: "The concrete moment"
+      pattern:
+        type: NarrativePattern
+        required: true
+        description: "Structural pattern used"
+      tone:
+        type: Tone
+        required: true
+        default: hopeful
+      audience:
+        type: Audience
+        required: true
+        default: general
+      word_count:
+        type: integer
+        required: true
+        min: 75
+        max: 300
+        description: "Target: 75-300 words (30s-2min read)"
+      reading_time_seconds:
+        type: integer
+        computed: true
+        formula: "word_count * 0.4"
+        description: "At ~150 WPM casual reading"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  AbstractConcept:
+    description: "The idea being narratized"
+    properties:
+      name:
+        type: string
+        required: true
+        maxLength: 100
+        description: "Short name for the concept"
+        examples:
+          - "AI-adaptive education"
+          - "AI-to-AI coordination"
+          - "Evaporating UI"
+      one_liner:
+        type: string
+        required: true
+        maxLength: 200
+        description: "One sentence explanation"
+      transformation_type:
+        type: TransformationType
+        required: true
+        description: "Category of shift this represents"
+      first_principles:
+        type: array
+        items:
+          type: FirstPrinciple
+        minItems: 1
+        maxItems: 3
+        description: "Core mechanisms (max 3)"
+
+  FirstPrinciple:
+    description: "A fundamental truth that makes this possible"
+    properties:
+      insight:
+        type: string
+        required: true
+        maxLength: 150
+        description: "The key insight in one sentence"
+        examples:
+          - "Learning adapts to the learner, not the other way around"
+          - "Humans shouldn't be middleware between systems that can talk to each other"
+          - "Decisions should come to you, not you to them"
+      mechanism:
+        type: string
+        required: false
+        maxLength: 200
+        description: "How it works (optional - often shown through scene)"
+
+  Protagonist:
+    description: "Named human at center of the vignette"
+    properties:
+      name:
+        type: string
+        required: true
+        description: "Actual name - never 'a user'"
+        examples: ["Ben", "Sarah", "Marcus", "Dr. Chen"]
+      age:
+        type: integer
+        required: false
+        description: "Age if relevant to story"
+      role:
+        type: string
+        required: true
+        description: "Their context/situation"
+        examples:
+          - "7-year-old with ADD"
+          - "nuclear safety engineer"
+          - "first-time founder"
+          - "busy parent"
+      defining_trait:
+        type: string
+        required: false
+        maxLength: 50
+        description: "One trait that matters to the story"
+        examples: ["easily distracted", "risk-averse", "time-starved"]
+
+  Setting:
+    description: "When and where the vignette takes place"
+    properties:
+      year:
+        type: integer
+        required: true
+        min: 2025
+        max: 2050
+        description: "Year the scene occurs"
+      time_horizon:
+        type: TimeHorizon
+        computed: true
+        description: "Derived from year"
+      location:
+        type: string
+        required: true
+        description: "Specific place"
+        examples: ["suburban Boston kitchen", "Austin co-working space", "Tokyo commuter train"]
+      time_of_day:
+        type: string
+        required: false
+        description: "Morning, afternoon, evening, etc."
+      sensory_detail:
+        type: string
+        required: false
+        maxLength: 100
+        description: "One sensory anchor that grounds the scene"
+        examples:
+          - "afternoon sun through the blinds"
+          - "the hum of the MRI machine"
+          - "coffee steam rising"
+
+  TransformationArc:
+    description: "The before/after shift the vignette illustrates"
+    properties:
+      before:
+        type: string
+        required: true
+        maxLength: 100
+        description: "How it works today"
+        examples:
+          - "sit on hold for 20 minutes"
+          - "manually review 10,000 lines of code"
+          - "craft pitch deck over 3 weeks"
+      after:
+        type: string
+        required: true
+        maxLength: 100
+        description: "How it works in the vignette"
+        examples:
+          - "AI handles scheduling while you sleep"
+          - "review a specification, approve the output"
+          - "AI researches investor, generates tailored deck"
+      transformation_type:
+        type: TransformationType
+        required: true
+      shift_sentence:
+        type: string
+        required: true
+        maxLength: 150
+        description: "One sentence capturing the transformation"
+        examples:
+          - "The human role shifts from operator to approver"
+          - "Interfaces disappear; decisions come to you."
+          - "Systems talk to systems; humans set preferences."
+
+  Scene:
+    description: "The concrete moment that shows the concept in action"
+    properties:
+      hook:
+        type: string
+        required: true
+        maxLength: 150
+        description: "Opening line - drops reader into the moment"
+        examples:
+          - "Ben bursts through the door, backpack flying."
+          - "Sarah's phone buzzes: 'Dentist confirmed for Thursday 2pm.'"
+          - "Marcus doesn't look at the code anymore."
+      body:
+        type: string
+        required: true
+        maxLength: 800
+        description: "The scene itself (150-250 words typically)"
+      embedded_principles:
+        type: array
+        items:
+          type: string
+        description: "Which first principles are shown (not told) in the scene"
+      sensory_channels:
+        type: array
+        items:
+          type: SensoryChannel
+        minItems: 2
+        description: "At least 2 senses engaged"
+      closing:
+        type: string
+        required: true
+        maxLength: 100
+        description: "Final line - memorable, resonant"
+        examples:
+          - "Same question. Same moment. Two perfect answers."
+          - "She never heard hold music again."
+          - "The future doesn't require your attention. Just your judgment."
+
+  Implication:
+    description: "What this transformation means"
+    properties:
+      for_protagonist:
+        type: string
+        required: true
+        maxLength: 100
+        description: "What changes for people like the protagonist"
+      for_society:
+        type: string
+        required: false
+        maxLength: 100
+        description: "Broader implication"
+      tradeoff:
+        type: string
+        required: false
+        maxLength: 100
+        description: "What we give up or what changes (honest)"
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  TransformationType:
+    description: "Category of transformation being illustrated"
+    values:
+      - name: operator_to_approver
+        description: "Human shifts from doing to approving"
+        examples: ["code review", "document drafting", "scheduling"]
+      - name: interface_evolution
+        description: "From static UI to ambient/adaptive interface"
+        examples: ["evaporating UI", "voice-first", "notification-based"]
+      - name: ai_to_ai_coordination
+        description: "Systems talk to each other; humans set preferences"
+        examples: ["scheduling", "supply chain", "API negotiation"]
+      - name: personalization
+        description: "One-size-fits-all becomes adaptive to individual"
+        examples: ["education", "medicine", "content"]
+      - name: time_compression
+        description: "What took hours/days now takes seconds/minutes"
+        examples: ["research", "content creation", "analysis"]
+      - name: cognitive_offload
+        description: "Mental burden shifts from human to AI"
+        examples: ["remembering", "monitoring", "tracking"]
+
+  NarrativePattern:
+    description: "Structural pattern for the vignette"
+    values:
+      - name: drop_in_moment
+        description: "Start in the middle of action (most common)"
+        word_count_range: [100, 200]
+      - name: before_after_contrast
+        description: "Brief 'today' vs 'then' juxtaposition"
+        word_count_range: [150, 250]
+      - name: conversation
+        description: "Dialogue-driven scene"
+        word_count_range: [150, 250]
+      - name: day_fragment
+        description: "Slice of daily life showing normalization"
+        word_count_range: [100, 200]
+      - name: decision_moment
+        description: "Focus on the approval/choice point"
+        word_count_range: [75, 150]
+
+  Tone:
+    description: "Emotional register of the vignette"
+    values:
+      - hopeful
+      - neutral
+      - cautionary
+      - whimsical
+
+  Audience:
+    description: "Primary audience for the vignette"
+    values:
+      - general
+      - executive
+      - engineer
+      - investor
+      - parent
+      - student
+      - skeptic
+
+  TimeHorizon:
+    description: "How far in the future"
+    values:
+      - name: near
+        year_range: [2025, 2029]
+      - name: mid
+        year_range: [2030, 2035]
+      - name: far
+        year_range: [2036, 2050]
+
+  SensoryChannel:
+    description: "Senses engaged in the scene"
+    values:
+      - visual
+      - auditory
+      - tactile
+      - kinesthetic
+      - olfactory
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+
+  NarratizeConcept:
+    type: create
+    description: "Transform an abstract concept into a future vignette"
+    operatesOn: FutureVignette
+    params:
+      concept:
+        type: string
+        required: true
+        description: "The abstract idea to narratize"
+      audience:
+        type: Audience
+        required: false
+        default: general
+      tone:
+        type: Tone
+        required: false
+        default: hopeful
+      year:
+        type: integer
+        required: false
+        default: 2030
+      pattern:
+        type: NarrativePattern
+        required: false
+        default: drop_in_moment
+    returns: FutureVignette
+
+  GenerateCollection:
+    type: create
+    description: "Generate multiple vignettes for related concepts"
+    params:
+      concepts:
+        type: array
+        items:
+          type: string
+        required: true
+      shared_theme:
+        type: string
+        required: false
+        description: "Unifying thread across vignettes"
+    returns:
+      type: array
+      items:
+        type: FutureVignette
+
+# =============================================================================
+# TEMPLATES
+# =============================================================================
+
+templates:
+
+  capsule_format:
+    description: "Standard output format for a vignette"
+    structure: |
+      # {title}
+
+      **{year} · {location}**
+
+      {scene.hook}
+
+      {scene.body}
+
+      {scene.closing}
+
+      ---
+
+      *{transformation.shift_sentence}*
+
+  with_principles:
+    description: "Extended format showing first principles"
+    structure: |
+      # {title}
+
+      **{year} · {location}**
+
+      {scene.hook}
+
+      {scene.body}
+
+      {scene.closing}
+
+      ---
+
+      **The Shift:** {transformation.shift_sentence}
+
+      **First Principles:**
+      {for principle in abstract_concept.first_principles}
+      - {principle.insight}
+      {endfor}

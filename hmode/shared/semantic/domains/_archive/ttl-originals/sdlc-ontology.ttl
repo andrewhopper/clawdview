@@ -1,0 +1,370 @@
+@prefix sdlc: <http://hopperlabs.ai/ontology/sdlc#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+# ============================================
+# SDLC Ontology for Hopper Labs
+# Defines approval workflow concepts
+# ============================================
+
+# ----------------
+# Core Classes
+# ----------------
+
+sdlc:Prototype a owl:Class ;
+    rdfs:label "Prototype" ;
+    rdfs:comment "A software prototype in the SDLC workflow" .
+
+sdlc:Phase a owl:Class ;
+    rdfs:label "SDLC Phase" ;
+    rdfs:comment "A phase in the 9-phase SDLC (SEED, RESEARCH, EXPANSION, etc.)" .
+
+sdlc:ApprovalLevel a owl:Class ;
+    rdfs:label "Approval Level" ;
+    rdfs:comment "A checkpoint requiring human approval in Phase 6" .
+
+sdlc:Artifact a owl:Class ;
+    rdfs:label "Artifact" ;
+    rdfs:comment "A deliverable artifact (sitemap, mockup, domain model, etc.)" .
+
+# ----------------
+# Approval Levels (Instances)
+# ----------------
+
+sdlc:Level1_Sitemap a sdlc:ApprovalLevel ;
+    rdfs:label "Level 1: Information Architecture" ;
+    sdlc:sequenceNumber 1 ;
+    sdlc:deliverable "SITEMAP.md" ;
+    sdlc:idFormat "SM-[Section].[Page]" ;
+    sdlc:fidelity "Conceptual" ;
+    sdlc:approvalActions "approve, reject-regenerate, edit" .
+
+sdlc:Level2_DomainModel a sdlc:ApprovalLevel ;
+    rdfs:label "Level 2: Domain Model" ;
+    sdlc:sequenceNumber 2 ;
+    sdlc:deliverable "DOMAIN_MODEL.md" ;
+    sdlc:idFormat "DM-[Entity]" ;
+    sdlc:fidelity "Data Structures" ;
+    sdlc:approvalActions "approve, reject-regenerate, edit" .
+
+sdlc:Level3_APIContract a sdlc:ApprovalLevel ;
+    rdfs:label "Level 3: API Contract" ;
+    sdlc:sequenceNumber 3 ;
+    sdlc:deliverable "API_CONTRACT.md" ;
+    sdlc:idFormat "API-[Resource].[Method]" ;
+    sdlc:fidelity "Request/Response Schemas" ;
+    sdlc:approvalActions "approve, reject-regenerate, edit" .
+
+sdlc:Level4_UserStories a sdlc:ApprovalLevel ;
+    rdfs:label "Level 4: User Stories" ;
+    sdlc:sequenceNumber 4 ;
+    sdlc:deliverable "USER_STORIES.md" ;
+    sdlc:idFormat "US-[Epic].[Story]" ;
+    sdlc:fidelity "User Scenarios" ;
+    sdlc:approvalActions "approve, reject-regenerate, edit, add" .
+
+sdlc:Level5A_SitemapMockup a sdlc:ApprovalLevel ;
+    rdfs:label "Level 5A: Sitemap Mockup (Text)" ;
+    sdlc:sequenceNumber 5.1 ;
+    sdlc:deliverable "SITEMAP_MOCKUP.md" ;
+    sdlc:idFormat "SMM-[Section].[Page].V[Version]" ;
+    sdlc:fidelity "ASCII Layout" ;
+    sdlc:versioned true ;
+    sdlc:approvalActions "approve, reject-regenerate, revise" .
+
+sdlc:Level5B_Wireframes a sdlc:ApprovalLevel ;
+    rdfs:label "Level 5B: Wireframes (Lo-Fi)" ;
+    sdlc:sequenceNumber 5.2 ;
+    sdlc:deliverable "WIREFRAMES.md" ;
+    sdlc:idFormat "WF-[Epic].[Story].V[Version]" ;
+    sdlc:fidelity "Component Placement" ;
+    sdlc:versioned true ;
+    sdlc:approvalActions "approve, reject-regenerate, revise" .
+
+sdlc:Level6_ClickablePrototype a sdlc:ApprovalLevel ;
+    rdfs:label "Level 6: Clickable Prototype" ;
+    sdlc:sequenceNumber 6 ;
+    sdlc:deliverable "prototypes/proto-XXX-clickable/" ;
+    sdlc:idFormat "CP-[Epic].[Story].V[Version]" ;
+    sdlc:fidelity "Interactive HTML" ;
+    sdlc:versioned true ;
+    sdlc:approvalActions "approve, reject-regenerate, revise" .
+
+sdlc:Level7_HiFiMockups a sdlc:ApprovalLevel ;
+    rdfs:label "Level 7: High-Fidelity Mockups" ;
+    sdlc:sequenceNumber 7 ;
+    sdlc:deliverable "HI_FI_MOCKUPS.md" ;
+    sdlc:idFormat "HF-[Epic].[Story].V[Version]" ;
+    sdlc:fidelity "Production Visual Design" ;
+    sdlc:versioned true ;
+    sdlc:approvalActions "approve, reject-regenerate, revise" .
+
+sdlc:Level8_ImplementationStrategy a sdlc:ApprovalLevel ;
+    rdfs:label "Level 8: Implementation Strategy" ;
+    sdlc:sequenceNumber 8 ;
+    sdlc:deliverable "IMPLEMENTATION_STRATEGY.md" ;
+    sdlc:idFormat "N/A" ;
+    sdlc:fidelity "Code Organization Plan" ;
+    sdlc:approvalActions "approve, reject-regenerate" .
+
+# ----------------
+# Artifact Types
+# ----------------
+
+sdlc:Sitemap a owl:Class ;
+    rdfs:subClassOf sdlc:Artifact ;
+    rdfs:label "Sitemap" ;
+    rdfs:comment "Information architecture defining navigation hierarchy" .
+
+sdlc:SitemapNode a owl:Class ;
+    rdfs:label "Sitemap Node" ;
+    rdfs:comment "A single page or section in the sitemap" .
+
+sdlc:DomainEntity a owl:Class ;
+    rdfs:subClassOf sdlc:Artifact ;
+    rdfs:label "Domain Entity" ;
+    rdfs:comment "A business entity in the domain model" .
+
+sdlc:APIEndpoint a owl:Class ;
+    rdfs:subClassOf sdlc:Artifact ;
+    rdfs:label "API Endpoint" ;
+    rdfs:comment "A REST API endpoint with request/response contract" .
+
+sdlc:UserStory a owl:Class ;
+    rdfs:subClassOf sdlc:Artifact ;
+    rdfs:label "User Story" ;
+    rdfs:comment "A user-facing scenario in 'As a..., I can..., so that...' format" .
+
+sdlc:Epic a owl:Class ;
+    rdfs:label "Epic" ;
+    rdfs:comment "A collection of related user stories" .
+
+sdlc:Mockup a owl:Class ;
+    rdfs:subClassOf sdlc:Artifact ;
+    rdfs:label "Mockup" ;
+    rdfs:comment "A visual representation of UI (wireframe, clickable, or hi-fi)" .
+
+# ----------------
+# Mockup Fidelity Types
+# ----------------
+
+sdlc:SitemapMockup a owl:Class ;
+    rdfs:subClassOf sdlc:Mockup ;
+    rdfs:label "Sitemap Mockup" ;
+    sdlc:fidelityLevel "ASCII/Text" .
+
+sdlc:Wireframe a owl:Class ;
+    rdfs:subClassOf sdlc:Mockup ;
+    rdfs:label "Wireframe" ;
+    sdlc:fidelityLevel "Lo-Fi" .
+
+sdlc:ClickablePrototype a owl:Class ;
+    rdfs:subClassOf sdlc:Mockup ;
+    rdfs:label "Clickable Prototype" ;
+    sdlc:fidelityLevel "Interactive Lo-Fi" .
+
+sdlc:HiFiMockup a owl:Class ;
+    rdfs:subClassOf sdlc:Mockup ;
+    rdfs:label "High-Fidelity Mockup" ;
+    sdlc:fidelityLevel "Production Design" .
+
+# ----------------
+# Approval Paths
+# ----------------
+
+sdlc:ApprovalPath a owl:Class ;
+    rdfs:label "Approval Path" ;
+    rdfs:comment "A predefined sequence of approval levels based on project type" .
+
+sdlc:MinimalPath a sdlc:ApprovalPath ;
+    rdfs:label "Minimal Path (Track A)" ;
+    sdlc:requiredLevels (sdlc:Level4_UserStories sdlc:Level8_ImplementationStrategy) ;
+    sdlc:optionalLevels (sdlc:Level5B_Wireframes sdlc:Level6_ClickablePrototype) ;
+    sdlc:useCases "Internal tools, POCs, learning projects" .
+
+sdlc:StandardPath a sdlc:ApprovalPath ;
+    rdfs:label "Standard Path (Track B)" ;
+    sdlc:requiredLevels (sdlc:Level1_Sitemap sdlc:Level2_DomainModel sdlc:Level3_APIContract sdlc:Level4_UserStories sdlc:Level5B_Wireframes sdlc:Level8_ImplementationStrategy) ;
+    sdlc:optionalLevels (sdlc:Level5A_SitemapMockup sdlc:Level6_ClickablePrototype sdlc:Level7_HiFiMockups) ;
+    sdlc:useCases "Client deliverables, production systems" .
+
+sdlc:DesignFirstPath a sdlc:ApprovalPath ;
+    rdfs:label "Design-First Path" ;
+    sdlc:requiredLevels (sdlc:Level1_Sitemap sdlc:Level4_UserStories sdlc:Level5A_SitemapMockup sdlc:Level5B_Wireframes sdlc:Level6_ClickablePrototype sdlc:Level7_HiFiMockups sdlc:Level8_ImplementationStrategy) ;
+    sdlc:optionalLevels (sdlc:Level2_DomainModel sdlc:Level3_APIContract) ;
+    sdlc:useCases "Marketing sites, dashboards, consumer apps" .
+
+sdlc:APIFirstPath a sdlc:ApprovalPath ;
+    rdfs:label "API-First Path" ;
+    sdlc:requiredLevels (sdlc:Level2_DomainModel sdlc:Level3_APIContract sdlc:Level4_UserStories sdlc:Level8_ImplementationStrategy) ;
+    sdlc:optionalLevels (sdlc:Level1_Sitemap sdlc:Level5B_Wireframes) ;
+    sdlc:useCases "APIs, libraries, CLIs, backend services" .
+
+sdlc:FullPath a sdlc:ApprovalPath ;
+    rdfs:label "Full Path (Enterprise)" ;
+    sdlc:requiredLevels (sdlc:Level1_Sitemap sdlc:Level2_DomainModel sdlc:Level3_APIContract sdlc:Level4_UserStories sdlc:Level5A_SitemapMockup sdlc:Level5B_Wireframes sdlc:Level6_ClickablePrototype sdlc:Level7_HiFiMockups sdlc:Level8_ImplementationStrategy) ;
+    sdlc:useCases "Mission-critical systems, regulated industries, large teams" .
+
+# ----------------
+# Properties
+# ----------------
+
+sdlc:hasApprovalLevel a owl:ObjectProperty ;
+    rdfs:domain sdlc:Prototype ;
+    rdfs:range sdlc:ApprovalLevel .
+
+sdlc:requiresApproval a owl:ObjectProperty ;
+    rdfs:domain sdlc:Artifact ;
+    rdfs:range sdlc:ApprovalLevel .
+
+sdlc:belongsToEpic a owl:ObjectProperty ;
+    rdfs:domain sdlc:UserStory ;
+    rdfs:range sdlc:Epic .
+
+sdlc:implementsUserStory a owl:ObjectProperty ;
+    rdfs:domain sdlc:Mockup ;
+    rdfs:range sdlc:UserStory .
+
+sdlc:hasParentNode a owl:ObjectProperty ;
+    rdfs:domain sdlc:SitemapNode ;
+    rdfs:range sdlc:SitemapNode .
+
+sdlc:hasChildNode a owl:ObjectProperty ;
+    rdfs:domain sdlc:SitemapNode ;
+    rdfs:range sdlc:SitemapNode ;
+    owl:inverseOf sdlc:hasParentNode .
+
+sdlc:relatesTo a owl:ObjectProperty ;
+    rdfs:domain sdlc:DomainEntity ;
+    rdfs:range sdlc:DomainEntity ;
+    rdfs:comment "Defines relationship between domain entities (one-to-many, many-to-many)" .
+
+sdlc:exposesEntity a owl:ObjectProperty ;
+    rdfs:domain sdlc:APIEndpoint ;
+    rdfs:range sdlc:DomainEntity .
+
+sdlc:approvedBy a owl:DatatypeProperty ;
+    rdfs:domain sdlc:Artifact ;
+    rdfs:range xsd:string .
+
+sdlc:approvedAt a owl:DatatypeProperty ;
+    rdfs:domain sdlc:Artifact ;
+    rdfs:range xsd:dateTime .
+
+sdlc:versionNumber a owl:DatatypeProperty ;
+    rdfs:domain sdlc:Mockup ;
+    rdfs:range xsd:integer .
+
+sdlc:status a owl:DatatypeProperty ;
+    rdfs:domain sdlc:Artifact ;
+    rdfs:range xsd:string ;
+    rdfs:comment "approved, pending, rejected, superseded" .
+
+sdlc:identifier a owl:DatatypeProperty ;
+    rdfs:domain sdlc:Artifact ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Unique ID (e.g., SM-1.1, US-2.3, WF-1.1.V2)" .
+
+sdlc:sequenceNumber a owl:DatatypeProperty ;
+    rdfs:domain sdlc:ApprovalLevel ;
+    rdfs:range xsd:decimal .
+
+sdlc:deliverable a owl:DatatypeProperty ;
+    rdfs:domain sdlc:ApprovalLevel ;
+    rdfs:range xsd:string .
+
+sdlc:idFormat a owl:DatatypeProperty ;
+    rdfs:domain sdlc:ApprovalLevel ;
+    rdfs:range xsd:string .
+
+sdlc:fidelity a owl:DatatypeProperty ;
+    rdfs:domain sdlc:ApprovalLevel ;
+    rdfs:range xsd:string .
+
+sdlc:fidelityLevel a owl:DatatypeProperty ;
+    rdfs:domain sdlc:Mockup ;
+    rdfs:range xsd:string .
+
+sdlc:approvalActions a owl:DatatypeProperty ;
+    rdfs:domain sdlc:ApprovalLevel ;
+    rdfs:range xsd:string .
+
+sdlc:versioned a owl:DatatypeProperty ;
+    rdfs:domain sdlc:ApprovalLevel ;
+    rdfs:range xsd:boolean .
+
+sdlc:requiredLevels a owl:ObjectProperty ;
+    rdfs:domain sdlc:ApprovalPath ;
+    rdfs:range sdlc:ApprovalLevel .
+
+sdlc:optionalLevels a owl:ObjectProperty ;
+    rdfs:domain sdlc:ApprovalPath ;
+    rdfs:range sdlc:ApprovalLevel .
+
+sdlc:useCases a owl:DatatypeProperty ;
+    rdfs:domain sdlc:ApprovalPath ;
+    rdfs:range xsd:string .
+
+# ----------------
+# Example Instance
+# ----------------
+
+# Example: proto-057 approval workflow
+<http://hopperlabs.ai/prototypes/proto-057> a sdlc:Prototype ;
+    rdfs:label "proto-057-example" ;
+    sdlc:currentPhase "TECHNICAL_DESIGN" ;
+    sdlc:approvalPath sdlc:StandardPath ;
+    sdlc:hasArtifact <http://hopperlabs.ai/prototypes/proto-057/sitemap/SM-1.1> ,
+                      <http://hopperlabs.ai/prototypes/proto-057/domain/DM-User> ,
+                      <http://hopperlabs.ai/prototypes/proto-057/api/API-Users.POST> ,
+                      <http://hopperlabs.ai/prototypes/proto-057/stories/US-1.1> ,
+                      <http://hopperlabs.ai/prototypes/proto-057/wireframes/WF-1.1.V2> .
+
+<http://hopperlabs.ai/prototypes/proto-057/sitemap/SM-1.1> a sdlc:SitemapNode ;
+    sdlc:identifier "SM-1.1" ;
+    rdfs:label "Homepage" ;
+    sdlc:requiresApproval sdlc:Level1_Sitemap ;
+    sdlc:status "approved" ;
+    sdlc:approvedBy "user" ;
+    sdlc:approvedAt "2025-11-13T12:00:00Z"^^xsd:dateTime .
+
+<http://hopperlabs.ai/prototypes/proto-057/domain/DM-User> a sdlc:DomainEntity ;
+    sdlc:identifier "DM-User" ;
+    rdfs:label "User Entity" ;
+    sdlc:requiresApproval sdlc:Level2_DomainModel ;
+    sdlc:status "approved" ;
+    sdlc:approvedBy "user" ;
+    sdlc:approvedAt "2025-11-13T13:00:00Z"^^xsd:dateTime ;
+    sdlc:relatesTo <http://hopperlabs.ai/prototypes/proto-057/domain/DM-Order> .
+
+<http://hopperlabs.ai/prototypes/proto-057/api/API-Users.POST> a sdlc:APIEndpoint ;
+    sdlc:identifier "API-Users.POST" ;
+    rdfs:label "Create User Endpoint" ;
+    sdlc:requiresApproval sdlc:Level3_APIContract ;
+    sdlc:status "approved" ;
+    sdlc:approvedBy "user" ;
+    sdlc:approvedAt "2025-11-13T14:00:00Z"^^xsd:dateTime ;
+    sdlc:exposesEntity <http://hopperlabs.ai/prototypes/proto-057/domain/DM-User> .
+
+<http://hopperlabs.ai/prototypes/proto-057/stories/US-1.1> a sdlc:UserStory ;
+    sdlc:identifier "US-1.1" ;
+    rdfs:label "User Registration" ;
+    sdlc:requiresApproval sdlc:Level4_UserStories ;
+    sdlc:status "approved" ;
+    sdlc:approvedBy "user" ;
+    sdlc:approvedAt "2025-11-13T15:00:00Z"^^xsd:dateTime ;
+    sdlc:belongsToEpic <http://hopperlabs.ai/prototypes/proto-057/epics/Authentication> .
+
+<http://hopperlabs.ai/prototypes/proto-057/wireframes/WF-1.1.V2> a sdlc:Wireframe ;
+    sdlc:identifier "WF-1.1.V2" ;
+    rdfs:label "Registration Form Wireframe v2" ;
+    sdlc:requiresApproval sdlc:Level5B_Wireframes ;
+    sdlc:status "approved" ;
+    sdlc:approvedBy "user" ;
+    sdlc:approvedAt "2025-11-13T16:00:00Z"^^xsd:dateTime ;
+    sdlc:versionNumber 2 ;
+    sdlc:fidelityLevel "Lo-Fi" ;
+    sdlc:implementsUserStory <http://hopperlabs.ai/prototypes/proto-057/stories/US-1.1> .

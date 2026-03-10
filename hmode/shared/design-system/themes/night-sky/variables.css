@@ -1,0 +1,206 @@
+/**
+ * Night Sky Theme for shadcn/ui
+ * Version 3 - Indigo/Navy/Midnight with Gradients
+ *
+ * Deep indigo and navy blues with subtle gradient accents
+ *
+ * Color Sources:
+ * - Midnight Blue: #191970
+ * - Navy: #0c1428, #111936
+ * - Indigo: #4B0082, #3730a3
+ * - Electric Indigo: #6366f1
+ */
+
+/* ========================================
+   INDIGO (Default) - Rich midnight navy
+   ======================================== */
+:root,
+.night-sky {
+  /* Deep navy background */
+  --background: 228 25% 7%;            /* Desaturated deep navy */
+  --foreground: 220 15% 90%;           /* Soft silver */
+
+  /* Cards - Slightly elevated navy */
+  --card: 228 20% 10%;
+  --card-foreground: 220 15% 90%;
+  --popover: 228 18% 12%;
+  --popover-foreground: 220 15% 90%;
+
+  /* Primary - Muted Navy Blue */
+  --primary: 220 50% 50%;              /* More saturated navy blue */
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary - Muted slate */
+  --secondary: 230 20% 18%;
+  --secondary-foreground: 220 15% 90%;
+
+  /* Muted - Dark slate blue */
+  --muted: 228 18% 14%;
+  --muted-foreground: 225 12% 55%;
+
+  /* Accent - Muted Cyan */
+  --accent: 192 45% 52%;               /* Desaturated cyan */
+  --accent-foreground: 228 25% 7%;
+
+  /* Destructive */
+  --destructive: 0 50% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Success */
+  --success: 160 45% 42%;              /* Desaturated emerald */
+  --success-foreground: 0 0% 100%;
+
+  /* Warning */
+  --warning: 38 55% 52%;               /* Desaturated amber */
+  --warning-foreground: 228 25% 7%;
+
+  /* Borders - Subtle indigo tint */
+  --border: 230 18% 20%;
+  --input: 230 16% 22%;
+  --ring: 220 50% 50%;
+
+  --radius: 0.5rem;
+
+  /* Chart colors - Desaturated */
+  --chart-1: 220 50% 50%;              /* Navy */
+  --chart-2: 192 45% 52%;              /* Cyan */
+  --chart-3: 160 45% 42%;              /* Emerald */
+  --chart-4: 270 35% 58%;              /* Violet */
+  --chart-5: 45 50% 55%;               /* Amber */
+
+  /* Gradients */
+  --gradient-start: 228 25% 7%;
+  --gradient-end: 250 25% 12%;
+  --glow-primary: 220 50% 50%;
+  --glow-accent: 192 45% 52%;
+}
+
+/* ========================================
+   MIDNIGHT - Deeper, more purple-tinted
+   ======================================== */
+.night-sky-midnight {
+  --background: 240 20% 6%;
+  --foreground: 240 12% 92%;
+
+  --card: 240 18% 9%;
+  --card-foreground: 240 12% 92%;
+  --popover: 240 16% 11%;
+  --popover-foreground: 240 12% 92%;
+
+  --primary: 250 40% 64%;              /* Desaturated violet */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 245 18% 17%;
+  --secondary-foreground: 240 12% 92%;
+
+  --muted: 242 16% 13%;
+  --muted-foreground: 240 10% 52%;
+
+  --accent: 280 35% 58%;               /* Desaturated purple */
+  --accent-foreground: 0 0% 100%;
+
+  --border: 245 15% 19%;
+  --input: 245 15% 21%;
+  --ring: 250 40% 64%;
+
+  --gradient-start: 240 20% 6%;
+  --gradient-end: 260 20% 10%;
+  --glow-primary: 250 40% 64%;
+  --glow-accent: 280 35% 58%;
+
+  --chart-1: 250 40% 64%;
+  --chart-2: 280 35% 58%;
+  --chart-3: 192 45% 52%;
+  --chart-4: 160 45% 42%;
+  --chart-5: 340 40% 55%;
+}
+
+/* ========================================
+   NAVY - Classic deep navy
+   ======================================== */
+.night-sky-navy {
+  --background: 222 28% 8%;
+  --foreground: 214 15% 92%;
+
+  --card: 222 24% 11%;
+  --card-foreground: 214 15% 92%;
+  --popover: 222 22% 13%;
+  --popover-foreground: 214 15% 92%;
+
+  --primary: 217 50% 58%;              /* Desaturated blue */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 220 22% 17%;
+  --secondary-foreground: 214 15% 92%;
+
+  --muted: 220 20% 14%;
+  --muted-foreground: 218 12% 54%;
+
+  --accent: 200 48% 52%;               /* Desaturated sky blue */
+  --accent-foreground: 222 28% 8%;
+
+  --border: 220 18% 19%;
+  --input: 220 18% 21%;
+  --ring: 217 50% 58%;
+
+  --gradient-start: 222 28% 8%;
+  --gradient-end: 215 26% 12%;
+  --glow-primary: 217 50% 58%;
+  --glow-accent: 200 48% 52%;
+
+  --chart-1: 217 50% 58%;
+  --chart-2: 200 48% 52%;
+  --chart-3: 160 45% 42%;
+  --chart-4: 250 38% 58%;
+  --chart-5: 38 52% 52%;
+}
+
+/* ========================================
+   ABYSS - Maximum depth
+   ======================================== */
+.night-sky-abyss {
+  --background: 235 22% 5%;            /* Nearly black indigo */
+  --foreground: 230 12% 88%;
+
+  --card: 235 20% 7%;
+  --card-foreground: 230 12% 88%;
+  --popover: 235 18% 9%;
+  --popover-foreground: 230 12% 88%;
+
+  --primary: 239 48% 68%;              /* Desaturated indigo */
+  --primary-foreground: 235 22% 5%;
+
+  --secondary: 235 20% 13%;
+  --secondary-foreground: 230 12% 88%;
+
+  --muted: 235 18% 10%;
+  --muted-foreground: 235 10% 48%;
+
+  --accent: 185 45% 50%;               /* Desaturated cyan */
+  --accent-foreground: 235 22% 5%;
+
+  --border: 235 16% 15%;
+  --input: 235 16% 17%;
+  --ring: 239 48% 68%;
+
+  --gradient-start: 235 22% 5%;
+  --gradient-end: 250 22% 9%;
+  --glow-primary: 239 48% 68%;
+  --glow-accent: 185 45% 50%;
+}
+
+/* ========================================
+   TYPOGRAPHY
+   ======================================== */
+.night-sky,
+.night-sky-midnight,
+.night-sky-navy,
+.night-sky-abyss {
+  --font-heading: 'Inter', 'SF Pro Display', -apple-system, sans-serif;
+  --font-body: 'Inter', 'SF Pro Text', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+  --tracking-tight: -0.025em;
+  --tracking-normal: -0.01em;
+  --tracking-wide: 0.05em;
+}

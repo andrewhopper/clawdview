@@ -1,0 +1,237 @@
+# Messaging Domain Model
+# SMS, MMS, and chat messaging
+# Extracted from mobile domain, inspired by Twilio Programmable Messaging
+
+domain:
+  name: messaging
+  version: "1.0.0"
+  description: SMS, MMS, and chat messaging for any platform (mobile, web, IoT)
+  dependencies: [core]
+  source: Twilio Programmable Messaging API
+  created_at: "2025-11-22"
+  updated_at: "2025-11-22"
+
+entities:
+
+  Message:
+    description: SMS or MMS message sent or received
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      from: { type: string, required: true, description: "Sender (E.164 phone or ID)" }
+      to: { type: string, required: true, description: "Recipient (E.164 phone or ID)" }
+      body: { type: string, description: "Message text (max 1600 chars SMS)" }
+      status: { type: MessageStatus, required: true }
+      direction: { type: MessageDirection, required: true }
+      channel: { type: MessageChannel, required: true }
+      numSegments: { type: integer, description: "SMS segments for long messages" }
+      media: { type: array, items: MessageMedia }
+      price: { type: decimal }
+      priceCurrency: { type: string }
+      errorCode: { type: integer }
+      errorMessage: { type: string }
+      serviceId: { type: string, description: "Messaging service used" }
+      externalId: { type: string, description: "External reference ID" }
+      metadata: { type: object, description: "Custom key-value metadata" }
+      scheduledAt: { type: datetime, description: "For scheduled messages" }
+      sentAt: { type: datetime }
+      deliveredAt: { type: datetime }
+      readAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  MessageMedia:
+    description: Media attachment for MMS/rich messages
+    properties:
+      id: { type: string, required: true }
+      messageId: { type: string, required: true }
+      contentType: { type: string, required: true, description: "MIME type" }
+      url: { type: uri, required: true }
+      size: { type: integer, description: "File size in bytes" }
+      filename: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  MessagingService:
+    description: Configuration for sending messages
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      name: { type: string, required: true }
+      inboundWebhookUrl: { type: uri }
+      inboundWebhookMethod: { type: HttpMethod }
+      statusCallbackUrl: { type: uri }
+      fallbackUrl: { type: uri }
+      fallbackMethod: { type: HttpMethod }
+      areaCodeGeomatch: { type: boolean, description: "Match sender to recipient area" }
+      validityPeriodSeconds: { type: integer, description: "Message validity (max 14400)" }
+      synchronousValidation: { type: boolean }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PhoneNumber:
+    description: Phone number resource for messaging
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      phoneNumber: { type: string, required: true, description: "E.164 format" }
+      friendlyName: { type: string }
+      capabilities: { type: PhoneCapabilities }
+      countryCode: { type: string, description: "ISO country code" }
+      locality: { type: string }
+      region: { type: string }
+      smsWebhookUrl: { type: uri }
+      mmsWebhookUrl: { type: uri }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PhoneCapabilities:
+    description: What a phone number can do
+    properties:
+      sms: { type: boolean }
+      mms: { type: boolean }
+      voice: { type: boolean }
+      fax: { type: boolean }
+
+  Conversation:
+    description: Thread of messages between parties
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      friendlyName: { type: string }
+      state: { type: ConversationState, required: true }
+      participants: { type: array, items: ConversationParticipant }
+      attributes: { type: object, description: "Custom attributes" }
+      timers: { type: ConversationTimers }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ConversationParticipant:
+    description: Participant in a conversation
+    properties:
+      id: { type: string, required: true }
+      conversationId: { type: string, required: true }
+      identity: { type: string, description: "User identity" }
+      address: { type: string, description: "Phone number or address" }
+      proxyAddress: { type: string, description: "Proxy number if using proxy" }
+      lastReadMessageIndex: { type: integer }
+      lastReadTimestamp: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ConversationTimers:
+    description: Auto-close timers for conversations
+    properties:
+      dateInactive: { type: datetime }
+      dateClosed: { type: datetime }
+
+enums:
+
+  MessageStatus:
+    description: Delivery status of a message
+    values:
+      - Queued       # Queued for sending
+      - Sending      # Being sent
+      - Sent         # Sent to carrier
+      - Delivered    # Carrier confirmed delivery
+      - Undelivered  # Could not deliver
+      - Failed       # Failed to send
+      - Receiving    # Inbound being received
+      - Received     # Inbound received
+      - Accepted     # Accepted by API
+      - Scheduled    # Scheduled for future
+      - Read         # Recipient read (if supported)
+      - Canceled     # Canceled before sending
+
+  MessageDirection:
+    values:
+      - Inbound      # Received from external
+      - OutboundApi  # Sent via API
+      - OutboundReply # Reply to inbound
+
+  MessageChannel:
+    description: Channel for message delivery
+    values:
+      - SMS
+      - MMS
+      - WhatsApp
+      - FacebookMessenger
+      - Telegram
+      - Slack
+      - Teams
+      - WebChat
+      - InApp
+
+  HttpMethod:
+    values: [GET, POST]
+
+  ConversationState:
+    values:
+      - Active
+      - Inactive
+      - Closed
+
+actions:
+
+  SendMessage:
+    description: Send an SMS, MMS, or chat message
+    parameters:
+      to: { type: string, required: true }
+      from: { type: string, description: "Sender number/ID" }
+      serviceId: { type: string, description: "Messaging service (alt to from)" }
+      body: { type: string }
+      mediaUrls: { type: array, items: uri, description: "Media for MMS" }
+      channel: { type: MessageChannel, default: SMS }
+      statusCallbackUrl: { type: uri }
+      scheduledAt: { type: datetime, description: "Schedule for later" }
+      metadata: { type: object }
+    result: Message
+
+  GetMessage:
+    description: Retrieve a message by ID
+    parameters:
+      id: { type: string, required: true }
+    result: Message
+
+  DeleteMessage:
+    description: Delete a message
+    parameters:
+      id: { type: string, required: true }
+    result: { type: boolean }
+
+  ListMessages:
+    description: List messages with filters
+    parameters:
+      to: { type: string }
+      from: { type: string }
+      status: { type: MessageStatus }
+      channel: { type: MessageChannel }
+      sentAfter: { type: datetime }
+      sentBefore: { type: datetime }
+      limit: { type: integer, default: 50 }
+    result: { type: array, items: Message }
+
+  CreateConversation:
+    description: Create a new conversation thread
+    parameters:
+      friendlyName: { type: string }
+      attributes: { type: object }
+    result: Conversation
+
+  AddParticipant:
+    description: Add participant to conversation
+    parameters:
+      conversationId: { type: string, required: true }
+      identity: { type: string }
+      address: { type: string }
+    result: ConversationParticipant
+
+  SendConversationMessage:
+    description: Send message to conversation
+    parameters:
+      conversationId: { type: string, required: true }
+      author: { type: string, required: true }
+      body: { type: string }
+      mediaUrls: { type: array, items: uri }
+    result: Message

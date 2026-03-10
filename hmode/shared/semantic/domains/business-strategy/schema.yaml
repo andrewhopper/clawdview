@@ -1,0 +1,5 @@
+# Business Strategy Domain Model
+# Main entry point - imports from modular schema/ directory
+# Sources: Osterwalder & Pigneur (2010), Maurya (2012), Blank (2013), Ries (2011), Bland & Osterwalder (2019)
+
+$ref: schema/index.yaml

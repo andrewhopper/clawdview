@@ -1,0 +1,233 @@
+# LLM Caching Domain Model
+# Prompt caching, semantic matching, and cache management
+# Source: Anthropic Prompt Caching, SCALM, MeanCache, GPTCache
+
+domain:
+  name: llm-caching
+  version: "1.0.0"
+  description: Prompt caching - exact and semantic matching, cache policies, breakpoints
+  dependencies: [core, llm-message]
+  sources:
+    - "Anthropic Prompt Caching: docs.anthropic.com/en/docs/build-with-claude/prompt-caching"
+    - "SCALM: researchgate.net/publication/384371510"
+    - "MeanCache: arxiv.org/abs/2403.02694"
+    - "GPTCache: github.com/zilliztech/GPTCache"
+    - "Microsoft Semantic Cache: learn.microsoft.com/azure/cosmos-db/gen-ai/semantic-cache"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  CacheEntry:
+    description: A cached prompt-response pair
+    properties:
+      id: { type: string, required: true }
+      cacheKey: { type: CacheKey, required: true }
+      promptHash: { type: string, required: true }
+      response: { type: string, required: true }
+      modelId: { type: string, required: true }
+      tokenCount: { type: integer }
+      hitCount: { type: integer, default: 0 }
+      lastAccessedAt: { type: datetime }
+      expiresAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CacheKey:
+    description: Key used to identify cached content
+    properties:
+      type: { type: CacheKeyType, required: true }
+      exactHash: { type: string, description: "SHA-256 of exact content" }
+      semanticHash: { type: string, description: "Embedding-based hash" }
+      prefixHash: { type: string, description: "Hash of prompt prefix" }
+      components: { type: array, items: CacheKeyComponent }
+
+  CacheKeyComponent:
+    description: Component of a cache key
+    properties:
+      type: { type: ComponentType, required: true }
+      value: { type: string }
+      hash: { type: string }
+      tokenCount: { type: integer }
+
+  CacheBreakpoint:
+    description: Anthropic cache breakpoint (cache_control marker)
+    properties:
+      id: { type: string, required: true }
+      position: { type: integer, required: true, description: "Position in prompt" }
+      contentType: { type: BreakpointContentType }
+      ttlMinutes: { type: integer, default: 5 }
+      tokenCount: { type: integer, description: "Tokens up to this point" }
+
+  CachePolicy:
+    description: Policy governing cache behavior
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: CachePolicyType, required: true }
+      ttlMinutes: { type: integer }
+      maxEntries: { type: integer }
+      maxSizeBytes: { type: integer }
+      evictionStrategy: { type: EvictionStrategy }
+      similarityThreshold: { type: decimal, description: "For semantic cache, 0-1" }
+      isEnabled: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  SemanticHash:
+    description: Embedding-based hash for semantic similarity
+    properties:
+      id: { type: string, required: true }
+      content: { type: string, required: true }
+      embedding: { type: array, items: decimal, description: "Vector embedding" }
+      embeddingModel: { type: string }
+      dimensionality: { type: integer }
+      normalizedHash: { type: string }
+      createdAt: { type: datetime, required: true }
+
+  CacheHit:
+    description: Record of a cache hit event
+    properties:
+      id: { type: string, required: true }
+      cacheEntryId: { type: string, required: true }
+      requestId: { type: string }
+      hitType: { type: CacheHitType, required: true }
+      similarityScore: { type: decimal, description: "For semantic hits" }
+      tokensSaved: { type: integer }
+      costSaved: { type: decimal }
+      latencySavedMs: { type: integer }
+      timestamp: { type: datetime, required: true }
+
+  CacheMiss:
+    description: Record of a cache miss event
+    properties:
+      id: { type: string, required: true }
+      requestId: { type: string }
+      missReason: { type: CacheMissReason, required: true }
+      nearestEntryId: { type: string }
+      nearestSimilarity: { type: decimal }
+      timestamp: { type: datetime, required: true }
+
+  CacheMetrics:
+    description: Aggregated cache performance metrics
+    properties:
+      cacheId: { type: string, required: true }
+      period: { type: string, description: "Hour, day, week" }
+      totalRequests: { type: integer }
+      hits: { type: integer }
+      misses: { type: integer }
+      hitRate: { type: decimal }
+      exactHits: { type: integer }
+      semanticHits: { type: integer }
+      prefixHits: { type: integer }
+      tokensSaved: { type: integer }
+      costSaved: { type: decimal }
+      avgLatencySavedMs: { type: decimal }
+      evictions: { type: integer }
+      recordedAt: { type: datetime }
+
+  CacheInvalidation:
+    description: Record of cache invalidation
+    properties:
+      id: { type: string, required: true }
+      entryIds: { type: array, items: string }
+      reason: { type: InvalidationReason, required: true }
+      triggeredBy: { type: string }
+      invalidatedAt: { type: datetime, required: true }
+
+  PrefixCache:
+    description: Anthropic-style prefix caching for prompts
+    properties:
+      id: { type: string, required: true }
+      prefix: { type: string, required: true }
+      prefixHash: { type: string, required: true }
+      tokenCount: { type: integer, required: true }
+      ttlType: { type: TTLType }
+      breakpoints: { type: array, items: CacheBreakpoint }
+      writePrice: { type: decimal, description: "Price per million tokens" }
+      readPrice: { type: decimal, description: "Price per million tokens" }
+      createdAt: { type: datetime, required: true }
+      expiresAt: { type: datetime }
+
+enums:
+
+  CacheKeyType:
+    description: Type of cache key matching
+    values:
+      - Exact           # Exact string match
+      - Semantic        # Embedding similarity match
+      - Prefix          # Prefix match (Anthropic style)
+      - Normalized      # Normalized content match
+      - Hybrid          # Combination of methods
+
+  ComponentType:
+    description: Type of cache key component
+    values:
+      - SystemPrompt
+      - Tools
+      - History
+      - UserMessage
+      - Model
+      - Parameters
+
+  BreakpointContentType:
+    description: Type of content at breakpoint
+    values:
+      - SystemPrompt
+      - Tools
+      - Documents
+      - Examples
+      - History
+
+  CachePolicyType:
+    description: Type of caching policy
+    values:
+      - Exact           # Only exact matches
+      - Semantic        # Semantic similarity matching
+      - Prefix          # Prompt prefix caching
+      - Hybrid          # Combination approach
+      - Adaptive        # Dynamically adjust strategy
+
+  EvictionStrategy:
+    description: Strategy for evicting cache entries
+    values:
+      - LRU             # Least Recently Used
+      - LFU             # Least Frequently Used
+      - FIFO            # First In First Out
+      - TTL             # Time-based expiration
+      - Size            # Evict largest entries
+      - Cost            # Evict lowest cost savings
+
+  CacheHitType:
+    description: Type of cache hit
+    values:
+      - ExactMatch      # Exact content match
+      - SemanticMatch   # Semantic similarity match
+      - PrefixMatch     # Prompt prefix match
+      - PartialMatch    # Partial content match
+
+  CacheMissReason:
+    description: Reason for cache miss
+    values:
+      - NoMatch         # No matching entry found
+      - Expired         # Entry expired
+      - Invalidated     # Entry was invalidated
+      - BelowThreshold  # Similarity below threshold
+      - ModelMismatch   # Different model requested
+      - CacheDisabled   # Caching disabled for request
+
+  InvalidationReason:
+    description: Reason for cache invalidation
+    values:
+      - Manual          # Manually invalidated
+      - TTLExpired      # Time-to-live expired
+      - ContentUpdated  # Source content changed
+      - PolicyChange    # Cache policy changed
+      - SystemMaintenance # System maintenance
+
+  TTLType:
+    description: Time-to-live duration type (Anthropic)
+    values:
+      - FiveMinutes     # Standard 5-minute cache
+      - OneHour         # Extended 1-hour cache (beta)
+      - Custom          # Custom TTL

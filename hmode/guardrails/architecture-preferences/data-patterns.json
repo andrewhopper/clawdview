@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Architecture Preferences - Data Patterns",
+  "description": "Data management and persistence patterns",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-16",
+  "categories": {
+    "data_access_patterns": {
+      "description": "Database access and query patterns",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Repository Pattern",
+          "version": "1.0.0",
+          "rationale": "Abstracts data access, improves testability, separates domain from persistence",
+          "useCases": [
+            "database abstraction",
+            "testable data layer",
+            "multiple data sources"
+          ],
+          "keyPrinciples": [
+            "Single responsibility for data access",
+            "Interface-based contracts",
+            "Domain models independent of persistence",
+            "Easy to mock for testing"
+          ],
+          "status": "approved"
+        }
+      ]
+    },
+    "data_modeling_patterns": {
+      "description": "Data structure and schema patterns",
+      "preferences": []
+    },
+    "caching_patterns": {
+      "description": "Data caching strategies",
+      "preferences": []
+    },
+    "event_sourcing_patterns": {
+      "description": "Event-based data management patterns",
+      "preferences": []
+    }
+  }
+}

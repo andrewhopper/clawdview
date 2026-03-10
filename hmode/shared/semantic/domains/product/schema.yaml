@@ -1,0 +1,516 @@
+# Product Domain
+# Brands, products, and product categories
+# Version: 1.0.0
+
+domain:
+  name: product
+  version: "1.0.0"
+  status: production
+  description: Generic product catalog - brands, products, categories
+  dependencies: [core]
+  use_case: Retail, dealerships, e-commerce, inventory management
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  Brand:
+    description: Manufacturer or brand of products
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        description: Brand name (Boston Whaler, Malibu, Ford)
+      display_name:
+        type: string
+        description: Display name if different from legal name
+      slug:
+        type: string
+        description: URL-friendly identifier
+
+      # Classification
+      brand_type:
+        type: BrandType
+        required: true
+
+      # Details
+      description:
+        type: string
+      tagline:
+        type: string
+      founded_year:
+        type: integer
+      country_of_origin:
+        type: string
+        description: ISO 3166-1 alpha-2 country code
+
+      # Parent company
+      parent_brand_id:
+        type: uuid
+        description: FK to parent brand (for sub-brands)
+      manufacturer_id:
+        type: uuid
+        description: FK to Organization (manufacturer)
+
+      # Media
+      logo_url:
+        type: string
+      logo_dark_url:
+        type: string
+        description: Logo for dark backgrounds
+      website:
+        type: string
+
+      # Status
+      status:
+        type: BrandStatus
+        required: true
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ProductCategory:
+    description: Hierarchical category for products
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      display_name:
+        type: string
+      slug:
+        type: string
+        description: URL-friendly identifier
+      description:
+        type: string
+
+      # Hierarchy
+      parent_id:
+        type: uuid
+        description: FK to parent category
+      level:
+        type: integer
+        default: 0
+        description: Depth in hierarchy (0 = root)
+      path:
+        type: string
+        description: Materialized path (e.g., "boats/powerboats/center-console")
+
+      # Display
+      icon:
+        type: string
+      image_url:
+        type: string
+      color:
+        type: string
+      sort_order:
+        type: integer
+        default: 0
+
+      # Status
+      status:
+        type: CategoryStatus
+        required: true
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Product:
+    description: A product in the catalog
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # Identity
+      name:
+        type: string
+        required: true
+      display_name:
+        type: string
+      slug:
+        type: string
+      sku:
+        type: string
+        description: Stock keeping unit
+      upc:
+        type: string
+        description: Universal product code
+      mpn:
+        type: string
+        description: Manufacturer part number
+
+      # Classification
+      brand_id:
+        type: uuid
+        required: true
+        description: FK to Brand
+      category_id:
+        type: uuid
+        required: true
+        description: FK to ProductCategory
+      product_type:
+        type: ProductType
+        required: true
+
+      # Description
+      short_description:
+        type: string
+      description:
+        type: string
+      features:
+        type: array
+        items: string
+
+      # Model info
+      model_year:
+        type: integer
+      model_number:
+        type: string
+      series:
+        type: string
+
+      # Pricing
+      msrp:
+        type: Money
+        description: Manufacturer suggested retail price
+      map_price:
+        type: Money
+        description: Minimum advertised price
+
+      # Dimensions
+      weight:
+        type: Weight
+      length:
+        type: Length
+      width:
+        type: Length
+      height:
+        type: Length
+
+      # Media
+      images:
+        type: array
+        items: MediaObject
+      primary_image:
+        type: MediaObject
+      videos:
+        type: array
+        items: MediaObject
+      documents:
+        type: array
+        items: ProductDocument
+
+      # Variants
+      has_variants:
+        type: boolean
+        default: false
+      variants:
+        type: array
+        items: ProductVariant
+
+      # Specifications
+      specifications:
+        type: array
+        items: ProductSpecification
+
+      # Status
+      status:
+        type: ProductStatus
+        required: true
+        default: active
+      discontinued:
+        type: boolean
+        default: false
+      discontinued_date:
+        type: date
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ProductVariant:
+    description: Variant of a product (color, size, option package)
+    properties:
+      id:
+        type: uuid
+        required: true
+      product_id:
+        type: uuid
+        required: true
+        description: FK to Product
+
+      name:
+        type: string
+        required: true
+      sku:
+        type: string
+
+      # Variant attributes
+      attributes:
+        type: array
+        items: VariantAttribute
+
+      # Pricing
+      price_adjustment:
+        type: Money
+        description: Difference from base MSRP
+      msrp:
+        type: Money
+        description: Override MSRP for this variant
+
+      # Media
+      images:
+        type: array
+        items: MediaObject
+
+      status:
+        type: ProductStatus
+        default: active
+
+  VariantAttribute:
+    description: Attribute that defines a variant
+    properties:
+      name:
+        type: string
+        required: true
+        description: Attribute name (Color, Size, Package)
+      value:
+        type: string
+        required: true
+        description: Attribute value (Red, Large, Premium)
+
+  ProductSpecification:
+    description: Technical specification for a product
+    properties:
+      name:
+        type: string
+        required: true
+      value:
+        type: string
+        required: true
+      unit:
+        type: string
+      group:
+        type: string
+        description: Spec group (Dimensions, Performance, Engine)
+      sort_order:
+        type: integer
+        default: 0
+
+  ProductDocument:
+    description: Document associated with a product
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      document_type:
+        type: DocumentType
+        required: true
+      url:
+        type: string
+        required: true
+      file_size:
+        type: integer
+        description: Size in bytes
+      language:
+        type: string
+        default: "en"
+
+  # Junction table for organization-brand relationships
+  OrganizationBrand:
+    description: Brands carried by an organization (authorized dealer)
+    properties:
+      id:
+        type: uuid
+        required: true
+      organization_id:
+        type: uuid
+        required: true
+        description: FK to Organization
+      brand_id:
+        type: uuid
+        required: true
+        description: FK to Brand
+
+      # Location-specific availability
+      location_ids:
+        type: array
+        items: uuid
+        description: "FK to OrganizationLocation - which locations carry this brand (null = all)"
+
+      # Relationship details
+      relationship_type:
+        type: BrandRelationshipType
+        required: true
+      authorization_level:
+        type: AuthorizationLevel
+
+      # Validity
+      start_date:
+        type: date
+      end_date:
+        type: date
+
+      # Status
+      status:
+        type: RelationshipStatus
+        required: true
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+enums:
+
+  BrandType:
+    values:
+      - manufacturer      # Makes products
+      - distributor       # Distributes products
+      - house_brand       # Store/house brand
+      - licensed          # Licensed brand
+      - white_label       # White label products
+
+  BrandStatus:
+    values:
+      - active
+      - inactive
+      - discontinued
+      - pending
+
+  CategoryStatus:
+    values:
+      - active
+      - inactive
+      - hidden
+
+  ProductType:
+    values:
+      - physical          # Physical product
+      - digital           # Digital product
+      - service           # Service-based product
+      - subscription      # Subscription product
+      - bundle            # Bundle of products
+
+  ProductStatus:
+    values:
+      - draft
+      - active
+      - inactive
+      - discontinued
+      - out_of_stock
+      - coming_soon
+
+  DocumentType:
+    values:
+      - brochure
+      - spec_sheet
+      - manual
+      - warranty
+      - msds              # Material safety data sheet
+      - installation
+      - maintenance
+      - comparison
+      - price_list
+
+  BrandRelationshipType:
+    values:
+      - authorized_dealer
+      - certified_dealer
+      - distributor
+      - reseller
+      - service_center
+      - parts_dealer
+
+  AuthorizationLevel:
+    values:
+      - platinum
+      - gold
+      - silver
+      - bronze
+      - standard
+
+  RelationshipStatus:
+    values:
+      - active
+      - pending
+      - suspended
+      - terminated
+      - expired
+
+examples:
+
+  brand_boston_whaler:
+    name: "Boston Whaler"
+    slug: "boston-whaler"
+    brand_type: manufacturer
+    description: "Premium center console and walkaround boats known for unsinkable hull design"
+    tagline: "The Unsinkable Legend"
+    founded_year: 1958
+    country_of_origin: "US"
+    website: "https://www.bostonwhaler.com"
+    status: active
+
+  brand_malibu:
+    name: "Malibu Boats"
+    slug: "malibu"
+    brand_type: manufacturer
+    description: "Premium wakeboard and ski boats"
+    founded_year: 1982
+    country_of_origin: "US"
+    website: "https://www.malibuboats.com"
+    status: active
+
+  category_powerboats:
+    name: "Powerboats"
+    slug: "powerboats"
+    level: 0
+    path: "powerboats"
+    status: active
+
+  category_center_console:
+    name: "Center Console"
+    slug: "center-console"
+    parent_id: "powerboats-uuid"
+    level: 1
+    path: "powerboats/center-console"
+    description: "Open deck boats with center-mounted console"
+    status: active
+
+  organization_brand_relationship:
+    organization_id: "goodhue-boat-co-uuid"
+    brand_id: "boston-whaler-uuid"
+    relationship_type: authorized_dealer
+    authorization_level: platinum
+    start_date: "2010-01-01"
+    status: active
+
+sources:
+  - "Retail industry standards"
+  - "Marine industry dealer networks"
+  - "E-commerce product catalog patterns"

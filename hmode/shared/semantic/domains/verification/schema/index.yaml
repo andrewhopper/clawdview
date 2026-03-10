@@ -1,0 +1,13 @@
+# Verification Domain - Index
+# Project verification rules for frontgate, overwatch, and manual audits
+
+domain: verification
+version: "1.0.0"
+description: Project verification rules and automated quality checks
+namespace: http://protoflow.ai/ontology/verification#
+dependencies: [core]
+
+imports:
+  - entities.yaml
+  - enums.yaml
+  - actions.yaml

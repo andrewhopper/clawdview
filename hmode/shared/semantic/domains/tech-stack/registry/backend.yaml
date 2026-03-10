@@ -1,0 +1,222 @@
+# Backend Frameworks Registry
+
+technologies:
+
+  # Node.js
+
+  express:
+    name: Express
+    description: Fast, unopinionated, minimalist web framework for Node.js
+    category: framework
+    subcategory: backend
+    author: TJ Holowaychuk / OpenJS Foundation
+    website: https://expressjs.com
+    repository: https://github.com/expressjs/express
+    documentation: https://expressjs.com/en/guide
+    npm_package: express
+    license: MIT
+    first_release: "2010-01-03"
+    language: JavaScript
+    runtime: node
+    tags: [http, middleware, routing, minimal]
+    detection_rules:
+      - { type: npm_dependency, pattern: "express" }
+    alternative_to: [fastify, hono, koa]
+
+  fastify:
+    name: Fastify
+    description: Fast and low overhead web framework for Node.js
+    category: framework
+    subcategory: backend
+    author: Fastify Team
+    website: https://fastify.dev
+    repository: https://github.com/fastify/fastify
+    documentation: https://fastify.dev/docs/latest
+    npm_package: fastify
+    license: MIT
+    first_release: "2016-09-28"
+    language: TypeScript
+    runtime: node
+    tags: [http, schema-validation, plugins, performance]
+    detection_rules:
+      - { type: npm_dependency, pattern: "fastify" }
+    alternative_to: [express, hono, koa]
+
+  hono:
+    name: Hono
+    description: Ultrafast web framework for the Edges
+    category: framework
+    subcategory: backend
+    author: Yusuke Wada
+    website: https://hono.dev
+    repository: https://github.com/honojs/hono
+    documentation: https://hono.dev/docs
+    npm_package: hono
+    license: MIT
+    first_release: "2021-12-14"
+    language: TypeScript
+    runtime: node
+    tags: [http, edge, cloudflare, bun, deno, multi-runtime]
+    detection_rules:
+      - { type: npm_dependency, pattern: "hono" }
+    alternative_to: [express, fastify]
+
+  nestjs:
+    name: NestJS
+    description: A progressive Node.js framework for building efficient server-side applications
+    category: framework
+    subcategory: backend
+    author: Kamil Myśliwiec
+    website: https://nestjs.com
+    repository: https://github.com/nestjs/nest
+    documentation: https://docs.nestjs.com
+    npm_package: "@nestjs/core"
+    license: MIT
+    first_release: "2017-05-05"
+    language: TypeScript
+    runtime: node
+    tags: [http, dependency-injection, decorators, modular, enterprise]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@nestjs/core" }
+    alternative_to: [express, fastify]
+
+  # Python
+
+  fastapi:
+    name: FastAPI
+    description: Modern, fast web framework for building APIs with Python
+    category: framework
+    subcategory: backend
+    author: Sebastián Ramírez
+    website: https://fastapi.tiangolo.com
+    repository: https://github.com/tiangolo/fastapi
+    documentation: https://fastapi.tiangolo.com/tutorial
+    pypi_package: fastapi
+    license: MIT
+    first_release: "2018-12-05"
+    language: Python
+    runtime: python
+    tags: [http, async, pydantic, openapi, type-hints]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "fastapi" }
+    alternative_to: [django, flask, starlette]
+
+  django:
+    name: Django
+    description: The web framework for perfectionists with deadlines
+    category: framework
+    subcategory: backend
+    author: Django Software Foundation
+    website: https://djangoproject.com
+    repository: https://github.com/django/django
+    documentation: https://docs.djangoproject.com
+    pypi_package: django
+    license: BSD-3-Clause
+    first_release: "2005-07-21"
+    language: Python
+    runtime: python
+    tags: [http, orm, admin, batteries-included, mvc]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "django" }
+      - { type: file_exists, pattern: "manage.py" }
+    alternative_to: [fastapi, flask, rails]
+
+  flask:
+    name: Flask
+    description: A lightweight WSGI web application framework
+    category: framework
+    subcategory: backend
+    author: Armin Ronacher / Pallets
+    website: https://flask.palletsprojects.com
+    repository: https://github.com/pallets/flask
+    documentation: https://flask.palletsprojects.com/en/latest
+    pypi_package: flask
+    license: BSD-3-Clause
+    first_release: "2010-04-01"
+    language: Python
+    runtime: python
+    tags: [http, wsgi, micro-framework, jinja2]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "flask" }
+    alternative_to: [fastapi, django]
+
+  # Ruby
+
+  rails:
+    name: Ruby on Rails
+    description: Web-application framework for database-backed apps
+    category: framework
+    subcategory: backend
+    author: David Heinemeier Hansson
+    website: https://rubyonrails.org
+    repository: https://github.com/rails/rails
+    documentation: https://guides.rubyonrails.org
+    license: MIT
+    first_release: "2004-07-25"
+    language: Ruby
+    runtime: ruby
+    tags: [http, orm, mvc, convention-over-configuration]
+    detection_rules:
+      - { type: file_exists, pattern: "Gemfile" }
+      - { type: file_content, pattern: "rails" }
+    alternative_to: [django, laravel]
+
+  # Go
+
+  gin:
+    name: Gin
+    description: HTTP web framework written in Go
+    category: framework
+    subcategory: backend
+    author: Gin Team
+    website: https://gin-gonic.com
+    repository: https://github.com/gin-gonic/gin
+    documentation: https://gin-gonic.com/docs
+    license: MIT
+    first_release: "2014-06-16"
+    language: Go
+    runtime: go
+    tags: [http, routing, middleware, performance]
+    detection_rules:
+      - { type: file_content, pattern: "github.com/gin-gonic/gin" }
+    alternative_to: [echo, fiber]
+
+  # Rust
+
+  actix:
+    name: Actix Web
+    description: Powerful, pragmatic, and extremely fast web framework for Rust
+    category: framework
+    subcategory: backend
+    author: Actix Team
+    website: https://actix.rs
+    repository: https://github.com/actix/actix-web
+    documentation: https://actix.rs/docs
+    cargo_crate: actix-web
+    license: MIT
+    first_release: "2017-10-23"
+    language: Rust
+    runtime: rust
+    tags: [http, async, actors, performance]
+    detection_rules:
+      - { type: cargo_dependency, pattern: "actix-web" }
+    alternative_to: [axum, rocket]
+
+  axum:
+    name: Axum
+    description: Ergonomic and modular web framework built with Tokio
+    category: framework
+    subcategory: backend
+    author: Tokio Team
+    website: https://github.com/tokio-rs/axum
+    repository: https://github.com/tokio-rs/axum
+    documentation: https://docs.rs/axum
+    cargo_crate: axum
+    license: MIT
+    first_release: "2021-07-30"
+    language: Rust
+    runtime: rust
+    tags: [http, async, tokio, tower, type-safe]
+    detection_rules:
+      - { type: cargo_dependency, pattern: "axum" }
+    alternative_to: [actix, rocket]

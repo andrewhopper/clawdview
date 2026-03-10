@@ -1,0 +1,73 @@
+# Actor - The core entity representing a user/customer
+# All personas, profiles, and research subjects compose from this
+
+entities:
+  Actor:
+    description: A user, customer, or research subject with attributes and motivations
+    properties:
+      id:
+        type: string
+        required: true
+        description: Unique identifier
+      name:
+        type: string
+        required: true
+        description: Fictional but memorable name (e.g., "Hobby Farmer Frank")
+      segment:
+        type: string
+        required: true
+        description: Customer segment this actor represents
+      photo_description:
+        type: string
+        description: Visual description for imagery generation
+      quote:
+        type: string
+        description: Representative quote capturing mindset (max 30 words)
+      demographics:
+        type: Demographics
+        required: true
+      accessibility:
+        type: AccessibilityProfile
+        description: Physical/cognitive traits affecting experience
+      motivations:
+        type: array
+        items: Motivation
+        description: Goals, jobs-to-be-done
+      pains:
+        type: array
+        items: Pain
+        description: Frustrations, obstacles, risks
+      gains:
+        type: array
+        items: Gain
+        description: Desired outcomes and benefits
+      behaviors:
+        type: array
+        items: Behavior
+        description: Observable actions and patterns
+      emotions:
+        type: array
+        items: Emotion
+        description: Feelings in specific contexts
+      tech_profile:
+        type: TechProfile
+        description: Device and technology preferences
+      context:
+        type: string
+        description: Specific scenario or touchpoint being analyzed
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # Lightweight actor for quick generation
+  ProtoActor:
+    description: Minimal actor for rapid hypothesis generation
+    extends: Actor
+    properties:
+      validated:
+        type: boolean
+        default: false
+        description: Whether this actor has been validated with real research

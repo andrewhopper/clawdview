@@ -1,0 +1,157 @@
+# relationships.yaml - Talking Avatar Domain Relationships
+# Generated: 2025-11-25
+# Status: PENDING APPROVAL
+
+relationships:
+  # Avatar relationships
+  - type: one_to_many
+    from: Avatar
+    to: AvatarVideo
+    foreign_key: avatar_id
+    description: "An avatar can be used in multiple videos"
+
+  - type: one_to_many
+    from: Avatar
+    to: StreamingSession
+    foreign_key: avatar_id
+    description: "An avatar can participate in multiple streaming sessions"
+
+  - type: one_to_one
+    from: AvatarTrainingJob
+    to: Avatar
+    foreign_key: avatar_id
+    description: "A training job produces one avatar"
+
+  - type: one_to_many
+    from: Avatar
+    to: AvatarEmotion
+    foreign_key: avatar_id
+    description: "An avatar can have multiple emotion configurations"
+
+  # Voice relationships
+  - type: one_to_many
+    from: Voice
+    to: AvatarVideo
+    foreign_key: voice_id
+    description: "A voice can be used in multiple videos"
+
+  - type: one_to_many
+    from: Voice
+    to: StreamingSession
+    foreign_key: voice_id
+    description: "A voice can be used in multiple streaming sessions"
+
+  # Scene relationships
+  - type: one_to_many
+    from: Scene
+    to: AvatarVideo
+    foreign_key: scene_id
+    description: "A scene/template can be used in multiple videos"
+
+  # Video relationships
+  - type: many_to_one
+    from: AvatarVideo
+    to: Avatar
+    foreign_key: avatar_id
+    description: "Each video uses one avatar"
+
+  - type: many_to_one
+    from: AvatarVideo
+    to: Voice
+    foreign_key: voice_id
+    description: "Each video uses one voice"
+
+  - type: many_to_one
+    from: AvatarVideo
+    to: Scene
+    foreign_key: scene_id
+    description: "Each video uses one scene (optional)"
+
+  # Streaming relationships
+  - type: one_to_many
+    from: StreamingSession
+    to: StreamingMessage
+    foreign_key: session_id
+    description: "A session contains multiple messages"
+
+  - type: many_to_one
+    from: StreamingSession
+    to: Avatar
+    foreign_key: avatar_id
+    description: "Each session uses one avatar"
+
+  - type: many_to_one
+    from: StreamingSession
+    to: Voice
+    foreign_key: voice_id
+    description: "Each session uses one voice"
+
+  # Training relationships
+  - type: one_to_one
+    from: Avatar
+    to: AvatarTrainingJob
+    foreign_key: training_job_id
+    description: "A custom avatar links back to its training job"
+
+  # User ownership relationships
+  - type: one_to_many
+    from: User
+    to: Avatar
+    foreign_key: user_id
+    description: "User owns custom avatars"
+
+  - type: one_to_many
+    from: User
+    to: Voice
+    foreign_key: user_id
+    description: "User owns custom voices"
+
+  - type: one_to_many
+    from: User
+    to: AvatarVideo
+    foreign_key: user_id
+    description: "User owns generated videos"
+
+  - type: one_to_many
+    from: User
+    to: Scene
+    foreign_key: user_id
+    description: "User owns custom scenes"
+
+  - type: one_to_many
+    from: User
+    to: AvatarTrainingJob
+    foreign_key: user_id
+    description: "User owns training jobs"
+
+  - type: one_to_many
+    from: User
+    to: StreamingSession
+    foreign_key: user_id
+    description: "User owns streaming sessions"
+
+  - type: one_to_many
+    from: User
+    to: StreamingMessage
+    foreign_key: user_id
+    description: "User sends messages to avatar"
+
+# Cross-domain relationships (with existing domains)
+cross_domain_relationships:
+  # TTS domain integration
+  - description: "Voice entity can reference tts domain for synthesis"
+    note: "The tts domain (already in registry) provides SynthesisRequest, Voice, Provider entities"
+    integration: "talking-avatar.Voice can compose tts.Voice for advanced voice synthesis"
+
+  # Core domain integration
+  - description: "Uses core domain primitives"
+    imports:
+      - TimePoint (for timestamps)
+      - Duration (for video/session durations)
+      - MediaObject (for source images, videos)
+      - Person (for avatar metadata)
+
+  # Workflow domain integration (optional)
+  - description: "Video generation can use workflow domain"
+    note: "AvatarVideo generation is a workflow with approval steps"
+    integration: "Can wrap video generation in WorkflowInstance for complex approval flows"

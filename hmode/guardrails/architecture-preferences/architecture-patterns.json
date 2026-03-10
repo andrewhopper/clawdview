@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Architecture Preferences - Architecture Patterns",
+  "description": "System-level architecture patterns and approaches",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-16",
+  "categories": {
+    "application_architecture": {
+      "description": "Overall application structure patterns",
+      "preferences": []
+    },
+    "service_architecture": {
+      "description": "Service organization and communication patterns",
+      "preferences": []
+    },
+    "deployment_architecture": {
+      "description": "Deployment and infrastructure patterns",
+      "preferences": []
+    },
+    "scaling_patterns": {
+      "description": "Scaling and performance patterns",
+      "preferences": []
+    }
+  }
+}

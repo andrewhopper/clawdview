@@ -1,0 +1,382 @@
+# Organizations Registry
+# Companies, foundations, and individuals that create technologies
+
+organizations:
+
+  # Big Tech
+  meta:
+    name: Meta (Facebook)
+    type: company
+    websites:
+      - { url: "https://meta.com", type: main }
+      - { url: "https://opensource.fb.com", type: community, label: "Open Source" }
+    github: https://github.com/facebook
+    description: Social technology company, creator of React
+
+  google:
+    name: Google
+    type: company
+    websites:
+      - { url: "https://google.com", type: main }
+      - { url: "https://opensource.google", type: community, label: "Open Source" }
+    github: https://github.com/google
+    description: Technology company, creator of Angular, TensorFlow, Go
+
+  microsoft:
+    name: Microsoft
+    type: company
+    websites:
+      - { url: "https://microsoft.com", type: main }
+      - { url: "https://opensource.microsoft.com", type: community, label: "Open Source" }
+    github: https://github.com/microsoft
+    description: Technology company, creator of TypeScript, VS Code, Playwright
+
+  # AWS
+  aws:
+    name: Amazon Web Services
+    type: company
+    websites:
+      - { url: "https://aws.amazon.com", type: main }
+      - { url: "https://docs.aws.amazon.com", type: documentation }
+    github: https://github.com/aws
+    description: Cloud computing platform
+
+  # Platforms
+  vercel:
+    name: Vercel
+    type: company
+    websites:
+      - { url: "https://vercel.com", type: main }
+      - { url: "https://vercel.com/docs", type: documentation }
+    github: https://github.com/vercel
+    description: Frontend cloud platform, creator of Next.js
+
+  cloudflare:
+    name: Cloudflare
+    type: company
+    websites:
+      - { url: "https://cloudflare.com", type: main }
+      - { url: "https://developers.cloudflare.com", type: documentation }
+    github: https://github.com/cloudflare
+    description: Web infrastructure and security company
+
+  # AI Companies
+  anthropic:
+    name: Anthropic
+    type: company
+    websites:
+      - { url: "https://anthropic.com", type: main }
+      - { url: "https://docs.anthropic.com", type: documentation }
+    github: https://github.com/anthropics
+    description: AI safety company, creator of Claude
+
+  openai:
+    name: OpenAI
+    type: company
+    websites:
+      - { url: "https://openai.com", type: main }
+      - { url: "https://platform.openai.com/docs", type: documentation }
+    github: https://github.com/openai
+    description: AI research company, creator of GPT, ChatGPT
+
+  boundaryml:
+    name: BoundaryML
+    type: company
+    websites:
+      - { url: "https://boundaryml.com", type: main }
+      - { url: "https://docs.boundaryml.com", type: documentation }
+    github: https://github.com/BoundaryML
+    description: Creator of BAML for type-safe LLM interactions
+
+  langchain-inc:
+    name: LangChain Inc
+    type: company
+    websites:
+      - { url: "https://langchain.com", type: main }
+      - { url: "https://python.langchain.com/docs", type: documentation }
+      - { url: "https://js.langchain.com/docs", type: documentation, label: "JS Docs" }
+    github: https://github.com/langchain-ai
+    description: LLM application framework company
+
+  # Foundations
+  openjs:
+    name: OpenJS Foundation
+    type: foundation
+    websites:
+      - { url: "https://openjsf.org", type: main }
+    github: https://github.com/openjs-foundation
+    description: Hosts JavaScript ecosystem projects (Node.js, jQuery, etc.)
+
+  psf:
+    name: Python Software Foundation
+    type: foundation
+    websites:
+      - { url: "https://python.org", type: main }
+      - { url: "https://docs.python.org", type: documentation }
+    github: https://github.com/python
+    description: Non-profit promoting Python programming language
+
+  cncf:
+    name: Cloud Native Computing Foundation
+    type: foundation
+    websites:
+      - { url: "https://cncf.io", type: main }
+      - { url: "https://landscape.cncf.io", type: community, label: "Landscape" }
+    github: https://github.com/cncf
+    description: Hosts cloud-native projects (Kubernetes, Prometheus, etc.)
+
+  apache:
+    name: Apache Software Foundation
+    type: foundation
+    websites:
+      - { url: "https://apache.org", type: main }
+    github: https://github.com/apache
+    description: Non-profit supporting Apache open source projects
+
+  # Individuals
+  evan-you:
+    name: Evan You
+    type: individual
+    websites:
+      - { url: "https://evanyou.me", type: main }
+    github: https://github.com/yyx990803
+    description: Creator of Vue.js and Vite
+
+  rich-harris:
+    name: Rich Harris
+    type: individual
+    github: https://github.com/Rich-Harris
+    description: Creator of Svelte and Rollup
+
+  tj-holowaychuk:
+    name: TJ Holowaychuk
+    type: individual
+    github: https://github.com/tj
+    description: Creator of Express, Commander, Mocha, and many npm packages
+
+  sebastian-ramirez:
+    name: Sebastián Ramírez
+    type: individual
+    websites:
+      - { url: "https://tiangolo.com", type: main }
+    github: https://github.com/tiangolo
+    description: Creator of FastAPI and Typer
+
+  sindre-sorhus:
+    name: Sindre Sorhus
+    type: individual
+    websites:
+      - { url: "https://sindresorhus.com", type: main }
+    github: https://github.com/sindresorhus
+    description: Prolific open source contributor, creator of many npm packages
+
+  # Companies - Databases
+  prisma:
+    name: Prisma
+    type: company
+    websites:
+      - { url: "https://prisma.io", type: main }
+      - { url: "https://prisma.io/docs", type: documentation }
+    github: https://github.com/prisma
+    description: Database tools company, creator of Prisma ORM
+
+  supabase:
+    name: Supabase Inc
+    type: company
+    websites:
+      - { url: "https://supabase.com", type: main }
+      - { url: "https://supabase.com/docs", type: documentation }
+    github: https://github.com/supabase
+    description: Open source Firebase alternative
+
+  planetscale:
+    name: PlanetScale Inc
+    type: company
+    websites:
+      - { url: "https://planetscale.com", type: main }
+      - { url: "https://planetscale.com/docs", type: documentation }
+    github: https://github.com/planetscale
+    description: Serverless MySQL platform
+
+  # Companies - Dev Tools
+  hashicorp:
+    name: HashiCorp
+    type: company
+    websites:
+      - { url: "https://hashicorp.com", type: main }
+      - { url: "https://developer.hashicorp.com", type: documentation }
+    github: https://github.com/hashicorp
+    description: Infrastructure automation company, creator of Terraform
+
+  docker-inc:
+    name: Docker Inc
+    type: company
+    websites:
+      - { url: "https://docker.com", type: main }
+      - { url: "https://docs.docker.com", type: documentation }
+    github: https://github.com/docker
+    description: Container platform company
+
+  # Companies - Testing
+  cypress-io:
+    name: Cypress.io
+    type: company
+    websites:
+      - { url: "https://cypress.io", type: main }
+      - { url: "https://docs.cypress.io", type: documentation }
+    github: https://github.com/cypress-io
+    description: End-to-end testing platform
+
+  # Companies - UI
+  tailwind-labs:
+    name: Tailwind Labs
+    type: company
+    websites:
+      - { url: "https://tailwindcss.com", type: main }
+      - { url: "https://tailwindcss.com/docs", type: documentation }
+    github: https://github.com/tailwindlabs
+    description: Creator of Tailwind CSS, Headless UI, Heroicons
+
+  workos:
+    name: WorkOS
+    type: company
+    websites:
+      - { url: "https://workos.com", type: main }
+      - { url: "https://workos.com/docs", type: documentation }
+    github: https://github.com/workos
+    description: Enterprise auth platform, maintainer of Radix UI
+
+  # Community
+  pallets:
+    name: Pallets
+    type: community
+    websites:
+      - { url: "https://palletsprojects.com", type: main }
+    github: https://github.com/pallets
+    description: Maintainers of Flask, Click, Jinja2
+
+  drizzle-team:
+    name: Drizzle Team
+    type: community
+    websites:
+      - { url: "https://orm.drizzle.team", type: main }
+    github: https://github.com/drizzle-team
+    description: Creator of Drizzle ORM
+
+  fastify-team:
+    name: Fastify Team
+    type: community
+    websites:
+      - { url: "https://fastify.dev", type: main }
+      - { url: "https://fastify.dev/docs/latest", type: documentation }
+    github: https://github.com/fastify
+    description: Creator of Fastify web framework
+
+  vitest-team:
+    name: Vitest Team
+    type: community
+    websites:
+      - { url: "https://vitest.dev", type: main }
+      - { url: "https://vitest.dev/guide", type: documentation }
+    github: https://github.com/vitest-dev
+    description: Creator of Vitest testing framework
+
+  biome-team:
+    name: Biome Team
+    type: community
+    websites:
+      - { url: "https://biomejs.dev", type: main }
+      - { url: "https://biomejs.dev/guides", type: documentation }
+    github: https://github.com/biomejs
+    description: Creator of Biome linter/formatter
+
+  astral:
+    name: Astral
+    type: company
+    websites:
+      - { url: "https://astral.sh", type: main }
+      - { url: "https://docs.astral.sh", type: documentation }
+    github: https://github.com/astral-sh
+    description: Creator of Ruff and uv for Python
+
+  salesforce:
+    name: Salesforce
+    type: company
+    websites:
+      - { url: "https://salesforce.com", type: main }
+      - { url: "https://developer.salesforce.com", type: documentation }
+    github: https://github.com/salesforce
+    description: CRM company, maintainer of oclif CLI framework
+
+  # Additional organizations for completeness
+  shopify:
+    name: Shopify
+    type: company
+    websites:
+      - { url: "https://shopify.com", type: main }
+      - { url: "https://shopify.dev", type: documentation }
+    github: https://github.com/Shopify
+    description: E-commerce platform, acquirer of Remix
+
+  oracle:
+    name: Oracle Corporation
+    type: company
+    websites:
+      - { url: "https://oracle.com", type: main }
+      - { url: "https://docs.oracle.com", type: documentation }
+    github: https://github.com/oracle
+    description: Enterprise software company, owner of MySQL
+
+  mongodb-inc:
+    name: MongoDB Inc
+    type: company
+    websites:
+      - { url: "https://mongodb.com", type: main }
+      - { url: "https://docs.mongodb.com", type: documentation }
+    github: https://github.com/mongodb
+    description: Document database company
+
+  redis-ltd:
+    name: Redis Ltd
+    type: company
+    websites:
+      - { url: "https://redis.io", type: main }
+      - { url: "https://redis.io/docs", type: documentation }
+    github: https://github.com/redis
+    description: In-memory data store company
+
+  neon-inc:
+    name: Neon Inc
+    type: company
+    websites:
+      - { url: "https://neon.tech", type: main }
+      - { url: "https://neon.tech/docs", type: documentation }
+    github: https://github.com/neondatabase
+    description: Serverless Postgres with branching
+
+  turso:
+    name: Turso
+    type: company
+    websites:
+      - { url: "https://turso.tech", type: main }
+      - { url: "https://docs.turso.tech", type: documentation }
+    github: https://github.com/tursodatabase
+    description: SQLite for production - edge database
+
+  sst-team:
+    name: SST
+    type: community
+    websites:
+      - { url: "https://sst.dev", type: main }
+      - { url: "https://docs.sst.dev", type: documentation }
+    github: https://github.com/sst
+    description: Build modern full-stack applications on AWS
+
+  pulumi-corp:
+    name: Pulumi Corporation
+    type: company
+    websites:
+      - { url: "https://pulumi.com", type: main }
+      - { url: "https://pulumi.com/docs", type: documentation }
+    github: https://github.com/pulumi
+    description: Infrastructure as Code in any programming language

@@ -1,0 +1,69 @@
+# Milestone Domain - Actions
+# All domain actions for milestone management
+
+actions:
+
+  CreateMilestone:
+    description: Create a new milestone
+    input:
+      type: { type: MilestoneType, required: true }
+      name: { type: string, required: true }
+      targetDate: { type: date }
+      priority: { type: MilestonePriority }
+    output:
+      milestone: { type: Milestone }
+
+  UpdateMilestoneStatus:
+    description: Update milestone status
+    input:
+      milestoneId: { type: string, required: true }
+      status: { type: MilestoneStatus, required: true }
+      notes: { type: string }
+    output:
+      milestone: { type: Milestone }
+
+  CreateVision:
+    description: Create or update vision statement
+    input:
+      scope: { type: VisionScope, required: true }
+      statement: { type: string, required: true }
+      timeHorizon: { type: TimeHorizon, required: true }
+    output:
+      vision: { type: Vision }
+
+  CreateMission:
+    description: Create or update mission statement
+    input:
+      scope: { type: MissionScope, required: true }
+      statement: { type: string, required: true }
+    output:
+      mission: { type: Mission }
+
+  AddValue:
+    description: Add value to value set
+    input:
+      keyword: { type: string, required: true }
+      statement: { type: string, required: true }
+      category: { type: ValueCategory, required: true }
+    output:
+      value: { type: Value }
+
+  EvaluateMilestoneProgress:
+    description: Evaluate progress toward milestone
+    input:
+      milestoneId: { type: string, required: true }
+    output:
+      percentComplete: { type: integer }
+      status: { type: MilestoneStatus }
+      atRisk: { type: boolean }
+      blockers: { type: array, items: Blocker }
+
+  AlignMilestoneWithVision:
+    description: Check milestone alignment with vision
+    input:
+      milestoneId: { type: string, required: true }
+      visionId: { type: string, required: true }
+    output:
+      aligned: { type: boolean }
+      alignmentScore: { type: integer }
+      gaps: { type: array, items: string }

@@ -1,0 +1,595 @@
+# Social Media Domain Model
+# User-generated content, social interactions, and community features
+
+domain:
+  name: social-media
+  version: "1.0.0"
+  description: Social media primitives - profiles, posts, comments, follows, reactions, and sites
+  dependencies: [core, auth]
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+
+entities:
+
+  # ============================================
+  # SITE / PLATFORM
+  # ============================================
+
+  Site:
+    description: Social media platform or community
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      slug: { type: string, required: true, description: "URL-safe identifier" }
+      description: { type: string }
+      logoUrl: { type: uri }
+      coverImageUrl: { type: uri }
+      domain: { type: string, description: "Custom domain if applicable" }
+      visibility: { type: SiteVisibility, default: Public }
+      settings: { type: SiteSettings }
+      ownerId: { type: string, required: true, references: "auth.User" }
+      memberCount: { type: integer, default: 0 }
+      postCount: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  SiteSettings:
+    description: Configuration options for a site
+    properties:
+      allowGuestViewing: { type: boolean, default: true }
+      requireApprovalToJoin: { type: boolean, default: false }
+      allowComments: { type: boolean, default: true }
+      allowReactions: { type: boolean, default: true }
+      moderationLevel: { type: ModerationLevel, default: Standard }
+      contentTypes: { type: array, items: ContentType, description: "Allowed post types" }
+
+  # ============================================
+  # PROFILE
+  # ============================================
+
+  Profile:
+    description: User's public social profile
+    properties:
+      id: { type: string, required: true }
+      userId: { type: string, required: true, references: "auth.User" }
+      username: { type: string, required: true, description: "Unique handle (@username)" }
+      displayName: { type: string, required: true }
+      bio: { type: string, maxLength: 500 }
+      avatarUrl: { type: uri }
+      bannerUrl: { type: uri }
+      website: { type: uri }
+      location: { type: string }
+      isVerified: { type: boolean, default: false }
+      isPrivate: { type: boolean, default: false }
+      followerCount: { type: integer, default: 0 }
+      followingCount: { type: integer, default: 0 }
+      postCount: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # FOLLOW RELATIONSHIPS
+  # ============================================
+
+  Follow:
+    description: Follow relationship between profiles
+    properties:
+      id: { type: string, required: true }
+      followerId: { type: string, required: true, references: Profile }
+      followingId: { type: string, required: true, references: Profile }
+      status: { type: FollowStatus, default: Active }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+    indexes:
+      - [followerId, followingId]  # Unique constraint
+
+  SiteMembership:
+    description: User membership in a site/community
+    properties:
+      id: { type: string, required: true }
+      profileId: { type: string, required: true, references: Profile }
+      siteId: { type: string, required: true, references: Site }
+      role: { type: MemberRole, default: Member }
+      status: { type: MembershipStatus, default: Active }
+      joinedAt: { type: datetime, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # POSTS / CONTENT
+  # ============================================
+
+  Post:
+    description: User-generated content item
+    properties:
+      id: { type: string, required: true }
+      authorId: { type: string, required: true, references: Profile }
+      siteId: { type: string, references: Site, description: "Optional - for site-specific posts" }
+      contentType: { type: ContentType, required: true }
+      title: { type: string, description: "Optional title for articles/threads" }
+      body: { type: string, required: true }
+      bodyFormat: { type: BodyFormat, default: PlainText }
+      media: { type: array, items: PostMedia }
+      hashtags: { type: array, items: string }
+      mentions: { type: array, items: string, description: "Mentioned user IDs" }
+      visibility: { type: PostVisibility, default: Public }
+      isPinned: { type: boolean, default: false }
+      isEdited: { type: boolean, default: false }
+      parentPostId: { type: string, description: "For replies/threads" }
+      originalPostId: { type: string, description: "For reposts/shares" }
+      repostCount: { type: integer, default: 0 }
+      commentCount: { type: integer, default: 0 }
+      reactionCount: { type: integer, default: 0 }
+      viewCount: { type: integer, default: 0 }
+      publishedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PostMedia:
+    description: Media attachment on a post
+    properties:
+      id: { type: string, required: true }
+      postId: { type: string, required: true, references: Post }
+      type: { type: MediaType, required: true }
+      url: { type: uri, required: true }
+      thumbnailUrl: { type: uri }
+      altText: { type: string, description: "Accessibility description" }
+      width: { type: integer }
+      height: { type: integer }
+      durationMs: { type: integer, description: "For video/audio" }
+      order: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # COMMENTS
+  # ============================================
+
+  Comment:
+    description: Comment on a post
+    properties:
+      id: { type: string, required: true }
+      postId: { type: string, required: true, references: Post }
+      authorId: { type: string, required: true, references: Profile }
+      parentCommentId: { type: string, description: "For nested replies" }
+      body: { type: string, required: true }
+      bodyFormat: { type: BodyFormat, default: PlainText }
+      mentions: { type: array, items: string }
+      isEdited: { type: boolean, default: false }
+      isPinned: { type: boolean, default: false }
+      replyCount: { type: integer, default: 0 }
+      reactionCount: { type: integer, default: 0 }
+      depth: { type: integer, default: 0, description: "Nesting level" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # REACTIONS
+  # ============================================
+
+  Reaction:
+    description: Reaction/like on content
+    properties:
+      id: { type: string, required: true }
+      profileId: { type: string, required: true, references: Profile }
+      targetType: { type: ReactionTargetType, required: true }
+      targetId: { type: string, required: true, description: "Post or Comment ID" }
+      reactionType: { type: ReactionType, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+    indexes:
+      - [profileId, targetType, targetId]  # One reaction per user per target
+
+  # ============================================
+  # HASHTAGS
+  # ============================================
+
+  Hashtag:
+    description: Hashtag for content discovery
+    properties:
+      id: { type: string, required: true }
+      tag: { type: string, required: true, description: "Without # prefix" }
+      siteId: { type: string, references: Site, description: "Site-specific or global" }
+      postCount: { type: integer, default: 0 }
+      followerCount: { type: integer, default: 0 }
+      isTrending: { type: boolean, default: false }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  HashtagFollow:
+    description: User following a hashtag
+    properties:
+      id: { type: string, required: true }
+      profileId: { type: string, required: true, references: Profile }
+      hashtagId: { type: string, required: true, references: Hashtag }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # NOTIFICATIONS
+  # ============================================
+
+  SocialNotification:
+    description: Social activity notification
+    properties:
+      id: { type: string, required: true }
+      recipientId: { type: string, required: true, references: Profile }
+      actorId: { type: string, references: Profile }
+      type: { type: NotificationType, required: true }
+      targetType: { type: string, description: "Post, Comment, Profile, etc." }
+      targetId: { type: string }
+      message: { type: string }
+      isRead: { type: boolean, default: false }
+      readAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # MODERATION
+  # ============================================
+
+  Report:
+    description: Content or user report for moderation
+    properties:
+      id: { type: string, required: true }
+      reporterId: { type: string, required: true, references: Profile }
+      targetType: { type: ReportTargetType, required: true }
+      targetId: { type: string, required: true }
+      reason: { type: ReportReason, required: true }
+      description: { type: string }
+      status: { type: ReportStatus, default: Pending }
+      moderatorId: { type: string, references: Profile }
+      resolution: { type: string }
+      resolvedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Block:
+    description: User blocking another user
+    properties:
+      id: { type: string, required: true }
+      blockerId: { type: string, required: true, references: Profile }
+      blockedId: { type: string, required: true, references: Profile }
+      reason: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Mute:
+    description: User muting another user (hidden but not blocked)
+    properties:
+      id: { type: string, required: true }
+      muterId: { type: string, required: true, references: Profile }
+      mutedId: { type: string, required: true, references: Profile }
+      expiresAt: { type: datetime, description: "Optional expiration" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+enums:
+
+  SiteVisibility:
+    values:
+      - Public      # Anyone can view and join
+      - Private     # Invite only
+      - Unlisted    # Can view with link, not discoverable
+
+  ModerationLevel:
+    values:
+      - None        # No moderation
+      - Minimal     # Flag obvious violations
+      - Standard    # Active moderation
+      - Strict      # Pre-approval required
+
+  ContentType:
+    values:
+      - Text        # Text-only post
+      - Image       # Image post
+      - Video       # Video post
+      - Link        # Link/URL share
+      - Poll        # Poll/survey
+      - Article     # Long-form content
+      - Thread      # Multi-part thread
+
+  BodyFormat:
+    values:
+      - PlainText
+      - Markdown
+      - HTML
+      - RichText
+
+  MediaType:
+    values:
+      - Image
+      - Video
+      - Audio
+      - GIF
+      - Document
+
+  PostVisibility:
+    values:
+      - Public      # Anyone can see
+      - Followers   # Only followers
+      - MutualOnly  # Only mutual follows
+      - Private     # Only author
+      - Site        # Only site members
+
+  FollowStatus:
+    values:
+      - Active
+      - Pending     # Awaiting approval (private accounts)
+      - Blocked
+      - Removed
+
+  MemberRole:
+    values:
+      - Owner
+      - Admin
+      - Moderator
+      - Member
+      - Guest
+
+  MembershipStatus:
+    values:
+      - Active
+      - Pending     # Awaiting approval
+      - Suspended
+      - Banned
+
+  ReactionType:
+    values:
+      - Like
+      - Love
+      - Laugh
+      - Wow
+      - Sad
+      - Angry
+      - Celebrate
+      - Support
+
+  ReactionTargetType:
+    values:
+      - Post
+      - Comment
+
+  NotificationType:
+    values:
+      - Follow
+      - FollowRequest
+      - FollowAccepted
+      - Like
+      - Comment
+      - Mention
+      - Repost
+      - Reply
+      - TaggedInPost
+      - NewFollowerPost
+
+  ReportTargetType:
+    values:
+      - Post
+      - Comment
+      - Profile
+      - Site
+
+  ReportReason:
+    values:
+      - Spam
+      - Harassment
+      - HateSpeech
+      - Violence
+      - SexualContent
+      - Misinformation
+      - Copyright
+      - Impersonation
+      - Other
+
+  ReportStatus:
+    values:
+      - Pending
+      - UnderReview
+      - Resolved
+      - Dismissed
+
+actions:
+
+  # Profile Actions
+  CreateProfile:
+    description: Create user profile
+    parameters:
+      userId: { type: string, required: true }
+      username: { type: string, required: true }
+      displayName: { type: string, required: true }
+      bio: { type: string }
+      avatarUrl: { type: uri }
+    result: Profile
+    errors: [USERNAME_TAKEN, INVALID_USERNAME]
+
+  UpdateProfile:
+    description: Update profile details
+    parameters:
+      profileId: { type: string, required: true }
+      displayName: { type: string }
+      bio: { type: string }
+      avatarUrl: { type: uri }
+      bannerUrl: { type: uri }
+      website: { type: uri }
+      location: { type: string }
+      isPrivate: { type: boolean }
+    result: Profile
+
+  # Follow Actions
+  FollowProfile:
+    description: Follow another profile
+    parameters:
+      followerId: { type: string, required: true }
+      followingId: { type: string, required: true }
+    result: Follow
+    errors: [ALREADY_FOLLOWING, BLOCKED, SELF_FOLLOW]
+
+  UnfollowProfile:
+    description: Unfollow a profile
+    parameters:
+      followerId: { type: string, required: true }
+      followingId: { type: string, required: true }
+    result: { type: void }
+    idempotent: true
+
+  AcceptFollowRequest:
+    description: Accept pending follow request
+    parameters:
+      followId: { type: string, required: true }
+    result: Follow
+
+  # Post Actions
+  CreatePost:
+    description: Create a new post
+    parameters:
+      authorId: { type: string, required: true }
+      siteId: { type: string }
+      contentType: { type: ContentType, required: true }
+      title: { type: string }
+      body: { type: string, required: true }
+      bodyFormat: { type: BodyFormat }
+      visibility: { type: PostVisibility }
+      media: { type: array, items: PostMedia }
+    result: Post
+
+  UpdatePost:
+    description: Edit an existing post
+    parameters:
+      postId: { type: string, required: true }
+      title: { type: string }
+      body: { type: string }
+      visibility: { type: PostVisibility }
+    result: Post
+    errors: [NOT_AUTHOR, POST_NOT_FOUND]
+
+  DeletePost:
+    description: Delete a post
+    parameters:
+      postId: { type: string, required: true }
+    result: { type: void }
+    idempotent: true
+
+  RepostContent:
+    description: Repost/share existing content
+    parameters:
+      profileId: { type: string, required: true }
+      originalPostId: { type: string, required: true }
+      comment: { type: string, description: "Optional quote text" }
+    result: Post
+
+  # Comment Actions
+  CreateComment:
+    description: Add comment to post
+    parameters:
+      postId: { type: string, required: true }
+      authorId: { type: string, required: true }
+      body: { type: string, required: true }
+      parentCommentId: { type: string }
+    result: Comment
+
+  UpdateComment:
+    description: Edit comment
+    parameters:
+      commentId: { type: string, required: true }
+      body: { type: string, required: true }
+    result: Comment
+
+  DeleteComment:
+    description: Delete comment
+    parameters:
+      commentId: { type: string, required: true }
+    result: { type: void }
+    idempotent: true
+
+  # Reaction Actions
+  AddReaction:
+    description: React to content
+    parameters:
+      profileId: { type: string, required: true }
+      targetType: { type: ReactionTargetType, required: true }
+      targetId: { type: string, required: true }
+      reactionType: { type: ReactionType, required: true }
+    result: Reaction
+
+  RemoveReaction:
+    description: Remove reaction
+    parameters:
+      reactionId: { type: string, required: true }
+    result: { type: void }
+    idempotent: true
+
+  # Site Actions
+  CreateSite:
+    description: Create new site/community
+    parameters:
+      name: { type: string, required: true }
+      slug: { type: string, required: true }
+      description: { type: string }
+      ownerId: { type: string, required: true }
+      visibility: { type: SiteVisibility }
+    result: Site
+    errors: [SLUG_TAKEN, INVALID_SLUG]
+
+  JoinSite:
+    description: Join a site/community
+    parameters:
+      profileId: { type: string, required: true }
+      siteId: { type: string, required: true }
+    result: SiteMembership
+    errors: [ALREADY_MEMBER, SITE_PRIVATE, BANNED]
+
+  LeaveSite:
+    description: Leave a site/community
+    parameters:
+      membershipId: { type: string, required: true }
+    result: { type: void }
+    idempotent: true
+
+  # Moderation Actions
+  ReportContent:
+    description: Report content or user
+    parameters:
+      reporterId: { type: string, required: true }
+      targetType: { type: ReportTargetType, required: true }
+      targetId: { type: string, required: true }
+      reason: { type: ReportReason, required: true }
+      description: { type: string }
+    result: Report
+
+  BlockProfile:
+    description: Block another user
+    parameters:
+      blockerId: { type: string, required: true }
+      blockedId: { type: string, required: true }
+      reason: { type: string }
+    result: Block
+
+  MuteProfile:
+    description: Mute another user
+    parameters:
+      muterId: { type: string, required: true }
+      mutedId: { type: string, required: true }
+      duration: { type: string, description: "ISO 8601 duration" }
+    result: Mute
+
+  # Feed Actions
+  GetFeed:
+    description: Get personalized content feed
+    parameters:
+      profileId: { type: string, required: true }
+      feedType: { type: string, description: "home, following, trending" }
+      limit: { type: integer, default: 20 }
+      cursor: { type: string }
+    result: { type: array, items: Post }
+    idempotent: true
+
+  GetProfilePosts:
+    description: Get posts by profile
+    parameters:
+      profileId: { type: string, required: true }
+      includeReposts: { type: boolean, default: true }
+      limit: { type: integer, default: 20 }
+      cursor: { type: string }
+    result: { type: array, items: Post }
+    idempotent: true

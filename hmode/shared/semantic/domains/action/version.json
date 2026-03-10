@@ -1,0 +1,25 @@
+{
+  "domain": "action",
+  "version": "1.0.0",
+  "description": "CRUD operations as first-class semantic entities (Kinetic Layer pattern)",
+  "languages": ["typescript", "python", "rust"],
+  "changelog": {
+    "1.0.0": "Initial release - Action, ReadAction, WriteAction, CreateAction, UpdateAction, DeleteAction with Parameter/Result types"
+  },
+  "entities": [
+    "Action",
+    "ReadAction",
+    "WriteAction",
+    "CreateAction",
+    "UpdateAction",
+    "DeleteAction",
+    "TransformAction",
+    "ValidationAction",
+    "Parameter",
+    "Result",
+    "ActionSequence",
+    "AgentCapability"
+  ],
+  "w3c_standards": ["RDF", "OWL"],
+  "source": "Palantir Foundry Kinetic Layer pattern"
+}

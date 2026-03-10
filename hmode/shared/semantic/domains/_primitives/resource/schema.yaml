@@ -1,0 +1,365 @@
+# Primitive: Resource
+# What is consumed, produced, or transformed by action
+# Physics: Conserved quantities (energy, mass, charge)
+# Philosophy: Means to an end
+# Biology: Nutrients, energy, building blocks
+# Economics: Factors of production
+
+domain:
+  name: primitive-resource
+  version: "1.0.0"
+  description: Resources - what actors consume, produce, and transform
+  layer: primitive
+  dependencies: [primitive-entity, primitive-quantity]
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  # ============================================
+  # RESOURCE FUNDAMENTALS
+  # ============================================
+
+  Resource:
+    description: Anything that can be consumed, produced, or transformed
+    properties:
+      id: { type: string, required: true }
+      type: { type: ResourceType, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      unit: { type: string, required: true }
+      isFungible: { type: boolean, default: true, description: "Units are interchangeable" }
+      isConsumable: { type: boolean, default: true, description: "Consumed when used" }
+      isRenewable: { type: boolean, default: false, description: "Regenerates over time" }
+    meta:
+      physics: "Conserved quantity - cannot be created/destroyed"
+      biology: "Nutrient - consumed for energy or growth"
+      economics: "Factor of production - input to process"
+
+  # ============================================
+  # RESOURCE TYPES
+  # ============================================
+
+  MaterialResource:
+    extends: Resource
+    description: Physical matter
+    properties:
+      state: { type: MaterialState }
+      weight: { type: number }
+      volume: { type: number }
+      perishable: { type: boolean }
+      expiresAt: { type: datetime }
+      storageRequirements: { type: StorageRequirements }
+    examples:
+      - "Raw materials"
+      - "Inventory"
+      - "Parts"
+      - "Ingredients"
+
+  InformationResource:
+    extends: Resource
+    description: Data, knowledge, content
+    properties:
+      format: { type: string }
+      size: { type: number, description: "Bytes" }
+      encoding: { type: string }
+      schema: { type: string }
+      accessLevel: { type: AccessLevel }
+    examples:
+      - "Documents"
+      - "Records"
+      - "Messages"
+      - "Knowledge"
+    meta:
+      note: "Information is not consumed - copying doesn't reduce it"
+
+  ComputeResource:
+    extends: Resource
+    description: Processing capacity
+    properties:
+      computeType: { type: ComputeType }
+      capacity: { type: number }
+      utilizationLimit: { type: number }
+      latency: { type: number }
+    examples:
+      - "CPU cycles"
+      - "GPU compute"
+      - "Memory"
+      - "Storage IOPS"
+
+  TimeResource:
+    extends: Resource
+    description: Duration as resource
+    properties:
+      duration: { type: string, description: "ISO 8601 duration" }
+      deadline: { type: datetime }
+      bufferAllowed: { type: boolean }
+    meta:
+      philosophy: "Time cannot be stored, only allocated"
+    examples:
+      - "Meeting time"
+      - "SLA budget"
+      - "Processing window"
+
+  MonetaryResource:
+    extends: Resource
+    description: Money and financial instruments
+    properties:
+      amount: { type: number, required: true }
+      currency: { type: string, required: true }
+      instrument: { type: FinancialInstrument }
+    examples:
+      - "Budget"
+      - "Payment"
+      - "Credit"
+
+  AttentionResource:
+    extends: Resource
+    description: Human cognitive capacity
+    properties:
+      cognitiveLoad: { type: number, description: "0-1 scale" }
+      focusType: { type: FocusType }
+      interruptible: { type: boolean }
+    meta:
+      psychology: "Attention as limited resource"
+    examples:
+      - "Review queue"
+      - "Support ticket"
+      - "Approval request"
+
+  EnergyResource:
+    extends: Resource
+    description: Power and energy
+    properties:
+      energyType: { type: EnergyType }
+      powerRating: { type: number }
+      efficiency: { type: number }
+    examples:
+      - "Battery charge"
+      - "API rate limit"
+      - "LLM tokens"
+
+  # ============================================
+  # RESOURCE POOLS
+  # ============================================
+
+  ResourcePool:
+    description: Collection of resources with capacity tracking
+    properties:
+      resourceType: { type: string, required: true }
+      capacity: { type: number, required: true }
+      allocated: { type: number, default: 0 }
+      reserved: { type: number, default: 0 }
+      available: { type: number, description: "Computed: capacity - allocated - reserved" }
+      replenishmentRate: { type: number }
+      replenishmentPeriod: { type: string }
+    meta:
+      pattern: "Resource pooling"
+
+  Allocation:
+    description: Resource assigned to a consumer
+    properties:
+      poolId: { type: string, required: true }
+      consumerId: { type: string, required: true }
+      amount: { type: number, required: true }
+      allocatedAt: { type: datetime }
+      expiresAt: { type: datetime }
+      priority: { type: Priority }
+
+  Reservation:
+    description: Resource reserved for future use
+    properties:
+      poolId: { type: string, required: true }
+      requesterId: { type: string, required: true }
+      amount: { type: number, required: true }
+      reservedAt: { type: datetime }
+      claimBy: { type: datetime, required: true }
+      purpose: { type: string }
+
+  # ============================================
+  # RESOURCE CONSUMPTION
+  # ============================================
+
+  Consumption:
+    description: Record of resource being used
+    properties:
+      resourceId: { type: string, required: true }
+      consumerId: { type: string, required: true }
+      amount: { type: number, required: true }
+      consumedAt: { type: datetime, required: true }
+      purpose: { type: string }
+      linkedAction: { type: string }
+
+  Production:
+    description: Record of resource being created
+    properties:
+      resourceId: { type: string, required: true }
+      producerId: { type: string, required: true }
+      amount: { type: number, required: true }
+      producedAt: { type: datetime, required: true }
+      inputResources: { type: array, items: ResourceInput }
+      linkedAction: { type: string }
+
+  ResourceInput:
+    description: Resource consumed to produce output
+    properties:
+      resourceId: { type: string, required: true }
+      amount: { type: number, required: true }
+
+  Transformation:
+    description: Conversion of one resource to another
+    properties:
+      inputs: { type: array, items: ResourceInput, required: true }
+      outputs: { type: array, items: ResourceOutput, required: true }
+      transformerId: { type: string }
+      transformedAt: { type: datetime }
+      efficiency: { type: number, description: "0-1, output/input ratio" }
+
+  ResourceOutput:
+    description: Resource produced from transformation
+    properties:
+      resourceId: { type: string, required: true }
+      amount: { type: number, required: true }
+
+  # ============================================
+  # RESOURCE CONSTRAINTS
+  # ============================================
+
+  ResourceConstraint:
+    description: Limits on resource usage
+    properties:
+      resourceType: { type: string, required: true }
+      constraintType: { type: ResourceConstraintType, required: true }
+      limit: { type: number, required: true }
+      period: { type: string }
+      enforcement: { type: Enforcement }
+
+  Quota:
+    description: Allocated limit for a consumer
+    properties:
+      consumerId: { type: string, required: true }
+      resourceType: { type: string, required: true }
+      limit: { type: number, required: true }
+      period: { type: string }
+      used: { type: number }
+      resetsAt: { type: datetime }
+
+  StorageRequirements:
+    description: How a resource must be stored
+    properties:
+      minTemperature: { type: number }
+      maxTemperature: { type: number }
+      humidity: { type: number }
+      lightSensitive: { type: boolean }
+      hazardClass: { type: string }
+
+enums:
+
+  ResourceType:
+    description: Fundamental categories of resources
+    values:
+      - material        # Physical matter
+      - information     # Data, knowledge
+      - compute         # Processing capacity
+      - time            # Duration
+      - monetary        # Money
+      - attention       # Human focus
+      - energy          # Power
+
+  MaterialState:
+    description: Physical state of material
+    values:
+      - solid
+      - liquid
+      - gas
+      - plasma
+
+  ComputeType:
+    description: Type of compute resource
+    values:
+      - cpu
+      - gpu
+      - memory
+      - storage
+      - network
+      - tokens         # LLM tokens
+
+  EnergyType:
+    description: Form of energy
+    values:
+      - electrical
+      - thermal
+      - mechanical
+      - chemical
+      - api_calls      # Rate limits as energy
+
+  FocusType:
+    description: Type of human attention
+    values:
+      - sustained      # Long-term focus
+      - selective      # Filtering out distractions
+      - divided        # Multiple tasks
+      - executive      # Decision-making
+
+  AccessLevel:
+    description: Who can access information resource
+    values:
+      - public
+      - internal
+      - confidential
+      - restricted
+      - secret
+
+  FinancialInstrument:
+    description: Type of monetary resource
+    values:
+      - cash
+      - credit
+      - prepaid
+      - escrow
+      - promise_to_pay
+
+  Priority:
+    description: Priority for allocation
+    values:
+      - critical
+      - high
+      - normal
+      - low
+      - background
+
+  ResourceConstraintType:
+    description: Type of resource limit
+    values:
+      - rate            # Per time period
+      - total           # Absolute limit
+      - concurrent      # Simultaneous usage
+      - burst           # Peak usage
+
+  Enforcement:
+    description: How strictly limit is enforced
+    values:
+      - hard            # Cannot exceed
+      - soft            # Warning on exceed
+      - throttle        # Slow down
+      - queue           # Wait for availability
+
+meta:
+  theoretical_basis:
+    physics: "Conservation laws - resources transform but total conserved"
+    biology: "Metabolism - resource flow through organisms"
+    economics: "Scarcity - unlimited wants, limited resources"
+    thermodynamics: "Energy cannot be created or destroyed"
+
+  patterns:
+    - "Resource pooling"
+    - "Rate limiting"
+    - "Quota management"
+    - "Capacity planning"
+
+  composition_role: "What actors consume and produce"
+
+  related_primitives:
+    - actor: "Actors consume resources"
+    - action: "Actions transform resources"
+    - quantity: "Resources have quantities"

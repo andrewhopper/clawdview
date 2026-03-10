@@ -1,0 +1,224 @@
+# File UUID: s3cur1ty-r3p0rt-4rt1-f4ct
+# Security Report Artifact Definition
+# Category: report
+# Complexity: complex
+
+id: security-report
+name: Security Report
+version: "1.0.0"
+description: Security assessment findings with vulnerability classification, risk ratings, and remediation recommendations
+category: report
+complexity: complex
+created_at: "2026-02-23"
+updated_at: "2026-02-23"
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: executive-summary
+      name: Executive Summary
+      description: High-level overview of security posture and critical findings
+      required: true
+      format: prose
+      word_limit: 150
+
+    - id: scope
+      name: Assessment Scope
+      description: What was assessed, methodology, and limitations
+      required: true
+      format: bullets
+      bullet_count: 5-10
+
+    - id: risk-summary
+      name: Risk Summary
+      description: Summary table of findings by severity
+      required: true
+      format: table
+
+    - id: critical-findings
+      name: Critical Findings
+      description: Critical and high severity vulnerabilities requiring immediate action
+      required: true
+      format: mixed
+
+    - id: medium-findings
+      name: Medium Findings
+      description: Medium severity issues that should be addressed
+      required: false
+      format: mixed
+
+    - id: low-findings
+      name: Low Findings
+      description: Low severity and informational findings
+      required: false
+      format: mixed
+
+    - id: remediation
+      name: Remediation Plan
+      description: Prioritized list of remediation actions with owners and timelines
+      required: true
+      format: table
+
+    - id: positive-findings
+      name: Positive Findings
+      description: Security controls and practices that are working well
+      required: false
+      format: bullets
+
+    - id: recommendations
+      name: Strategic Recommendations
+      description: Long-term security improvements beyond immediate remediations
+      required: true
+      format: numbered
+      item_count: 3-7
+
+    - id: appendix
+      name: Technical Appendix
+      description: Detailed technical evidence, logs, and reproduction steps
+      required: false
+      format: mixed
+
+  required_inputs:
+    - name: target
+      type: string
+      description: System, application, or scope being assessed
+      required: true
+    - name: assessment_type
+      type: string
+      description: Type of assessment (pentest, code review, infrastructure audit, etc.)
+      required: true
+    - name: findings
+      type: text
+      description: Raw findings from the security assessment
+      required: true
+    - name: assessor
+      type: string
+      description: Person or team conducting the assessment
+      default: "Security Team"
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a senior security engineer writing assessment reports for technical and executive audiences.
+
+    Your reporting style:
+    - Lead with business impact, then technical details
+    - Use CVSS-like severity ratings (Critical, High, Medium, Low, Info)
+    - Provide actionable, specific remediation steps
+    - Include evidence without exposing sensitive data
+    - Balance thoroughness with readability
+
+    Risk rating criteria:
+    - Critical: Immediate exploitation possible, severe business impact
+    - High: Exploitable with moderate effort, significant impact
+    - Medium: Requires specific conditions, moderate impact
+    - Low: Minimal impact or difficult to exploit
+    - Info: Best practice recommendations
+
+  task: |
+    Generate a security report for {{TARGET}}.
+
+    Assessment Type: {{ASSESSMENT_TYPE}}
+    Assessor: {{ASSESSOR}}
+
+    Findings:
+    {{FINDINGS}}
+
+    Structure your response with these sections:
+    1. **Executive Summary** - 2-3 paragraphs for leadership
+    2. **Assessment Scope** - What was tested and methodology
+    3. **Risk Summary** - Table: Severity | Count | Status
+    4. **Critical Findings** - Each with: Description, Impact, Evidence, Remediation
+    5. **Medium Findings** - Same format as critical
+    6. **Low Findings** - Condensed format
+    7. **Remediation Plan** - Table: Finding | Priority | Owner | Timeline | Status
+    8. **Positive Findings** - What's working well
+    9. **Strategic Recommendations** - Long-term improvements
+    10. **Technical Appendix** - Detailed evidence (if applicable)
+
+  tone: professional
+  reading_level: technical
+  density: dense
+
+# -----------------------------------------
+# VALIDATORS: Quality Checks
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 800
+      max: 5000
+    severity: warning
+    message: "Security report should be 800-5000 words"
+
+  - id: section-presence
+    name: Required Sections
+    type: section_presence
+    rule:
+      required:
+        - executive-summary
+        - scope
+        - risk-summary
+        - critical-findings
+        - remediation
+        - recommendations
+    severity: error
+    message: "Missing required section"
+
+  - id: has-severity-ratings
+    name: Contains Severity Ratings
+    type: regex
+    rule:
+      pattern: "(Critical|High|Medium|Low|Info)"
+      should_match: true
+    severity: error
+    message: "Findings must include severity ratings"
+
+  - id: has-remediation
+    name: Findings Have Remediation
+    type: regex
+    rule:
+      pattern: "[Rr]emediation|[Ff]ix|[Mm]itigation"
+      should_match: true
+    severity: error
+    message: "All findings must include remediation steps"
+
+  - id: no-sensitive-data
+    name: No Sensitive Data Exposed
+    type: regex
+    rule:
+      pattern: "(password|secret|api[_-]?key|token)\\s*[:=]\\s*['\"][^'\"]{8,}"
+      should_not_match: true
+    severity: error
+    message: "Report may contain sensitive data - redact before sharing"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 800
+  max_words: 5000
+  reading_level: technical
+  density: dense
+  output_formats:
+    - markdown
+    - html
+    - pdf
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - security
+  - vulnerability
+  - assessment
+  - audit
+  - pentest
+  - compliance
+  - risk

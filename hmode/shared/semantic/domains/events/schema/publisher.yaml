@@ -1,0 +1,171 @@
+# Event Publisher Schema
+# Components that emit domain events
+
+enums:
+
+  PublishMode:
+    description: How events are published
+    values:
+      - sync          # Block until all handlers complete
+      - async         # Fire and forget
+      - transactional # Publish only if transaction commits (outbox pattern)
+
+  PublishResult:
+    description: Result of a publish operation
+    values:
+      - success       # All handlers succeeded
+      - partial       # Some handlers failed
+      - failed        # Publish failed
+      - queued        # Queued for later delivery
+
+entities:
+
+  EventPublisher:
+    description: Component that emits events to the event bus
+    extends: Entity
+    properties:
+      publisherName:
+        type: string
+        required: true
+        description: Unique name for this publisher
+      publisherType:
+        type: string
+        description: Type of publisher (service, aggregate, saga, etc.)
+      defaultBus:
+        type: string
+        description: Default event bus to publish to
+      publishMode:
+        type: PublishMode
+        default: async
+        description: Default publishing mode
+      enabled:
+        type: boolean
+        default: true
+        description: Whether publisher is active
+      middleware:
+        type: list
+        itemType: string
+        description: Middleware to apply before publishing
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  PublishRequest:
+    description: Request to publish an event
+    properties:
+      event:
+        type: DomainEvent
+        required: true
+        description: Event to publish
+      targetBus:
+        type: string
+        description: Override default bus
+      publishMode:
+        type: PublishMode
+        description: Override default mode
+      delaySeconds:
+        type: integer
+        description: Delay before publishing
+      scheduledAt:
+        type: datetime
+        description: Specific time to publish
+
+  PublishReceipt:
+    description: Receipt returned after publishing
+    properties:
+      receiptId:
+        type: string
+        required: true
+        description: Unique receipt identifier
+      eventId:
+        type: string
+        required: true
+        description: ID of published event
+      result:
+        type: PublishResult
+        required: true
+        description: Outcome of publish operation
+      publishedAt:
+        type: datetime
+        required: true
+        description: When event was published
+      handlerCount:
+        type: integer
+        description: Number of handlers that received event
+      failedHandlers:
+        type: list
+        itemType: string
+        description: Names of handlers that failed
+      error:
+        type: string
+        description: Error message if failed
+
+  OutboxEntry:
+    description: |
+      Transactional outbox pattern entry.
+      Events stored in same transaction as domain changes,
+      then published asynchronously by a relay process.
+    properties:
+      entryId:
+        type: string
+        required: true
+        description: Unique outbox entry ID
+      event:
+        type: DomainEvent
+        required: true
+        description: Event to publish
+      aggregateType:
+        type: string
+        description: Source aggregate type
+      aggregateId:
+        type: string
+        description: Source aggregate ID
+      status:
+        type: EventStatus
+        default: pending
+        description: Current status
+      targetBus:
+        type: string
+        description: Target event bus
+      createdAt:
+        type: datetime
+        required: true
+      publishedAt:
+        type: datetime
+        description: When event was actually published
+      retryCount:
+        type: integer
+        default: 0
+      nextRetryAt:
+        type: datetime
+        description: When to retry if failed
+
+  Outbox:
+    description: Transactional outbox for reliable event publishing
+    extends: Entity
+    properties:
+      outboxName:
+        type: string
+        required: true
+        description: Name of this outbox
+      entries:
+        type: list
+        itemType: OutboxEntry
+        description: Pending outbox entries
+      relayIntervalMs:
+        type: integer
+        default: 1000
+        description: How often relay checks for pending events
+      batchSize:
+        type: integer
+        default: 100
+        description: Max events to relay per batch
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true

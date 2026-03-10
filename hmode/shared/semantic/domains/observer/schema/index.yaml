@@ -1,0 +1,42 @@
+# Observer Domain Schema Index
+# Version: 1.0.0
+
+domain: observer
+version: "1.0.0"
+
+schemas:
+  - enums.yaml
+  - entities.yaml
+
+rules:
+  - rules/document_rules.yaml
+  - rules/code_rules.yaml
+
+validators:
+  document:
+    - has_date_in_document
+    - has_valid_date_format
+    - has_stage_title
+    - uses_decimal_outline
+    - no_bullet_lists_except_checkboxes
+    - content_not_too_short
+    - content_not_too_long
+    - has_metadata_section
+  code:
+    - python_has_type_hints
+    - python_models_have_timestamps
+    - no_any_type
+    - typescript_has_types
+    - no_hardcoded_secrets
+    - no_print_statements
+    - has_docstring
+    - no_bare_except
+    - no_star_imports
+
+implementation:
+  python:
+    models: shared/observers/models.py
+    observer: shared/observers/observer.py
+    rule_loader: shared/observers/rule_loader.py
+    document_validators: shared/observers/document_validators.py
+    code_validators: shared/observers/code_validators.py

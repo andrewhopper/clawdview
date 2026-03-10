@@ -1,0 +1,33 @@
+{
+  "name": "typescript-email-template",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "email dev --port 3001",
+    "build": "tsc",
+    "preview": "email preview",
+    "export": "email export --outDir out",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-email/components": "^0.0.15",
+    "react": "^18.2.0",
+    "react-email": "^2.1.0",
+    "resend": "^3.2.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^14.2.0",
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react": "^7.33.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  }
+}

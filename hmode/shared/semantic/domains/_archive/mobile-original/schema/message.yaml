@@ -1,0 +1,309 @@
+# Mobile Messaging Domain Model
+# SMS, MMS messaging inspired by Twilio Programmable Messaging API
+# https://www.twilio.com/docs/sms/api/message-resource
+
+entities:
+
+  Message:
+    description: SMS or MMS message sent or received
+    extends: Entity
+    properties:
+      sid:
+        type: string
+        required: true
+        description: Unique message identifier (Twilio-style SID)
+      accountSid:
+        type: string
+        required: true
+        description: Account that owns this message
+      from:
+        type: string
+        required: true
+        description: Sender phone number (E.164 format)
+      to:
+        type: string
+        required: true
+        description: Recipient phone number (E.164 format)
+      body:
+        type: string
+        description: Message text content (max 1600 chars for SMS)
+      status:
+        type: MessageStatus
+        required: true
+        description: Current delivery status
+      direction:
+        type: MessageDirection
+        required: true
+        description: Inbound or outbound
+      numSegments:
+        type: integer
+        description: Number of SMS segments (messages > 160 chars)
+      numMedia:
+        type: integer
+        description: Number of media attachments (MMS)
+      mediaUrls:
+        type: array
+        items: uri
+        description: URLs of attached media files
+      price:
+        type: decimal
+        description: Cost of the message
+      priceUnit:
+        type: string
+        description: Currency code (USD, EUR, etc.)
+      errorCode:
+        type: integer
+        description: Error code if delivery failed
+      errorMessage:
+        type: string
+        description: Human-readable error description
+      messagingServiceSid:
+        type: string
+        description: Messaging service used for sending
+      createdAt:
+        type: datetime
+        required: true
+        description: When message was created
+      updatedAt:
+        type: datetime
+        required: true
+        description: When message was last updated
+      sentAt:
+        type: datetime
+        description: When message was sent
+      deliveredAt:
+        type: datetime
+        description: When message was delivered
+
+  MessageMedia:
+    description: Media attachment for MMS messages
+    properties:
+      sid:
+        type: string
+        required: true
+        description: Unique media identifier
+      messageSid:
+        type: string
+        required: true
+        description: Parent message SID
+      contentType:
+        type: string
+        required: true
+        description: MIME type (image/jpeg, video/mp4, etc.)
+      uri:
+        type: uri
+        required: true
+        description: URL to fetch media content
+      size:
+        type: integer
+        description: File size in bytes
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  MessagingService:
+    description: Messaging service configuration for sending messages
+    properties:
+      sid:
+        type: string
+        required: true
+        description: Unique service identifier
+      accountSid:
+        type: string
+        required: true
+      friendlyName:
+        type: string
+        required: true
+        description: Human-readable name
+      inboundRequestUrl:
+        type: uri
+        description: Webhook for incoming messages
+      inboundMethod:
+        type: HttpMethod
+        description: HTTP method for inbound webhook
+      statusCallback:
+        type: uri
+        description: Webhook for status updates
+      fallbackUrl:
+        type: uri
+        description: Fallback webhook if primary fails
+      fallbackMethod:
+        type: HttpMethod
+      useInboundWebhookOnNumber:
+        type: boolean
+        description: Use number-level webhook instead
+      areaCodeGeomatch:
+        type: boolean
+        description: Match sender to recipient area code
+      validityPeriod:
+        type: integer
+        description: Message validity in seconds (max 14400)
+      synchronousValidation:
+        type: boolean
+        description: Validate before accepting
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  PhoneNumber:
+    description: Phone number resource for messaging
+    properties:
+      sid:
+        type: string
+        required: true
+      accountSid:
+        type: string
+        required: true
+      phoneNumber:
+        type: string
+        required: true
+        description: E.164 format (+12025551234)
+      friendlyName:
+        type: string
+      capabilities:
+        type: PhoneNumberCapabilities
+        description: What this number can do
+      countryCode:
+        type: string
+        description: ISO country code (US, GB, etc.)
+      locality:
+        type: string
+        description: City or locality
+      region:
+        type: string
+        description: State or region
+      smsUrl:
+        type: uri
+        description: Webhook for incoming SMS
+      voiceUrl:
+        type: uri
+        description: Webhook for incoming calls
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  PhoneNumberCapabilities:
+    description: Capabilities of a phone number
+    properties:
+      sms:
+        type: boolean
+        description: Can send/receive SMS
+      mms:
+        type: boolean
+        description: Can send/receive MMS
+      voice:
+        type: boolean
+        description: Can make/receive calls
+      fax:
+        type: boolean
+        description: Can send/receive fax
+
+enums:
+
+  MessageStatus:
+    description: Delivery status of a message
+    values:
+      - queued       # Message is queued for sending
+      - sending      # Message is being sent
+      - sent         # Message sent to carrier
+      - delivered    # Carrier confirmed delivery
+      - undelivered  # Carrier could not deliver
+      - failed       # Message failed to send
+      - receiving    # Inbound message being received
+      - received     # Inbound message received
+      - accepted     # Message accepted by API
+      - scheduled    # Message scheduled for future
+      - read         # Recipient read the message (if supported)
+      - canceled     # Message was canceled
+
+  MessageDirection:
+    description: Direction of message flow
+    values:
+      - inbound       # Received from external number
+      - outbound-api  # Sent via REST API
+      - outbound-call # Sent during a call
+      - outbound-reply # Reply to inbound message
+
+  HttpMethod:
+    values: [GET, POST]
+
+actions:
+
+  SendMessageAction:
+    description: Send an SMS or MMS message
+    parameters:
+      to:
+        type: string
+        required: true
+        description: Recipient phone number (E.164)
+      from:
+        type: string
+        description: Sender phone number (E.164)
+      messagingServiceSid:
+        type: string
+        description: Messaging service to use (alternative to from)
+      body:
+        type: string
+        description: Message text
+      mediaUrl:
+        type: array
+        items: uri
+        description: Media URLs for MMS
+      statusCallback:
+        type: uri
+        description: Webhook for status updates
+      scheduleType:
+        type: string
+        description: "fixed" for scheduled messages
+      sendAt:
+        type: datetime
+        description: When to send (for scheduled messages)
+    result:
+      type: Message
+
+  FetchMessageAction:
+    description: Retrieve a message by SID
+    parameters:
+      sid:
+        type: string
+        required: true
+    result:
+      type: Message
+
+  DeleteMessageAction:
+    description: Delete a message
+    parameters:
+      sid:
+        type: string
+        required: true
+    result:
+      type: boolean
+
+  ListMessagesAction:
+    description: List messages with filters
+    parameters:
+      to:
+        type: string
+        description: Filter by recipient
+      from:
+        type: string
+        description: Filter by sender
+      dateSentAfter:
+        type: datetime
+      dateSentBefore:
+        type: datetime
+      pageSize:
+        type: integer
+        description: Results per page (max 1000)
+    result:
+      type: array
+      items: Message

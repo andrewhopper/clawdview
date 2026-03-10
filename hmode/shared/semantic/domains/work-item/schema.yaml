@@ -1,0 +1,386 @@
+# Work Item Domain Model (Abstract Base)
+# Shared primitives for task-management and human-task domains
+
+domain:
+  name: work-item
+  version: "1.0.0"
+  description: Abstract base domain for work items - shared primitives for todos, review tasks, and assignable work
+  dependencies: [core, auth]
+  use_case: Base domain providing common work item patterns for extension
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+  abstract: true  # This domain is meant to be extended, not used directly
+
+entities:
+
+  # ============================================
+  # ABSTRACT WORK ITEM
+  # ============================================
+
+  WorkItem:
+    description: Abstract base for any unit of work requiring action
+    abstract: true
+    properties:
+      id: { type: uuid, required: true }
+      title: { type: string, required: true, maxLength: 500 }
+      description: { type: string }
+      status: { type: WorkItemStatus, required: true }
+      priority: { type: Priority, required: true }
+      assigneeId: { type: string, description: "FK to auth:User" }
+      creatorId: { type: string, description: "FK to auth:User" }
+      deadline: { type: Deadline }
+      tags: { type: array, items: string }
+      attachments: { type: array, items: Attachment }
+      completedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # SHARED VALUE OBJECTS
+  # ============================================
+
+  Priority:
+    description: Universal priority model with numeric score
+    properties:
+      level: { type: PriorityLevel, required: true }
+      score: { type: decimal, required: true, min: 0.0, max: 1.0, description: "Normalized 0-1 for sorting" }
+      label: { type: string, description: "Custom label override" }
+      isUrgent: { type: boolean, default: false }
+      reason: { type: string, description: "Why this priority" }
+
+  Deadline:
+    description: Due date with optional time and reminder settings
+    properties:
+      dueDate: { type: date, required: true }
+      dueTime: { type: time }
+      hasTime: { type: boolean, required: true, default: false }
+      timezone: { type: string, description: "IANA timezone" }
+      isHard: { type: boolean, default: false, description: "Hard deadline vs soft target" }
+      reminders: { type: array, items: Reminder }
+
+  Reminder:
+    description: A notification trigger before deadline
+    properties:
+      id: { type: uuid, required: true }
+      type: { type: ReminderTriggerType, required: true }
+      offsetMinutes: { type: integer, description: "Minutes before deadline (for time triggers)" }
+      channel: { type: NotificationChannel, required: true, default: push }
+      message: { type: string, description: "Custom reminder message" }
+      sentAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+
+  Assignment:
+    description: Assignment of work item to actor
+    properties:
+      id: { type: uuid, required: true }
+      workItemId: { type: uuid, required: true }
+      assigneeId: { type: string, required: true }
+      assigneeType: { type: ActorType, required: true }
+      role: { type: AssignmentRole, required: true, default: primary }
+      assignedById: { type: string, description: "Who made the assignment" }
+      assignedAt: { type: datetime, required: true }
+      acceptedAt: { type: datetime }
+      completedAt: { type: datetime }
+
+  Attachment:
+    description: File or media attached to work item
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      fileName: { type: string, required: true }
+      url: { type: uri, required: true }
+      mimeType: { type: string, required: true }
+      fileSize: { type: integer }
+      attachmentType: { type: AttachmentType, required: true }
+      thumbnailUrl: { type: uri }
+      uploadedById: { type: string }
+      createdAt: { type: datetime, required: true }
+
+  ActivityLogEntry:
+    description: Audit log entry for work item changes
+    properties:
+      id: { type: uuid, required: true }
+      workItemId: { type: uuid, required: true }
+      actorId: { type: string }
+      actorType: { type: ActorType, required: true }
+      action: { type: ActivityType, required: true }
+      field: { type: string, description: "Field that changed" }
+      oldValue: { type: string }
+      newValue: { type: string }
+      metadata: { type: object }
+      timestamp: { type: datetime, required: true }
+
+  # ============================================
+  # RECURRENCE (for repeating items)
+  # ============================================
+
+  Recurrence:
+    description: Pattern for repeating work items
+    properties:
+      pattern: { type: RecurrencePattern, required: true }
+      interval: { type: integer, required: true, default: 1 }
+      daysOfWeek: { type: array, items: DayOfWeek }
+      dayOfMonth: { type: integer }
+      monthOfYear: { type: integer }
+      endDate: { type: date }
+      maxOccurrences: { type: integer }
+      completionBehavior: { type: CompletionBehavior, required: true, default: next_scheduled }
+
+enums:
+
+  # ============================================
+  # STATUS
+  # ============================================
+
+  WorkItemStatus:
+    description: Abstract status - domains should define concrete values
+    abstract: true
+    base_values:
+      - pending       # Not started
+      - active        # In progress
+      - completed     # Done
+      - cancelled     # Won't do
+
+  # ============================================
+  # PRIORITY
+  # ============================================
+
+  PriorityLevel:
+    description: Universal priority levels with score mapping
+    values:
+      - none          # 0.0 - No priority
+      - low           # 0.25 - Nice to have
+      - medium        # 0.5 - Standard
+      - high          # 0.75 - Important
+      - urgent        # 1.0 - Critical/time-sensitive
+    score_mapping:
+      none: 0.0
+      low: 0.25
+      medium: 0.5
+      high: 0.75
+      urgent: 1.0
+
+  # ============================================
+  # REMINDERS
+  # ============================================
+
+  ReminderTriggerType:
+    values:
+      - at_time       # At deadline
+      - before        # Minutes before deadline
+      - location      # Location-based (geofence)
+      - event         # Triggered by external event
+      - context       # Context-aware (e.g., when meeting ends)
+
+  NotificationChannel:
+    values:
+      - push          # Push notification
+      - email         # Email
+      - sms           # Text message
+      - in_app        # In-app notification
+      - slack         # Slack message
+      - teams         # MS Teams message
+
+  # ============================================
+  # ASSIGNMENT
+  # ============================================
+
+  ActorType:
+    values:
+      - user          # Human user
+      - system        # System/automated
+      - service       # External service
+      - agent         # AI agent
+      - group         # User group/team
+
+  AssignmentRole:
+    values:
+      - primary       # Main assignee
+      - secondary     # Backup/helper
+      - reviewer      # Reviewer/approver
+      - observer      # Watcher only
+      - delegate      # Delegated from someone else
+
+  # ============================================
+  # ATTACHMENTS
+  # ============================================
+
+  AttachmentType:
+    values:
+      - file          # Generic file
+      - image         # Image
+      - document      # Document (PDF, DOC, etc.)
+      - video         # Video
+      - audio         # Audio
+      - archive       # Compressed archive
+      - link          # External URL
+
+  # ============================================
+  # ACTIVITY
+  # ============================================
+
+  ActivityType:
+    description: Types of changes to work items
+    values:
+      # Lifecycle
+      - created
+      - updated
+      - completed
+      - reopened
+      - cancelled
+      - deleted
+      - restored
+      # Assignment
+      - assigned
+      - unassigned
+      - reassigned
+      - delegated
+      # Priority/Deadline
+      - priority_changed
+      - deadline_set
+      - deadline_changed
+      - deadline_cleared
+      # Organization
+      - moved
+      - tagged
+      - untagged
+      # Attachments
+      - attachment_added
+      - attachment_removed
+      # Comments
+      - commented
+
+  # ============================================
+  # RECURRENCE
+  # ============================================
+
+  RecurrencePattern:
+    values:
+      - daily
+      - weekly
+      - biweekly
+      - monthly
+      - quarterly
+      - yearly
+      - custom
+
+  DayOfWeek:
+    values: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+
+  CompletionBehavior:
+    values:
+      - next_scheduled   # Move to next occurrence date
+      - from_completion  # Calculate from completion date
+
+actions:
+
+  # These are abstract actions - concrete domains implement them
+
+  CreateWorkItem:
+    abstract: true
+    description: Create a new work item
+    parameters:
+      title: { type: string, required: true }
+      description: { type: string }
+      priority: { type: PriorityLevel }
+      deadline: { type: Deadline }
+      assigneeId: { type: string }
+    result: WorkItem
+    permission: workitem:create
+
+  UpdateWorkItem:
+    abstract: true
+    description: Update a work item
+    parameters:
+      id: { type: uuid, required: true }
+      title: { type: string }
+      description: { type: string }
+      priority: { type: PriorityLevel }
+      deadline: { type: Deadline }
+      status: { type: WorkItemStatus }
+    result: WorkItem
+    permission: workitem:update
+
+  CompleteWorkItem:
+    abstract: true
+    description: Mark work item as completed
+    parameters:
+      id: { type: uuid, required: true }
+    result: WorkItem
+    permission: workitem:update
+
+  AssignWorkItem:
+    abstract: true
+    description: Assign work item to actor
+    parameters:
+      workItemId: { type: uuid, required: true }
+      assigneeId: { type: string, required: true }
+      role: { type: AssignmentRole }
+    result: Assignment
+    permission: workitem:assign
+
+  SetReminder:
+    abstract: true
+    description: Set reminder for work item
+    parameters:
+      workItemId: { type: uuid, required: true }
+      type: { type: ReminderTriggerType, required: true }
+      offsetMinutes: { type: integer }
+      channel: { type: NotificationChannel }
+    result: Reminder
+    permission: workitem:update
+
+  AddAttachment:
+    abstract: true
+    description: Add attachment to work item
+    parameters:
+      workItemId: { type: uuid, required: true }
+      name: { type: string, required: true }
+      url: { type: uri, required: true }
+      mimeType: { type: string, required: true }
+    result: Attachment
+    permission: workitem:update
+
+relationships:
+  - type: one_to_many
+    from: WorkItem
+    to: Assignment
+    foreign_key: workItemId
+    description: A work item can have multiple assignments
+
+  - type: one_to_many
+    from: WorkItem
+    to: Attachment
+    foreign_key: workItemId
+    description: A work item can have multiple attachments
+
+  - type: one_to_many
+    from: WorkItem
+    to: ActivityLogEntry
+    foreign_key: workItemId
+    description: A work item has activity history
+
+# Extension guidance for derived domains
+extension_guidance:
+  task_management:
+    extends: WorkItem
+    to: Todo
+    adds:
+      - Project relationship
+      - Category relationship
+      - Subtasks
+      - Tags (many-to-many)
+      - Comments
+      - SavedFilters
+    status_values: [pending, in_progress, completed, cancelled, deferred, waiting]
+
+  human_task:
+    extends: WorkItem
+    to: Task
+    adds:
+      - TaskInput payload
+      - Recommendation
+      - Multi-reviewer patterns
+      - AggregateDecision
+      - FeedbackDimensions
+    status_values: [Pending, Active, Deferred, Completed, Expired, Cancelled]

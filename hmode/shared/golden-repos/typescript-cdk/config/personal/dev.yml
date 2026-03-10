@@ -1,0 +1,63 @@
+# ===========================================
+# Personal Context - Development Stage
+# ===========================================
+
+# AWS Account & Region
+account: "507745175693"  # Personal AWS account
+region: "us-east-1"
+
+# Project Settings
+projectName: "my-personal-project"
+stackPrefix: "personal"
+
+# ===========================================
+# Domain Configuration
+# ===========================================
+domain:
+  rootDomain: "dev.b.lfg.new"  # Using .b.lfg.new for personal
+  subdomain: "api"
+
+# ===========================================
+# Notification Configuration
+# ===========================================
+notifications:
+  adminEmail: "andy@example.com"
+
+# ===========================================
+# Database Configuration
+# ===========================================
+database:
+  instanceClass: "t3.micro"
+  allocatedStorage: 20
+  multiAz: false
+  deletionProtection: false
+  backupRetentionDays: 3
+
+# ===========================================
+# Compute Configuration
+# ===========================================
+compute:
+  lambdaMemory: 128
+  lambdaTimeout: 15
+  taskCpu: 256
+  taskMemory: 512
+  desiredCount: 1
+  minCount: 1
+  maxCount: 2
+
+# ===========================================
+# Monitoring Configuration
+# ===========================================
+monitoring:
+  enableDashboards: false
+  enableTracing: false
+  logRetentionDays: 3
+  alarmEvaluationPeriods: 2
+
+# ===========================================
+# Resource Tags
+# ===========================================
+tags:
+  Owner: "Andy"
+  Context: "personal"
+  Purpose: "Development"

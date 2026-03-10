@@ -1,0 +1,41 @@
+{
+  "domain": "artifact-library",
+  "version": "0.1.0",
+  "status": "draft",
+  "created_at": "2025-11-22",
+  "updated_at": "2025-11-22",
+  "description": "Company-wide library of document types with generation instructions",
+  "entities": [
+    "ArtifactType",
+    "ArtifactSchema",
+    "Section",
+    "Field",
+    "GenerationPrompt",
+    "FewShotExample",
+    "PromptVariable",
+    "Validator",
+    "Example",
+    "Annotation",
+    "Constraints"
+  ],
+  "enums": [
+    "ArtifactCategory",
+    "ComplexityLevel",
+    "OutputFormat",
+    "FieldType",
+    "SectionFormat",
+    "ValidatorType",
+    "Severity",
+    "Tone",
+    "VariableSource",
+    "ReadingLevel",
+    "DensityLevel"
+  ],
+  "actions": [
+    "CreateArtifactType",
+    "GenerateArtifact",
+    "ValidateArtifact",
+    "TransformArtifact"
+  ],
+  "dependencies": []
+}

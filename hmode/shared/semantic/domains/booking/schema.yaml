@@ -1,0 +1,643 @@
+# Booking Domain
+# Appointments, reservations, scheduling
+# Version: 1.0.0
+
+domain:
+  name: booking
+  version: "1.0.0"
+  status: production
+  description: Bookings, appointments, and reservations for resources
+  dependencies: [core, capacity]
+  use_case: Appointments, rentals, reservations, classes, events
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Booking:
+    description: A reservation of a resource for a time period
+    properties:
+      id:
+        type: uuid
+        required: true
+      booking_type:
+        type: BookingType
+        required: true
+
+      # What is being booked
+      resource_type:
+        type: string
+        required: true
+        description: Type of resource (room, vehicle, person, equipment)
+      resource_id:
+        type: uuid
+        required: true
+        description: FK to the resource
+      resource_name:
+        type: string
+        description: Denormalized for display
+
+      # Who is booking
+      customer_id:
+        type: string
+        required: true
+      customer_type:
+        type: CustomerType
+        required: true
+        default: individual
+      customer_name:
+        type: string
+      customer_email:
+        type: string
+      customer_phone:
+        type: string
+
+      # When
+      start_time:
+        type: datetime
+        required: true
+      end_time:
+        type: datetime
+        required: true
+      timezone:
+        type: string
+        required: true
+      duration:
+        type: Duration
+        description: Computed from start/end
+      all_day:
+        type: boolean
+        default: false
+
+      # Recurrence
+      is_recurring:
+        type: boolean
+        default: false
+      recurrence:
+        type: Recurrence
+      recurrence_id:
+        type: uuid
+        description: FK to parent recurring booking
+      occurrence_index:
+        type: integer
+        description: Which occurrence in series
+
+      # Quantity
+      quantity:
+        type: integer
+        default: 1
+        description: Number of resources/spots
+      attendee_count:
+        type: integer
+        description: Number of attendees (for group bookings)
+
+      # Status
+      status:
+        type: BookingStatus
+        required: true
+        default: confirmed
+
+      # Confirmation
+      confirmation_code:
+        type: string
+        description: Human-readable confirmation code
+      confirmed_at:
+        type: datetime
+      confirmed_by:
+        type: string
+
+      # Pricing
+      base_price:
+        type: Money
+      adjustments:
+        type: array
+        items: PriceAdjustment
+      total_price:
+        type: Money
+      deposit_required:
+        type: Money
+      deposit_paid:
+        type: Money
+
+      # Payment
+      payment_status:
+        type: PaymentStatus
+        default: pending
+      paid_at:
+        type: datetime
+      payment_reference:
+        type: string
+
+      # Check-in/out
+      checked_in:
+        type: boolean
+        default: false
+      checked_in_at:
+        type: datetime
+      checked_in_by:
+        type: string
+      checked_out:
+        type: boolean
+        default: false
+      checked_out_at:
+        type: datetime
+      no_show:
+        type: boolean
+        default: false
+
+      # Notes
+      notes:
+        type: string
+      internal_notes:
+        type: string
+      special_requests:
+        type: string
+
+      # Source
+      booked_via:
+        type: BookingSource
+        default: direct
+      external_reference:
+        type: string
+        description: External booking ID (OTA, etc.)
+
+      # Cancellation
+      canceled_at:
+        type: datetime
+      canceled_by:
+        type: string
+      cancellation_reason:
+        type: string
+      refund_amount:
+        type: Money
+
+      # Links
+      service_id:
+        type: uuid
+        description: FK to Service (if service booking)
+      event_id:
+        type: uuid
+        description: FK to Event (if event booking)
+      agreement_id:
+        type: uuid
+        description: FK to rental agreement (if rental)
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  PriceAdjustment:
+    description: Price adjustment applied to booking
+    properties:
+      description:
+        type: string
+        required: true
+      adjustment_type:
+        type: string
+        description: discount, surcharge, tax, fee
+      amount:
+        type: Money
+        required: true
+      rule_id:
+        type: string
+        description: FK to pricing rule that created this
+
+  BookableResource:
+    description: Something that can be booked
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      resource_type:
+        type: ResourceType
+        required: true
+
+      # Capacity
+      capacity:
+        type: integer
+        default: 1
+        description: How many can book simultaneously
+      min_booking_quantity:
+        type: integer
+        default: 1
+      max_booking_quantity:
+        type: integer
+
+      # Time constraints
+      min_duration:
+        type: Duration
+        description: Minimum booking duration
+      max_duration:
+        type: Duration
+        description: Maximum booking duration
+      duration_increment:
+        type: Duration
+        description: Booking duration must be multiple of this
+      buffer_before:
+        type: Duration
+        description: Required buffer time before booking
+      buffer_after:
+        type: Duration
+        description: Required buffer time after booking
+
+      # Booking constraints
+      min_advance:
+        type: Duration
+        description: Minimum advance booking time
+      max_advance:
+        type: Duration
+        description: Maximum advance booking time
+      cutoff_time:
+        type: string
+        description: Time of day by which bookings must be made
+
+      # Availability
+      schedule_id:
+        type: uuid
+        description: FK to OperatingSchedule
+      custom_availability:
+        type: array
+        items: AvailabilityWindow
+
+      # Pricing
+      base_price:
+        type: Money
+      price_unit:
+        type: PriceUnit
+        required: true
+        default: per_booking
+      pricing_rules:
+        type: array
+        items: string
+        description: FK to PricingRule IDs
+
+      # Features
+      features:
+        type: array
+        items: string
+      amenities:
+        type: array
+        items: string
+      images:
+        type: array
+        items: MediaObject
+
+      # Location
+      location_id:
+        type: uuid
+        description: FK to location
+
+      status:
+        type: ResourceStatus
+        required: true
+        default: active
+
+  AvailabilityWindow:
+    description: Custom availability window
+    properties:
+      day_of_week:
+        type: DayOfWeek
+      start_time:
+        type: string
+        format: time
+      end_time:
+        type: string
+        format: time
+      effective_from:
+        type: date
+      effective_until:
+        type: date
+      is_available:
+        type: boolean
+        default: true
+      reason:
+        type: string
+        description: If blocked, why
+
+  TimeSlot:
+    description: An available time slot for booking
+    properties:
+      id:
+        type: uuid
+        required: true
+      resource_id:
+        type: uuid
+        required: true
+      start_time:
+        type: datetime
+        required: true
+      end_time:
+        type: datetime
+        required: true
+      capacity:
+        type: integer
+        required: true
+      available_capacity:
+        type: integer
+        required: true
+      price:
+        type: Money
+      status:
+        type: SlotStatus
+        required: true
+        default: available
+
+  BookingRequest:
+    description: Request for a booking (before confirmation)
+    properties:
+      id:
+        type: uuid
+        required: true
+      resource_type:
+        type: string
+        required: true
+      resource_id:
+        type: uuid
+        required: true
+      customer_id:
+        type: string
+        required: true
+      requested_start:
+        type: datetime
+        required: true
+      requested_end:
+        type: datetime
+        required: true
+      quantity:
+        type: integer
+        default: 1
+      notes:
+        type: string
+      status:
+        type: RequestStatus
+        required: true
+        default: pending
+      requested_at:
+        type: datetime
+        required: true
+      responded_at:
+        type: datetime
+      responded_by:
+        type: string
+      response_notes:
+        type: string
+      resulting_booking_id:
+        type: uuid
+
+  WaitlistEntry:
+    description: Entry on waitlist for fully booked resource
+    properties:
+      id:
+        type: uuid
+        required: true
+      resource_type:
+        type: string
+        required: true
+      resource_id:
+        type: uuid
+        required: true
+      customer_id:
+        type: string
+        required: true
+      desired_start:
+        type: datetime
+        required: true
+      desired_end:
+        type: datetime
+        required: true
+      flexibility:
+        type: string
+        description: How flexible on timing
+      position:
+        type: integer
+        required: true
+      joined_at:
+        type: datetime
+        required: true
+      notified_at:
+        type: datetime
+      expires_at:
+        type: datetime
+      status:
+        type: WaitlistStatus
+        required: true
+        default: waiting
+      converted_booking_id:
+        type: uuid
+
+  BookingReminder:
+    description: Reminder for upcoming booking
+    properties:
+      id:
+        type: uuid
+        required: true
+      booking_id:
+        type: uuid
+        required: true
+      reminder_type:
+        type: ReminderType
+        required: true
+      scheduled_for:
+        type: datetime
+        required: true
+      sent_at:
+        type: datetime
+      channel:
+        type: ReminderChannel
+        required: true
+      status:
+        type: ReminderStatus
+        required: true
+        default: pending
+
+enums:
+
+  BookingType:
+    values:
+      - appointment       # Service appointment
+      - reservation       # Table, seat, etc.
+      - rental            # Equipment, vehicle
+      - class             # Fitness class, workshop
+      - event             # Event attendance
+      - room              # Meeting room, venue
+      - consultation      # Professional consultation
+      - tour              # Tour booking
+
+  CustomerType:
+    values:
+      - individual
+      - organization
+      - group
+      - member
+      - guest
+
+  BookingStatus:
+    values:
+      - pending           # Awaiting confirmation
+      - confirmed         # Confirmed
+      - checked_in        # Customer arrived
+      - in_progress       # Service in progress
+      - completed         # Finished
+      - canceled          # Canceled
+      - no_show           # Customer didn't show
+      - rescheduled       # Moved to new time
+
+  PaymentStatus:
+    values:
+      - pending
+      - deposit_paid
+      - paid
+      - partial_refund
+      - refunded
+      - failed
+
+  BookingSource:
+    values:
+      - direct            # Direct booking
+      - website           # Own website
+      - app               # Mobile app
+      - phone             # Phone booking
+      - walk_in           # Walk-in
+      - ota               # Online travel agent
+      - partner           # Partner referral
+      - api               # API integration
+
+  ResourceType:
+    values:
+      - room              # Meeting room, hotel room
+      - vehicle           # Car, boat, bike
+      - equipment         # Tools, gear
+      - person            # Service provider
+      - table             # Restaurant table
+      - seat              # Event seat
+      - space             # Generic space
+      - virtual           # Virtual resource
+
+  ResourceStatus:
+    values:
+      - active
+      - inactive
+      - maintenance
+      - retired
+
+  PriceUnit:
+    values:
+      - per_booking       # Fixed per booking
+      - per_hour          # Hourly rate
+      - per_day           # Daily rate
+      - per_person        # Per attendee
+      - per_unit          # Per unit booked
+
+  SlotStatus:
+    values:
+      - available
+      - limited           # Limited availability
+      - fully_booked
+      - blocked           # Administratively blocked
+      - past              # In the past
+
+  RequestStatus:
+    values:
+      - pending
+      - approved
+      - declined
+      - expired
+      - canceled
+
+  WaitlistStatus:
+    values:
+      - waiting
+      - notified          # Spot available, notified
+      - offered           # Offer made
+      - converted         # Converted to booking
+      - expired
+      - canceled
+
+  ReminderType:
+    values:
+      - upcoming          # X hours/days before
+      - confirmation      # Booking confirmed
+      - day_before        # Day before
+      - hour_before       # Hour before
+      - check_in          # Time to check in
+      - follow_up         # Post-booking follow-up
+
+  ReminderChannel:
+    values:
+      - email
+      - sms
+      - push
+      - in_app
+
+  ReminderStatus:
+    values:
+      - pending
+      - sent
+      - delivered
+      - failed
+      - canceled
+
+examples:
+
+  salon_appointment:
+    booking_type: appointment
+    resource_type: "person"
+    resource_id: "stylist_jane"
+    resource_name: "Jane - Senior Stylist"
+    customer_id: "customer_123"
+    customer_name: "Alice Smith"
+    start_time: "2025-01-20T10:00:00-05:00"
+    end_time: "2025-01-20T11:30:00-05:00"
+    timezone: "America/New_York"
+    service_id: "haircut_color"
+    base_price: { amount: 150, currency: "USD" }
+    total_price: { amount: 150, currency: "USD" }
+    status: confirmed
+    confirmation_code: "SAL-20250120-ABC"
+
+  car_rental:
+    booking_type: rental
+    resource_type: "vehicle"
+    resource_id: "car_tesla_model3"
+    resource_name: "Tesla Model 3"
+    customer_id: "customer_456"
+    start_time: "2025-01-25T09:00:00-08:00"
+    end_time: "2025-01-28T09:00:00-08:00"
+    timezone: "America/Los_Angeles"
+    base_price: { amount: 75, currency: "USD" }
+    adjustments:
+      - description: "Weekend surcharge"
+        adjustment_type: "surcharge"
+        amount: { amount: 30, currency: "USD" }
+    total_price: { amount: 255, currency: "USD" }
+    deposit_required: { amount: 200, currency: "USD" }
+    status: confirmed
+    agreement_id: "rental_agreement_789"
+
+  yoga_class:
+    booking_type: class
+    resource_type: "class"
+    resource_id: "yoga_morning_flow"
+    resource_name: "Morning Flow Yoga"
+    customer_id: "member_abc"
+    start_time: "2025-01-15T07:00:00-05:00"
+    end_time: "2025-01-15T08:00:00-05:00"
+    timezone: "America/New_York"
+    quantity: 1
+    status: confirmed
+    payment_status: paid
+    booked_via: app
+
+sources:
+  - "Calendly Scheduling Model"
+  - "OpenTable Reservations"
+  - "Mindbody Class Booking"
+  - "Car Rental Industry Standards"

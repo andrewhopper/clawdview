@@ -1,0 +1,45 @@
+version: 1
+# AWS Amplify Build Specification
+# Copy to project root as amplify.yml
+
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    # Next.js SSR
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
+
+# Uncomment for static site (Vite, CRA, etc.)
+# frontend:
+#   phases:
+#     preBuild:
+#       commands:
+#         - npm ci
+#     build:
+#       commands:
+#         - npm run build
+#   artifacts:
+#     baseDirectory: dist
+#     files:
+#       - '**/*'
+#   cache:
+#     paths:
+#       - node_modules/**/*
+
+# Uncomment for backend (API routes, SSR)
+# backend:
+#   phases:
+#     build:
+#       commands:
+#         - npm run build:backend

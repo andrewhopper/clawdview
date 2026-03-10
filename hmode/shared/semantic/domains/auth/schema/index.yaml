@@ -1,0 +1,14 @@
+# Auth Domain Schema Index
+
+domain: auth
+version: 0.1.0
+description: Authentication and authorization domain model
+namespace: http://protoflow.ai/ontology/auth#
+dependencies: [core]
+
+imports:
+  - identity.yaml    # User, ServiceAccount, Principal
+  - access.yaml      # Role, Permission, Policy
+  - session.yaml     # Session
+  - credentials.yaml # Password, Token, OAuth, MFA
+  - actions.yaml     # Authenticate, Authorize, etc.

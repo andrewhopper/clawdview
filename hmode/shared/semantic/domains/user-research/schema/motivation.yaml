@@ -1,0 +1,93 @@
+# Motivation - Goals, Jobs, Pains, Gains
+# Source: Christensen (2016), Osterwalder (2014)
+
+entities:
+  Motivation:
+    description: A job-to-be-done or goal the actor wants to achieve
+    properties:
+      id:
+        type: string
+        required: true
+      type:
+        type: MotivationType
+        required: true
+      statement:
+        type: string
+        required: true
+        description: The job/goal statement
+      jtbd_format:
+        type: string
+        description: "When [situation], I want to [motivation], so I can [outcome]"
+      importance:
+        type: integer
+        min: 1
+        max: 5
+        default: 3
+        description: How important is this job (5=critical)
+      frequency:
+        type: Frequency
+        description: How often this job arises
+
+  Pain:
+    description: A frustration, obstacle, or risk the actor experiences
+    properties:
+      id:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      type:
+        type: PainType
+        required: true
+      severity:
+        type: Severity
+        required: true
+        description: How painful is this
+      context:
+        type: string
+        description: When/where this pain occurs
+
+  Gain:
+    description: A desired outcome or benefit the actor wants
+    properties:
+      id:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      type:
+        type: GainType
+        required: true
+      relevance:
+        type: integer
+        min: 1
+        max: 5
+        default: 3
+        description: How relevant/desired (5=must-have)
+
+  # Hiring/firing criteria for solutions
+  HiringCriteria:
+    description: What makes an actor choose a solution
+    properties:
+      criteria:
+        type: array
+        items: string
+        required: true
+      deal_breakers:
+        type: array
+        items: string
+        description: Absolute requirements
+
+  FiringCriteria:
+    description: What makes an actor abandon a solution
+    properties:
+      criteria:
+        type: array
+        items: string
+        required: true
+      triggers:
+        type: array
+        items: string
+        description: Immediate causes for switching

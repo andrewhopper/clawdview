@@ -1,0 +1,97 @@
+# Location & Address
+
+entities:
+
+  Address:
+    schemaOrg: PostalAddress
+    description: Physical or mailing address
+    properties:
+      line1:
+        type: string
+        required: true
+        maxLength: 200
+        description: Street address, P.O. box
+      line2:
+        type: string
+        description: Apt, suite, unit, building
+      city:
+        type: string
+        required: true
+      stateProvince:
+        type: string
+      postalCode:
+        type: string
+        maxLength: 20
+      country:
+        type: string
+        required: true
+        pattern: "^[A-Z]{2}$"
+        description: ISO 3166-1 alpha-2 code
+      type:
+        type: AddressType
+      geoLocation:
+        type: GeoLocation
+
+  GeoLocation:
+    description: Coordinates on Earth
+    properties:
+      latitude:
+        type: decimal
+        required: true
+        min: -90
+        max: 90
+      longitude:
+        type: decimal
+        required: true
+        min: -180
+        max: 180
+      altitude:
+        type: decimal
+        description: Meters above sea level
+      accuracy:
+        type: decimal
+        description: Accuracy radius in meters
+
+  Location:
+    description: Simple geographic location without full street address (for work locations, event venues, etc.)
+    properties:
+      id:
+        type: uuid
+        required: true
+      city:
+        type: string
+        maxLength: 100
+        description: City name
+      state:
+        type: string
+        maxLength: 100
+        description: State, province, or region
+      country:
+        type: string
+        required: true
+        pattern: "^[A-Z]{2}$"
+        description: ISO 3166-1 alpha-2 code
+      postal_code:
+        type: string
+        maxLength: 20
+        description: ZIP or postal code
+      location_type:
+        type: LocationType
+        required: true
+        default: Physical
+      geo_location:
+        type: GeoLocation
+        required: false
+        description: Optional precise coordinates
+
+enums:
+
+  AddressType:
+    values: [Home, Work, Billing, Shipping, Mailing]
+
+  LocationType:
+    description: Type of location
+    values:
+      - Physical      # Physical office/building
+      - Remote        # Remote work
+      - Hybrid        # Mix of physical and remote

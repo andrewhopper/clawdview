@@ -1,0 +1,527 @@
+# Artifact Library Domain Model
+# Version: 0.1.0
+# Purpose: Define document types for AI-assisted generation
+
+domain:
+  name: artifact-library
+  description: Company-wide library of document types with generation instructions
+  version: "0.1.0"
+  created_at: "2025-11-22"
+  updated_at: "2025-11-22"
+
+# ============================================
+# CORE ENTITIES
+# ============================================
+
+entities:
+  # -----------------------------------------
+  # ArtifactType - Document type definition
+  # -----------------------------------------
+  ArtifactType:
+    description: A reusable document template with generation instructions
+    properties:
+      id:
+        type: string
+        required: true
+        pattern: "^[a-z][a-z0-9-]+$"
+        description: Unique identifier (kebab-case)
+      name:
+        type: string
+        required: true
+        description: Human-readable name
+      description:
+        type: string
+        required: true
+        description: What this artifact is and when to use it
+      category:
+        type: ArtifactCategory
+        required: true
+        description: Classification for organization
+      complexity:
+        type: ComplexityLevel
+        required: true
+        description: Generation complexity indicator
+      version:
+        type: string
+        required: true
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+        description: Semantic version
+      schema:
+        type: ArtifactSchema
+        required: true
+        description: Structure definition
+      prompt:
+        type: GenerationPrompt
+        required: true
+        description: AI generation instructions
+      validators:
+        type: array
+        items: Validator
+        description: Quality checks
+      examples:
+        type: array
+        items: Example
+        min_items: 1
+        description: Gold standard outputs
+      output_formats:
+        type: array
+        items: OutputFormat
+        default: [markdown]
+        description: Supported output formats
+      constraints:
+        type: Constraints
+        description: Length and style limits
+      tags:
+        type: array
+        items: string
+        description: Searchable tags
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # -----------------------------------------
+  # ArtifactSchema - Document structure
+  # -----------------------------------------
+  ArtifactSchema:
+    description: Defines required sections and fields
+    properties:
+      sections:
+        type: array
+        items: Section
+        required: true
+        min_items: 1
+      required_fields:
+        type: array
+        items: Field
+        description: Input fields needed for generation
+      optional_fields:
+        type: array
+        items: Field
+
+  Section:
+    description: A section within the document
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      order:
+        type: integer
+        required: true
+      required:
+        type: boolean
+        default: true
+      subsections:
+        type: array
+        items: Section
+      word_limit:
+        type: integer
+        description: Max words for this section
+      format:
+        type: SectionFormat
+
+  Field:
+    description: Input field for generation
+    properties:
+      name:
+        type: string
+        required: true
+      type:
+        type: FieldType
+        required: true
+      description:
+        type: string
+      required:
+        type: boolean
+        default: false
+      default:
+        type: any
+      validation:
+        type: string
+        description: Regex or validation rule
+
+  # -----------------------------------------
+  # GenerationPrompt - AI instructions
+  # -----------------------------------------
+  GenerationPrompt:
+    description: Instructions for AI to generate the artifact
+    properties:
+      system_prompt:
+        type: string
+        required: true
+        description: Role and context for AI
+      task_prompt:
+        type: string
+        required: true
+        description: What to generate and how
+      style_guide:
+        type: string
+        description: Reference to writing style guide
+      few_shot_examples:
+        type: array
+        items: FewShotExample
+        description: In-context learning examples
+      constraints:
+        type: array
+        items: string
+        description: Generation constraints (word limits, formatting)
+      audience:
+        type: string
+        description: Target audience description
+      tone:
+        type: Tone
+        description: Writing tone
+      variables:
+        type: array
+        items: PromptVariable
+        description: Dynamic prompt placeholders
+
+  FewShotExample:
+    description: Input/output pair for in-context learning
+    properties:
+      input:
+        type: string
+        required: true
+      output:
+        type: string
+        required: true
+      explanation:
+        type: string
+        description: Why this is a good example
+
+  PromptVariable:
+    description: Dynamic placeholder in prompt
+    properties:
+      name:
+        type: string
+        required: true
+        pattern: "^\\{\\{[A-Z_]+\\}\\}$"
+      description:
+        type: string
+      source:
+        type: VariableSource
+        description: Where the value comes from
+
+  # -----------------------------------------
+  # Validator - Quality checks
+  # -----------------------------------------
+  Validator:
+    description: Quality validation rule
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      type:
+        type: ValidatorType
+        required: true
+      rule:
+        type: string
+        required: true
+        description: Validation logic or regex
+      severity:
+        type: Severity
+        default: error
+      message:
+        type: string
+        required: true
+        description: Error message when validation fails
+
+  # -----------------------------------------
+  # Example - Gold standard output
+  # -----------------------------------------
+  Example:
+    description: Reference implementation of the artifact
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      input:
+        type: object
+        required: true
+        description: Input values used
+      output:
+        type: string
+        required: true
+        description: Generated artifact content
+      quality_score:
+        type: number
+        min: 0
+        max: 100
+        description: Quality rating
+      annotations:
+        type: array
+        items: Annotation
+        description: Explanatory notes
+
+  Annotation:
+    description: Explanatory note on example
+    properties:
+      line_start:
+        type: integer
+      line_end:
+        type: integer
+      comment:
+        type: string
+        required: true
+
+  # -----------------------------------------
+  # Constraints - Generation limits
+  # -----------------------------------------
+  Constraints:
+    description: Limits on generated output
+    properties:
+      min_words:
+        type: integer
+      max_words:
+        type: integer
+      min_sections:
+        type: integer
+      max_sections:
+        type: integer
+      max_tokens:
+        type: integer
+        description: LLM token limit
+      reading_level:
+        type: ReadingLevel
+      density:
+        type: DensityLevel
+        description: Word economy level
+
+# ============================================
+# ENUMS
+# ============================================
+
+enums:
+  ArtifactCategory:
+    values:
+      - report           # Findings, analysis, assessment
+      - brief            # Executive summary, one-pager
+      - proposal         # Technical proposal, project pitch
+      - communication    # Email, readout, update
+      - presentation     # Slides, deck
+      - documentation    # Technical docs, guides
+      - creative         # Story, song, narrative
+      - assessment       # Audit, review, scorecard
+      - transformer      # Outline, cliff notes, visualization
+
+  ComplexityLevel:
+    values:
+      - simple           # Single-pass generation
+      - moderate         # May need refinement
+      - complex          # Multi-stage workflow
+      - progressive      # 6-stage progressive content
+
+  OutputFormat:
+    values:
+      - markdown
+      - html
+      - docx
+      - pdf
+      - pptx
+      - json
+      - yaml
+
+  FieldType:
+    values:
+      - string
+      - text           # Multi-line string
+      - number
+      - boolean
+      - date
+      - datetime
+      - url
+      - email
+      - file           # File attachment
+      - object
+      - array
+      - enum
+
+  SectionFormat:
+    values:
+      - prose
+      - bullets
+      - numbered
+      - table
+      - code
+      - diagram
+      - mixed
+
+  ValidatorType:
+    values:
+      - word_count
+      - section_presence
+      - regex
+      - quality_rubric
+      - style_check
+      - grammar
+      - citation
+      - custom
+
+  Severity:
+    values:
+      - error
+      - warning
+      - info
+
+  Tone:
+    values:
+      - formal
+      - professional
+      - conversational
+      - technical
+      - persuasive
+      - empathetic
+      - neutral
+
+  VariableSource:
+    values:
+      - user_input
+      - context
+      - project_metadata
+      - previous_section
+      - external_api
+
+  ReadingLevel:
+    values:
+      - executive       # C-suite, minimal jargon
+      - technical       # Engineers, detailed
+      - general         # Broad audience
+      - expert          # Deep domain knowledge assumed
+
+  DensityLevel:
+    values:
+      - dense           # 50% fewer words, high info density
+      - standard        # Normal prose
+      - expanded        # Detailed explanations
+
+# ============================================
+# ACTIONS
+# ============================================
+
+actions:
+  CreateArtifactType:
+    description: Register a new artifact type in the library
+    operates_on: ArtifactType
+    requires_permission: artifact:create
+    idempotent: false
+
+  GenerateArtifact:
+    description: Generate a document from an artifact type
+    operates_on: ArtifactType
+    inputs:
+      - artifact_type_id
+      - field_values
+      - output_format
+    outputs:
+      - generated_content
+      - validation_results
+      - quality_score
+    requires_permission: artifact:generate
+    idempotent: true
+
+  ValidateArtifact:
+    description: Run validators against generated content
+    operates_on: ArtifactType
+    inputs:
+      - artifact_type_id
+      - content
+    outputs:
+      - validation_results
+      - passed
+      - score
+    idempotent: true
+
+  TransformArtifact:
+    description: Convert artifact between formats or representations
+    operates_on: ArtifactType
+    inputs:
+      - source_content
+      - target_format
+      - transformation_type
+    outputs:
+      - transformed_content
+    idempotent: true
+
+# ============================================
+# CLI INTERFACE
+# ============================================
+
+cli:
+  name: artifact
+  description: Generate documents from the artifact library
+  commands:
+    list:
+      description: List available artifact types
+      flags:
+        - name: --category
+          type: ArtifactCategory
+          description: Filter by category
+        - name: --format
+          type: string
+          default: table
+          values: [table, json, yaml]
+
+    generate:
+      description: Generate a document
+      args:
+        - name: type
+          required: true
+          description: Artifact type ID
+      flags:
+        - name: --input
+          type: string
+          description: Path to input YAML/JSON file
+        - name: --output
+          type: string
+          description: Output file path
+        - name: --format
+          type: OutputFormat
+          default: markdown
+        - name: --validate
+          type: boolean
+          default: true
+        - name: --interactive
+          type: boolean
+          default: false
+          description: Prompt for missing fields
+
+    validate:
+      description: Validate existing content against artifact type
+      args:
+        - name: type
+          required: true
+        - name: file
+          required: true
+      flags:
+        - name: --fix
+          type: boolean
+          default: false
+          description: Attempt auto-fixes
+
+    info:
+      description: Show artifact type details
+      args:
+        - name: type
+          required: true
+      flags:
+        - name: --schema
+          type: boolean
+          description: Show full schema
+        - name: --examples
+          type: boolean
+          description: Show examples

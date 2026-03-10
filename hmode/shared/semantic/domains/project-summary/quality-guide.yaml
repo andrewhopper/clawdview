@@ -1,0 +1,1262 @@
+# =============================================================================
+# Project Capsule Quality Guide
+# Version: 2.1.0
+# Purpose: Evaluation criteria for LLM judge to assess capsule quality
+# Audience: MBA-level executive with no technical background
+# Frameworks: 2500+ years of wisdom - ancient philosophy to modern behavioral economics
+# =============================================================================
+
+guide_version: "2.1.0"
+target_audience: "Executive with MBA-level education, no technical background"
+reading_time: "30 seconds to 2 minutes"
+
+# =============================================================================
+# CORE PRINCIPLE
+# =============================================================================
+
+core_principle: |
+  A capsule must answer "why should I care?" in plain English.
+
+  The reader should understand:
+    1. WHO benefits from this
+    2. WHAT problem they have today
+    3. WHY current options don't work
+    4. HOW this project helps them
+    5. WHAT makes it different
+
+  WITHOUT needing to know:
+    - Programming languages
+    - Technical architectures
+    - Implementation details
+    - Industry acronyms
+
+  WRITING RULES:
+    1. NO unsupported claims - cite data or remove
+    2. NO unnecessary adjectives - strip them
+    3. DENSIFY - say more with fewer words
+    4. STATE THE CORE BENEFIT - what can the user DO?
+
+# =============================================================================
+# HUMAN-CENTERED DESIGN FRAMEWORKS
+# =============================================================================
+
+frameworks:
+  description: |
+    Every capsule must align with proven human-centered design principles.
+    Use these frameworks to ensure the capsule speaks to human motivation.
+
+  # ---------------------------------------------------------------------------
+  # SIMON SINEK: THE GOLDEN CIRCLE (2009)
+  # ---------------------------------------------------------------------------
+  golden_circle:
+    source: "Start With Why (Simon Sinek, 2009)"
+    principle: |
+      People don't buy WHAT you do, they buy WHY you do it.
+      Communicate from the inside out: WHY → HOW → WHAT
+
+    application:
+      why: "uvp field - the belief or purpose driving the project"
+      how: "solution field - the approach that makes it possible"
+      what: "features field - the tangible capabilities"
+
+    key_insight: |
+      The WHY speaks to the limbic brain (emotions, decisions).
+      The WHAT speaks to the neocortex (rational analysis).
+      Lead with emotion, support with logic.
+
+  # ---------------------------------------------------------------------------
+  # CLAYTON CHRISTENSEN: JOBS TO BE DONE (2016)
+  # ---------------------------------------------------------------------------
+  jobs_to_be_done:
+    source: "Competing Against Luck (Clayton Christensen, 2016)"
+    principle: |
+      Customers don't buy products - they hire them to do a job.
+      Every "job" has functional, emotional, and social dimensions.
+
+    job_dimensions:
+      functional: "The practical task to accomplish"
+      emotional: "How the user wants to FEEL"
+      social: "How the user wants to be PERCEIVED"
+
+    application:
+      problem: "Describes the functional job not getting done"
+      core_benefit: "Must include emotional and social outcomes"
+      customer: "Defined by the job, not demographics"
+
+    formula: |
+      "When I [situation], I want to [motivation], so I can [outcome]"
+
+    examples:
+      - situation: "am away from my desk"
+        motivation: "get AI help with code"
+        outcome: "keep making progress on my ideas"
+      - situation: "am caring for an aging parent"
+        motivation: "know they're okay"
+        outcome: "stop worrying and live my own life"
+
+  # ---------------------------------------------------------------------------
+  # BJ FOGG: BEHAVIOR MODEL (2009)
+  # ---------------------------------------------------------------------------
+  fogg_behavior_model:
+    source: "Tiny Habits (BJ Fogg, 2019)"
+    principle: |
+      Behavior = Motivation + Ability + Prompt (B = MAP)
+      All three must converge for behavior to occur.
+
+    components:
+      motivation: "The user's desire to act (pain/pleasure, hope/fear, belonging)"
+      ability: "How easy it is to perform the action"
+      prompt: "The trigger that initiates the behavior"
+
+    application:
+      problem: "Addresses motivation (pain point)"
+      solution: "Addresses ability (make it easy)"
+      uvp: "Often addresses the prompt or reduces friction"
+
+    design_implications:
+      - "Reduce steps: fewer clicks, less setup"
+      - "Match motivation level: high motivation tolerates more friction"
+      - "Time prompts well: meet users when motivation is high"
+
+  # ---------------------------------------------------------------------------
+  # NIR EYAL: HOOKED MODEL (2014)
+  # ---------------------------------------------------------------------------
+  hooked_model:
+    source: "Hooked: How to Build Habit-Forming Products (Nir Eyal, 2014)"
+    principle: |
+      Habits form through a four-step loop:
+      Trigger → Action → Variable Reward → Investment
+
+    components:
+      trigger: "External (notification) or internal (emotion like boredom)"
+      action: "Simplest behavior in anticipation of reward"
+      variable_reward: "Unpredictable satisfaction (tribe, hunt, or self)"
+      investment: "User puts something in, increasing likelihood of return"
+
+    reward_types:
+      tribe: "Social rewards - connection, acceptance, belonging"
+      hunt: "Resource rewards - information, money, deals"
+      self: "Achievement rewards - mastery, completion, competence"
+
+    application:
+      problem: "Often describes the internal trigger (frustration, anxiety)"
+      solution: "Describes the action and reward"
+      vision: "May hint at investment loop"
+
+  # ---------------------------------------------------------------------------
+  # DON NORMAN: EMOTIONAL DESIGN (2004)
+  # ---------------------------------------------------------------------------
+  emotional_design:
+    source: "Emotional Design (Don Norman, 2004)"
+    principle: |
+      Design operates on three levels of cognitive processing:
+      Visceral → Behavioral → Reflective
+
+    levels:
+      visceral: "Immediate, automatic reaction (looks good, feels right)"
+      behavioral: "Usability and effectiveness (works well, feels easy)"
+      reflective: "Meaning and self-image (makes me feel smart, proud)"
+
+    application:
+      uvp: "Often targets reflective level (identity, status)"
+      solution: "Targets behavioral level (ease of use)"
+      high_level_concept: "Creates visceral recognition"
+
+# =============================================================================
+# ANCIENT & CLASSICAL WISDOM (2500+ YEARS)
+# =============================================================================
+
+ancient_wisdom:
+  description: |
+    Human nature hasn't changed. These frameworks from ancient philosophy
+    and religious traditions capture timeless truths about motivation.
+
+  # ---------------------------------------------------------------------------
+  # ARISTOTLE: RHETORIC (350 BC)
+  # ---------------------------------------------------------------------------
+  aristotelian_rhetoric:
+    source: "On Rhetoric (Aristotle, 350 BC)"
+    principle: |
+      Persuasion requires three appeals working together:
+      - Ethos: Credibility and character of the speaker
+      - Pathos: Emotional state of the audience
+      - Logos: Logic and reasoning of the argument
+
+    application:
+      ethos: "Establishes trust - who made this? why should I believe them?"
+      pathos: "problem field - triggers emotional recognition"
+      logos: "solution field - provides rational justification"
+
+    key_insight: |
+      Ethos opens the door (credibility).
+      Pathos creates the desire (emotion).
+      Logos closes the deal (reason).
+      Lead with credibility, appeal to emotion, support with logic.
+
+    additional_element:
+      kairos: "The right moment - timing matters for persuasion"
+
+  # ---------------------------------------------------------------------------
+  # CONFUCIUS: THE ANALECTS (~500 BC)
+  # ---------------------------------------------------------------------------
+  confucian_wisdom:
+    source: "The Analects (Confucius, ~500 BC)"
+    principle: |
+      Self-cultivation through virtue and relationships.
+      The junzi (superior person) develops through:
+      - Ren (仁): Benevolence, humaneness
+      - Yi (義): Righteousness, doing what is right
+      - Li (禮): Propriety, ritual, proper conduct
+      - Zhi (智): Wisdom, knowledge
+      - Xin (信): Sincerity, faithfulness
+
+    key_insight: |
+      "What you do not desire for yourself, do not do to others."
+      The self is deeply relational - we exist in relationship to others.
+
+    application:
+      customer: "Define in terms of relationships and obligations"
+      core_benefit: "Should honor human dignity and relationships"
+      solution: "Should enable virtue, not just efficiency"
+
+    five_relationships:
+      - "Parent and child"
+      - "Ruler and subject"
+      - "Husband and wife"
+      - "Elder and younger"
+      - "Friend and friend"
+
+  # ---------------------------------------------------------------------------
+  # BUDDHIST: FOUR NOBLE TRUTHS (~500 BC)
+  # ---------------------------------------------------------------------------
+  buddhist_psychology:
+    source: "Dhammacakkappavattana Sutta (Buddha, ~500 BC)"
+    principle: |
+      The Four Noble Truths:
+      1. Dukkha: Life involves suffering/dissatisfaction
+      2. Samudaya: Suffering arises from craving (tanha)
+      3. Nirodha: Suffering can cease
+      4. Magga: There is a path to cessation
+
+    key_insight: |
+      Dukkha doesn't mean "suffering" - it means "incapable of satisfying."
+      Craving for sense-pleasures, for becoming, for non-existence
+      all lead to dissatisfaction. The solution addresses craving.
+
+    application:
+      problem: "Identifies the dukkha - the dissatisfaction, the craving"
+      solution: "Addresses the root cause, not just symptoms"
+      uvp: "Promises relief from craving, not just more to crave"
+
+    three_types_of_dukkha:
+      obvious: "Physical and mental pain"
+      change: "Anxiety about impermanence - things we love will end"
+      existence: "Basic unsatisfactoriness of conditioned existence"
+
+  # ---------------------------------------------------------------------------
+  # STOIC: DICHOTOMY OF CONTROL (~100 AD)
+  # ---------------------------------------------------------------------------
+  stoic_philosophy:
+    source: "Enchiridion (Epictetus, ~100 AD)"
+    principle: |
+      Divide all things into two categories:
+      - Within our control: judgments, desires, actions
+      - Outside our control: external events, others' opinions, outcomes
+
+      Focus only on what you can control.
+      Accept what you cannot control.
+
+    key_insight: |
+      "People are disturbed not by events, but by their judgments about events."
+      This insight inspired modern Cognitive Behavioral Therapy (CBT).
+
+    application:
+      problem: "Often about things outside user's control"
+      solution: "Brings things back into user's control"
+      core_benefit: "Shifts from helplessness to agency"
+
+    serenity_prayer:
+      description: "Modern expression of the same principle"
+      text: |
+        Grant me serenity to accept what I cannot change,
+        courage to change what I can,
+        and wisdom to know the difference.
+
+  # ---------------------------------------------------------------------------
+  # BIBLICAL: WISDOM LITERATURE (~1000-300 BC)
+  # ---------------------------------------------------------------------------
+  biblical_wisdom:
+    source: "Proverbs, Ecclesiastes, Job (Hebrew Bible)"
+    principle: |
+      Proverbs: Practical wisdom - right actions lead to good outcomes
+      Ecclesiastes: Limits of wisdom - sometimes it doesn't work
+      Job: Mystery of suffering - some things cannot be explained
+
+    proverbs_insight: |
+      "The fear of the LORD is the beginning of wisdom."
+      Human destiny depends upon responsible action.
+      Work is tied to need: "A worker's appetite works for him."
+
+    ecclesiastes_insight: |
+      "What does man gain by all the toil at which he toils under the sun?"
+      Wisdom has limits. Not all striving leads to satisfaction.
+      "Vanity of vanities - all is vanity."
+
+    application:
+      problem: "May reflect Ecclesiastes - the futility of current approaches"
+      solution: "Should reflect Proverbs - practical wisdom that works"
+      core_benefit: "Honest about limits while offering real help"
+
+    balance: |
+      Don't promise more than you can deliver (Ecclesiastes).
+      But do offer genuine practical value (Proverbs).
+
+# =============================================================================
+# MID-20TH CENTURY FOUNDATIONS (1940s-1970s)
+# =============================================================================
+
+mid_century_psychology:
+  description: |
+    Foundational frameworks from the post-war period that shaped
+    modern understanding of human motivation.
+
+  # ---------------------------------------------------------------------------
+  # VIKTOR FRANKL: LOGOTHERAPY (1946)
+  # ---------------------------------------------------------------------------
+  logotherapy:
+    source: "Man's Search for Meaning (Viktor Frankl, 1946)"
+    principle: |
+      The primary human drive is not pleasure (Freud) or power (Adler)
+      but the search for MEANING.
+
+      Without meaning, people fill the void with:
+      hedonism, power, materialism, or neurotic obsessions.
+
+    three_sources_of_meaning:
+      creative: "Creating a work or accomplishing a task"
+      experiential: "Experiencing something or loving someone"
+      attitudinal: "Finding meaning in unavoidable suffering"
+
+    key_insight: |
+      "He who has a WHY to live can bear almost any HOW."
+      Meaning can be found even in suffering.
+      Life never ceases to have meaning.
+
+    application:
+      uvp: "Should connect to meaning, not just utility"
+      core_benefit: "Addresses a deeper WHY, not just WHAT"
+      vision: "Points to meaningful purpose"
+
+  # ---------------------------------------------------------------------------
+  # HERZBERG: TWO-FACTOR THEORY (1959)
+  # ---------------------------------------------------------------------------
+  two_factor_theory:
+    source: "The Motivation to Work (Frederick Herzberg, 1959)"
+    principle: |
+      Satisfaction and dissatisfaction are NOT opposites.
+      Two separate factors at work:
+
+      Hygiene Factors (prevent dissatisfaction):
+      - Salary, conditions, policy, supervision, relationships
+      - Absence causes dissatisfaction; presence doesn't motivate
+
+      Motivators (create satisfaction):
+      - Achievement, recognition, the work itself, responsibility
+      - Presence motivates; absence doesn't cause dissatisfaction
+
+    key_insight: |
+      Fixing problems (hygiene) is necessary but not sufficient.
+      To truly motivate, you must enable achievement and growth.
+
+    application:
+      problem: "May address hygiene factors (things that frustrate)"
+      solution: "Should enable motivators (achievement, growth)"
+      core_benefit: "Best when it enables achievement, not just removes pain"
+
+  # ---------------------------------------------------------------------------
+  # McCLELLAND: ACHIEVEMENT MOTIVATION (1961)
+  # ---------------------------------------------------------------------------
+  achievement_motivation:
+    source: "The Achieving Society (David McClelland, 1961)"
+    principle: |
+      Three core motivational needs (one usually dominates):
+
+      Need for Achievement (nAch):
+      - Drive to excel, accomplish, succeed
+      - Prefers challenging but achievable goals
+      - Wants feedback on performance
+
+      Need for Affiliation (nAff):
+      - Drive for harmonious relationships
+      - Values belonging and connection
+      - Dislikes conflict and isolation
+
+      Need for Power (nPow):
+      - Drive to influence and control
+      - Values status and recognition
+      - Wants to make an impact
+
+    application:
+      customer: "Which need dominates for your target user?"
+      core_benefit: "Should address their dominant need"
+      outcome_mapping:
+        achievement: "...so they can accomplish more, achieve their goals"
+        affiliation: "...so they can stay connected, belong, collaborate"
+        power: "...so they can have more influence, make a bigger impact"
+
+  # ---------------------------------------------------------------------------
+  # CARL ROGERS: HUMANISTIC PSYCHOLOGY (1961)
+  # ---------------------------------------------------------------------------
+  humanistic_psychology:
+    source: "On Becoming a Person (Carl Rogers, 1961)"
+    principle: |
+      People have an innate drive toward self-actualization.
+      Growth requires:
+      - Unconditional positive regard: Acceptance without conditions
+      - Empathy: Being understood by another
+      - Congruence: Authenticity, genuineness
+
+    key_insight: |
+      People thrive when accepted as they are.
+      Conditional acceptance ("I'll value you IF...") stunts growth.
+      True change comes from acceptance, not judgment.
+
+    application:
+      customer: "Describe without judgment or condescension"
+      problem: "Empathize with the struggle, don't blame the user"
+      solution: "Enable growth without imposing conditions"
+
+    self_actualization_signs:
+      - "Openness to experience"
+      - "Trust in themselves"
+      - "Internal source of evaluation"
+      - "Willingness to continue growing"
+
+# =============================================================================
+# BEHAVIORAL ECONOMICS PRINCIPLES
+# =============================================================================
+
+behavioral_economics:
+  description: |
+    Human decisions are not purely rational. Apply these biases
+    to make capsules more compelling and honest about user behavior.
+
+  # ---------------------------------------------------------------------------
+  # KAHNEMAN: SYSTEM 1 AND SYSTEM 2 (2011)
+  # ---------------------------------------------------------------------------
+  dual_process_theory:
+    source: "Thinking, Fast and Slow (Daniel Kahneman, 2011)"
+    principle: |
+      The brain has two systems:
+      - System 1: Fast, automatic, emotional, intuitive
+      - System 2: Slow, deliberate, logical, effortful
+
+      Most decisions are made by System 1.
+      System 2 often just rationalizes System 1 choices.
+
+    application:
+      uvp: "Must work for System 1 - immediate, intuitive appeal"
+      problem: "Triggers System 1 recognition of pain"
+      solution: "System 2 justification after System 1 says yes"
+
+    writing_implications:
+      - "Lead with emotion and benefits (System 1)"
+      - "Support with logic and evidence (System 2)"
+      - "Keep it simple - System 2 is lazy"
+
+  # ---------------------------------------------------------------------------
+  # THALER & SUNSTEIN: NUDGE THEORY (2008)
+  # ---------------------------------------------------------------------------
+  nudge_theory:
+    source: "Nudge (Richard Thaler & Cass Sunstein, 2008)"
+    principle: |
+      Small changes in how choices are presented can significantly
+      influence decisions without restricting options.
+
+    east_framework:
+      description: "Make desired behavior EAST"
+      easy: "Reduce friction, minimize steps"
+      attractive: "Draw attention, highlight benefits"
+      social: "Show what others are doing"
+      timely: "Prompt when motivation is highest"
+
+    application:
+      solution: "Should emphasize ease and attraction"
+      alternatives: "Show social proof in gaps (why others struggle)"
+
+  # ---------------------------------------------------------------------------
+  # ARIELY: PREDICTABLE IRRATIONALITY (2008)
+  # ---------------------------------------------------------------------------
+  predictable_irrationality:
+    source: "Predictably Irrational (Dan Ariely, 2008)"
+    principle: |
+      Humans make consistent, predictable errors in judgment.
+      Understanding these helps design for real behavior.
+
+    key_biases:
+      anchoring: "First number seen influences all subsequent judgments"
+      relativity: "We judge value by comparison, not absolute merit"
+      free_effect: "Zero is not just a price - it's an emotional trigger"
+      social_vs_market: "Social norms and market norms don't mix"
+      expectations: "We experience what we expect to experience"
+
+    application:
+      alternatives: "Create relativity - show what's missing from current options"
+      uvp: "Anchor to a positive frame"
+      solution: "Set expectations that can be exceeded"
+
+  # ---------------------------------------------------------------------------
+  # DECI & RYAN: SELF-DETERMINATION THEORY (1985)
+  # ---------------------------------------------------------------------------
+  self_determination_theory:
+    source: "Self-Determination Theory (Deci & Ryan, 1985)"
+    principle: |
+      Humans have three basic psychological needs:
+      - Autonomy: Control over one's own actions
+      - Competence: Ability to master tasks and learn new skills
+      - Relatedness: Connection and belonging with others
+
+      When satisfied, intrinsic motivation flourishes.
+      When thwarted, motivation diminishes.
+
+    application:
+      core_benefit: "Should address at least one psychological need"
+      outcome_mapping:
+        autonomy:
+          - "without being tied to..."
+          - "on your own terms"
+          - "whenever you want"
+        competence:
+          - "get better results"
+          - "feel confident"
+          - "master new skills"
+        relatedness:
+          - "stay connected"
+          - "share with others"
+          - "be part of a community"
+
+  # ---------------------------------------------------------------------------
+  # MASLOW: HIERARCHY OF NEEDS (1943)
+  # ---------------------------------------------------------------------------
+  hierarchy_of_needs:
+    source: "A Theory of Human Motivation (Abraham Maslow, 1943)"
+    principle: |
+      Human needs form a hierarchy:
+      1. Physiological (survival)
+      2. Safety (security, stability)
+      3. Belonging (love, connection)
+      4. Esteem (achievement, respect)
+      5. Self-actualization (reaching potential)
+
+    design_hierarchy:
+      description: "Steven Bradley's translation for product design"
+      levels:
+        functionality: "Does it work at all?"
+        reliability: "Does it work consistently?"
+        usability: "Is it easy to use?"
+        proficiency: "Does it help me do more?"
+        creativity: "Does it enable new possibilities?"
+
+    application:
+      problem: "Identify which need level is unmet"
+      solution: "Address that need directly"
+      vision: "May point to higher-order needs"
+
+# =============================================================================
+# FRAMEWORK SYNTHESIS: THE CAPSULE CHECKLIST
+# =============================================================================
+
+framework_checklist:
+  description: |
+    Before finalizing a capsule, verify alignment with key frameworks.
+    Organized by era: ancient wisdom, mid-century foundations, modern research.
+
+  checks:
+    # ANCIENT WISDOM (2500+ years)
+    aristotelian_rhetoric:
+      - "Does the capsule establish ethos (credibility)?"
+      - "Does the problem trigger pathos (emotional recognition)?"
+      - "Does the solution provide logos (rational justification)?"
+
+    stoic_control:
+      - "Does the solution bring things into the user's control?"
+      - "Does it shift from helplessness to agency?"
+
+    buddhist_dukkha:
+      - "Does the problem identify the real dissatisfaction (not surface symptoms)?"
+      - "Does the solution address root causes, not just cravings?"
+
+    confucian_relationships:
+      - "Does the solution honor human dignity and relationships?"
+      - "Is the customer defined in terms of their relationships/roles?"
+
+    biblical_wisdom:
+      - "Does it offer practical value (Proverbs) without overpromising (Ecclesiastes)?"
+      - "Is it honest about limits while offering genuine help?"
+
+    # MID-CENTURY FOUNDATIONS (1940s-1970s)
+    frankl_meaning:
+      - "Does the uvp connect to meaning, not just utility?"
+      - "Does the core_benefit address a deeper WHY?"
+
+    herzberg_two_factor:
+      - "Does it enable achievement (motivator), not just remove frustration (hygiene)?"
+
+    mcclelland_needs:
+      - "Which need does the customer have: achievement, affiliation, or power?"
+      - "Does the outcome address their dominant need?"
+
+    rogers_acceptance:
+      - "Does the customer description avoid judgment or condescension?"
+      - "Does it empathize with struggle rather than blame?"
+
+    # MODERN FRAMEWORKS (1980s-present)
+    golden_circle:
+      - "Does the uvp communicate WHY, not just WHAT?"
+      - "Would this resonate emotionally before logically?"
+
+    jobs_to_be_done:
+      - "Is the problem defined as a job to be done?"
+      - "Does core_benefit address emotional AND functional outcomes?"
+      - "Is customer defined by situation, not demographics?"
+
+    behavior_model:
+      - "Is the solution easy enough given the motivation level?"
+      - "Are friction points minimized?"
+
+    dual_process:
+      - "Does the uvp work for fast, intuitive System 1 thinking?"
+      - "Is the solution simple enough that System 2 won't reject it?"
+
+    self_determination:
+      - "Does the outcome address autonomy, competence, or relatedness?"
+      - "Will the user feel more in control, capable, or connected?"
+
+    emotional_design:
+      - "Does the high_level_concept create instant recognition?"
+      - "Will users feel proud to use this (reflective level)?"
+
+# =============================================================================
+# DENSIFICATION & AUDIT RULES
+# =============================================================================
+
+densification_rules:
+  description: |
+    Every capsule must pass a densification audit before approval.
+    Goal: Maximum information density with minimum word count.
+
+  audit_checklist:
+    - step: "Strip adjectives"
+      description: "Remove adjectives that don't add specific meaning"
+      before: "Our innovative, cutting-edge, AI-powered solution"
+      after: "Our solution"
+
+    - step: "Remove weasel words"
+      description: "Delete hedging language"
+      words_to_remove:
+        - "very"
+        - "really"
+        - "quite"
+        - "somewhat"
+        - "relatively"
+        - "fairly"
+        - "pretty much"
+        - "kind of"
+        - "sort of"
+        - "in order to"
+        - "due to the fact that"
+        - "at this point in time"
+
+    - step: "Compress phrases"
+      description: "Replace wordy phrases with concise alternatives"
+      compressions:
+        "in order to": "to"
+        "due to the fact that": "because"
+        "at this point in time": "now"
+        "in the event that": "if"
+        "for the purpose of": "for"
+        "with regard to": "about"
+        "in spite of the fact that": "although"
+        "has the ability to": "can"
+        "is able to": "can"
+        "make use of": "use"
+
+    - step: "State core benefit"
+      description: "Express what the user can DO in a single sentence"
+      template: "Allows [WHO] to [DO WHAT] from [WHERE/WHEN/HOW]"
+      example: "Allows developers to get AI coding help from any device at any time"
+
+    - step: "Verify claims"
+      description: "Every data claim needs a citation or must be removed"
+
+  core_benefit_formula:
+    description: |
+      Every project has ONE core benefit. Express it as:
+      "[WHO] can [ACTION] [CONSTRAINT REMOVED] so that [OUTCOME]"
+
+      The "so that" clause connects the capability to human value:
+      - Freedom (not tied to desk, location, schedule)
+      - Peace of mind (reduced worry, confidence)
+      - Time (get more done, faster results)
+      - Simplicity (as easy as X)
+      - Empowerment (do something previously impossible)
+
+    examples:
+      - project: "GoCoder"
+        core_benefit: "Developers can interact with AI coding assistants from any device, any time so that they can turn ideas into working code without being tied to their desk"
+        breakdown:
+          who: "Developers"
+          action: "interact with AI coding assistants"
+          constraint_removed: "from any device, any time"
+          outcome: "turn ideas into working code without being tied to their desk"
+
+      - project: "Dementia Companion"
+        core_benefit: "Caregivers can monitor their loved one without being physically present so that they have peace of mind and can live their own life"
+        breakdown:
+          who: "Caregivers"
+          action: "monitor their loved one"
+          constraint_removed: "without being physically present"
+          outcome: "peace of mind and can live their own life"
+
+      - project: "TTS CLI"
+        core_benefit: "Anyone can convert text to natural speech with one command so that creating audio content is as easy as writing"
+        breakdown:
+          who: "Anyone"
+          action: "convert text to natural speech"
+          constraint_removed: "with one command"
+          outcome: "creating audio content is as easy as writing"
+
+    outcome_categories:
+      # Based on Self-Determination Theory (Deci & Ryan, 1985)
+      # and Jobs to Be Done (Christensen, 2016)
+
+      autonomy:  # SDT: Control over one's actions
+        description: "User gains freedom and control"
+        examples:
+          - "without being tied to their desk"
+          - "from anywhere, at any time"
+          - "on their own schedule"
+          - "without depending on others"
+
+      competence:  # SDT: Ability to master and achieve
+        description: "User becomes more capable"
+        examples:
+          - "turn ideas into working results"
+          - "get more done in less time"
+          - "feel confident in their abilities"
+          - "master something previously difficult"
+
+      relatedness:  # SDT: Connection with others
+        description: "User connects and belongs"
+        examples:
+          - "stay connected to loved ones"
+          - "share accomplishments with others"
+          - "be part of a community"
+          - "help others succeed"
+
+      safety:  # Maslow: Security and stability
+        description: "User feels secure and protected"
+        examples:
+          - "with peace of mind"
+          - "without worry about what could go wrong"
+          - "knowing everything is handled"
+          - "with confidence it will work"
+
+      simplicity:  # Fogg: Increase ability
+        description: "User faces less friction"
+        examples:
+          - "as easy as [familiar action]"
+          - "without learning complex tools"
+          - "with no setup required"
+          - "in one click instead of many steps"
+
+      possibility:  # Maslow: Self-actualization
+        description: "User reaches new potential"
+        examples:
+          - "do something previously impossible"
+          - "without needing [expensive resource]"
+          - "regardless of [previous limitation]"
+          - "unlock capabilities they didn't have before"
+
+# =============================================================================
+# CITATION REQUIREMENTS
+# =============================================================================
+
+citation_requirements:
+  description: |
+    Any claim involving numbers, statistics, or comparisons MUST have a citation.
+    If you can't cite it, delete it.
+
+  claims_requiring_citation:
+    - Market size claims ("$X billion market")
+    - Growth rates ("X% annual growth")
+    - Performance claims ("10x faster")
+    - User statistics ("X million users")
+    - Cost savings ("reduces costs by X%")
+    - Time savings ("saves X hours per week")
+    - Comparison claims ("faster than X")
+    - Industry statistics ("X% of companies...")
+
+  citation_format:
+    in_capsule: |
+      Use inline citation with source and date:
+      "Saves 3 hours per week [Internal user study, Nov 2025]"
+      "40% faster deployment [AWS benchmarks, 2024]"
+
+    citations_section: |
+      If capsule has multiple claims, add citations section:
+
+      citations:
+        - claim: "Saves 3 hours per week"
+          source: "Internal user study"
+          date: "November 2025"
+          n: 15 users
+        - claim: "40% faster deployment"
+          source: "AWS Lambda benchmarks"
+          url: "https://..."
+
+  no_citation_needed:
+    - General descriptions of the problem
+    - Qualitative user feedback ("users say it's easier")
+    - Self-evident statements ("typing is slower than speaking")
+    - Technical capabilities that are verifiable in code
+
+  what_to_do_without_citation:
+    - OPTION 1: Remove the claim entirely
+    - OPTION 2: Soften to qualitative ("significantly faster" → "faster")
+    - OPTION 3: Mark as hypothesis to validate ("We believe X, to be validated")
+
+# =============================================================================
+# FIELD-BY-FIELD QUALITY CRITERIA
+# =============================================================================
+
+field_criteria:
+
+  customer:
+    description: "Who is this for?"
+    max_words: 15
+    requirements:
+      - Describes a PERSON, not a system or company
+      - Uses job titles or life situations people recognize
+      - Avoids technical roles unless explained
+    good_examples:
+      - "Busy parents who forget important appointments"
+      - "Small business owners managing their own books"
+      - "People caring for elderly relatives with memory issues"
+    bad_examples:
+      - "DevOps engineers needing CI/CD pipeline optimization"
+      - "B2B SaaS companies with high MRR churn"
+      - "Enterprise architects modernizing legacy systems"
+    rewrite_guidance: |
+      Replace technical roles with the OUTCOME they want.
+      "DevOps engineers" → "Teams who want faster software releases"
+      "Data scientists" → "Analysts who need answers from messy data"
+
+  problem:
+    description: "What pain does this solve?"
+    max_words: 40
+    requirements:
+      - States the FRUSTRATION, not the missing feature
+      - Uses "I" or "they" perspective
+      - Anyone can relate to the pain
+    good_examples:
+      - "Managing a loved one's care means constant worry. You can't be there 24/7, and you never know if they're okay."
+      - "Getting help with code requires installing complicated tools. If you're on a phone or borrowed computer, you're stuck."
+    bad_examples:
+      - "Lack of real-time observability into container orchestration leads to MTTR increases"
+      - "Manual ETL processes create data quality issues in downstream analytics"
+    rewrite_guidance: |
+      Ask: "What does this feel like to the person experiencing it?"
+      Technical: "No CI/CD integration"
+      Human: "Every change requires manual steps that take hours and cause mistakes"
+
+  alternatives:
+    description: "What do people do today?"
+    requirements:
+      - Names solutions a layperson would recognize
+      - Gaps explained in terms of USER impact
+      - Avoid feature comparisons
+    good_examples:
+      - name: "Calling family members"
+        gap: "You can't call every hour, and they forget what you said"
+      - name: "Hiring a helper"
+        gap: "Expensive and still not available at 3am"
+    bad_examples:
+      - name: "Kubernetes native solutions"
+        gap: "Lack of multi-tenancy support"
+      - name: "Apache Airflow"
+        gap: "No native dbt integration"
+    rewrite_guidance: |
+      Replace product names with what they DO.
+      "Kubernetes" → "Container management tools"
+      "Airflow" → "Scheduling software"
+
+      Replace feature gaps with USER impact.
+      "No multi-tenancy" → "Can't separate different teams' work safely"
+
+  solution:
+    description: "What does this project do?"
+    max_words: 40
+    requirements:
+      - Describes the EXPERIENCE, not the technology
+      - Uses action verbs the user takes
+      - Result is clear without technical knowledge
+    good_examples:
+      - "Open a browser, type your question, and get working code you can test immediately."
+      - "A friendly voice your loved one recognizes calls to check in, chat, and alert you if something seems wrong."
+    bad_examples:
+      - "Containerized Claude Code instances with WebSocket terminal bridging"
+      - "ElevenLabs voice cloning with NLP-based cognitive assessment"
+    rewrite_guidance: |
+      Describe what the USER does, not what the SYSTEM does.
+      System: "Deploys ephemeral containers"
+      User: "Click a button and get your own workspace"
+
+  features:
+    description: "Top 3 capabilities"
+    max_items: 3
+    requirements:
+      - Each is a BENEFIT, not a feature
+      - Starts with action verb
+      - No technical terms
+    good_examples:
+      - "Ask questions and see real answers run"
+      - "Get alerts when something unusual happens"
+      - "Share results with one click"
+    bad_examples:
+      - "xterm.js terminal integration"
+      - "OAuth 2.0 authentication"
+      - "S3-based artifact persistence"
+    rewrite_guidance: |
+      Convert features to benefits:
+      "OAuth 2.0" → "Log in securely with your existing accounts"
+      "S3 storage" → "Your files are saved and backed up automatically"
+
+  innovations:
+    description: "Technical breakthroughs (for technical readers)"
+    note: |
+      This field IS allowed to be technical - it's for CTOs and engineers.
+      However, the IMPACT should still be understandable.
+    requirements:
+      - Title can be technical
+      - Description can be technical
+      - IMPACT must be in plain terms (speed, cost, reliability)
+    good_examples:
+      - title: "Firecracker microVMs"
+        description: "Lightweight virtual machines that start in milliseconds"
+        impact: "Your workspace is ready in under a second instead of minutes"
+    bad_examples:
+      - title: "gRPC streaming"
+        description: "Bidirectional streaming RPC"
+        impact: "Improved p99 latency for downstream consumers"
+
+  uvp:
+    description: "Why are we different?"
+    max_words: 10
+    requirements:
+      - Single sentence anyone understands
+      - Focuses on unique BENEFIT
+      - Could be a tagline or headline
+    good_examples:
+      - "Code help that works from any device"
+      - "A familiar voice that never forgets"
+      - "Turn any document into natural speech"
+    bad_examples:
+      - "Cloud-native agentic coding platform"
+      - "AI-powered cognitive decline monitoring"
+      - "Enterprise-grade TTS microservice"
+    rewrite_guidance: |
+      Remove all adjectives that are marketing speak:
+      - "cloud-native" → (delete)
+      - "AI-powered" → (delete or explain what AI does)
+      - "enterprise-grade" → "reliable" or "secure"
+
+  high_level_concept:
+    description: "X for Y analogy"
+    requirements:
+      - Both X and Y are household names
+      - Instantly communicates the idea
+    good_examples:
+      - "Uber for dog walking"
+      - "Google Docs for spreadsheets"
+      - "Zoom for family check-ins"
+    bad_examples:
+      - "Terraform for Kubernetes"
+      - "Datadog for LLM observability"
+
+  next_step:
+    description: "What happens next?"
+    max_words: 10
+    requirements:
+      - Specific and actionable
+      - Business or user outcome focus
+      - No technical implementation details
+    good_examples:
+      - "Talk to 5 caregivers about their biggest fears"
+      - "Launch beta with 10 early users"
+      - "Add the ability to save your work"
+    bad_examples:
+      - "Implement OAuth PKCE flow"
+      - "Refactor state management to Redux"
+      - "Set up Terraform modules"
+
+# =============================================================================
+# JARGON BLOCKLIST
+# =============================================================================
+
+jargon_blocklist:
+  description: |
+    These terms should NEVER appear in customer, problem, solution, or uvp fields.
+    They may appear in innovations field only.
+
+  technical_terms:
+    - API
+    - SDK
+    - CLI
+    - OAuth
+    - JWT
+    - REST
+    - GraphQL
+    - WebSocket
+    - microservice
+    - container
+    - Kubernetes
+    - Docker
+    - serverless
+    - Lambda
+    - CDK
+    - Terraform
+    - CI/CD
+    - DevOps
+    - MLOps
+    - ETL
+    - pipeline
+    - orchestration
+    - deployment
+    - infrastructure
+    - backend
+    - frontend
+    - full-stack
+    - database
+    - schema
+    - query
+    - endpoint
+    - latency
+    - throughput
+    - scalability
+    - middleware
+    - framework
+    - runtime
+    - instance
+    - cluster
+    - node
+    - pod
+    - namespace
+    - ingress
+    - load balancer
+    - cache
+    - queue
+    - pub/sub
+    - streaming
+    - batch
+    - async
+    - sync
+    - callback
+    - webhook
+    - cron
+    - daemon
+
+  marketing_buzzwords:
+    - AI-powered
+    - ML-driven
+    - cloud-native
+    - enterprise-grade
+    - next-generation
+    - cutting-edge
+    - state-of-the-art
+    - best-in-class
+    - world-class
+    - revolutionary
+    - disruptive
+    - innovative
+    - leverage
+    - synergy
+    - ecosystem
+    - paradigm
+    - holistic
+    - seamless
+    - robust
+    - scalable
+    - agile
+    - lean
+
+  acronyms_to_expand:
+    API: "way for software to talk to each other"
+    CLI: "command-line tool"
+    SaaS: "software you use in a browser"
+    B2B: "business-to-business"
+    B2C: "business-to-consumer"
+    ROI: "return on investment"
+    KPI: "key metric"
+    MVP: "first working version"
+    POC: "proof of concept / test version"
+    UI: "interface / what you see and click"
+    UX: "how easy it is to use"
+
+# =============================================================================
+# SCORING RUBRIC
+# =============================================================================
+
+scoring_rubric:
+  description: |
+    Use this rubric to score each capsule field.
+    Score 1-5 for each criterion, then average.
+
+  criteria:
+    clarity:
+      weight: 30
+      description: "Can a non-technical person understand this?"
+      scores:
+        5: "A high schooler would understand"
+        4: "A college graduate would understand"
+        3: "Requires some business context"
+        2: "Requires industry knowledge"
+        1: "Requires technical expertise"
+
+    specificity:
+      weight: 25
+      description: "Is this concrete and specific?"
+      scores:
+        5: "Paints a vivid picture with specific details"
+        4: "Clear and concrete"
+        3: "Somewhat generic but understandable"
+        2: "Vague or abstract"
+        1: "Could apply to almost anything"
+
+    benefit_focus:
+      weight: 25
+      description: "Does this focus on user benefit?"
+      scores:
+        5: "Entirely focused on what user gains"
+        4: "Mostly benefit-focused"
+        3: "Mix of features and benefits"
+        2: "Mostly feature-focused"
+        1: "Entirely technical/feature description"
+
+    brevity:
+      weight: 20
+      description: "Is this concise?"
+      scores:
+        5: "Every word earns its place"
+        4: "Tight with minor trim possible"
+        3: "Some unnecessary words"
+        2: "Noticeably verbose"
+        1: "Needs significant editing"
+
+  passing_score: 3.5
+  excellent_score: 4.5
+
+# =============================================================================
+# LLM JUDGE PROMPT
+# =============================================================================
+
+llm_judge_prompt: |
+  You are evaluating a Project Capsule for executive readability.
+
+  TARGET READER: An executive with an MBA who has NO technical background.
+  They should understand this in 30 seconds.
+
+  EVALUATE each field against these criteria:
+
+  1. CLARITY (25%): Can a non-technical person understand this?
+  2. SPECIFICITY (20%): Is this concrete, not vague?
+  3. BENEFIT FOCUS (25%): Does this explain user value, not technical features?
+  4. BREVITY (15%): Is every word necessary?
+  5. FRAMEWORK ALIGNMENT (15%): Does it follow human-centered design principles?
+
+  FRAMEWORK CHECKLIST (for criterion 5):
+  □ Golden Circle: Does uvp communicate WHY, not just WHAT?
+  □ Jobs to Be Done: Is customer defined by job/situation, not demographics?
+  □ Self-Determination Theory: Does outcome address autonomy, competence, or relatedness?
+  □ Fogg Behavior Model: Is solution easy enough given the motivation level?
+  □ Kahneman System 1: Does uvp work for fast, intuitive thinking?
+
+  FAIL immediately if:
+  - Technical jargon appears in customer/problem/solution/uvp fields
+  - The reader needs to know programming to understand
+  - Benefits are stated as features
+  - Core benefit lacks an outcome clause ("so that...")
+  - Data claims have no citations
+
+  PROVIDE:
+  1. Overall score (1-5)
+  2. Pass/Fail (3.5 minimum to pass)
+  3. Field-by-field feedback
+  4. Framework alignment notes
+  5. Specific rewrite suggestions for failing fields
+
+  FORMAT your response as:
+  ```yaml
+  overall_score: X.X
+  pass: true/false
+
+  field_scores:
+    customer:
+      score: X
+      feedback: "..."
+      rewrite: "..." (if needed)
+    problem:
+      score: X
+      feedback: "..."
+      rewrite: "..."
+    core_benefit:
+      score: X
+      feedback: "..."
+      outcome_type: "autonomy|competence|relatedness|safety|simplicity|possibility"
+      rewrite: "..."
+    # etc.
+
+  framework_alignment:
+    golden_circle: "pass/fail - notes"
+    jobs_to_be_done: "pass/fail - notes"
+    self_determination: "pass/fail - which need addressed"
+    behavior_model: "pass/fail - motivation/ability balance"
+    system_1: "pass/fail - intuitive appeal"
+
+  summary: "One paragraph overall assessment"
+  ```
+
+# =============================================================================
+# EXAMPLES: BEFORE/AFTER REWRITES
+# =============================================================================
+
+rewrite_examples:
+
+  - field: customer
+    before: "DevOps engineers managing Kubernetes clusters"
+    after: "Teams who want their software updates to go live faster and safer"
+    explanation: "Focus on what they WANT, not their job title"
+
+  - field: problem
+    before: "Lack of observability into distributed systems causes increased MTTR"
+    after: "When something breaks, it takes hours to find the problem because you can't see what's happening inside your software"
+    explanation: "Describe the FEELING and CONSEQUENCE, not the technical gap"
+
+  - field: solution
+    before: "Real-time distributed tracing with automatic instrumentation"
+    after: "See exactly where problems happen, automatically, without changing your code"
+    explanation: "Focus on what the USER experiences"
+
+  - field: uvp
+    before: "Cloud-native observability platform with AI-powered root cause analysis"
+    after: "Find problems in seconds, not hours"
+    explanation: "Remove jargon, focus on the outcome"
+
+  - field: alternatives
+    before:
+      name: "Datadog"
+      gap: "No native OpenTelemetry support"
+    after:
+      name: "Existing monitoring tools"
+      gap: "Expensive and still take hours to pinpoint issues"
+    explanation: "Replace product names with categories, gaps with user impact"

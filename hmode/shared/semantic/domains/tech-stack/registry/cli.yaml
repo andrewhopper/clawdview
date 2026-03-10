@@ -1,0 +1,195 @@
+# CLI Frameworks Registry
+
+technologies:
+
+  # Node.js CLI
+
+  ink:
+    name: Ink
+    description: React for interactive command-line apps
+    category: framework
+    subcategory: cli
+    author: Vadim Demedes
+    website: https://github.com/vadimdemedes/ink
+    repository: https://github.com/vadimdemedes/ink
+    documentation: https://github.com/vadimdemedes/ink#readme
+    npm_package: ink
+    license: MIT
+    first_release: "2017-06-18"
+    language: TypeScript
+    runtime: node
+    tags: [cli, react, tui, interactive]
+    detection_rules:
+      - { type: npm_dependency, pattern: "ink" }
+    extends: react
+    alternative_to: [commander, oclif]
+
+  commander:
+    name: Commander.js
+    description: The complete solution for node.js command-line interfaces
+    category: library
+    subcategory: cli
+    author: TJ Holowaychuk
+    website: https://github.com/tj/commander.js
+    repository: https://github.com/tj/commander.js
+    documentation: https://github.com/tj/commander.js#readme
+    npm_package: commander
+    license: MIT
+    first_release: "2011-08-15"
+    language: JavaScript
+    runtime: node
+    tags: [cli, argument-parsing, commands]
+    detection_rules:
+      - { type: npm_dependency, pattern: "commander" }
+    alternative_to: [yargs, meow]
+
+  yargs:
+    name: Yargs
+    description: Yargs helps you build interactive command line tools
+    category: library
+    subcategory: cli
+    author: Yargs Team
+    website: https://yargs.js.org
+    repository: https://github.com/yargs/yargs
+    documentation: https://yargs.js.org/docs
+    npm_package: yargs
+    license: MIT
+    first_release: "2013-11-17"
+    language: JavaScript
+    runtime: node
+    tags: [cli, argument-parsing, interactive]
+    detection_rules:
+      - { type: npm_dependency, pattern: "yargs" }
+    alternative_to: [commander, meow]
+
+  oclif:
+    name: oclif
+    description: Open CLI Framework by Salesforce
+    category: framework
+    subcategory: cli
+    author: Salesforce
+    website: https://oclif.io
+    repository: https://github.com/oclif/oclif
+    documentation: https://oclif.io/docs
+    npm_package: "@oclif/core"
+    license: MIT
+    first_release: "2018-03-01"
+    language: TypeScript
+    runtime: node
+    tags: [cli, framework, plugins, enterprise]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@oclif/core" }
+    alternative_to: [commander, ink]
+
+  meow:
+    name: meow
+    description: CLI app helper
+    category: library
+    subcategory: cli
+    author: Sindre Sorhus
+    website: https://github.com/sindresorhus/meow
+    repository: https://github.com/sindresorhus/meow
+    npm_package: meow
+    license: MIT
+    language: JavaScript
+    runtime: node
+    tags: [cli, argument-parsing, minimal]
+    detection_rules:
+      - { type: npm_dependency, pattern: "meow" }
+    alternative_to: [commander, yargs]
+
+  # Python CLI
+
+  click:
+    name: Click
+    description: Python composable command line interface toolkit
+    category: library
+    subcategory: cli
+    author: Armin Ronacher / Pallets
+    website: https://click.palletsprojects.com
+    repository: https://github.com/pallets/click
+    documentation: https://click.palletsprojects.com
+    pypi_package: click
+    license: BSD-3-Clause
+    first_release: "2014-04-24"
+    language: Python
+    runtime: python
+    tags: [cli, argument-parsing, decorators]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "click" }
+    alternative_to: [typer, argparse]
+
+  typer:
+    name: Typer
+    description: Build great CLIs with Python type hints
+    category: library
+    subcategory: cli
+    author: Sebastián Ramírez
+    website: https://typer.tiangolo.com
+    repository: https://github.com/tiangolo/typer
+    documentation: https://typer.tiangolo.com
+    pypi_package: typer
+    license: MIT
+    first_release: "2019-12-24"
+    language: Python
+    runtime: python
+    tags: [cli, type-hints, click, fastapi-style]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "typer" }
+    extends: click
+    alternative_to: [click, argparse]
+
+  rich:
+    name: Rich
+    description: Python library for rich text and beautiful formatting in the terminal
+    category: library
+    subcategory: cli
+    author: Will McGugan
+    website: https://rich.readthedocs.io
+    repository: https://github.com/Textualize/rich
+    documentation: https://rich.readthedocs.io
+    pypi_package: rich
+    license: MIT
+    first_release: "2020-03-10"
+    language: Python
+    runtime: python
+    tags: [cli, formatting, tables, progress, syntax-highlighting]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "rich" }
+
+  # Rust CLI
+
+  clap:
+    name: clap
+    description: Command Line Argument Parser for Rust
+    category: library
+    subcategory: cli
+    author: clap-rs
+    website: https://clap.rs
+    repository: https://github.com/clap-rs/clap
+    documentation: https://docs.rs/clap
+    cargo_crate: clap
+    license: MIT
+    language: Rust
+    runtime: rust
+    tags: [cli, argument-parsing, derive-macro]
+    detection_rules:
+      - { type: cargo_dependency, pattern: "clap" }
+
+  # Go CLI
+
+  cobra:
+    name: Cobra
+    description: A Commander for modern Go CLI interactions
+    category: library
+    subcategory: cli
+    author: Steve Francia
+    website: https://cobra.dev
+    repository: https://github.com/spf13/cobra
+    documentation: https://cobra.dev
+    license: Apache-2.0
+    language: Go
+    runtime: go
+    tags: [cli, argument-parsing, commands]
+    detection_rules:
+      - { type: file_content, pattern: "github.com/spf13/cobra" }

@@ -1,0 +1,32 @@
+# enums.yaml - Email Domain Enumerations
+# Generated: 2025-11-24
+# Status: PENDING APPROVAL
+
+enums:
+  EmailStatus:
+    description: "Email lifecycle status"
+    values:
+      - draft            # Being composed
+      - queued           # Queued for sending
+      - sending          # Currently sending
+      - sent             # Successfully sent
+      - delivered        # Confirmed delivered to recipient
+      - bounced          # Delivery failed (hard/soft bounce)
+      - failed           # Failed to send
+      - spam             # Marked as spam
+      - blocked          # Blocked by recipient
+
+  EmailPriority:
+    description: "Email importance level"
+    values:
+      - low              # Low priority
+      - normal           # Normal priority
+      - high             # High priority
+      - urgent           # Urgent/critical
+
+  RecipientType:
+    description: "How recipient is addressed"
+    values:
+      - to               # Primary recipient
+      - cc               # Carbon copy
+      - bcc              # Blind carbon copy

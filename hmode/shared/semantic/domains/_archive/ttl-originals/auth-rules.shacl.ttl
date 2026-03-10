@@ -1,0 +1,152 @@
+@prefix auth: <http://hopperlabs.ai/ontology/auth#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================
+# Authentication & Authorization SHACL Validation Rules
+# ============================================
+
+# ----------------
+# User Validation
+# ----------------
+
+auth:UserShape a sh:NodeShape ;
+    sh:targetClass auth:User ;
+    sh:property [
+        sh:path auth:userId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:minLength 1 ;
+        sh:message "userId is required and must be non-empty"
+    ] ;
+    sh:property [
+        sh:path auth:email ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$" ;
+        sh:message "Valid email address is required"
+    ] ;
+    sh:property [
+        sh:path auth:username ;
+        sh:datatype xsd:string ;
+        sh:minLength 3 ;
+        sh:maxLength 64 ;
+        sh:pattern "^[a-zA-Z0-9_.-]+$" ;
+        sh:message "Username must be 3-64 characters, alphanumeric with _ . -"
+    ] ;
+    sh:property [
+        sh:path auth:isActive ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:message "isActive status is required"
+    ] .
+
+# ----------------
+# Role Validation
+# ----------------
+
+auth:RoleShape a sh:NodeShape ;
+    sh:targetClass auth:Role ;
+    sh:property [
+        sh:path auth:roleName ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:minLength 2 ;
+        sh:maxLength 64 ;
+        sh:pattern "^[a-z][a-z0-9_-]*$" ;
+        sh:message "Role name must be lowercase, start with letter, 2-64 chars"
+    ] ;
+    sh:property [
+        sh:path auth:roleDescription ;
+        sh:datatype xsd:string ;
+        sh:maxLength 500 ;
+        sh:message "Role description must be under 500 characters"
+    ] .
+
+# ----------------
+# Permission Validation
+# ----------------
+
+auth:PermissionShape a sh:NodeShape ;
+    sh:targetClass auth:Permission ;
+    sh:property [
+        sh:path auth:permissionName ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*$" ;
+        sh:message "Permission must be in format 'resource:action' (e.g., 'email:send')"
+    ] ;
+    sh:property [
+        sh:path auth:permissionScope ;
+        sh:in (auth:GlobalScope auth:OrgScope auth:ProjectScope auth:ResourceScope) ;
+        sh:message "Permission scope must be: Global, Org, Project, or Resource"
+    ] .
+
+# ----------------
+# Session Validation
+# ----------------
+
+auth:SessionShape a sh:NodeShape ;
+    sh:targetClass auth:Session ;
+    sh:property [
+        sh:path auth:sessionId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:minLength 16 ;
+        sh:message "Session ID is required and must be at least 16 characters"
+    ] ;
+    sh:property [
+        sh:path auth:accessToken ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:message "Access token is required"
+    ] ;
+    sh:property [
+        sh:path auth:expiresAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "Session expiration time is required"
+    ] ;
+    sh:property [
+        sh:path auth:sessionStatus ;
+        sh:in (auth:Active auth:Expired auth:Revoked auth:Suspended) ;
+        sh:message "Session status must be: Active, Expired, Revoked, or Suspended"
+    ] ;
+    sh:property [
+        sh:path auth:ipAddress ;
+        sh:datatype xsd:string ;
+        sh:pattern "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$" ;
+        sh:message "IP address must be valid IPv4 or IPv6"
+    ] .
+
+# ----------------
+# Password Credential Validation
+# ----------------
+
+auth:PasswordCredentialShape a sh:NodeShape ;
+    sh:targetClass auth:PasswordCredential ;
+    sh:sparql [
+        sh:message "Password must be at least 8 characters with uppercase, lowercase, number, and special character" ;
+        sh:prefixes auth: ;
+        sh:select """
+            SELECT $this
+            WHERE {
+                # This is a placeholder - actual password validation happens at application layer
+                # Passwords are never stored in plain text
+            }
+        """
+    ] .
+
+# ----------------
+# Service Account Validation
+# ----------------
+
+auth:ServiceAccountShape a sh:NodeShape ;
+    sh:targetClass auth:ServiceAccount ;
+    sh:property [
+        sh:path auth:username ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^svc-[a-z0-9-]+$" ;
+        sh:message "Service account username must start with 'svc-'"
+    ] .

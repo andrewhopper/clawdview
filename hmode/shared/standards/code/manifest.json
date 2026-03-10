@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Reference Examples Manifest",
+  "description": "Tracks gold standard code examples and their currency",
+  "version": "1.0.0",
+  "generated": "2025-11-17T12:40:00Z",
+  "staleThresholdDays": 180,
+  "references": {
+    "typescript": {
+      "path": "shared/standards/code/typescript/",
+      "description": "TypeScript patterns: type safety, error handling, async patterns",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "types.ts",
+        "errors.ts",
+        "async-patterns.ts"
+      ],
+      "strictness": "REQUIRED",
+      "applicability": "All TypeScript prototypes"
+    },
+    "react": {
+      "path": "shared/standards/code/react/",
+      "description": "React + TypeScript: modern hooks, components, state management",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "components/",
+        "hooks/",
+        "context/"
+      ],
+      "strictness": "REQUIRED",
+      "applicability": "All React prototypes"
+    },
+    "nodejs": {
+      "path": "shared/standards/code/nodejs/",
+      "description": "Node.js + Express: RESTful API, middleware, error handling",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "routes/",
+        "middleware/",
+        "errors.ts"
+      ],
+      "strictness": "REQUIRED",
+      "applicability": "All Node.js backend prototypes"
+    },
+    "vite": {
+      "path": "shared/standards/code/vite/",
+      "description": "Vite: build configuration, optimization, dev workflow",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "vite.config.ts",
+        "tsconfig.json"
+      ],
+      "strictness": "RECOMMENDED",
+      "applicability": "Vite-based frontend prototypes"
+    },
+    "python": {
+      "path": "shared/standards/code/python/",
+      "description": "Python: type hints, dataclasses, async patterns",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "type_hints.py",
+        "async_patterns.py",
+        "dataclasses_example.py"
+      ],
+      "strictness": "REQUIRED",
+      "applicability": "All Python prototypes"
+    },
+    "fastapi": {
+      "path": "shared/standards/code/fastapi/",
+      "description": "FastAPI: modern Python API with auto docs",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "main.py",
+        "routes/",
+        "models/"
+      ],
+      "strictness": "REQUIRED",
+      "applicability": "FastAPI backend prototypes"
+    },
+    "pydantic": {
+      "path": "shared/standards/code/pydantic/",
+      "description": "Pydantic: data validation and serialization",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "models.py",
+        "validation.py"
+      ],
+      "strictness": "REQUIRED",
+      "applicability": "Python projects using Pydantic"
+    },
+    "pydantic-ai": {
+      "path": "shared/standards/code/pydantic-ai/",
+      "description": "Pydantic AI: type-safe AI agents with structured outputs",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "agent.py",
+        "structured_outputs.py"
+      ],
+      "strictness": "RECOMMENDED",
+      "applicability": "AI agent prototypes using Pydantic AI"
+    },
+    "baml": {
+      "path": "shared/standards/code/baml/",
+      "description": "BAML: structured LLM outputs, multi-language support",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "schema.baml",
+        "client.ts"
+      ],
+      "strictness": "RECOMMENDED",
+      "applicability": "LLM integration prototypes"
+    },
+    "react-email": {
+      "path": "shared/standards/code/react-email/",
+      "description": "React Email: email templates with React components",
+      "last_modified": "2025-11-16T00:00:00Z",
+      "last_reviewed": "2025-11-16T00:00:00Z",
+      "status": "CURRENT",
+      "key_files": [
+        "templates/",
+        "components/"
+      ],
+      "strictness": "OPTIONAL",
+      "applicability": "Prototypes with email functionality"
+    }
+  },
+  "statistics": {
+    "total_references": 10,
+    "current": 10,
+    "stale": 0,
+    "needs_review": 0
+  },
+  "statusDefinitions": {
+    "CURRENT": "Up-to-date, recently reviewed (< 180 days)",
+    "STALE": "Not reviewed in > 180 days, may need update",
+    "NEEDS_REVIEW": "Flagged for review by maintainer",
+    "DEPRECATED": "No longer recommended, use alternative"
+  }
+}

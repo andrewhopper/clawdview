@@ -1,0 +1,53 @@
+# Demographics - Attributes describing who the actor is
+
+entities:
+  Demographics:
+    description: Demographic attributes of an actor
+    properties:
+      age_range:
+        type: string
+        description: Age range (e.g., "45-60")
+      income_bracket:
+        type: string
+        description: Income range (e.g., "$65,000-$95,000")
+      location_type:
+        type: LocationType
+        description: Urban, suburban, rural, etc.
+      location:
+        type: string
+        description: Geographic location or region
+      occupation:
+        type: string
+        description: Job title or role
+      education:
+        type: EducationLevel
+      household:
+        type: HouseholdType
+        description: Family composition
+      life_stage:
+        type: LifeStage
+
+  TechProfile:
+    description: Technology usage and preferences
+    properties:
+      primary_device:
+        type: DeviceType
+        required: true
+      secondary_device:
+        type: DeviceType
+      screen_size:
+        type: string
+        description: Primary screen dimensions
+      social_media:
+        type: array
+        items: string
+        description: Platforms used
+      tech_comfort:
+        type: integer
+        min: 1
+        max: 5
+        description: 1=resistant, 5=expert
+      preferred_contact:
+        type: ContactMethod
+      connection_type:
+        type: ConnectionType

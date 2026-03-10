@@ -1,0 +1,184 @@
+# LLM Message Domain Model
+# Message structure, roles, and content types
+# Source: OpenAI Chat API, Anthropic Messages API, Open Message Format
+
+domain:
+  name: llm-message
+  version: "1.0.0"
+  description: Message structure for LLM interactions - roles, content types, and formatting
+  dependencies: [core, llm-participant]
+  sources:
+    - "OpenAI Chat Completions API"
+    - "Anthropic Messages API"
+    - "Open Message Format: github.com/open-llm-initiative/open-message-format"
+    - "LangChain Message Types"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  Message:
+    description: A single message in an LLM conversation
+    properties:
+      id: { type: string, required: true }
+      role: { type: MessageRole, required: true }
+      content: { type: array, items: ContentBlock, required: true }
+      participantId: { type: string, description: "Reference to participant" }
+      turnId: { type: string, description: "Reference to conversation turn" }
+      timestamp: { type: datetime, required: true }
+      metadata: { type: MessageMetadata }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ContentBlock:
+    description: A block of content within a message (text, image, tool call, etc.)
+    properties:
+      id: { type: string, required: true }
+      type: { type: ContentType, required: true }
+      sequence: { type: integer, required: true, description: "Order in message" }
+
+  TextContent:
+    extends: ContentBlock
+    description: Plain text content block
+    properties:
+      text: { type: string, required: true }
+      format: { type: TextFormat, default: "Plain" }
+
+  ImageContent:
+    extends: ContentBlock
+    description: Image content block
+    properties:
+      source: { type: ImageSource, required: true }
+      mediaType: { type: string, description: "MIME type" }
+      altText: { type: string }
+
+  ImageSource:
+    description: Source of an image (URL or base64)
+    properties:
+      type: { type: ImageSourceType, required: true }
+      url: { type: uri }
+      base64Data: { type: string }
+      mediaType: { type: string }
+
+  FileContent:
+    extends: ContentBlock
+    description: File attachment content block
+    properties:
+      fileId: { type: string, required: true }
+      fileName: { type: string }
+      mimeType: { type: string }
+      sizeBytes: { type: integer }
+
+  ToolUseContent:
+    extends: ContentBlock
+    description: Tool invocation content block
+    properties:
+      toolCallId: { type: string, required: true }
+      toolName: { type: string, required: true }
+      input: { type: object, required: true, description: "Tool input parameters" }
+
+  ToolResultContent:
+    extends: ContentBlock
+    description: Result from a tool invocation
+    properties:
+      toolCallId: { type: string, required: true }
+      output: { type: string, required: true }
+      isError: { type: boolean, default: false }
+      errorType: { type: string }
+
+  ThinkingContent:
+    extends: ContentBlock
+    description: Extended thinking/reasoning content (Claude 3.5+)
+    properties:
+      thinking: { type: string, required: true }
+      isVisible: { type: boolean, default: false }
+
+  MessageMetadata:
+    description: Additional metadata about a message
+    properties:
+      tokenCount: { type: integer }
+      processingTimeMs: { type: integer }
+      modelId: { type: string }
+      stopReason: { type: StopReason }
+      cacheStatus: { type: CacheStatus }
+      fingerprint: { type: string, description: "Content hash for deduplication" }
+
+  MessageTemplate:
+    description: Reusable message template with variables
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      role: { type: MessageRole, required: true }
+      templateContent: { type: string, required: true }
+      variables: { type: array, items: TemplateVariable }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  TemplateVariable:
+    description: A variable placeholder in a message template
+    properties:
+      name: { type: string, required: true }
+      type: { type: string, required: true }
+      defaultValue: { type: string }
+      required: { type: boolean, default: true }
+      description: { type: string }
+
+enums:
+
+  MessageRole:
+    description: Role of the message sender
+    values:
+      - System      # System instructions (not from user or assistant)
+      - User        # Human user input
+      - Assistant   # LLM response
+      - Tool        # Tool/function result
+      - Developer   # Developer-level instructions (Anthropic)
+
+  ContentType:
+    description: Type of content block
+    values:
+      - Text
+      - Image
+      - File
+      - Audio
+      - Video
+      - ToolUse
+      - ToolResult
+      - Thinking
+      - Citation
+      - Code
+
+  TextFormat:
+    description: Format of text content
+    values:
+      - Plain
+      - Markdown
+      - HTML
+      - LaTeX
+      - Code
+      - JSON
+      - XML
+
+  ImageSourceType:
+    description: How the image is provided
+    values:
+      - Url
+      - Base64
+
+  StopReason:
+    description: Why generation stopped
+    values:
+      - EndTurn       # Natural completion
+      - MaxTokens     # Hit token limit
+      - StopSequence  # Hit stop sequence
+      - ToolUse       # Needs tool result
+      - ContentFilter # Blocked by filter
+      - Error         # Error occurred
+
+  CacheStatus:
+    description: Cache status for the message
+    values:
+      - CacheHit       # Served from cache
+      - CacheMiss      # Not in cache
+      - CacheWrite     # Written to cache
+      - CacheDisabled  # Caching disabled

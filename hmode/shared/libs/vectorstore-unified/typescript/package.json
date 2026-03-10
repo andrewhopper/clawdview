@@ -1,0 +1,65 @@
+{
+  "name": "vectorstore-unified",
+  "version": "0.1.0",
+  "description": "Unified VectorStore - Pinecone-like API with Algolia-style text search",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "vector",
+    "embeddings",
+    "search",
+    "s3",
+    "pgvector",
+    "opensearch",
+    "bedrock",
+    "pinecone",
+    "algolia"
+  ],
+  "author": "Protoflow",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.500.0",
+    "@aws-sdk/client-s3": "^3.500.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  },
+  "peerDependencies": {
+    "@opensearch-project/opensearch": "^2.0.0",
+    "pg": "^8.0.0",
+    "pgvector": "^0.1.0",
+    "openai": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@opensearch-project/opensearch": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "pgvector": {
+      "optional": true
+    },
+    "openai": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,52 @@
+# Contribution Configuration
+# File UUID: 5d9f2c4e-7b3a-4f8e-9c1d-6a4e8f7b2c3e
+
+# GitLab Repository Configuration
+repository:
+  upstream:
+    url: https://gitlab.com/protoflow/protoflow
+    namespace: protoflow
+    project: protoflow
+    default_branch: main
+    # project_id: 12345678  # Optional: Get from GitLab project page
+
+# Contribution Settings
+contributions:
+  # Auto-detect user's fork or create one
+  auto_fork: true
+
+  # Branch naming pattern
+  branch_prefix: contrib
+
+  # Require tests before MR
+  require_tests: true
+
+  # Auto-assign labels
+  auto_labels:
+    - contribution
+    - needs-review
+
+  # Default reviewers (GitLab usernames)
+  default_reviewers:
+    - andyhop
+
+  # Merge request template (optional)
+  # mr_template: .gitlab/merge_request_templates/contribution.md
+
+# Sandbox Settings
+sandbox:
+  base_path: /tmp/claude-contributions
+  keep_count: 5
+  auto_clean_after_days: 7
+
+# CI/CD Integration
+ci:
+  wait_for_pipeline: true
+  require_passing: false
+  show_pipeline_status: true
+
+# User Preferences
+user:
+  # name: John Doe
+  # email: john@example.com
+  # gitlab_username: johndoe

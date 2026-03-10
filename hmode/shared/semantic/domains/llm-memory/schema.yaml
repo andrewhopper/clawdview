@@ -1,0 +1,254 @@
+# LLM Memory Domain Model
+# Short-term, long-term memory, retrieval, and forgetting
+# Source: RAISE, MemoryBank, LongMem, M+, MaaS papers
+
+domain:
+  name: llm-memory
+  version: "1.0.0"
+  description: LLM memory systems - short-term, long-term, retrieval, and forgetting mechanisms
+  dependencies: [core, llm-conversation]
+  sources:
+    - "RAISE dual-memory: arxiv.org/abs/2401.02777"
+    - "MemoryBank: arxiv.org/abs/2305.10250"
+    - "LongMem: arxiv.org/abs/2306.07174"
+    - "M+: arxiv.org/abs/2502.00592"
+    - "MaaS: arxiv.org/abs/2506.22815"
+    - "Long Term Memory for AGI: arxiv.org/abs/2410.15665"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  MemoryBank:
+    description: Container for all memory types (MemoryBank pattern)
+    properties:
+      id: { type: string, required: true }
+      ownerId: { type: string, required: true, description: "User or agent ID" }
+      shortTermMemory: { type: ShortTermMemory }
+      longTermMemory: { type: LongTermMemory }
+      totalCapacity: { type: integer, description: "Max memory entries" }
+      usedCapacity: { type: integer }
+      lastConsolidatedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ShortTermMemory:
+    description: Transient working memory / scratchpad (RAISE pattern)
+    properties:
+      id: { type: string, required: true }
+      memoryBankId: { type: string, required: true }
+      capacity: { type: integer, description: "Max items" }
+      items: { type: array, items: MemoryItem }
+      decayRate: { type: decimal, description: "How fast items decay" }
+      lastAccessedAt: { type: datetime }
+
+  LongTermMemory:
+    description: Persistent memory with retrieval (MemoryBank pattern)
+    properties:
+      id: { type: string, required: true }
+      memoryBankId: { type: string, required: true }
+      storageType: { type: StorageType }
+      indexType: { type: IndexType }
+      totalItems: { type: integer }
+      embeddingModel: { type: string }
+      retrievalMethod: { type: RetrievalMethod }
+      consolidationPolicy: { type: ConsolidationPolicy }
+
+  MemoryItem:
+    description: A single memory item
+    properties:
+      id: { type: string, required: true }
+      type: { type: MemoryType, required: true }
+      content: { type: string, required: true }
+      embedding: { type: array, items: decimal }
+      importance: { type: decimal, description: "0-1 importance score" }
+      recency: { type: decimal, description: "Recency score" }
+      accessCount: { type: integer, default: 0 }
+      source: { type: MemorySource }
+      tags: { type: array, items: string }
+      relatedItemIds: { type: array, items: string }
+      expiresAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      lastAccessedAt: { type: datetime }
+
+  MemoryRetrieval:
+    description: A memory retrieval operation
+    properties:
+      id: { type: string, required: true }
+      query: { type: string, required: true }
+      queryEmbedding: { type: array, items: decimal }
+      retrievedItems: { type: array, items: string, description: "MemoryItem IDs" }
+      scores: { type: array, items: decimal, description: "Relevance scores" }
+      method: { type: RetrievalMethod }
+      topK: { type: integer }
+      latencyMs: { type: integer }
+      retrievedAt: { type: datetime, required: true }
+
+  ForgettingCurve:
+    description: Ebbinghaus forgetting curve for memory decay (MemoryBank)
+    properties:
+      id: { type: string, required: true }
+      memoryItemId: { type: string, required: true }
+      initialStrength: { type: decimal }
+      currentStrength: { type: decimal }
+      decayConstant: { type: decimal }
+      reinforcements: { type: integer, description: "Times memory was accessed" }
+      lastReinforcedAt: { type: datetime }
+      predictedExpiryAt: { type: datetime }
+
+  ConsolidationPolicy:
+    description: Policy for consolidating short-term to long-term memory
+    properties:
+      id: { type: string, required: true }
+      trigger: { type: ConsolidationTrigger }
+      minImportance: { type: decimal, description: "Minimum importance to consolidate" }
+      minAccessCount: { type: integer }
+      maxAge: { type: duration, description: "Max time in short-term" }
+      batchSize: { type: integer }
+
+  MemoryConsolidation:
+    description: Record of memory consolidation event
+    properties:
+      id: { type: string, required: true }
+      memoryBankId: { type: string, required: true }
+      itemsConsolidated: { type: integer }
+      itemsForgotten: { type: integer }
+      consolidatedAt: { type: datetime, required: true }
+      duration: { type: duration }
+
+  ExperientialMemory:
+    description: Memory of past interactions and outcomes
+    properties:
+      id: { type: string, required: true }
+      sessionId: { type: string, required: true }
+      situation: { type: string, description: "Context description" }
+      action: { type: string, description: "Action taken" }
+      outcome: { type: string, description: "Result of action" }
+      feedback: { type: string, description: "User feedback if any" }
+      successScore: { type: decimal, description: "0-1 success rating" }
+      lessons: { type: array, items: string, description: "Extracted lessons" }
+      createdAt: { type: datetime, required: true }
+
+  EntityMemory:
+    description: Memory about specific entities (people, projects, etc.)
+    properties:
+      id: { type: string, required: true }
+      entityType: { type: string, required: true }
+      entityId: { type: string, required: true }
+      entityName: { type: string }
+      facts: { type: array, items: EntityFact }
+      relationships: { type: array, items: EntityRelationship }
+      lastInteractionAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  EntityFact:
+    description: A fact about an entity
+    properties:
+      key: { type: string, required: true }
+      value: { type: string, required: true }
+      confidence: { type: decimal }
+      source: { type: string }
+      learnedAt: { type: datetime }
+      validUntil: { type: datetime }
+
+  EntityRelationship:
+    description: Relationship between entities
+    properties:
+      relatedEntityId: { type: string, required: true }
+      relationshipType: { type: string, required: true }
+      strength: { type: decimal }
+      bidirectional: { type: boolean, default: false }
+
+  MemoryService:
+    description: Memory as a Service (MaaS pattern) - callable memory module
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: MemoryServiceType }
+      endpoint: { type: uri }
+      capabilities: { type: array, items: MemoryCapability }
+      isShared: { type: boolean, default: false }
+      accessPolicy: { type: string }
+
+enums:
+
+  MemoryType:
+    description: Type of memory item
+    values:
+      - Episodic       # Specific events/interactions
+      - Semantic       # General knowledge/facts
+      - Procedural     # How to do things
+      - Working        # Current task context
+      - Entity         # About specific entities
+      - Preference     # User preferences
+      - Contextual     # Situational context
+
+  MemorySource:
+    description: Source of the memory
+    values:
+      - Conversation   # From conversation
+      - Observation    # Observed behavior
+      - Explicit       # Explicitly provided
+      - Inferred       # Inferred from context
+      - External       # From external source
+      - Consolidated   # From consolidation
+
+  StorageType:
+    description: Type of long-term storage
+    values:
+      - Vector         # Vector database
+      - Graph          # Knowledge graph
+      - Document       # Document store
+      - Relational     # Relational database
+      - Hybrid         # Combination
+
+  IndexType:
+    description: Type of memory index
+    values:
+      - Flat           # No index (brute force)
+      - HNSW           # Hierarchical Navigable Small World
+      - IVF            # Inverted File Index
+      - LSH            # Locality Sensitive Hashing
+      - Tree           # Tree-based index
+
+  RetrievalMethod:
+    description: Method for retrieving memories
+    values:
+      - SemanticSearch    # Vector similarity
+      - KeywordSearch     # Keyword/BM25
+      - TemporalSearch    # Time-based
+      - GraphTraversal    # Follow relationships
+      - Hybrid            # Combination
+      - Recency           # Most recent
+      - Importance        # Most important
+
+  ConsolidationTrigger:
+    description: What triggers memory consolidation
+    values:
+      - TimeInterval   # Periodic consolidation
+      - CapacityLimit  # When short-term is full
+      - SessionEnd     # At end of session
+      - ExplicitCall   # Manually triggered
+      - ImportanceThreshold  # When important memory detected
+
+  MemoryServiceType:
+    description: Type of memory service (MaaS)
+    values:
+      - Personal       # Personal memory for one user
+      - Shared         # Shared across users
+      - Organizational # Organization-wide memory
+      - Domain         # Domain-specific memory
+      - Contextual     # Session/context memory
+
+  MemoryCapability:
+    description: Capabilities of a memory service
+    values:
+      - Store
+      - Retrieve
+      - Update
+      - Delete
+      - Search
+      - Consolidate
+      - Export
+      - Import

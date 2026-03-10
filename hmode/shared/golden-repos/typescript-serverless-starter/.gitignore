@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build outputs
+dist/
+build/
+*.js.map
+*.d.ts
+
+# CDK
+cdk.out/
+.cdk.staging/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+.nyc_output/
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Type checking
+.mypy_cache/
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Deployment artifacts (keep structure, ignore contents)
+infra/deploys/releases/*/deploy.log
+infra/deploys/releases/*/outputs.json
+infra/deploys/releases/*/manifest.json
+!infra/deploys/.gitkeep

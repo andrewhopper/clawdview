@@ -1,0 +1,132 @@
+# Example Enforcement Configuration
+# File UUID: 3f8d6a2e-9b7c-4e1d-8a5f-7c9b4e3d2f6a
+
+# Global default mode (LOG, WARN, APPROVAL_REQUIRED, BLOCK)
+default_mode: WARN
+
+# Per-category enforcement modes
+categories:
+  security:
+    mode: BLOCK
+    description: "Security violations are never allowed"
+
+  tech_preferences:
+    mode: APPROVAL_REQUIRED
+    description: "Technology decisions require approval"
+    suggest_alternatives: true
+    log_approval_decision: true
+
+  design_system:
+    mode: WARN
+    description: "Design system violations warned"
+    autofix_available: true
+
+  code_quality:
+    mode: LOG
+    description: "Quality metrics silently logged"
+
+  experimental_patterns:
+    mode: LOG
+    description: "Pattern detection for future rules"
+
+# Individual rules (override category defaults)
+rules:
+  # Security rules - BLOCK (no override)
+  - id: never-ws-protocol
+    category: security
+    mode: BLOCK
+    message: "Insecure ws:// protocol detected. Must use wss://"
+
+  - id: never-hardcode-secrets
+    category: security
+    mode: BLOCK
+    message: "Hardcoded secret detected in {file}"
+
+  # Tech preferences - APPROVAL_REQUIRED
+  - id: unapproved-dependency
+    category: tech_preferences
+    mode: APPROVAL_REQUIRED
+    message: "Package '{package}' not in approved list. Approved: {alternatives}"
+    show_alternatives: true
+    require_justification: true
+
+  - id: unapproved-architecture-pattern
+    category: tech_preferences
+    mode: APPROVAL_REQUIRED
+    message: "Architecture pattern not in .guardrails/architecture-preferences/"
+
+  # Design system - WARN
+  - id: raw-hex-colors
+    category: design_system
+    mode: WARN
+    message: "Raw hex {color} detected. Use design token: {token}"
+    autofix_available: true
+
+  - id: missing-file-uuid
+    category: design_system
+    mode: WARN
+    message: "File UUID comment missing in {file}"
+
+  # Code quality - LOG
+  - id: file-size-limit
+    category: code_quality
+    mode: LOG
+    message: "File {file} exceeds 500 lines ({count})"
+
+  - id: missing-type-hints
+    category: code_quality
+    mode: LOG
+    message: "Type hints missing in {function}"
+
+# Strictness profiles for ranking
+strictness_profiles:
+  relaxed:
+    rank_1: LOG
+    rank_2_3: LOG
+    rank_4_plus: WARN
+    not_listed: WARN
+
+  standard:
+    rank_1: LOG
+    rank_2_3: WARN
+    rank_4_plus: WARN
+    not_listed: APPROVAL_REQUIRED
+
+  strict:
+    rank_1: LOG
+    rank_2_3: APPROVAL_REQUIRED
+    rank_4_plus: BLOCK
+    not_listed: BLOCK
+
+# Context-based overrides
+environments:
+  spike:
+    default_mode: LOG
+    categories:
+      security:
+        mode: WARN  # Relaxed for prototyping
+
+  production:
+    default_mode: APPROVAL_REQUIRED
+    categories:
+      security:
+        mode: BLOCK
+      tech_preferences:
+        mode: BLOCK
+
+phases:
+  phase_1_to_3:
+    strictness: relaxed
+
+  phase_8_to_9:
+    strictness: standard
+
+project_types:
+  exploration:
+    strictness: relaxed
+
+  prototype:
+    strictness: standard
+
+  production:
+    strictness: strict

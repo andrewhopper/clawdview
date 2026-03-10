@@ -1,0 +1,445 @@
+# Capability Domain Model
+# Interfaces and capabilities - abstractions over service implementations
+
+domain:
+  name: capability
+  version: "1.0.0"
+  description: Interface and capability abstractions - provider-agnostic service definitions
+  dependencies: [core]
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+
+entities:
+
+  # ============================================
+  # CAPABILITY - Abstract ability/feature
+  # ============================================
+
+  Capability:
+    description: Abstract capability that can be provided (e.g., text-to-speech, translation)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      category: { type: CapabilityCategory, required: true }
+      version: { type: string }
+      inputs: { type: array, items: CapabilityInput, description: "Required inputs" }
+      outputs: { type: array, items: CapabilityOutput, description: "Produced outputs" }
+      constraints: { type: array, items: CapabilityConstraint }
+      qualityMetrics: { type: array, items: QualityMetric }
+      sla: { type: ServiceLevelAgreement }
+      tags: { type: array, items: string }
+      status: { type: CapabilityStatus, default: Active }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CapabilityInput:
+    description: Input parameter for a capability
+    properties:
+      name: { type: string, required: true }
+      type: { type: string, required: true }
+      description: { type: string }
+      isRequired: { type: boolean, default: true }
+      defaultValue: { type: any }
+      constraints: { type: InputConstraints }
+
+  CapabilityOutput:
+    description: Output produced by a capability
+    properties:
+      name: { type: string, required: true }
+      type: { type: string, required: true }
+      description: { type: string }
+      format: { type: string, description: "Output format (e.g., audio/mp3, application/json)" }
+
+  CapabilityConstraint:
+    description: Constraint on capability usage
+    properties:
+      name: { type: string, required: true }
+      type: { type: ConstraintType, required: true }
+      value: { type: any, required: true }
+      description: { type: string }
+
+  InputConstraints:
+    description: Constraints on input values
+    properties:
+      minLength: { type: integer }
+      maxLength: { type: integer }
+      minValue: { type: decimal }
+      maxValue: { type: decimal }
+      pattern: { type: string, description: "Regex pattern" }
+      allowedValues: { type: array, items: any }
+
+  QualityMetric:
+    description: Quality metric for capability output
+    properties:
+      name: { type: string, required: true }
+      unit: { type: string }
+      minimumValue: { type: decimal }
+      targetValue: { type: decimal }
+      description: { type: string }
+
+  ServiceLevelAgreement:
+    description: SLA for capability
+    properties:
+      availability: { type: decimal, description: "Target uptime percentage (e.g., 99.9)" }
+      latencyP50: { type: integer, description: "50th percentile latency in ms" }
+      latencyP99: { type: integer, description: "99th percentile latency in ms" }
+      throughput: { type: integer, description: "Requests per second" }
+      errorRate: { type: decimal, description: "Max error rate percentage" }
+
+  # ============================================
+  # INTERFACE - Capability provider abstraction
+  # ============================================
+
+  Interface:
+    description: Provider abstraction that offers one or more capabilities
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      version: { type: string, required: true }
+      capabilities: { type: array, items: ProvidedCapability, required: true }
+      configuration: { type: InterfaceConfig }
+      authentication: { type: AuthenticationSpec }
+      rateLimit: { type: RateLimitSpec }
+      endpoints: { type: array, items: Endpoint }
+      status: { type: InterfaceStatus, default: Active }
+      provider: { type: ProviderInfo }
+      documentation: { type: uri, description: "Link to documentation" }
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ProvidedCapability:
+    description: Capability offered by an interface
+    properties:
+      capabilityId: { type: string, required: true }
+      version: { type: string }
+      method: { type: string, required: true, description: "Method/operation name" }
+      inputMapping: { type: object, description: "Map capability inputs to interface params" }
+      outputMapping: { type: object, description: "Map interface response to capability outputs" }
+      overrides: { type: object, description: "Provider-specific overrides" }
+      featureFlags: { type: array, items: string }
+      cost: { type: CostSpec }
+
+  InterfaceConfig:
+    description: Configuration for an interface
+    properties:
+      baseUrl: { type: uri }
+      timeout: { type: integer, description: "Timeout in milliseconds" }
+      retryPolicy: { type: RetryPolicy }
+      headers: { type: object }
+      environment: { type: object, description: "Required environment variables" }
+
+  AuthenticationSpec:
+    description: Authentication requirements for interface
+    properties:
+      type: { type: AuthType, required: true }
+      location: { type: AuthLocation }
+      headerName: { type: string }
+      queryParam: { type: string }
+      scopes: { type: array, items: string }
+
+  RateLimitSpec:
+    description: Rate limiting configuration
+    properties:
+      requestsPerSecond: { type: integer }
+      requestsPerMinute: { type: integer }
+      requestsPerDay: { type: integer }
+      burstSize: { type: integer }
+      retryAfterHeader: { type: string }
+
+  RetryPolicy:
+    description: Retry configuration
+    properties:
+      maxRetries: { type: integer, default: 3 }
+      initialDelayMs: { type: integer, default: 1000 }
+      maxDelayMs: { type: integer, default: 30000 }
+      backoffMultiplier: { type: decimal, default: 2 }
+      retryableStatuses: { type: array, items: integer }
+
+  Endpoint:
+    description: API endpoint definition
+    properties:
+      name: { type: string, required: true }
+      path: { type: string, required: true }
+      method: { type: HttpMethod, required: true }
+      capabilityId: { type: string, description: "Capability this endpoint provides" }
+      requestSchema: { type: object }
+      responseSchema: { type: object }
+      errorCodes: { type: array, items: ErrorCode }
+
+  ErrorCode:
+    description: Possible error code from endpoint
+    properties:
+      code: { type: string, required: true }
+      httpStatus: { type: integer }
+      description: { type: string }
+      retryable: { type: boolean, default: false }
+
+  ProviderInfo:
+    description: Information about the provider
+    properties:
+      name: { type: string, required: true }
+      website: { type: uri }
+      support: { type: uri }
+      region: { type: string }
+      compliance: { type: array, items: string, description: "SOC2, HIPAA, etc." }
+
+  CostSpec:
+    description: Cost information for capability usage
+    properties:
+      model: { type: CostModel, required: true }
+      unitPrice: { type: decimal }
+      currency: { type: string, default: "USD" }
+      unit: { type: string, description: "per request, per 1K tokens, etc." }
+      freeTier: { type: FreeTierSpec }
+
+  FreeTierSpec:
+    description: Free tier allowance
+    properties:
+      units: { type: integer }
+      period: { type: string, description: "monthly, daily" }
+      expiresAt: { type: datetime }
+
+  # ============================================
+  # INTERFACE INSTANCE - Runtime binding
+  # ============================================
+
+  InterfaceInstance:
+    description: Runtime instance of an interface with credentials
+    properties:
+      id: { type: string, required: true }
+      interfaceId: { type: string, required: true }
+      name: { type: string, required: true }
+      environment: { type: EnvironmentType, required: true }
+      credentials: { type: CredentialReference }
+      configOverrides: { type: object }
+      status: { type: InstanceStatus, default: Active }
+      healthCheck: { type: HealthCheckResult }
+      lastUsedAt: { type: datetime }
+      usageStats: { type: UsageStats }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CredentialReference:
+    description: Reference to stored credentials (never store secrets directly)
+    properties:
+      type: { type: CredentialType, required: true }
+      secretId: { type: string, required: true, description: "ID in secrets manager" }
+      secretVersion: { type: string }
+
+  HealthCheckResult:
+    description: Result of interface health check
+    properties:
+      status: { type: HealthStatus, required: true }
+      latencyMs: { type: integer }
+      checkedAt: { type: datetime, required: true }
+      message: { type: string }
+
+  UsageStats:
+    description: Usage statistics for interface instance
+    properties:
+      requestCount: { type: integer }
+      errorCount: { type: integer }
+      totalLatencyMs: { type: integer }
+      periodStart: { type: datetime }
+      periodEnd: { type: datetime }
+
+  # ============================================
+  # CAPABILITY REGISTRY
+  # ============================================
+
+  CapabilityRegistry:
+    description: Registry of available capabilities and their providers
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      capabilities: { type: array, items: RegisteredCapability }
+      defaultProviders: { type: object, description: "Capability ID -> Interface ID mapping" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  RegisteredCapability:
+    description: Capability registered in a registry
+    properties:
+      capabilityId: { type: string, required: true }
+      providers: { type: array, items: string, description: "Interface IDs that provide this" }
+      preferredProvider: { type: string, description: "Default interface ID" }
+      selectionStrategy: { type: SelectionStrategy, default: Preferred }
+
+enums:
+
+  CapabilityCategory:
+    description: Category of capability
+    values:
+      - Speech           # TTS, STT, speech recognition
+      - Language         # Translation, summarization, generation
+      - Vision           # Image recognition, OCR, generation
+      - Audio            # Audio processing, music generation
+      - Video            # Video processing, generation
+      - Data             # Data processing, transformation
+      - Communication    # Email, SMS, notifications
+      - Storage          # File storage, database
+      - Compute          # Processing, ML inference
+      - Integration      # API integration, workflow
+      - Security         # Auth, encryption, scanning
+      - Analytics        # Metrics, logging, monitoring
+
+  CapabilityStatus:
+    values:
+      - Active
+      - Deprecated
+      - Beta
+      - Experimental
+
+  InterfaceStatus:
+    values:
+      - Active
+      - Maintenance
+      - Degraded
+      - Offline
+      - Deprecated
+
+  InstanceStatus:
+    values:
+      - Active
+      - Inactive
+      - Suspended
+      - Error
+
+  HealthStatus:
+    values:
+      - Healthy
+      - Degraded
+      - Unhealthy
+      - Unknown
+
+  AuthType:
+    values:
+      - ApiKey
+      - OAuth2
+      - Bearer
+      - Basic
+      - HMAC
+      - IAM
+      - None
+
+  AuthLocation:
+    values:
+      - Header
+      - Query
+      - Body
+      - Cookie
+
+  HttpMethod:
+    values: [GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS]
+
+  ConstraintType:
+    values:
+      - MaxLength        # Maximum input length
+      - MinLength        # Minimum input length
+      - MaxSize          # Maximum file size
+      - AllowedFormats   # Allowed input formats
+      - RateLimit        # Rate limiting
+      - Quota            # Usage quota
+      - Region           # Geographic restrictions
+
+  CostModel:
+    values:
+      - Free
+      - PayPerUse
+      - Subscription
+      - Tiered
+      - Custom
+
+  CredentialType:
+    values:
+      - ApiKey
+      - OAuth2Token
+      - ServiceAccount
+      - Certificate
+      - UsernamePassword
+
+  EnvironmentType:
+    values:
+      - Development
+      - Staging
+      - Production
+      - Test
+
+  SelectionStrategy:
+    description: How to select among multiple providers
+    values:
+      - Preferred        # Use preferred provider
+      - RoundRobin       # Rotate through providers
+      - LowestCost       # Select cheapest option
+      - LowestLatency    # Select fastest option
+      - Fallback         # Use backup if primary fails
+      - LoadBalanced     # Distribute load evenly
+
+actions:
+
+  RegisterCapability:
+    description: Register a new capability
+    parameters:
+      name: { type: string, required: true }
+      category: { type: CapabilityCategory, required: true }
+      description: { type: string }
+      inputs: { type: array, items: CapabilityInput }
+      outputs: { type: array, items: CapabilityOutput }
+    result: Capability
+
+  RegisterInterface:
+    description: Register a new interface
+    parameters:
+      name: { type: string, required: true }
+      description: { type: string }
+      capabilities: { type: array, items: ProvidedCapability, required: true }
+      provider: { type: ProviderInfo }
+    result: Interface
+
+  CreateInstance:
+    description: Create a runtime interface instance
+    parameters:
+      interfaceId: { type: string, required: true }
+      name: { type: string, required: true }
+      environment: { type: EnvironmentType, required: true }
+      credentials: { type: CredentialReference }
+    result: InterfaceInstance
+
+  InvokeCapability:
+    description: Invoke a capability through its interface
+    parameters:
+      capabilityId: { type: string, required: true }
+      instanceId: { type: string, description: "Specific instance to use" }
+      inputs: { type: object, required: true }
+    result: { type: object }
+
+  CheckHealth:
+    description: Check health of an interface instance
+    parameters:
+      instanceId: { type: string, required: true }
+    result: HealthCheckResult
+
+  GetCapabilityProviders:
+    description: Get all interfaces that provide a capability
+    parameters:
+      capabilityId: { type: string, required: true }
+      status: { type: InterfaceStatus }
+    result: { type: array, items: Interface }
+
+  SetPreferredProvider:
+    description: Set the preferred provider for a capability
+    parameters:
+      capabilityId: { type: string, required: true }
+      interfaceId: { type: string, required: true }
+    result: CapabilityRegistry
+
+  GetUsageStats:
+    description: Get usage statistics for an interface instance
+    parameters:
+      instanceId: { type: string, required: true }
+      periodStart: { type: datetime }
+      periodEnd: { type: datetime }
+    result: UsageStats

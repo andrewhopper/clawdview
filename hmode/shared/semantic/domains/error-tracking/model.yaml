@@ -1,0 +1,234 @@
+# Error Tracking Domain Model
+# Version: 1.1.0
+# Inspired by: Sentry, PostHog, Airbrake
+# Purpose: Lightweight frontend error tracking for auto-fix workflows
+
+domain: error-tracking
+version: "1.1.0"
+description: Frontend error capture and tracking for debugging and auto-fix
+
+entities:
+  Error:
+    description: A captured frontend error event
+    primaryKey: [projectId, timestamp]
+    sortKey: timestamp
+    ttl: 14 days
+
+    attributes:
+      # ══════════════════════════════════════════
+      # IDENTITY
+      # ══════════════════════════════════════════
+      errorId:
+        type: string
+        description: Unique error identifier (base36)
+        example: "m4x7k2abc123"
+
+      projectId:
+        type: string
+        format: uuid
+        required: true
+        description: Project UUID from .project file
+
+      fingerprint:
+        type: string
+        description: Hash for grouping similar errors (message + stack)
+        example: "a1b2c3d4e5f6"
+
+      # ══════════════════════════════════════════
+      # TIMING
+      # ══════════════════════════════════════════
+      timestamp:
+        type: string
+        format: iso8601
+        required: true
+        description: When error occurred (client time)
+
+      receivedAt:
+        type: string
+        format: iso8601
+        description: Server receipt time
+
+      # ══════════════════════════════════════════
+      # REQUEST CONTEXT (flat, top-level)
+      # ══════════════════════════════════════════
+      url:
+        type: string
+        required: true
+        description: Page URL (without query string)
+        example: "https://mo.b.lfg.new/record"
+
+      query:
+        type: string
+        description: URL query string (sanitized)
+        example: "tab=settings&view=list"
+
+      body:
+        type: object
+        description: Request body at time of error (sanitized)
+
+      method:
+        type: string
+        enum: [GET, POST, PUT, DELETE, PATCH]
+        description: HTTP method if during API call
+
+      ip:
+        type: string
+        description: Client IP (from X-Forwarded-For)
+
+      userAgent:
+        type: string
+        description: Raw user agent string
+
+      referer:
+        type: string
+        description: HTTP referer header
+
+      # ══════════════════════════════════════════
+      # ERROR DETAILS
+      # ══════════════════════════════════════════
+      level:
+        type: string
+        enum: [fatal, error, warning, info, debug]
+        default: error
+        description: Severity level
+
+      message:
+        type: string
+        required: true
+        description: Error message
+        example: "Cannot read property 'foo' of undefined"
+
+      stack:
+        type: string
+        description: Stack trace
+
+      type:
+        type: string
+        enum: [error, unhandledrejection, console.error, custom, network]
+        default: error
+
+      source:
+        type: string
+        description: Source file where error occurred
+        example: "app.js"
+
+      line:
+        type: integer
+        description: Line number
+
+      column:
+        type: integer
+        description: Column number
+
+      # ══════════════════════════════════════════
+      # APP CONTEXT
+      # ══════════════════════════════════════════
+      release:
+        type: string
+        description: App version/release
+        example: "1.2.3"
+
+      environment:
+        type: string
+        enum: [production, staging, development, local]
+        default: production
+
+      transaction:
+        type: string
+        description: Route or action name
+        example: "/api/recordings/upload"
+
+      # ══════════════════════════════════════════
+      # USER CONTEXT
+      # ══════════════════════════════════════════
+      userId:
+        type: string
+        description: User ID or anonymous ID
+        example: "anon_k7x9m2"
+
+      sessionId:
+        type: string
+        description: Browser session ID
+
+      # ══════════════════════════════════════════
+      # CLIENT INFO (parsed from userAgent)
+      # ══════════════════════════════════════════
+      browser:
+        type: string
+        example: "Chrome 120.0"
+
+      os:
+        type: string
+        example: "macOS 14.0"
+
+      device:
+        type: string
+        enum: [desktop, mobile, tablet]
+
+      # ══════════════════════════════════════════
+      # BREADCRUMBS (recent user actions)
+      # ══════════════════════════════════════════
+      breadcrumbs:
+        type: array
+        maxItems: 20
+        description: Trail of user actions before error
+        items:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: iso8601
+            type:
+              type: string
+              enum: [click, input, navigation, xhr, fetch, console, custom]
+            category:
+              type: string
+              example: "ui.click"
+            message:
+              type: string
+              example: "button#submit clicked"
+            data:
+              type: object
+
+      # ══════════════════════════════════════════
+      # CUSTOM
+      # ══════════════════════════════════════════
+      tags:
+        type: object
+        description: Custom key-value tags for filtering
+        example: { "feature": "recording", "plan": "pro" }
+
+      extra:
+        type: object
+        description: Additional context data
+
+      # ══════════════════════════════════════════
+      # SYSTEM
+      # ══════════════════════════════════════════
+      ttl:
+        type: integer
+        description: DynamoDB TTL (unix timestamp)
+
+indexes:
+  byProject:
+    hashKey: projectId
+    sortKey: timestamp
+    projection: ALL
+
+  byFingerprint:
+    hashKey: projectId
+    sortKey: fingerprint
+    projection: KEYS_ONLY
+
+operations:
+  capture:
+    input: Error
+    output: { errorId: string }
+
+  list:
+    input: { projectId: uuid, limit?: 50, cursor?: string }
+    output: { errors: Error[], nextCursor?: string }
+
+  aggregate:
+    input: { projectId: uuid, groupBy: fingerprint, since?: iso8601 }
+    output: { groups: [{ fingerprint, count, lastSeen, sample }] }

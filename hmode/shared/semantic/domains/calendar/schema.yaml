@@ -1,0 +1,680 @@
+# File UUID: c8a6ad49-a02e-4683-af58-37bcf6b1b402
+# Calendar Domain Model
+# Events, meetings, attendees, and scheduling
+
+domain:
+  name: calendar
+  version: "1.0.0"
+  description: Calendar and scheduling primitives - events, meetings, attendees, RSVPs, and availability
+  dependencies: [core, auth, notification]
+  use_case: Personal and team calendaring, meeting scheduling, event management
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+
+entities:
+
+  # ============================================
+  # CORE CALENDAR ENTITIES
+  # ============================================
+
+  Calendar:
+    description: A calendar container for events
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true, maxLength: 100 }
+      description: { type: string }
+      ownerId: { type: string, required: true, description: "FK to auth:User" }
+      color: { type: string, description: "Hex color code" }
+      timezone: { type: string, required: true, description: "IANA timezone" }
+      visibility: { type: CalendarVisibility, required: true, default: private }
+      isDefault: { type: boolean, default: false }
+      syncSource: { type: SyncSource, description: "External calendar source" }
+      syncToken: { type: string, description: "For incremental sync" }
+      lastSyncedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Event:
+    description: A calendar event or appointment
+    properties:
+      id: { type: uuid, required: true }
+      calendarId: { type: uuid, required: true, description: "FK to Calendar" }
+      title: { type: string, required: true, maxLength: 255 }
+      description: { type: string, description: "Event details (supports markdown)" }
+      descriptionFormat: { type: DescriptionFormat, default: markdown }
+      eventType: { type: EventType, required: true, default: event }
+      status: { type: EventStatus, required: true, default: confirmed }
+      organizerId: { type: string, required: true, description: "FK to auth:User" }
+      # Time
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      timezone: { type: string, required: true }
+      isAllDay: { type: boolean, default: false }
+      # Recurrence
+      recurrence: { type: EventRecurrence }
+      recurringEventId: { type: uuid, description: "FK to parent recurring event" }
+      originalStartTime: { type: datetime, description: "For modified instances" }
+      # Location
+      location: { type: EventLocation }
+      # Conferencing
+      conferenceData: { type: ConferenceData }
+      # Visibility & Access
+      visibility: { type: EventVisibility, required: true, default: default }
+      guestsCanModify: { type: boolean, default: false }
+      guestsCanInviteOthers: { type: boolean, default: true }
+      guestsCanSeeOtherGuests: { type: boolean, default: true }
+      # Reminders
+      reminders: { type: array, items: EventReminder }
+      useDefaultReminders: { type: boolean, default: true }
+      # Attachments
+      attachments: { type: array, items: EventAttachment }
+      # Metadata
+      color: { type: string, description: "Override calendar color" }
+      extendedProperties: { type: object, description: "Custom key-value pairs" }
+      externalId: { type: string, description: "ID from external system" }
+      externalLink: { type: uri, description: "Link to external event" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # ATTENDEE & RSVP
+  # ============================================
+
+  Attendee:
+    description: A person invited to an event
+    properties:
+      id: { type: uuid, required: true }
+      eventId: { type: uuid, required: true, description: "FK to Event" }
+      userId: { type: string, description: "FK to auth:User (if internal)" }
+      email: { type: string, required: true }
+      displayName: { type: string }
+      role: { type: AttendeeRole, required: true, default: attendee }
+      responseStatus: { type: ResponseStatus, required: true, default: needs_action }
+      comment: { type: string, description: "Response comment" }
+      isOptional: { type: boolean, default: false }
+      isOrganizer: { type: boolean, default: false }
+      isResource: { type: boolean, default: false, description: "Room, equipment, etc." }
+      respondedAt: { type: datetime }
+      invitedAt: { type: datetime, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  RSVP:
+    description: Response to an event invitation
+    properties:
+      id: { type: uuid, required: true }
+      eventId: { type: uuid, required: true }
+      attendeeId: { type: uuid, required: true }
+      response: { type: ResponseStatus, required: true }
+      comment: { type: string }
+      proposedTime: { type: ProposedTime, description: "Alternative time suggestion" }
+      respondedAt: { type: datetime, required: true }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # MEETING-SPECIFIC
+  # ============================================
+
+  Meeting:
+    description: A meeting event with agenda and action items (extends Event)
+    extends: Event
+    properties:
+      meetingType: { type: MeetingType, required: true, default: general }
+      agenda: { type: array, items: AgendaItem }
+      notes: { type: string, description: "Meeting notes (markdown)" }
+      actionItems: { type: array, items: MeetingActionItem }
+      recordingUrl: { type: uri }
+      transcriptUrl: { type: uri }
+      scheduledDuration: { type: integer, description: "Planned duration in minutes" }
+      actualDuration: { type: integer, description: "Actual duration in minutes" }
+      startedAt: { type: datetime }
+      endedAt: { type: datetime }
+
+  AgendaItem:
+    description: An item on a meeting agenda
+    properties:
+      id: { type: uuid, required: true }
+      title: { type: string, required: true }
+      description: { type: string }
+      duration: { type: integer, description: "Estimated minutes" }
+      presenterId: { type: string, description: "FK to auth:User" }
+      sortOrder: { type: integer, required: true }
+      status: { type: AgendaItemStatus, default: pending }
+
+  MeetingActionItem:
+    description: Action item from a meeting
+    properties:
+      id: { type: uuid, required: true }
+      meetingId: { type: uuid, required: true }
+      title: { type: string, required: true }
+      description: { type: string }
+      assigneeId: { type: string, description: "FK to auth:User" }
+      dueDate: { type: date }
+      status: { type: ActionItemStatus, required: true, default: open }
+      linkedTodoId: { type: uuid, description: "FK to task-management:Todo" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # SCHEDULING & AVAILABILITY
+  # ============================================
+
+  Availability:
+    description: User's availability for scheduling
+    properties:
+      id: { type: uuid, required: true }
+      userId: { type: string, required: true }
+      dayOfWeek: { type: DayOfWeek, required: true }
+      startTime: { type: time, required: true }
+      endTime: { type: time, required: true }
+      timezone: { type: string, required: true }
+      isAvailable: { type: boolean, required: true, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  BusyBlock:
+    description: A time block where user is unavailable
+    properties:
+      id: { type: uuid, required: true }
+      userId: { type: string, required: true }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      reason: { type: BusyReason, default: busy }
+      eventId: { type: uuid, description: "FK to Event if from calendar" }
+      createdAt: { type: datetime, required: true }
+
+  SchedulingLink:
+    description: A shareable link for others to book time (like Calendly)
+    properties:
+      id: { type: uuid, required: true }
+      userId: { type: string, required: true }
+      name: { type: string, required: true }
+      slug: { type: string, required: true, description: "URL-safe identifier" }
+      description: { type: string }
+      duration: { type: integer, required: true, description: "Meeting duration in minutes" }
+      bufferBefore: { type: integer, default: 0, description: "Buffer before in minutes" }
+      bufferAfter: { type: integer, default: 0, description: "Buffer after in minutes" }
+      minNotice: { type: integer, default: 60, description: "Minimum advance notice in minutes" }
+      maxFutureDays: { type: integer, default: 60, description: "How far ahead can book" }
+      availabilityRules: { type: array, items: uuid, description: "FK to Availability[]" }
+      calendarId: { type: uuid, description: "Calendar to add events to" }
+      conferenceType: { type: ConferenceType }
+      questions: { type: array, items: BookingQuestion }
+      isActive: { type: boolean, required: true, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Booking:
+    description: A scheduled appointment via SchedulingLink
+    properties:
+      id: { type: uuid, required: true }
+      schedulingLinkId: { type: uuid, required: true }
+      eventId: { type: uuid, required: true, description: "Created event" }
+      bookerEmail: { type: string, required: true }
+      bookerName: { type: string }
+      answers: { type: array, items: BookingAnswer }
+      status: { type: BookingStatus, required: true, default: confirmed }
+      cancelledAt: { type: datetime }
+      cancellationReason: { type: string }
+      rescheduledFromId: { type: uuid }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # SUPPORTING VALUE OBJECTS
+  # ============================================
+
+  EventLocation:
+    description: Physical or virtual location
+    properties:
+      type: { type: LocationType, required: true }
+      name: { type: string }
+      address: { type: string }
+      coordinates: { type: object, description: "{lat, lng}" }
+      url: { type: uri, description: "Virtual meeting URL" }
+      notes: { type: string }
+
+  ConferenceData:
+    description: Video conferencing details
+    properties:
+      type: { type: ConferenceType, required: true }
+      conferenceId: { type: string }
+      joinUrl: { type: uri, required: true }
+      dialIn: { type: string }
+      pin: { type: string }
+      password: { type: string }
+      hostUrl: { type: uri }
+
+  EventRecurrence:
+    description: Recurrence pattern for repeating events
+    properties:
+      rule: { type: string, required: true, description: "RRULE format (RFC 5545)" }
+      pattern: { type: RecurrencePattern, required: true }
+      interval: { type: integer, required: true, default: 1 }
+      daysOfWeek: { type: array, items: DayOfWeek }
+      dayOfMonth: { type: integer }
+      monthOfYear: { type: integer }
+      count: { type: integer, description: "Number of occurrences" }
+      until: { type: date, description: "End date" }
+      exceptions: { type: array, items: datetime, description: "Excluded dates" }
+
+  EventReminder:
+    description: Notification before event
+    properties:
+      id: { type: uuid, required: true }
+      method: { type: ReminderMethod, required: true }
+      minutes: { type: integer, required: true, description: "Minutes before event" }
+
+  EventAttachment:
+    description: File attached to event
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      url: { type: uri, required: true }
+      mimeType: { type: string }
+      fileSize: { type: integer }
+      iconUrl: { type: uri }
+
+  ProposedTime:
+    description: Alternative time proposed in RSVP
+    properties:
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      comment: { type: string }
+
+  BookingQuestion:
+    description: Question for booking form
+    properties:
+      id: { type: uuid, required: true }
+      question: { type: string, required: true }
+      type: { type: QuestionType, required: true }
+      required: { type: boolean, default: false }
+      options: { type: array, items: string, description: "For select/multiselect" }
+      sortOrder: { type: integer, required: true }
+
+  BookingAnswer:
+    description: Answer to booking question
+    properties:
+      questionId: { type: uuid, required: true }
+      answer: { type: string, required: true }
+
+enums:
+
+  # Calendar
+  CalendarVisibility:
+    values:
+      - private       # Only owner sees
+      - shared        # Shared with specific people
+      - public        # Anyone can see
+
+  SyncSource:
+    values:
+      - google        # Google Calendar
+      - outlook       # Microsoft Outlook/365
+      - apple         # Apple iCloud Calendar
+      - caldav        # Generic CalDAV
+      - exchange      # Microsoft Exchange
+
+  # Event
+  EventType:
+    values:
+      - event         # General event
+      - meeting       # Meeting with attendees
+      - reminder      # Reminder only
+      - task          # Task with due date
+      - out_of_office # OOO block
+      - focus_time    # Focus/do not disturb
+      - working_hours # Working location
+
+  EventStatus:
+    values:
+      - confirmed     # Event is confirmed
+      - tentative     # Tentatively scheduled
+      - cancelled     # Event cancelled
+
+  EventVisibility:
+    values:
+      - default       # Use calendar default
+      - public        # Anyone can see details
+      - private       # Only attendees see details
+      - confidential  # Only time shown to others
+
+  DescriptionFormat:
+    values:
+      - plain
+      - markdown
+      - html
+
+  # Attendee
+  AttendeeRole:
+    values:
+      - organizer     # Event organizer
+      - chair         # Meeting chair
+      - attendee      # Required attendee
+      - optional      # Optional attendee
+      - resource      # Room/equipment
+
+  ResponseStatus:
+    values:
+      - needs_action  # No response yet
+      - accepted      # Attending
+      - declined      # Not attending
+      - tentative     # Maybe attending
+      - delegated     # Delegated to someone else
+
+  # Meeting
+  MeetingType:
+    values:
+      - general       # General meeting
+      - one_on_one    # 1:1 meeting
+      - standup       # Daily standup
+      - retrospective # Retro
+      - planning      # Sprint/project planning
+      - review        # Review meeting
+      - interview     # Job interview
+      - external      # External/client meeting
+      - workshop      # Workshop/training
+
+  AgendaItemStatus:
+    values: [pending, in_progress, completed, skipped]
+
+  ActionItemStatus:
+    values: [open, in_progress, completed, cancelled]
+
+  # Location
+  LocationType:
+    values:
+      - physical      # Physical address
+      - virtual       # Online meeting
+      - hybrid        # Both physical and virtual
+      - phone         # Phone call
+
+  ConferenceType:
+    values:
+      - zoom
+      - google_meet
+      - teams
+      - webex
+      - phone
+      - custom
+
+  # Recurrence
+  RecurrencePattern:
+    values:
+      - daily
+      - weekly
+      - biweekly
+      - monthly
+      - yearly
+      - custom
+
+  DayOfWeek:
+    values: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+
+  # Reminders
+  ReminderMethod:
+    values:
+      - popup         # In-app notification
+      - email         # Email reminder
+      - sms           # Text message
+      - push          # Push notification
+
+  # Availability
+  BusyReason:
+    values:
+      - busy          # Generic busy
+      - event         # Calendar event
+      - out_of_office # OOO
+      - focus         # Focus time
+      - personal      # Personal time
+
+  # Booking
+  BookingStatus:
+    values:
+      - pending       # Awaiting confirmation
+      - confirmed     # Confirmed
+      - cancelled     # Cancelled
+      - rescheduled   # Rescheduled
+      - completed     # Meeting completed
+      - no_show       # Booker didn't show
+
+  QuestionType:
+    values:
+      - text          # Free text
+      - textarea      # Long text
+      - select        # Single select
+      - multiselect   # Multiple select
+      - phone         # Phone number
+      - email         # Email address
+
+actions:
+
+  # Calendar CRUD
+  CreateCalendar:
+    description: Create a new calendar
+    parameters:
+      name: { type: string, required: true }
+      timezone: { type: string, required: true }
+      color: { type: string }
+      visibility: { type: CalendarVisibility }
+    result: Calendar
+    permission: calendar:create
+    idempotent: false
+
+  # Event CRUD
+  CreateEvent:
+    description: Create a new event
+    parameters:
+      calendarId: { type: uuid, required: true }
+      title: { type: string, required: true }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      description: { type: string }
+      location: { type: EventLocation }
+      attendees: { type: array, items: string, description: "Email addresses" }
+      recurrence: { type: EventRecurrence }
+      reminders: { type: array, items: EventReminder }
+    result: Event
+    permission: event:create
+    idempotent: false
+
+  UpdateEvent:
+    description: Update an event
+    parameters:
+      eventId: { type: uuid, required: true }
+      title: { type: string }
+      startTime: { type: datetime }
+      endTime: { type: datetime }
+      description: { type: string }
+      location: { type: EventLocation }
+      updateRecurring: { type: UpdateScope, description: "For recurring events" }
+    result: Event
+    permission: event:update
+    idempotent: true
+
+  DeleteEvent:
+    description: Delete an event
+    parameters:
+      eventId: { type: uuid, required: true }
+      deleteRecurring: { type: UpdateScope }
+      sendNotification: { type: boolean, default: true }
+    result: { type: boolean }
+    permission: event:delete
+    idempotent: true
+
+  # Attendee management
+  InviteAttendee:
+    description: Invite attendee to event
+    parameters:
+      eventId: { type: uuid, required: true }
+      email: { type: string, required: true }
+      role: { type: AttendeeRole }
+      isOptional: { type: boolean }
+    result: Attendee
+    permission: event:update
+    idempotent: true
+
+  RemoveAttendee:
+    description: Remove attendee from event
+    parameters:
+      eventId: { type: uuid, required: true }
+      attendeeId: { type: uuid, required: true }
+      sendNotification: { type: boolean, default: true }
+    result: { type: boolean }
+    permission: event:update
+    idempotent: true
+
+  # RSVP
+  RespondToEvent:
+    description: RSVP to an event invitation
+    parameters:
+      eventId: { type: uuid, required: true }
+      response: { type: ResponseStatus, required: true }
+      comment: { type: string }
+      proposedTime: { type: ProposedTime }
+    result: RSVP
+    permission: event:respond
+    idempotent: true
+
+  # Availability
+  GetAvailability:
+    description: Get user's availability for a time range
+    parameters:
+      userIds: { type: array, items: string, required: true }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      timezone: { type: string }
+    result: { type: object, description: "Map of userId to BusyBlock[]" }
+    permission: availability:read
+    idempotent: true
+
+  FindAvailableSlots:
+    description: Find common available time slots
+    parameters:
+      attendeeEmails: { type: array, items: string, required: true }
+      duration: { type: integer, required: true, description: "Minutes" }
+      startDate: { type: date, required: true }
+      endDate: { type: date, required: true }
+      preferredTimes: { type: array, items: time }
+    result: { type: array, items: object, description: "Available slots" }
+    permission: availability:read
+    idempotent: true
+
+  # Scheduling Links
+  CreateSchedulingLink:
+    description: Create a booking link
+    parameters:
+      name: { type: string, required: true }
+      slug: { type: string, required: true }
+      duration: { type: integer, required: true }
+      calendarId: { type: uuid, required: true }
+      conferenceType: { type: ConferenceType }
+    result: SchedulingLink
+    permission: scheduling:create
+    idempotent: false
+
+  BookAppointment:
+    description: Book an appointment via scheduling link
+    parameters:
+      schedulingLinkId: { type: uuid, required: true }
+      startTime: { type: datetime, required: true }
+      bookerEmail: { type: string, required: true }
+      bookerName: { type: string }
+      answers: { type: array, items: BookingAnswer }
+    result: Booking
+    permission: scheduling:book
+    idempotent: false
+
+  CancelBooking:
+    description: Cancel a booking
+    parameters:
+      bookingId: { type: uuid, required: true }
+      reason: { type: string }
+      sendNotification: { type: boolean, default: true }
+    result: Booking
+    permission: scheduling:cancel
+    idempotent: true
+
+  # Meeting-specific
+  CreateMeeting:
+    description: Create a meeting with agenda
+    parameters:
+      calendarId: { type: uuid, required: true }
+      title: { type: string, required: true }
+      startTime: { type: datetime, required: true }
+      duration: { type: integer, required: true }
+      meetingType: { type: MeetingType }
+      attendees: { type: array, items: string }
+      agenda: { type: array, items: AgendaItem }
+      conferenceType: { type: ConferenceType }
+    result: Meeting
+    permission: meeting:create
+    idempotent: false
+
+  AddActionItem:
+    description: Add action item to meeting
+    parameters:
+      meetingId: { type: uuid, required: true }
+      title: { type: string, required: true }
+      assigneeId: { type: string }
+      dueDate: { type: date }
+    result: MeetingActionItem
+    permission: meeting:update
+    idempotent: false
+
+# Additional enum for update scope
+  UpdateScope:
+    values:
+      - this_only     # Only this instance
+      - this_and_future # This and all future
+      - all           # All instances
+
+relationships:
+  - type: one_to_many
+    from: Calendar
+    to: Event
+    foreign_key: calendarId
+    description: A calendar contains many events
+
+  - type: one_to_many
+    from: Event
+    to: Attendee
+    foreign_key: eventId
+    description: An event has many attendees
+
+  - type: one_to_many
+    from: Event
+    to: RSVP
+    foreign_key: eventId
+    description: An event has many RSVPs
+
+  - type: one_to_many
+    from: Event
+    to: Event
+    foreign_key: recurringEventId
+    description: Recurring events have instances
+
+  - type: one_to_many
+    from: Meeting
+    to: AgendaItem
+    foreign_key: meetingId
+    description: A meeting has agenda items
+
+  - type: one_to_many
+    from: Meeting
+    to: MeetingActionItem
+    foreign_key: meetingId
+    description: A meeting produces action items
+
+  - type: one_to_many
+    from: SchedulingLink
+    to: Booking
+    foreign_key: schedulingLinkId
+    description: A scheduling link has many bookings
+
+  # Cross-domain relationship
+  - type: one_to_one
+    from: MeetingActionItem
+    to: task-management:Todo
+    foreign_key: linkedTodoId
+    description: Action items can link to todos

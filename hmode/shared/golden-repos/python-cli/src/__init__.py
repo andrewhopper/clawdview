@@ -1,0 +1,1 @@
+"""Python CLI template package."""

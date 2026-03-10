@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Night Sky Theme Preview</title>
+  <style>
+    /* Night Sky Theme Variables */
+    :root {
+      --background: 228 25% 7%;
+      --foreground: 220 15% 90%;
+      --card: 228 20% 10%;
+      --card-foreground: 220 15% 90%;
+      --primary: 220 50% 50%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 230 20% 18%;
+      --secondary-foreground: 220 15% 90%;
+      --muted: 228 18% 14%;
+      --muted-foreground: 225 12% 55%;
+      --accent: 192 45% 52%;
+      --accent-foreground: 228 25% 7%;
+      --destructive: 0 50% 50%;
+      --destructive-foreground: 0 0% 100%;
+      --success: 160 45% 42%;
+      --warning: 38 55% 52%;
+      --border: 230 18% 20%;
+      --ring: 220 50% 50%;
+      --radius: 0.5rem;
+      --chart-1: 220 50% 50%;
+      --chart-2: 192 45% 52%;
+      --chart-3: 160 45% 42%;
+      --chart-4: 270 35% 58%;
+      --chart-5: 45 50% 55%;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      min-height: 100vh;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 2rem;
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: hsl(var(--foreground));
+    }
+
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    /* Color Swatches */
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+
+    .swatch {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid hsl(var(--border));
+    }
+
+    .swatch-color {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .swatch-label {
+      padding: 0.75rem;
+      background: hsl(var(--card));
+      font-size: 0.75rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Buttons */
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-weight: 500;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-secondary {
+      background: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+    }
+
+    .btn-accent {
+      background: hsl(var(--accent));
+      color: hsl(var(--accent-foreground));
+    }
+
+    .btn-destructive {
+      background: hsl(var(--destructive));
+      color: hsl(var(--destructive-foreground));
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid hsl(var(--border));
+      color: hsl(var(--foreground));
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: hsl(var(--foreground));
+    }
+
+    .btn-ghost:hover {
+      background: hsl(var(--muted));
+    }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-description {
+      color: hsl(var(--muted-foreground));
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      background: hsl(var(--background));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      color: hsl(var(--foreground));
+      font-size: 0.875rem;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: hsl(var(--ring));
+      box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+    }
+
+    .form-input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Badges */
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-primary {
+      background: hsl(var(--primary) / 0.2);
+      color: hsl(var(--primary));
+    }
+
+    .badge-accent {
+      background: hsl(var(--accent) / 0.2);
+      color: hsl(var(--accent));
+    }
+
+    .badge-success {
+      background: hsl(var(--success) / 0.2);
+      color: hsl(var(--success));
+    }
+
+    .badge-warning {
+      background: hsl(var(--warning) / 0.2);
+      color: hsl(var(--warning));
+    }
+
+    .badge-destructive {
+      background: hsl(var(--destructive) / 0.2);
+      color: hsl(var(--destructive));
+    }
+
+    /* Chart Preview */
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+      height: 120px;
+      padding: 1rem;
+      background: hsl(var(--card));
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+    }
+
+    .chart-bar {
+      flex: 1;
+      border-radius: 4px 4px 0 0;
+      min-width: 40px;
+    }
+
+    /* Alert */
+    .alert {
+      padding: 1rem;
+      border-radius: var(--radius);
+      border-left: 4px solid;
+      margin-bottom: 1rem;
+    }
+
+    .alert-info {
+      background: hsl(var(--primary) / 0.1);
+      border-color: hsl(var(--primary));
+    }
+
+    .alert-success {
+      background: hsl(var(--success) / 0.1);
+      border-color: hsl(var(--success));
+    }
+
+    .alert-warning {
+      background: hsl(var(--warning) / 0.1);
+      border-color: hsl(var(--warning));
+    }
+
+    .alert-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .alert-text {
+      font-size: 0.875rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Divider */
+    hr {
+      border: none;
+      border-top: 1px solid hsl(var(--border));
+      margin: 2rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌌 Night Sky Theme</h1>
+    <h2>Deep indigo and navy blues with subtle gradient accents</h2>
+
+    <div class="section">
+      <h3>Color Palette</h3>
+      <div class="swatches">
+        <div class="swatch">
+          <div class="swatch-color" style="background: hsl(var(--background)); border: 1px solid hsl(var(--border));">
+            <span style="color: hsl(var(--foreground));">Aa</span>
+          </div>
+          <div class="swatch-label">Background</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: hsl(var(--card));">
+            <span style="color: hsl(var(--card-foreground));">Aa</span>
+          </div>
+          <div class="swatch-label">Card</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: hsl(var(--primary));">
+            <span style="color: hsl(var(--primary-foreground));">Aa</span>
+          </div>
+          <div class="swatch-label">Primary</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: hsl(var(--secondary));">
+            <span style="color: hsl(var(--secondary-foreground));">Aa</span>
+          </div>
+          <div class="swatch-label">Secondary</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: hsl(var(--accent));">
+            <span style="color: hsl(var(--accent-foreground));">Aa</span>
+          </div>
+          <div class="swatch-label">Accent</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: hsl(var(--muted));">
+            <span style="color: hsl(var(--muted-foreground));">Aa</span>
+          </div>
+          <div class="swatch-label">Muted</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: hsl(var(--success));">
+            <span style="color: white;">Aa</span>
+          </div>
+          <div class="swatch-label">Success</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: hsl(var(--warning));">
+            <span style="color: hsl(var(--background));">Aa</span>
+          </div>
+          <div class="swatch-label">Warning</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: hsl(var(--destructive));">
+            <span style="color: white;">Aa</span>
+          </div>
+          <div class="swatch-label">Destructive</div>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="section">
+      <h3>Buttons</h3>
+      <div class="buttons">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-accent">Accent</button>
+        <button class="btn btn-destructive">Destructive</button>
+        <button class="btn btn-outline">Outline</button>
+        <button class="btn btn-ghost">Ghost</button>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="section">
+      <h3>Cards</h3>
+      <div class="cards">
+        <div class="card">
+          <div class="card-title">Analytics Dashboard</div>
+          <div class="card-description">Track your metrics and performance in real-time with beautiful visualizations.</div>
+          <div class="badges">
+            <span class="badge badge-primary">New</span>
+            <span class="badge badge-accent">Featured</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Team Collaboration</div>
+          <div class="card-description">Work together seamlessly with integrated tools and communication.</div>
+          <div class="badges">
+            <span class="badge badge-success">Active</span>
+            <span class="badge badge-warning">Beta</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Security Center</div>
+          <div class="card-description">Monitor and manage your application security from one place.</div>
+          <div class="badges">
+            <span class="badge badge-destructive">Critical</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="section">
+      <h3>Form Elements</h3>
+      <div class="cards">
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" placeholder="Enter your password">
+          </div>
+          <button class="btn btn-primary" style="width: 100%;">Sign In</button>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="section">
+      <h3>Alerts</h3>
+      <div class="alert alert-info">
+        <div class="alert-title">Information</div>
+        <div class="alert-text">Your session will expire in 30 minutes. Save your work.</div>
+      </div>
+      <div class="alert alert-success">
+        <div class="alert-title">Success</div>
+        <div class="alert-text">Your changes have been saved successfully.</div>
+      </div>
+      <div class="alert alert-warning">
+        <div class="alert-title">Warning</div>
+        <div class="alert-text">Storage is almost full. Consider upgrading your plan.</div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="section">
+      <h3>Chart Colors</h3>
+      <div class="chart-bars">
+        <div class="chart-bar" style="background: hsl(var(--chart-1)); height: 100%;"></div>
+        <div class="chart-bar" style="background: hsl(var(--chart-2)); height: 75%;"></div>
+        <div class="chart-bar" style="background: hsl(var(--chart-3)); height: 60%;"></div>
+        <div class="chart-bar" style="background: hsl(var(--chart-4)); height: 85%;"></div>
+        <div class="chart-bar" style="background: hsl(var(--chart-5)); height: 45%;"></div>
+        <div class="chart-bar" style="background: hsl(var(--chart-1)); height: 90%;"></div>
+        <div class="chart-bar" style="background: hsl(var(--chart-2)); height: 55%;"></div>
+        <div class="chart-bar" style="background: hsl(var(--chart-3)); height: 70%;"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

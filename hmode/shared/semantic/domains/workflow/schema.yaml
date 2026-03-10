@@ -1,0 +1,249 @@
+# Workflow Domain Model
+# Reusable approval workflows, state machines, and process automation
+
+domain:
+  name: workflow
+  version: "1.1.0"
+  description: Reusable approval workflows, state machines, and process automation
+  dependencies: [core, auth, protocol]
+  created_at: "2025-11-22"
+  updated_at: "2025-11-24"
+
+entities:
+
+  WorkflowDefinition:
+    description: Template defining a workflow's steps and transitions
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      version: { type: string, required: true }
+      protocolId: { type: string, description: "Protocol this workflow implements" }
+      protocolVersion: { type: string, description: "Version of protocol implemented" }
+      isActive: { type: boolean, default: true }
+      steps: { type: array, items: StepDefinition, required: true }
+      transitions: { type: array, items: TransitionDefinition }
+      artifactTypes: { type: array, items: string, description: "Types of artifacts this workflow produces" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  StepDefinition:
+    description: Definition of a step in a workflow template
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      order: { type: integer, required: true }
+      type: { type: StepType, required: true }
+      assigneeType: { type: AssigneeType, description: "How to determine assignee" }
+      assigneeRole: { type: string, description: "Role required if assigneeType is Role" }
+      isRequired: { type: boolean, default: true }
+      timeoutHours: { type: integer, description: "Auto-escalate after N hours" }
+      actions: { type: array, items: string, description: "Allowed actions at this step" }
+
+  TransitionDefinition:
+    description: Defines valid transitions between steps
+    properties:
+      id: { type: string, required: true }
+      fromStepId: { type: string, required: true }
+      toStepId: { type: string, required: true }
+      trigger: { type: TransitionTrigger, required: true }
+      condition: { type: string, description: "Optional condition expression" }
+
+  WorkflowInstance:
+    description: Running instance of a workflow
+    properties:
+      id: { type: string, required: true }
+      definitionId: { type: string, required: true }
+      definitionVersion: { type: string, required: true }
+      status: { type: WorkflowStatus, required: true }
+      currentStepId: { type: string }
+      subjectType: { type: string, required: true, description: "Type of entity being processed" }
+      subjectId: { type: string, required: true, description: "ID of entity being processed" }
+      initiatorId: { type: string, required: true }
+      steps: { type: array, items: StepInstance }
+      artifactBundleId: { type: string, description: "ArtifactBundle produced by this workflow" }
+      startedAt: { type: datetime, required: true }
+      completedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  StepInstance:
+    description: Instance of a step in a running workflow
+    properties:
+      id: { type: string, required: true }
+      definitionStepId: { type: string, required: true }
+      order: { type: integer, required: true }
+      status: { type: StepStatus, required: true }
+      assigneeId: { type: string, description: "User assigned to complete this step" }
+      decision: { type: StepDecision }
+      comments: { type: string }
+      dueAt: { type: datetime }
+      startedAt: { type: datetime }
+      completedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ApprovalRequest:
+    description: Request for approval in a workflow step
+    properties:
+      id: { type: string, required: true }
+      workflowInstanceId: { type: string, required: true }
+      stepInstanceId: { type: string, required: true }
+      requesterId: { type: string, required: true }
+      approverId: { type: string, required: true }
+      status: { type: ApprovalStatus, required: true }
+      decision: { type: StepDecision }
+      comments: { type: string }
+      requestedAt: { type: datetime, required: true }
+      respondedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Escalation:
+    description: Escalation when step times out or requires attention
+    properties:
+      id: { type: string, required: true }
+      workflowInstanceId: { type: string, required: true }
+      stepInstanceId: { type: string, required: true }
+      reason: { type: EscalationReason, required: true }
+      escalatedToId: { type: string, required: true }
+      originalAssigneeId: { type: string }
+      isResolved: { type: boolean, default: false }
+      resolvedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+enums:
+
+  WorkflowStatus:
+    description: Status of a workflow instance
+    values:
+      - Active       # Workflow is running
+      - Completed    # All steps completed successfully
+      - Rejected     # Workflow rejected at some step
+      - Cancelled    # Workflow cancelled
+      - Suspended    # Workflow paused
+      - TimedOut     # Workflow timed out
+
+  StepStatus:
+    description: Status of a workflow step
+    values:
+      - Pending      # Not yet started
+      - Active       # Currently awaiting action
+      - Completed    # Step completed
+      - Skipped      # Step was skipped
+      - TimedOut     # Step timed out
+      - Escalated    # Step was escalated
+
+  StepType:
+    description: Type of workflow step
+    values:
+      - Approval     # Requires approval decision
+      - Review       # Review only, no decision
+      - Task         # Manual task to complete
+      - Notification # Send notification only
+      - Automatic    # System-automated step
+      - Parallel     # Multiple parallel approvals
+
+  StepDecision:
+    description: Decision made at a step
+    values:
+      - Approved
+      - Rejected
+      - RequestChanges
+      - Delegated
+      - Abstained
+
+  ApprovalStatus:
+    values:
+      - Pending
+      - Approved
+      - Rejected
+      - Delegated
+      - Expired
+
+  AssigneeType:
+    description: How to determine step assignee
+    values:
+      - Specific     # Specific user ID
+      - Role         # Anyone with role
+      - Manager      # Initiator's manager
+      - Department   # Department head
+      - Dynamic      # Determined at runtime
+
+  TransitionTrigger:
+    description: What triggers a transition
+    values:
+      - OnApproval   # When step is approved
+      - OnRejection  # When step is rejected
+      - OnCompletion # When step completes (any outcome)
+      - OnTimeout    # When step times out
+      - OnCondition  # When condition is met
+      - Manual       # Manual trigger
+
+  EscalationReason:
+    values:
+      - Timeout
+      - Reassignment
+      - Priority
+      - Manual
+
+actions:
+
+  CreateWorkflowDefinition:
+    description: Create a new workflow template
+    parameters:
+      name: { type: string, required: true }
+      description: { type: string }
+      steps: { type: array, items: StepDefinition, required: true }
+      transitions: { type: array, items: TransitionDefinition }
+    result: WorkflowDefinition
+
+  StartWorkflow:
+    description: Start a new workflow instance
+    parameters:
+      definitionId: { type: string, required: true }
+      subjectType: { type: string, required: true }
+      subjectId: { type: string, required: true }
+      initiatorId: { type: string, required: true }
+      metadata: { type: object, description: "Additional context data" }
+    result: WorkflowInstance
+
+  CompleteStep:
+    description: Complete a workflow step with a decision
+    parameters:
+      stepInstanceId: { type: string, required: true }
+      decision: { type: StepDecision, required: true }
+      comments: { type: string }
+    result: StepInstance
+
+  DelegateStep:
+    description: Delegate a step to another user
+    parameters:
+      stepInstanceId: { type: string, required: true }
+      delegateToId: { type: string, required: true }
+      reason: { type: string }
+    result: StepInstance
+
+  CancelWorkflow:
+    description: Cancel a running workflow
+    parameters:
+      workflowInstanceId: { type: string, required: true }
+      reason: { type: string, required: true }
+    result: WorkflowInstance
+
+  EscalateStep:
+    description: Escalate a step to a higher authority
+    parameters:
+      stepInstanceId: { type: string, required: true }
+      escalateToId: { type: string, required: true }
+      reason: { type: EscalationReason, required: true }
+    result: Escalation
+
+  GetPendingApprovals:
+    description: Get pending approvals for a user
+    parameters:
+      userId: { type: string, required: true }
+      status: { type: ApprovalStatus, default: Pending }
+    result: { type: array, items: ApprovalRequest }

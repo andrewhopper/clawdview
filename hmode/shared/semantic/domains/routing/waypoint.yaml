@@ -1,0 +1,520 @@
+# Routing Domain: Waypoints & Stops
+# Points along a route with semantic meaning
+# Version: 1.0.0
+
+domain: routing-waypoint
+version: "1.0.0"
+status: production
+description: Waypoints, stops, checkpoints, and via points
+dependencies:
+  - geo-point
+  - geo-place
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Waypoint (abstract location on route)
+  # ---------------------------------------------------------------------------
+
+  Waypoint:
+    description: Point along a route with semantic meaning
+    fields:
+      id:
+        type: string
+        required: false
+      location:
+        type: Point
+        required: true
+        description: Geographic coordinates
+      name:
+        type: string
+        required: false
+        description: Human-readable name
+      address:
+        type: Address
+        required: false
+        description: Street address
+      place:
+        type: Place
+        required: false
+        description: Associated place/POI
+      type:
+        type: WaypointType
+        required: true
+        default: VIA
+        description: Role in route
+      sequence:
+        type: integer
+        required: false
+        description: Order in route (0 = origin)
+      side_of_road:
+        type: SideOfRoad
+        required: false
+        description: Which side of road to approach
+      heading:
+        type: integer
+        required: false
+        constraints:
+          min: 0
+          max: 360
+        description: Preferred approach heading
+      radius_meters:
+        type: float
+        required: false
+        description: Acceptable arrival radius
+      metadata:
+        type: object
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Stop (waypoint with time constraints)
+  # ---------------------------------------------------------------------------
+
+  Stop:
+    description: Waypoint with scheduled stop time
+    extends: Waypoint
+    fields:
+      arrival_time:
+        type: datetime
+        required: false
+        description: Scheduled/actual arrival
+      departure_time:
+        type: datetime
+        required: false
+        description: Scheduled/actual departure
+      time_window:
+        type: TimeWindow
+        required: false
+        description: Acceptable arrival window
+      dwell_time_seconds:
+        type: integer
+        required: false
+        description: Time spent at stop
+      stop_type:
+        type: StopType
+        required: false
+        description: Purpose of stop
+      status:
+        type: StopStatus
+        required: false
+        description: Current status
+      actual_arrival:
+        type: datetime
+        required: false
+        description: Actual arrival time (vs scheduled)
+      actual_departure:
+        type: datetime
+        required: false
+        description: Actual departure time
+      notes:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Time Window
+  # ---------------------------------------------------------------------------
+
+  TimeWindow:
+    description: Acceptable time range for arrival/departure
+    fields:
+      earliest:
+        type: datetime
+        required: true
+        description: Earliest acceptable time
+      latest:
+        type: datetime
+        required: true
+        description: Latest acceptable time
+      preferred:
+        type: datetime
+        required: false
+        description: Preferred/ideal time
+      strictness:
+        type: TimeWindowStrictness
+        required: false
+        default: SOFT
+        description: How strictly to enforce
+
+  # ---------------------------------------------------------------------------
+  # Checkpoint (verification point)
+  # ---------------------------------------------------------------------------
+
+  Checkpoint:
+    description: Verification or milestone point
+    extends: Waypoint
+    fields:
+      checkpoint_type:
+        type: CheckpointType
+        required: true
+      requires_verification:
+        type: boolean
+        required: false
+        default: false
+        description: Must confirm passage
+      verification_method:
+        type: VerificationMethod
+        required: false
+      expected_time:
+        type: datetime
+        required: false
+      actual_time:
+        type: datetime
+        required: false
+      verified:
+        type: boolean
+        required: false
+      verified_by:
+        type: string
+        required: false
+        description: User/device that verified
+
+  # ---------------------------------------------------------------------------
+  # Fuel/Charging Stop
+  # ---------------------------------------------------------------------------
+
+  FuelStop:
+    description: Refueling or charging stop
+    extends: Stop
+    fields:
+      fuel_type:
+        type: FuelType
+        required: true
+      station_name:
+        type: string
+        required: false
+      station_brand:
+        type: string
+        required: false
+      price_per_unit:
+        type: float
+        required: false
+      quantity:
+        type: float
+        required: false
+        description: Amount to add
+      cost:
+        type: Money
+        required: false
+      charge_level_start:
+        type: float
+        required: false
+        description: Battery % at arrival (EV)
+      charge_level_end:
+        type: float
+        required: false
+        description: Battery % at departure (EV)
+      charger_type:
+        type: ChargerType
+        required: false
+        description: EV charger type
+
+  # ---------------------------------------------------------------------------
+  # Rest Stop
+  # ---------------------------------------------------------------------------
+
+  RestStop:
+    description: Rest or break stop (driver hours compliance)
+    extends: Stop
+    fields:
+      rest_type:
+        type: RestType
+        required: true
+      required_duration_minutes:
+        type: integer
+        required: false
+        description: Minimum rest time required
+      actual_duration_minutes:
+        type: integer
+        required: false
+      regulation:
+        type: string
+        required: false
+        description: Regulation requiring rest (e.g., "HOS", "EU 561")
+      facilities:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Available facilities
+
+  # ---------------------------------------------------------------------------
+  # Delivery/Pickup Stop
+  # ---------------------------------------------------------------------------
+
+  DeliveryStop:
+    description: Cargo pickup or delivery point
+    extends: Stop
+    fields:
+      action:
+        type: DeliveryAction
+        required: true
+      items:
+        type: array
+        items:
+          type: DeliveryItem
+        required: false
+      contact_name:
+        type: string
+        required: false
+      contact_phone:
+        type: string
+        required: false
+      special_instructions:
+        type: string
+        required: false
+      proof_of_delivery:
+        type: ProofOfDelivery
+        required: false
+      dock_number:
+        type: string
+        required: false
+      appointment_required:
+        type: boolean
+        required: false
+      appointment_id:
+        type: string
+        required: false
+
+  DeliveryItem:
+    description: Item being picked up or delivered
+    fields:
+      id:
+        type: string
+        required: true
+      description:
+        type: string
+        required: false
+      quantity:
+        type: integer
+        required: false
+        default: 1
+      weight_kg:
+        type: float
+        required: false
+      dimensions:
+        type: Dimensions
+        required: false
+      handling:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Special handling (fragile, hazmat, etc.)
+
+  ProofOfDelivery:
+    description: Evidence of delivery completion
+    fields:
+      signature:
+        type: string
+        required: false
+        description: Signature image URL or data
+      signer_name:
+        type: string
+        required: false
+      photo:
+        type: string
+        required: false
+        description: Photo URL
+      timestamp:
+        type: datetime
+        required: true
+      location:
+        type: Point
+        required: false
+      notes:
+        type: string
+        required: false
+
+  Dimensions:
+    description: Physical dimensions
+    fields:
+      length_cm:
+        type: float
+        required: false
+      width_cm:
+        type: float
+        required: false
+      height_cm:
+        type: float
+        required: false
+      volume_cubic_cm:
+        type: float
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Border Crossing
+  # ---------------------------------------------------------------------------
+
+  BorderCrossing:
+    description: International border crossing point
+    extends: Waypoint
+    fields:
+      crossing_name:
+        type: string
+        required: false
+      country_from:
+        type: string
+        required: true
+        description: ISO country code departing
+      country_to:
+        type: string
+        required: true
+        description: ISO country code entering
+      customs_required:
+        type: boolean
+        required: false
+      typical_wait_minutes:
+        type: integer
+        required: false
+      current_wait_minutes:
+        type: integer
+        required: false
+      hours:
+        type: OperatingHours
+        required: false
+      vehicle_types_allowed:
+        type: array
+        items:
+          type: string
+        required: false
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  WaypointType:
+    description: Role of waypoint in route
+    values:
+      - ORIGIN            # Starting point
+      - DESTINATION       # Final destination
+      - VIA               # Pass through (no stop)
+      - STOP              # Scheduled stop
+      - CHECKPOINT        # Verification point
+      - FUEL              # Refueling stop
+      - REST              # Rest/break stop
+      - DELIVERY          # Pickup/delivery
+      - BORDER            # Border crossing
+
+  StopType:
+    description: Purpose of scheduled stop
+    values:
+      - PICKUP            # Cargo pickup
+      - DELIVERY          # Cargo delivery
+      - FUEL              # Refueling
+      - REST              # Driver rest
+      - MEAL              # Meal break
+      - INSPECTION        # Vehicle inspection
+      - WEIGH_STATION     # Weight check
+      - CUSTOMS           # Customs clearance
+      - TRANSFER          # Change vehicle/mode
+      - MEETING           # Customer meeting
+      - SERVICE           # Vehicle service
+      - OTHER
+
+  StopStatus:
+    description: Current status of stop
+    values:
+      - PLANNED           # Scheduled
+      - EN_ROUTE          # Traveling to stop
+      - ARRIVING          # Approaching
+      - ARRIVED           # At location
+      - IN_PROGRESS       # Activity underway
+      - COMPLETED         # Finished
+      - SKIPPED           # Bypassed
+      - FAILED            # Could not complete
+      - CANCELLED         # Removed from route
+
+  TimeWindowStrictness:
+    description: How strictly to enforce time window
+    values:
+      - HARD              # Must arrive within window
+      - SOFT              # Prefer but allow violation
+      - PREFERRED         # Suggestion only
+
+  SideOfRoad:
+    description: Which side of road to approach
+    values:
+      - EITHER            # Any side acceptable
+      - LEFT              # Left side only
+      - RIGHT             # Right side only
+      - CURB              # Curbside (country-dependent)
+
+  CheckpointType:
+    description: Type of checkpoint
+    values:
+      - MILESTONE         # Distance/progress marker
+      - TOLL              # Toll booth
+      - WEIGH_STATION     # Weight check
+      - INSPECTION        # Safety inspection
+      - BORDER            # Border crossing
+      - GATE              # Facility gate
+      - GEOFENCE          # Virtual boundary
+      - CUSTOM            # User-defined
+
+  VerificationMethod:
+    description: How to verify checkpoint passage
+    values:
+      - GPS               # Automatic GPS detection
+      - MANUAL            # Manual confirmation
+      - BARCODE           # Scan barcode/QR
+      - NFC               # NFC tap
+      - BLUETOOTH         # Bluetooth beacon
+      - PHOTO             # Photo required
+
+  FuelType:
+    description: Type of fuel or energy
+    values:
+      - GASOLINE
+      - DIESEL
+      - ELECTRIC
+      - HYBRID
+      - LNG               # Liquefied Natural Gas
+      - CNG               # Compressed Natural Gas
+      - HYDROGEN
+      - PROPANE
+
+  ChargerType:
+    description: EV charger connector type
+    values:
+      - LEVEL_1           # Standard outlet (slow)
+      - LEVEL_2           # 240V (medium)
+      - DC_FAST           # DC fast charging
+      - CHADEMO           # CHAdeMO connector
+      - CCS               # Combined Charging System
+      - TESLA             # Tesla Supercharger
+      - NACS              # North American Charging Standard
+
+  RestType:
+    description: Type of rest stop
+    values:
+      - SHORT_BREAK       # 15-30 min break
+      - MEAL_BREAK        # 30-60 min meal
+      - DAILY_REST        # 9-11 hour rest (EU/US)
+      - WEEKLY_REST       # 24-45 hour rest
+      - SPLIT_REST        # Split sleeper berth
+      - PERSONAL          # Personal break
+
+  DeliveryAction:
+    description: Action at delivery stop
+    values:
+      - PICKUP            # Load cargo
+      - DELIVERY          # Unload cargo
+      - EXCHANGE          # Both pickup and delivery
+      - RETURN            # Return items
+      - TRANSFER          # Transfer to another vehicle
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "Google Directions API Waypoints"
+  - "FMCSA Hours of Service: https://www.fmcsa.dot.gov/regulations/hours-service"
+  - "EU Regulation 561/2006 (Driver Hours)"
+  - "GS1 Delivery Standards"

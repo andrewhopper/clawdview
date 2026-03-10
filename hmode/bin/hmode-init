@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+# hmode-init: Set up hmode symlinks in a project
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HMODE_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$HMODE_DIR")"
+
+# Parse flags
+QUIET=false
+COPY_MODE=false
+for arg in "$@"; do
+  case $arg in
+    --quiet|-q) QUIET=true ;;
+    --copy|-c) COPY_MODE=true ;;
+    --help|-h)
+      echo "Usage: hmode-init [OPTIONS]"
+      echo ""
+      echo "Set up hmode methodology in the current project."
+      echo ""
+      echo "Options:"
+      echo "  --quiet, -q    Suppress output (for git hooks)"
+      echo "  --copy, -c     Copy files instead of symlinking (for CI/CD)"
+      echo "  --help, -h     Show this help"
+      exit 0
+      ;;
+  esac
+done
+
+log() { $QUIET || echo "$@"; }
+
+cd "$PROJECT_ROOT"
+
+# Ensure .claude directory exists
+mkdir -p .claude
+
+# Handle CLAUDE.md symlink
+if [ -f "CLAUDE.md" ] && [ ! -L "CLAUDE.md" ]; then
+  if [ ! -f ".claude/CLAUDE.md" ]; then
+    log "Moving existing CLAUDE.md to .claude/CLAUDE.md (local override)"
+    mv CLAUDE.md .claude/CLAUDE.md
+  else
+    log "WARNING: CLAUDE.md exists as regular file AND .claude/CLAUDE.md exists."
+    log "  Backing up to CLAUDE.md.bak"
+    mv CLAUDE.md CLAUDE.md.bak
+  fi
+fi
+
+if $COPY_MODE; then
+  log "Setting up hmode (copy mode)..."
+  cp hmode/CLAUDE.md ./CLAUDE.md
+  rm -rf .claude/commands .claude/skills .claude/agents
+  cp -R hmode/commands .claude/commands
+  cp -R hmode/skills .claude/skills
+  cp -R hmode/agents .claude/agents
+else
+  log "Setting up hmode symlinks..."
+
+  # CLAUDE.md -> hmode/CLAUDE.md
+  ln -sfn hmode/CLAUDE.md ./CLAUDE.md
+  log "  CLAUDE.md -> hmode/CLAUDE.md"
+
+  # .claude/commands -> ../hmode/commands
+  rm -rf .claude/commands 2>/dev/null || true
+  ln -sfn ../hmode/commands .claude/commands
+  log "  .claude/commands -> ../hmode/commands"
+
+  # .claude/skills -> ../hmode/skills
+  rm -rf .claude/skills 2>/dev/null || true
+  ln -sfn ../hmode/skills .claude/skills
+  log "  .claude/skills -> ../hmode/skills"
+
+  # .claude/agents -> ../hmode/agents
+  rm -rf .claude/agents 2>/dev/null || true
+  ln -sfn ../hmode/agents .claude/agents
+  log "  .claude/agents -> ../hmode/agents"
+fi
+
+# Add symlinks to .gitignore if not already there
+GITIGNORE="$PROJECT_ROOT/.gitignore"
+touch "$GITIGNORE"
+for entry in "CLAUDE.md" ".claude/commands" ".claude/skills" ".claude/agents"; do
+  if ! grep -qxF "$entry" "$GITIGNORE" 2>/dev/null; then
+    echo "$entry" >> "$GITIGNORE"
+    log "  Added $entry to .gitignore"
+  fi
+done
+
+# Create .claude/CLAUDE.md stub if missing
+if [ ! -f ".claude/CLAUDE.md" ]; then
+  cat > .claude/CLAUDE.md << 'STUB'
+# Project-Specific Overrides
+
+<!-- This file contains project-specific configuration that overrides hmode defaults. -->
+<!-- Claude Code loads this as the local tier (highest priority). -->
+
+## Project Context
+
+<!-- Add project-specific info here: -->
+<!-- - AWS credentials and profiles -->
+<!-- - Repository structure notes -->
+<!-- - Team conventions -->
+<!-- - Environment-specific configs -->
+STUB
+  log "  Created .claude/CLAUDE.md stub for local overrides"
+fi
+
+# Install post-checkout hook for symlink resilience
+HOOK_DIR="$PROJECT_ROOT/.git/hooks"
+if [ -d "$HOOK_DIR" ]; then
+  HOOK_FILE="$HOOK_DIR/post-checkout"
+  HOOK_LINE='[ -f "hmode/bin/hmode-init" ] && ./hmode/bin/hmode-init --quiet'
+  if [ -f "$HOOK_FILE" ]; then
+    if ! grep -qF "hmode-init" "$HOOK_FILE"; then
+      echo "" >> "$HOOK_FILE"
+      echo "$HOOK_LINE" >> "$HOOK_FILE"
+      log "  Added hmode-init to existing post-checkout hook"
+    fi
+  else
+    cat > "$HOOK_FILE" << HOOK
+#!/bin/bash
+$HOOK_LINE
+HOOK
+    chmod +x "$HOOK_FILE"
+    log "  Created post-checkout hook"
+  fi
+fi
+
+log ""
+log "hmode initialized! Claude Code will now load the shared methodology."
+log "Project-specific overrides: .claude/CLAUDE.md"

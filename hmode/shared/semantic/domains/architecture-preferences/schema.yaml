@@ -1,0 +1,604 @@
+# Architecture Preferences Domain Model
+# Approved architectural patterns and best practices
+# Version: 1.0.0
+# Last Updated: 2025-11-24
+
+version: "1.0.0"
+domain: architecture-preferences
+description: |
+  Domain model for architecture preferences - approved patterns for
+  process, design, integration, and data architecture.
+  Maps to .guardrails/architecture-preferences/*.json
+
+# =============================================================================
+# Enums
+# =============================================================================
+
+enums:
+  PatternCategory:
+    description: Architecture pattern categories
+    values:
+      - process_patterns       # Development and operational processes
+      - design_patterns        # Code-level design patterns
+      - architecture_patterns  # System-level architecture
+      - integration_patterns   # System integration and communication
+      - data_patterns          # Data management and persistence
+
+  ProcessSubcategory:
+    description: Process pattern subcategories
+    values:
+      - parallel_execution     # Concurrent task execution
+      - agent_orchestration    # Multi-agent coordination
+      - workflow_automation    # Automated workflows
+      - deployment_strategy    # Deployment approaches
+
+  DesignSubcategory:
+    description: Design pattern subcategories
+    values:
+      - creational_patterns    # Object creation patterns
+      - structural_patterns    # Object composition patterns
+      - behavioral_patterns    # Object interaction patterns
+      - code_organization      # Code structure patterns
+
+  ArchitectureSubcategory:
+    description: Architecture pattern subcategories
+    values:
+      - application_architecture  # Application structure
+      - service_architecture      # Service organization
+      - deployment_architecture   # Deployment topology
+      - scaling_patterns          # Scalability approaches
+
+  IntegrationSubcategory:
+    description: Integration pattern subcategories
+    values:
+      - api_patterns             # API design patterns
+      - messaging_patterns       # Async messaging patterns
+      - data_sync_patterns       # Data synchronization
+      - authentication_patterns  # Auth integration
+
+  DataSubcategory:
+    description: Data pattern subcategories
+    values:
+      - data_access_patterns     # Data access layer patterns
+      - data_modeling_patterns   # Data model design
+      - caching_patterns         # Caching strategies
+      - event_sourcing_patterns  # Event sourcing/CQRS
+
+  PatternMaturity:
+    description: Pattern maturity level
+    values:
+      - experimental   # New, untested pattern
+      - emerging       # Gaining adoption
+      - established    # Well-understood, proven
+      - legacy         # Older pattern, consider alternatives
+
+  PatternScope:
+    description: Scope where pattern applies
+    values:
+      - function       # Single function
+      - class          # Single class/module
+      - component      # Component/service
+      - system         # Entire system
+      - organization   # Cross-system/org-wide
+
+# =============================================================================
+# Core Entities
+# =============================================================================
+
+entities:
+  ArchitecturePattern:
+    description: An approved architecture pattern
+    fields:
+      id:
+        type: string
+        required: true
+        description: Unique pattern identifier (kebab-case)
+      name:
+        type: string
+        required: true
+        description: Human-readable pattern name
+      category:
+        type: PatternCategory
+        required: true
+      subcategory:
+        type: string
+        required: true
+        description: Subcategory within the category
+      rank:
+        type: integer
+        required: true
+        min: 1
+        description: Preference ranking (1 = most preferred)
+      description:
+        type: string
+        required: true
+      problem:
+        type: string
+        required: true
+        description: Problem this pattern solves
+      solution:
+        type: string
+        required: true
+        description: How the pattern solves the problem
+      rationale:
+        type: string
+        required: true
+        description: Why this pattern is preferred
+      useCases:
+        type: list[string]
+        required: true
+        description: Appropriate use cases
+      consequences:
+        type: PatternConsequences
+        description: Trade-offs and implications
+      implementation:
+        type: PatternImplementation
+        description: Implementation guidance
+      examples:
+        type: list[PatternExample]
+        description: Code examples
+      relatedPatterns:
+        type: list[string]
+        description: Related pattern IDs
+      maturity:
+        type: PatternMaturity
+        default: established
+      scope:
+        type: PatternScope
+        required: true
+      tags:
+        type: list[string]
+      approvedBy:
+        type: string
+      approvedDate:
+        type: date
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  PatternCategory:
+    description: A category of architecture patterns
+    fields:
+      name:
+        type: PatternCategory
+        required: true
+      file:
+        type: string
+        required: true
+        description: JSON filename
+      description:
+        type: string
+        required: true
+      subcategories:
+        type: list[string]
+        required: true
+      patternCount:
+        type: integer
+        required: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ArchitecturePreferencesIndex:
+    description: Master index of architecture preferences
+    fields:
+      schema:
+        type: string
+        format: uri
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      version:
+        type: SemVer
+        required: true
+      lastUpdated:
+        type: date
+        required: true
+      categories:
+        type: map[string, PatternCategoryEntry]
+        required: true
+      totalPatterns:
+        type: integer
+        required: true
+      quickReference:
+        type: list[QuickRefEntry]
+
+  ApprovalLogEntry:
+    description: Architecture decision approval record
+    fields:
+      id:
+        type: string
+        required: true
+      patternId:
+        type: string
+        required: true
+      decision:
+        type: string
+        required: true
+        enum: [approved, rejected, deferred, deprecated]
+      approvedBy:
+        type: string
+        required: true
+      approvedDate:
+        type: date
+        required: true
+      rationale:
+        type: string
+        required: true
+      context:
+        type: string
+        description: Decision context
+      supersedes:
+        type: string
+        description: Pattern ID this supersedes
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+# =============================================================================
+# Supporting Types
+# =============================================================================
+
+types:
+  PatternConsequences:
+    description: Trade-offs and implications of a pattern
+    fields:
+      benefits:
+        type: list[string]
+        required: true
+        description: Positive outcomes
+      drawbacks:
+        type: list[string]
+        description: Negative trade-offs
+      risks:
+        type: list[string]
+        description: Potential risks
+      mitigations:
+        type: list[string]
+        description: Risk mitigations
+
+  PatternImplementation:
+    description: Implementation guidance for a pattern
+    fields:
+      steps:
+        type: list[string]
+        description: Implementation steps
+      prerequisites:
+        type: list[string]
+        description: Required before implementing
+      dependencies:
+        type: list[string]
+        description: Technology dependencies
+      antiPatterns:
+        type: list[string]
+        description: What NOT to do
+      bestPractices:
+        type: list[string]
+        description: Recommended practices
+      codeSnippet:
+        type: string
+        description: Example code snippet
+      language:
+        type: string
+        description: Programming language for snippet
+
+  PatternExample:
+    description: Example of pattern application
+    fields:
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      code:
+        type: string
+        description: Code example
+      language:
+        type: string
+        description: Programming language
+      context:
+        type: string
+        description: When to use this example
+      fileRef:
+        type: string
+        description: Reference to example file in codebase
+
+  PatternCategoryEntry:
+    description: Index entry for a pattern category
+    fields:
+      file:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      patternCount:
+        type: integer
+        required: true
+      subcategories:
+        type: list[string]
+        required: true
+
+  QuickRefEntry:
+    description: Quick reference entry for common patterns
+    fields:
+      name:
+        type: string
+        required: true
+      category:
+        type: PatternCategory
+        required: true
+      rank:
+        type: integer
+        required: true
+      useCases:
+        type: list[string]
+        required: true
+
+  PatternDecision:
+    description: Architecture decision record (ADR)
+    fields:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      status:
+        type: string
+        required: true
+        enum: [proposed, accepted, deprecated, superseded]
+      context:
+        type: string
+        required: true
+        description: What is the issue
+      decision:
+        type: string
+        required: true
+        description: What was decided
+      consequences:
+        type: string
+        required: true
+        description: What becomes easier/harder
+      alternatives:
+        type: list[AlternativeOption]
+        description: Options considered
+      date:
+        type: date
+        required: true
+      deciders:
+        type: list[string]
+
+  AlternativeOption:
+    description: Alternative option considered
+    fields:
+      name:
+        type: string
+        required: true
+      pros:
+        type: list[string]
+      cons:
+        type: list[string]
+      reason_rejected:
+        type: string
+
+# =============================================================================
+# Actions
+# =============================================================================
+
+actions:
+  GetPattern:
+    description: Get preferred pattern for a category
+    input:
+      category:
+        type: PatternCategory
+        required: true
+      subcategory:
+        type: string
+      scope:
+        type: PatternScope
+      useCase:
+        type: string
+    output:
+      pattern:
+        type: ArchitecturePattern
+      alternatives:
+        type: list[ArchitecturePattern]
+
+  ValidateArchitecture:
+    description: Validate architecture against preferences
+    input:
+      patterns:
+        type: list[string]
+        description: Pattern IDs being used
+      context:
+        type: string
+        description: Project context
+    output:
+      valid:
+        type: boolean
+      violations:
+        type: list[ArchViolation]
+      recommendations:
+        type: list[string]
+
+  RecordDecision:
+    description: Record an architecture decision
+    input:
+      pattern:
+        type: ArchitecturePattern
+        required: true
+      decision:
+        type: string
+        required: true
+        enum: [approved, rejected, deferred]
+      rationale:
+        type: string
+        required: true
+      approver:
+        type: string
+        required: true
+    output:
+      entry:
+        type: ApprovalLogEntry
+
+  ComparePatterns:
+    description: Compare architecture patterns
+    input:
+      patterns:
+        type: list[string]
+        required: true
+        description: Pattern IDs to compare
+      criteria:
+        type: list[string]
+    output:
+      comparison:
+        type: PatternComparison
+
+  ArchViolation:
+    description: Architecture validation violation
+    fields:
+      patternId:
+        type: string
+      category:
+        type: PatternCategory
+      severity:
+        type: string
+        enum: [warning, error]
+      message:
+        type: string
+      recommendation:
+        type: string
+
+  PatternComparison:
+    description: Comparison result between patterns
+    fields:
+      patterns:
+        type: list[ArchitecturePattern]
+      scores:
+        type: map[string, map[string, integer]]
+        description: Pattern ID -> Criterion -> Score
+      recommendation:
+        type: string
+      rationale:
+        type: string
+
+# =============================================================================
+# Relationships
+# =============================================================================
+
+relationships:
+  - ArchitecturePattern belongsToCategory PatternCategory
+  - ArchitecturePattern supersedes ArchitecturePattern
+  - ArchitecturePattern relatesTo ArchitecturePattern
+  - ApprovalLogEntry approves ArchitecturePattern
+  - PatternDecision documents ArchitecturePattern
+
+# =============================================================================
+# Category Definitions
+# =============================================================================
+
+category_definitions:
+  process_patterns:
+    description: Development and operational process patterns
+    file: process-patterns.json
+    subcategories:
+      parallel_execution:
+        description: Concurrent task execution patterns
+        examples:
+          - name: Claude Code CLI Child Processes
+            rank: 1
+            useCases: [multi-agent orchestration, parallel research, autonomous agents]
+      agent_orchestration:
+        description: Multi-agent coordination patterns
+        examples:
+          - name: Two-Phase Execution (Data then Synthesis)
+            rank: 1
+            useCases: [research workflows, data collection + analysis]
+
+  design_patterns:
+    description: Code-level design patterns and best practices
+    file: design-patterns.json
+    subcategories:
+      creational_patterns:
+        description: Object creation patterns
+        examples: [Factory, Builder, Singleton]
+      structural_patterns:
+        description: Object composition patterns
+        examples: [Adapter, Decorator, Facade]
+      behavioral_patterns:
+        description: Object interaction patterns
+        examples: [Observer, Strategy, Command]
+      code_organization:
+        description: Code structure patterns
+        examples:
+          - name: Service Layer Pattern
+            rank: 1
+            useCases: [API development, business logic separation]
+
+  architecture_patterns:
+    description: System-level architecture patterns
+    file: architecture-patterns.json
+    subcategories:
+      application_architecture:
+        description: Application structure patterns
+        examples: [Layered Architecture, Hexagonal Architecture, Clean Architecture]
+      service_architecture:
+        description: Service organization patterns
+        examples: [Microservices, Modular Monolith, Serverless]
+      deployment_architecture:
+        description: Deployment topology patterns
+        examples: [Blue-Green, Canary, Rolling]
+      scaling_patterns:
+        description: Scalability patterns
+        examples: [Horizontal Scaling, Sharding, CQRS]
+
+  integration_patterns:
+    description: System integration and communication patterns
+    file: integration-patterns.json
+    subcategories:
+      api_patterns:
+        description: API design patterns
+        examples: [REST, GraphQL, gRPC]
+      messaging_patterns:
+        description: Async messaging patterns
+        examples: [Pub/Sub, Event-Driven, Message Queue]
+      data_sync_patterns:
+        description: Data synchronization patterns
+        examples: [CDC, ETL, Event Sourcing]
+      authentication_patterns:
+        description: Authentication integration patterns
+        examples: [OAuth 2.0, SAML, JWT]
+
+  data_patterns:
+    description: Data management and persistence patterns
+    file: data-patterns.json
+    subcategories:
+      data_access_patterns:
+        description: Data access layer patterns
+        examples:
+          - name: Repository Pattern
+            rank: 1
+            useCases: [database abstraction, testable data layer]
+      data_modeling_patterns:
+        description: Data model design patterns
+        examples: [Normalization, Denormalization, Star Schema]
+      caching_patterns:
+        description: Caching strategy patterns
+        examples: [Cache-Aside, Write-Through, Write-Behind]
+      event_sourcing_patterns:
+        description: Event sourcing and CQRS patterns
+        examples: [Event Store, Projection, Snapshot]

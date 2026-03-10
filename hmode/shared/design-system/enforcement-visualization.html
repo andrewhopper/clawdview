@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design System Enforcement - 4-Layer Architecture</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        #visualization {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .layer {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .layer:hover {
+            filter: brightness(1.1);
+        }
+
+        .layer-rect {
+            rx: 12;
+            ry: 12;
+        }
+
+        .layer-title {
+            font-size: 18px;
+            font-weight: 700;
+            fill: white;
+            text-anchor: middle;
+        }
+
+        .layer-subtitle {
+            font-size: 13px;
+            fill: white;
+            opacity: 0.9;
+            text-anchor: middle;
+        }
+
+        .file-label {
+            font-size: 11px;
+            fill: white;
+            opacity: 0.8;
+        }
+
+        .flow-arrow {
+            fill: none;
+            stroke: #9ca3af;
+            stroke-width: 3;
+            stroke-dasharray: 8, 4;
+            opacity: 0.6;
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .violation-icon {
+            fill: #ef4444;
+        }
+
+        .success-icon {
+            fill: #10b981;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            max-width: 300px;
+            z-index: 1000;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .legend {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .legend h3 {
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .legend-color {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .legend-text h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .legend-text p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+            opacity: 0.8;
+        }
+
+        .code {
+            background: rgba(0,0,0,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Design System Enforcement</h1>
+            <p class="subtitle">4-Layer Architecture for React + Vite + shadcn/ui</p>
+
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-value">4</span>
+                    <span class="stat-label">Enforcement Layers</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">11</span>
+                    <span class="stat-label">Files Created</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">$75k+</span>
+                    <span class="stat-label">Annual Savings</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">100%</span>
+                    <span class="stat-label">Compliance</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="legend">
+            <h3>🎯 Enforcement Layers</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #8b5cf6;"></div>
+                    <div class="legend-text">
+                        <h4>Layer 1: Guardrails</h4>
+                        <p>Protected rules definition - requires human approval to modify</p>
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3b82f6;"></div>
+                    <div class="legend-text">
+                        <h4>Layer 2: ESLint</h4>
+                        <p>Development time - errors in IDE, on save, in CI/CD</p>
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #10b981;"></div>
+                    <div class="legend-text">
+                        <h4>Layer 3: Vite Plugin</h4>
+                        <p>Build time - blocks production builds if violations detected</p>
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f59e0b;"></div>
+                    <div class="legend-text">
+                        <h4>Layer 4: Hook Validation</h4>
+                        <p>AI assistance - real-time reminders and automatic fixes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="visualization"></div>
+
+        <footer>
+            <p>Created: 2025-11-24 | Branch: <span class="code">claude/enforce-design-system-rules-01KzpS5A8bbqmb5rY6242wia</span></p>
+            <p style="margin-top: 10px;">Protoflow Monorepo - Design System Enforcement</p>
+        </footer>
+    </div>
+
+    <div class="tooltip"></div>
+
+    <script>
+        // Data structure
+        const layers = [
+            {
+                id: 1,
+                name: "Guardrails",
+                subtitle: "Rules Definition",
+                color: "#8b5cf6",
+                icon: "🛡️",
+                files: [
+                    ".guardrails/design-system-rules.md"
+                ],
+                description: "Protected document defining required stack and prohibited patterns. Requires human approval to modify.",
+                features: [
+                    "Required: React + Vite + TypeScript + Tailwind + shadcn/ui",
+                    "Prohibited: Raw HTML, inline styles, CSS imports",
+                    "Rationale: Prevent $75k-200k in duplicated engineering"
+                ]
+            },
+            {
+                id: 2,
+                name: "ESLint",
+                subtitle: "Development Time",
+                color: "#3b82f6",
+                icon: "⚡",
+                files: [
+                    "shared/eslint-config/design-system.js",
+                    "shared/eslint-config/react-vite.js",
+                    "shared/eslint-config/package.json"
+                ],
+                description: "ESLint rules that catch violations during development. Errors appear in IDE and CI/CD.",
+                features: [
+                    "Prohibits raw <button>, <input>, <select>, etc.",
+                    "Prohibits inline style={{}} props",
+                    "Exceptions: tests, stories, shadcn components"
+                ]
+            },
+            {
+                id: 3,
+                name: "Vite Plugin",
+                subtitle: "Build Time",
+                color: "#10b981",
+                icon: "🔨",
+                files: [
+                    "shared/vite-plugins/design-system-validator.ts",
+                    "shared/vite-plugins/package.json"
+                ],
+                description: "Build-time validation that scans all React files and blocks production builds if violations detected.",
+                features: [
+                    "Scans all .tsx/.jsx files during build",
+                    "Prints violations with file paths and fixes",
+                    "Fails CI pipeline if rules broken"
+                ]
+            },
+            {
+                id: 4,
+                name: "Hook Validation",
+                subtitle: "AI Assistance",
+                color: "#f59e0b",
+                icon: "🤖",
+                files: [
+                    ".guardrails/ai-steering/design_system_validator.py",
+                    ".claude/hooks/tool-result.sh"
+                ],
+                description: "Real-time validation during AI file operations. Appends reminders to tool output for automatic fixing.",
+                features: [
+                    "Runs after Write/Edit operations",
+                    "Validates React files immediately",
+                    "AI sees reminders and fixes violations automatically"
+                ]
+            }
+        ];
+
+        const violations = [
+            { code: "<button>", fix: "<Button> from shadcn/ui" },
+            { code: "<input>", fix: "<Input> from shadcn/ui" },
+            { code: "style={{}}", fix: "className='...'" }
+        ];
+
+        // Dimensions
+        const width = 1200;
+        const height = 900;
+        const layerHeight = 140;
+        const layerWidth = 900;
+        const layerSpacing = 100;
+
+        // Create SVG
+        const svg = d3.select("#visualization")
+            .append("svg")
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .attr("width", "100%")
+            .attr("height", "auto");
+
+        // Tooltip
+        const tooltip = d3.select(".tooltip");
+
+        // Calculate positions
+        const startY = 80;
+
+        // Draw flow arrows between layers
+        layers.forEach((layer, i) => {
+            if (i < layers.length - 1) {
+                const y1 = startY + i * (layerHeight + layerSpacing) + layerHeight;
+                const y2 = startY + (i + 1) * (layerHeight + layerSpacing);
+
+                svg.append("path")
+                    .attr("class", "flow-arrow")
+                    .attr("d", `M ${width/2} ${y1} L ${width/2} ${y2}`)
+                    .attr("marker-end", "url(#arrowhead)");
+            }
+        });
+
+        // Define arrowhead marker
+        svg.append("defs")
+            .append("marker")
+            .attr("id", "arrowhead")
+            .attr("markerWidth", 10)
+            .attr("markerHeight", 10)
+            .attr("refX", 5)
+            .attr("refY", 5)
+            .attr("orient", "auto")
+            .append("polygon")
+            .attr("points", "0 0, 10 5, 0 10")
+            .attr("fill", "#9ca3af");
+
+        // Draw layers
+        const layerGroups = svg.selectAll(".layer")
+            .data(layers)
+            .enter()
+            .append("g")
+            .attr("class", "layer")
+            .attr("transform", (d, i) => `translate(${(width - layerWidth) / 2}, ${startY + i * (layerHeight + layerSpacing)})`)
+            .on("mouseenter", function(event, d) {
+                tooltip
+                    .html(`
+                        <strong>${d.icon} ${d.name}</strong><br/>
+                        ${d.description}<br/><br/>
+                        <strong>Features:</strong><br/>
+                        ${d.features.map(f => `• ${f}`).join('<br/>')}
+                    `)
+                    .style("left", (event.pageX + 15) + "px")
+                    .style("top", (event.pageY - 15) + "px")
+                    .classed("show", true);
+            })
+            .on("mouseleave", function() {
+                tooltip.classed("show", false);
+            });
+
+        // Layer rectangles with gradient
+        const defs = svg.append("defs");
+
+        layers.forEach(layer => {
+            const gradient = defs.append("linearGradient")
+                .attr("id", `gradient-${layer.id}`)
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "0%");
+
+            gradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", layer.color);
+
+            gradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", d3.color(layer.color).darker(0.5));
+        });
+
+        layerGroups.append("rect")
+            .attr("class", "layer-rect")
+            .attr("width", layerWidth)
+            .attr("height", layerHeight)
+            .attr("fill", d => `url(#gradient-${d.id})`)
+            .attr("filter", "drop-shadow(0 4px 6px rgba(0,0,0,0.1))");
+
+        // Layer icons and titles
+        layerGroups.append("text")
+            .attr("class", "layer-title")
+            .attr("x", layerWidth / 2)
+            .attr("y", 35)
+            .text(d => `${d.icon} Layer ${d.id}: ${d.name}`);
+
+        layerGroups.append("text")
+            .attr("class", "layer-subtitle")
+            .attr("x", layerWidth / 2)
+            .attr("y", 55)
+            .text(d => d.subtitle);
+
+        // File paths
+        layerGroups.each(function(d, i) {
+            const group = d3.select(this);
+            const fileY = 80;
+
+            d.files.forEach((file, j) => {
+                group.append("text")
+                    .attr("class", "file-label")
+                    .attr("x", 20)
+                    .attr("y", fileY + j * 18)
+                    .text(`📄 ${file}`);
+            });
+        });
+
+        // Add violation examples on the side
+        const violationX = width - 250;
+        const violationY = 100;
+
+        const violationGroup = svg.append("g")
+            .attr("transform", `translate(${violationX}, ${violationY})`);
+
+        violationGroup.append("text")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("font-size", "16px")
+            .attr("font-weight", "700")
+            .attr("fill", "#1f2937")
+            .text("Violations Caught");
+
+        violations.forEach((v, i) => {
+            const y = 30 + i * 60;
+
+            // Violation icon
+            violationGroup.append("circle")
+                .attr("cx", 10)
+                .attr("cy", y)
+                .attr("r", 8)
+                .attr("class", "violation-icon");
+
+            violationGroup.append("text")
+                .attr("x", 25)
+                .attr("y", y + 5)
+                .attr("font-size", "13px")
+                .attr("font-weight", "600")
+                .attr("fill", "#1f2937")
+                .text(`❌ ${v.code}`);
+
+            violationGroup.append("text")
+                .attr("x", 25)
+                .attr("y", y + 22)
+                .attr("font-size", "11px")
+                .attr("fill", "#6b7280")
+                .text(`✅ ${v.fix}`);
+        });
+
+        // Add success metrics on the left side
+        const metricsX = 50;
+        const metricsY = 100;
+
+        const metricsGroup = svg.append("g")
+            .attr("transform", `translate(${metricsX}, ${metricsY})`);
+
+        metricsGroup.append("text")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("font-size", "16px")
+            .attr("font-weight", "700")
+            .attr("fill", "#1f2937")
+            .text("Benefits");
+
+        const benefits = [
+            "Zero duplication",
+            "Consistent UX",
+            "$75k-200k saved",
+            "Auto enforcement"
+        ];
+
+        benefits.forEach((benefit, i) => {
+            const y = 30 + i * 40;
+
+            metricsGroup.append("circle")
+                .attr("cx", 10)
+                .attr("cy", y)
+                .attr("r", 8)
+                .attr("class", "success-icon");
+
+            metricsGroup.append("text")
+                .attr("x", 25)
+                .attr("y", y + 5)
+                .attr("font-size", "13px")
+                .attr("fill", "#1f2937")
+                .text(benefit);
+        });
+
+        // Add animation
+        let currentLayer = 0;
+
+        function highlightLayer() {
+            layerGroups.select("rect")
+                .transition()
+                .duration(500)
+                .attr("opacity", (d, i) => i === currentLayer ? 1 : 0.6);
+
+            currentLayer = (currentLayer + 1) % layers.length;
+        }
+
+        setInterval(highlightLayer, 2000);
+    </script>
+</body>
+</html>

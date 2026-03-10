@@ -1,0 +1,3691 @@
+# =============================================================================
+# Domain: bible-learning
+# Version: 0.5.0
+# Status: development
+# Dependencies: core@^1.0.0, story@^1.0.0, auth@^0.1.0
+# Created: 2025-12-15
+# Updated: 2025-12-15
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# Project: bible-buddy-a66e1
+# =============================================================================
+
+domain:
+  name: bible-learning
+  version: "0.6.0"
+  description: "Multimodal Bible learning domain for visual learners and ADHD users"
+  namespace: "https://protoflow.ai/ontology/bible-learning#"
+  created_at: "2025-12-15"
+  updated_at: "2025-12-15"
+  dependencies:
+    core: "^1.0.0"       # Person, Location, TimeRange, DateRange
+    story: "^1.0.0"      # Character traits, Scene patterns
+    auth: "^0.1.0"       # User, Session
+    _primitives/entity: "^1.0.0"  # IdentifiableThing, ExistenceInfo
+    _primitives/relation: "^1.0.0"  # Relationship patterns
+
+  changelog:
+    "0.1.0": "Initial development version"
+    "0.2.0": "Refactored to extend core.Person, use TimeRange, proper decomposition"
+    "0.3.0": "Added shared prayer journals and study guides"
+    "0.4.0": "Added media (video/audio) and community (needs/giving) features"
+    "0.5.0": "Added resources directory (churches, support groups, play groups)"
+    "0.6.0": "Added story creator, showcase, sharing, and progress tracking"
+
+# =============================================================================
+# PRIMITIVE EXTENSIONS - Reusing core primitives
+# =============================================================================
+
+primitives_used:
+  from_core:
+    - Person           # Extended by BiblicalPerson
+    - Location         # Extended by BiblicalLocation
+    - TimeRange        # Used for life spans, reign periods
+    - DateRange        # Used for events
+    - TimePoint        # Used for specific moments
+  from_entity:
+    - IdentifiableThing  # Base for all entities
+    - ExistenceInfo      # Birth/death tracking
+    - Reference          # Cross-references
+  from_relation:
+    - Relationship       # Family, connections
+
+# =============================================================================
+# ENTITIES - Properly Decomposed
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # 1. BIBLICAL PERSON - Extends core.Person
+  # ---------------------------------------------------------------------------
+
+  BiblicalPerson:
+    description: "A person mentioned in the Bible"
+    extends: core.Person  # Gets firstName, lastName, fullName, dateOfBirth
+    properties:
+      # Identity (from IdentifiableThing pattern)
+      id:
+        type: string
+        required: true
+        description: "Unique slug identifier (e.g., 'abraham')"
+
+      # Names - extending core.Person
+      hebrew_name:
+        type: LocalizedName
+        description: "Original Hebrew name"
+      greek_name:
+        type: LocalizedName
+        description: "Greek name (Septuagint/NT)"
+      aliases:
+        type: array
+        items: LocalizedName
+        description: "Other names (Abram→Abraham, Saul→Paul)"
+
+      # Lifespan - using core.TimeRange
+      lifespan:
+        type: LifeSpan
+        description: "Birth to death period"
+
+      # Role & Classification
+      primary_role:
+        type: BiblicalRole
+        required: true
+      secondary_roles:
+        type: array
+        items: BiblicalRole
+      testament:
+        type: Testament
+        required: true
+      period:
+        type: BiblicalPeriod
+        required: true
+
+      # Visual representation
+      icon:
+        type: string
+        description: "Emoji representation"
+      image_url:
+        type: string
+        format: uri
+
+      # Content - Decomposed by age
+      facts:
+        type: AgeAdaptiveContent
+        required: true
+
+      # References
+      scripture_refs:
+        type: array
+        items: ScriptureRef
+      primary_locations:
+        type: array
+        items: Reference  # References to BiblicalLocation
+
+      # Timestamps (from ExistenceInfo pattern)
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 2. LOCALIZED NAME - Atomic component
+  # ---------------------------------------------------------------------------
+
+  LocalizedName:
+    description: "A name with language/script context"
+    properties:
+      value:
+        type: string
+        required: true
+      language:
+        type: Language
+        required: true
+      script:
+        type: string
+        description: "Hebrew, Greek, Latin, etc."
+      meaning:
+        type: string
+        description: "Name meaning"
+      transliteration:
+        type: string
+        description: "Phonetic rendering"
+
+  # ---------------------------------------------------------------------------
+  # 3. LIFESPAN - Extends core.TimeRange for biblical context
+  # ---------------------------------------------------------------------------
+
+  LifeSpan:
+    description: "Life period with biblical year notation"
+    extends: core.TimeRange  # Gets start_date, end_date, is_current
+    properties:
+      birth_year_bce:
+        type: integer
+        description: "Birth year (positive = BCE)"
+      death_year_bce:
+        type: integer
+        description: "Death year (positive = BCE, null if alive in narrative)"
+      age_at_death:
+        type: integer
+        description: "Recorded age at death if known"
+      is_approximate:
+        type: boolean
+        default: true
+        description: "Historical dates are estimates"
+      era:
+        type: BiblicalPeriod
+        description: "Which era they primarily lived in"
+
+  # ---------------------------------------------------------------------------
+  # 4. REIGN PERIOD - For kings, judges, etc.
+  # ---------------------------------------------------------------------------
+
+  ReignPeriod:
+    description: "Period of authority/leadership"
+    extends: core.TimeRange
+    properties:
+      person_id:
+        type: string
+        required: true
+      role:
+        type: BiblicalRole
+        required: true
+      territory:
+        type: string
+        description: "Israel, Judah, Egypt, etc."
+      start_year_bce:
+        type: integer
+      end_year_bce:
+        type: integer
+      predecessor_id:
+        type: string
+      successor_id:
+        type: string
+
+  # ---------------------------------------------------------------------------
+  # 5. FAMILY RELATIONSHIP - Uses relation primitive pattern
+  # ---------------------------------------------------------------------------
+
+  FamilyRelationship:
+    description: "Family connection between two people"
+    extends: _primitives/relation.Relationship
+    properties:
+      from_person_id:
+        type: string
+        required: true
+      to_person_id:
+        type: string
+        required: true
+      relation_type:
+        type: FamilyRelationType
+        required: true
+      is_biological:
+        type: boolean
+        default: true
+      notes:
+        type: string
+        description: "Adoption, marriage, etc."
+
+  # ---------------------------------------------------------------------------
+  # 6. BIBLICAL LOCATION - Extends core.Location
+  # ---------------------------------------------------------------------------
+
+  BiblicalLocation:
+    description: "A geographical location in the Bible"
+    extends: core.Location
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      localized_names:
+        type: array
+        items: LocalizedName
+
+      # Geography
+      coordinates:
+        type: GeoPoint
+      modern_name:
+        type: string
+      modern_country:
+        type: string
+      region:
+        type: BiblicalRegion
+        required: true
+
+      # Classification
+      location_type:
+        type: LocationType
+        required: true
+      significance:
+        type: array
+        items: LocationSignificance
+
+      # Content
+      facts:
+        type: AgeAdaptiveContent
+
+      # References
+      events_here:
+        type: array
+        items: Reference  # To BiblicalEvent
+      notable_people:
+        type: array
+        items: Reference  # To BiblicalPerson
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  GeoPoint:
+    description: "Geographic coordinates"
+    properties:
+      latitude:
+        type: number
+        required: true
+        minimum: -90
+        maximum: 90
+      longitude:
+        type: number
+        required: true
+        minimum: -180
+        maximum: 180
+      elevation_m:
+        type: integer
+
+  LocationSignificance:
+    description: "Why a location matters"
+    properties:
+      event_type:
+        type: string
+        required: true
+        description: "Birth, Death, Miracle, Battle, etc."
+      person_id:
+        type: string
+      event_id:
+        type: string
+      description:
+        type: string
+
+  # ---------------------------------------------------------------------------
+  # 7. BIBLICAL EVENT - Uses DateRange
+  # ---------------------------------------------------------------------------
+
+  BiblicalEvent:
+    description: "A significant event in the Bible"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+
+      # Time - using core.DateRange pattern
+      time_range:
+        type: EventTimeRange
+
+      # Classification
+      event_type:
+        type: EventType
+        required: true
+      period:
+        type: BiblicalPeriod
+        required: true
+      testament:
+        type: Testament
+        required: true
+
+      # Participants & Location
+      location_id:
+        type: string
+      participants:
+        type: array
+        items: EventParticipant
+
+      # Content
+      facts:
+        type: AgeAdaptiveContent
+      scripture_refs:
+        type: array
+        items: ScriptureRef
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  EventTimeRange:
+    description: "Time range for biblical events"
+    extends: core.DateRange
+    properties:
+      year_bce:
+        type: integer
+        description: "Approximate year (positive = BCE)"
+      is_approximate:
+        type: boolean
+        default: true
+      duration_description:
+        type: string
+        description: "40 days, 3 years, instant, etc."
+
+  EventParticipant:
+    description: "Person's role in an event"
+    properties:
+      person_id:
+        type: string
+        required: true
+      role:
+        type: ParticipantRole
+        required: true
+      description:
+        type: string
+
+  # ---------------------------------------------------------------------------
+  # 8. JOURNEY - Sequence of locations over time
+  # ---------------------------------------------------------------------------
+
+  Journey:
+    description: "A travel route in the Bible"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Exodus Route, Paul's First Missionary Journey"
+
+      # Who & When
+      traveler_id:
+        type: string
+        required: true
+      time_range:
+        type: EventTimeRange
+
+      # Route
+      waypoints:
+        type: array
+        items: Waypoint
+        required: true
+
+      # Content
+      facts:
+        type: AgeAdaptiveContent
+      purpose:
+        type: string
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Waypoint:
+    description: "A stop on a journey"
+    properties:
+      sequence:
+        type: integer
+        required: true
+      location_id:
+        type: string
+        required: true
+      event_description:
+        type: string
+      duration:
+        type: string
+        description: "3 days, 40 years, etc."
+
+  # ---------------------------------------------------------------------------
+  # 9. SCRIPTURE REFERENCE - Atomic
+  # ---------------------------------------------------------------------------
+
+  ScriptureRef:
+    description: "Reference to Bible verse(s)"
+    properties:
+      book:
+        type: BibleBook
+        required: true
+      chapter:
+        type: integer
+        required: true
+        minimum: 1
+      verse_start:
+        type: integer
+        required: true
+        minimum: 1
+      verse_end:
+        type: integer
+      translation:
+        type: BibleTranslation
+        default: NIV
+
+  # ---------------------------------------------------------------------------
+  # 10. AGE-ADAPTIVE CONTENT - Decomposed content by audience
+  # ---------------------------------------------------------------------------
+
+  AgeAdaptiveContent:
+    description: "Content adapted for different audiences"
+    properties:
+      kids_3_6:
+        type: ContentBlock
+      kids_7_10:
+        type: ContentBlock
+      teen:
+        type: ContentBlock
+      adult:
+        type: ContentBlock
+
+  ContentBlock:
+    description: "A piece of content with optional media"
+    properties:
+      text:
+        type: string
+        required: true
+        maxLength: 1000
+      visual:
+        type: string
+        description: "Emoji or image URL"
+      audio_url:
+        type: string
+        format: uri
+        description: "Pre-generated Polly audio"
+      reading_level:
+        type: string
+        description: "Flesch-Kincaid grade level"
+
+  # ---------------------------------------------------------------------------
+  # 11. AUDIO NARRATION - Separate from content
+  # ---------------------------------------------------------------------------
+
+  AudioNarration:
+    description: "Generated audio for content"
+    properties:
+      id:
+        type: string
+        required: true
+      content_type:
+        type: ContentType
+        required: true
+      content_id:
+        type: string
+        required: true
+      age_group:
+        type: AgeGroup
+        required: true
+
+      # Audio details
+      audio_url:
+        type: string
+        format: uri
+        required: true
+      duration_seconds:
+        type: integer
+      voice_id:
+        type: string
+        description: "Polly voice ID"
+      transcript:
+        type: string
+
+      generated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 12. PRAYER - Standalone entity
+  # ---------------------------------------------------------------------------
+
+  Prayer:
+    description: "A prayer from scripture or library"
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      text:
+        type: string
+        required: true
+
+      # Classification
+      source:
+        type: PrayerSource
+        required: true
+      topics:
+        type: array
+        items: PrayerTopic
+        required: true
+      scripture_ref:
+        type: ScriptureRef
+
+      # Audience
+      suitable_for:
+        type: array
+        items: AgeGroup
+
+      # Media
+      audio_url:
+        type: string
+        format: uri
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 13. PRAYER JOURNAL - Shareable container for entries
+  # ---------------------------------------------------------------------------
+
+  PrayerJournal:
+    description: "A prayer journal that can be shared among multiple users"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        maxLength: 100
+        description: "e.g., 'Family Prayer Journal', 'Youth Group Prayers'"
+      description:
+        type: string
+        maxLength: 500
+      owner_id:
+        type: string
+        required: true
+        description: "User who created the journal"
+
+      # Sharing settings
+      visibility:
+        type: JournalVisibility
+        required: true
+        default: Private
+      invite_code:
+        type: string
+        description: "Code for joining shared journals"
+
+      # Members
+      members:
+        type: array
+        items: JournalMember
+        description: "Users with access to this journal"
+
+      # Stats
+      entry_count:
+        type: integer
+        default: 0
+      answered_prayer_count:
+        type: integer
+        default: 0
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  JournalMember:
+    description: "A member of a shared prayer journal"
+    properties:
+      user_id:
+        type: string
+        required: true
+      role:
+        type: JournalRole
+        required: true
+        default: Member
+      joined_at:
+        type: datetime
+        required: true
+      invited_by:
+        type: string
+        description: "User who invited this member"
+      can_see_private:
+        type: boolean
+        default: false
+        description: "Can see entries marked private by others"
+
+  # ---------------------------------------------------------------------------
+  # 14. PRAYER JOURNAL ENTRY - Now references a journal
+  # ---------------------------------------------------------------------------
+
+  PrayerJournalEntry:
+    description: "An entry in a prayer journal (personal or shared)"
+    properties:
+      id:
+        type: string
+        required: true
+      journal_id:
+        type: string
+        required: true
+        description: "Reference to PrayerJournal"
+      author_id:
+        type: string
+        required: true
+        description: "User who wrote this entry"
+
+      # Content
+      title:
+        type: string
+        maxLength: 200
+      content:
+        type: string
+        required: true
+        maxLength: 5000
+      prayer_type:
+        type: PrayerType
+      mood:
+        type: JournalMood
+      tags:
+        type: array
+        items: string
+
+      # Answer tracking
+      is_answered:
+        type: boolean
+        default: false
+      answered_at:
+        type: datetime
+      answer_notes:
+        type: string
+
+      # Privacy within shared journal
+      visibility:
+        type: EntryVisibility
+        default: Journal
+        description: "Who can see this entry"
+
+      # Reactions from other members
+      reactions:
+        type: array
+        items: EntryReaction
+
+      # Media
+      audio_recording_url:
+        type: string
+        format: uri
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  EntryReaction:
+    description: "A reaction to a prayer entry (praying with, amen, etc.)"
+    properties:
+      user_id:
+        type: string
+        required: true
+      reaction_type:
+        type: ReactionType
+        required: true
+      created_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 15. STUDY GUIDE - Bible reading plans
+  # ---------------------------------------------------------------------------
+
+  StudyGuide:
+    description: "A structured Bible reading/study plan"
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+        description: "e.g., '7 Days in Proverbs', 'Bible in a Year'"
+      description:
+        type: string
+        maxLength: 1000
+
+      # Classification
+      guide_type:
+        type: StudyGuideType
+        required: true
+      difficulty:
+        type: Difficulty
+      suitable_for:
+        type: array
+        items: AgeGroup
+      topics:
+        type: array
+        items: StudyTopic
+
+      # Duration
+      duration_days:
+        type: integer
+        required: true
+        description: "7, 30, 365, etc."
+      estimated_minutes_per_day:
+        type: integer
+        description: "Approximate time commitment"
+
+      # Content
+      days:
+        type: array
+        items: StudyDay
+        required: true
+
+      # Cover/branding
+      cover_image_url:
+        type: string
+        format: uri
+      icon:
+        type: string
+        description: "Emoji representation"
+
+      # Metadata
+      author:
+        type: string
+      source:
+        type: string
+        description: "Where this plan came from"
+      is_featured:
+        type: boolean
+        default: false
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  StudyDay:
+    description: "One day's content in a study guide"
+    properties:
+      day_number:
+        type: integer
+        required: true
+        minimum: 1
+      title:
+        type: string
+        required: true
+        description: "Day's theme or title"
+
+      # Readings
+      readings:
+        type: array
+        items: ReadingAssignment
+        required: true
+
+      # Reflection content
+      reflection_prompt:
+        type: string
+        description: "Question or thought to consider"
+      key_verse:
+        type: ScriptureRef
+        description: "Memory verse for the day"
+      prayer_focus:
+        type: string
+        description: "What to pray about"
+
+      # Age-adaptive content
+      devotional:
+        type: AgeAdaptiveContent
+        description: "Devotional content by age"
+
+      # Media
+      audio_url:
+        type: string
+        format: uri
+        description: "Audio devotional"
+      video_url:
+        type: string
+        format: uri
+
+      # Activity for kids
+      activity:
+        type: StudyActivity
+        description: "Interactive activity for kids"
+
+  ReadingAssignment:
+    description: "A scripture reading assignment"
+    properties:
+      scripture_ref:
+        type: ScriptureRef
+        required: true
+      reading_type:
+        type: ReadingType
+        required: true
+        default: Primary
+      estimated_minutes:
+        type: integer
+      notes:
+        type: string
+        description: "Context or focus for reading"
+
+  StudyActivity:
+    description: "An interactive activity for a study day"
+    properties:
+      activity_type:
+        type: ActivityType
+        required: true
+      title:
+        type: string
+        required: true
+      instructions:
+        type: string
+        required: true
+      materials_needed:
+        type: array
+        items: string
+      suitable_for:
+        type: array
+        items: AgeGroup
+
+  # ---------------------------------------------------------------------------
+  # 16. USER STUDY PROGRESS - Tracking study completion
+  # ---------------------------------------------------------------------------
+
+  UserStudyProgress:
+    description: "Tracks a user's progress through a study guide"
+    properties:
+      id:
+        type: string
+        required: true
+      user_id:
+        type: string
+        required: true
+      guide_id:
+        type: string
+        required: true
+        description: "Reference to StudyGuide"
+
+      # Progress
+      started_at:
+        type: datetime
+        required: true
+      current_day:
+        type: integer
+        default: 1
+      completed_days:
+        type: array
+        items: CompletedDay
+
+      # Status
+      status:
+        type: StudyStatus
+        required: true
+        default: In_Progress
+      completed_at:
+        type: datetime
+
+      # Streak tracking
+      current_streak:
+        type: integer
+        default: 0
+      longest_streak:
+        type: integer
+        default: 0
+      last_activity_date:
+        type: date
+
+      # Settings
+      reminder_time:
+        type: string
+        format: time
+        description: "Daily reminder time (HH:MM)"
+      reminder_enabled:
+        type: boolean
+        default: true
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  CompletedDay:
+    description: "Record of a completed study day"
+    properties:
+      day_number:
+        type: integer
+        required: true
+      completed_at:
+        type: datetime
+        required: true
+      time_spent_minutes:
+        type: integer
+      notes:
+        type: string
+        description: "User's personal notes"
+      marked_favorite:
+        type: boolean
+        default: false
+
+  # ---------------------------------------------------------------------------
+  # 14. TRIVIA QUESTION - Decomposed
+  # ---------------------------------------------------------------------------
+
+  TriviaQuestion:
+    description: "A learning trivia question"
+    properties:
+      id:
+        type: string
+        required: true
+      question_text:
+        type: string
+        required: true
+
+      # Classification
+      question_type:
+        type: QuestionType
+        required: true
+      difficulty:
+        type: Difficulty
+        required: true
+      age_group:
+        type: AgeGroup
+        required: true
+      topic:
+        type: TriviaTopic
+
+      # Answer
+      options:
+        type: array
+        items: AnswerOption
+      correct_answer:
+        type: string
+        required: true
+      explanation:
+        type: string
+
+      # Media
+      image_url:
+        type: string
+        format: uri
+      audio_url:
+        type: string
+        format: uri
+
+      # Scoring
+      points:
+        type: integer
+        default: 10
+      time_limit_seconds:
+        type: integer
+
+      # References
+      related_person_id:
+        type: string
+      related_location_id:
+        type: string
+      related_event_id:
+        type: string
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  AnswerOption:
+    description: "Multiple choice answer option"
+    properties:
+      id:
+        type: string
+        required: true
+      text:
+        type: string
+        required: true
+      image_url:
+        type: string
+        format: uri
+
+  # ---------------------------------------------------------------------------
+  # 15. TRIVIA SESSION - Game state
+  # ---------------------------------------------------------------------------
+
+  TriviaSession:
+    description: "A trivia game session"
+    properties:
+      id:
+        type: string
+        required: true
+      user_id:
+        type: string
+        required: true
+      game_type:
+        type: GameType
+        required: true
+
+      # State
+      question_ids:
+        type: array
+        items: string
+      current_index:
+        type: integer
+        default: 0
+      answers:
+        type: array
+        items: UserAnswer
+
+      # Scoring
+      score:
+        type: integer
+        default: 0
+      streak:
+        type: integer
+        default: 0
+
+      # Time
+      started_at:
+        type: datetime
+        required: true
+      completed_at:
+        type: datetime
+
+  UserAnswer:
+    description: "User's answer to a question"
+    properties:
+      question_id:
+        type: string
+        required: true
+      selected_answer:
+        type: string
+        required: true
+      is_correct:
+        type: boolean
+        required: true
+      time_taken_ms:
+        type: integer
+      answered_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 16. USER PROGRESS - Learning tracking
+  # ---------------------------------------------------------------------------
+
+  UserProgress:
+    description: "User's learning progress"
+    properties:
+      id:
+        type: string
+        required: true
+      user_id:
+        type: string
+        required: true
+      age_mode:
+        type: AgeGroup
+        required: true
+
+      # Viewed content
+      characters_viewed:
+        type: array
+        items: string
+      locations_explored:
+        type: array
+        items: string
+      events_learned:
+        type: array
+        items: string
+      prayers_completed:
+        type: array
+        items: string
+
+      # Stats
+      trivia_stats:
+        type: TriviaStats
+      achievements:
+        type: array
+        items: Achievement
+
+      # Engagement
+      total_time_minutes:
+        type: integer
+        default: 0
+      last_activity_at:
+        type: datetime
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  TriviaStats:
+    description: "Aggregated trivia statistics"
+    properties:
+      questions_answered:
+        type: integer
+        default: 0
+      correct_answers:
+        type: integer
+        default: 0
+      accuracy_percent:
+        type: number
+        computed: "(correct_answers / questions_answered) * 100"
+      total_points:
+        type: integer
+        default: 0
+      best_streak:
+        type: integer
+        default: 0
+      games_played:
+        type: integer
+        default: 0
+
+  Achievement:
+    description: "Learning achievement badge"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      icon:
+        type: string
+      earned_at:
+        type: datetime
+        required: true
+
+# ---------------------------------------------------------------------------
+  # 17. VIDEO CONTENT - Teaching videos, animated stories
+  # ---------------------------------------------------------------------------
+
+  VideoContent:
+    description: "Video content for Bible learning"
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+        maxLength: 1000
+
+      # Classification
+      video_type:
+        type: VideoType
+        required: true
+      suitable_for:
+        type: array
+        items: AgeGroup
+        required: true
+      topics:
+        type: array
+        items: StudyTopic
+
+      # Media
+      video_url:
+        type: string
+        format: uri
+        required: true
+      thumbnail_url:
+        type: string
+        format: uri
+      duration_seconds:
+        type: integer
+        required: true
+
+      # Related content
+      related_person_id:
+        type: string
+      related_location_id:
+        type: string
+      related_event_id:
+        type: string
+      scripture_refs:
+        type: array
+        items: ScriptureRef
+
+      # Metadata
+      source:
+        type: string
+        description: "Provider or creator"
+      series_id:
+        type: string
+        description: "Part of a series"
+      episode_number:
+        type: integer
+
+      # Stats
+      view_count:
+        type: integer
+        default: 0
+      like_count:
+        type: integer
+        default: 0
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 18. AUDIO CONTENT - Podcasts, music, stories
+  # ---------------------------------------------------------------------------
+
+  AudioContent:
+    description: "Audio content beyond narration (music, podcasts, stories)"
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+
+      # Classification
+      audio_type:
+        type: AudioType
+        required: true
+      suitable_for:
+        type: array
+        items: AgeGroup
+        required: true
+      topics:
+        type: array
+        items: StudyTopic
+
+      # Media
+      audio_url:
+        type: string
+        format: uri
+        required: true
+      cover_image_url:
+        type: string
+        format: uri
+      duration_seconds:
+        type: integer
+        required: true
+
+      # Related content
+      scripture_refs:
+        type: array
+        items: ScriptureRef
+      lyrics:
+        type: string
+        description: "For songs"
+      transcript:
+        type: string
+        description: "For podcasts/stories"
+
+      # Series info
+      series_id:
+        type: string
+      episode_number:
+        type: integer
+
+      # Artist/creator
+      artist:
+        type: string
+      album:
+        type: string
+
+      # Stats
+      play_count:
+        type: integer
+        default: 0
+      like_count:
+        type: integer
+        default: 0
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 19. MEDIA PLAYLIST - Collections of videos/audio
+  # ---------------------------------------------------------------------------
+
+  MediaPlaylist:
+    description: "Curated playlist of videos or audio"
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+
+      # Classification
+      media_type:
+        type: MediaType
+        required: true
+        description: "Video or Audio"
+      playlist_type:
+        type: PlaylistType
+        required: true
+      suitable_for:
+        type: array
+        items: AgeGroup
+
+      # Content
+      items:
+        type: array
+        items: PlaylistItem
+        required: true
+      total_duration_seconds:
+        type: integer
+
+      # Visual
+      cover_image_url:
+        type: string
+        format: uri
+
+      # Ownership
+      owner_id:
+        type: string
+        description: "User who created (if user-created)"
+      is_system:
+        type: boolean
+        default: true
+        description: "System-curated vs user-created"
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  PlaylistItem:
+    description: "An item in a playlist"
+    properties:
+      sequence:
+        type: integer
+        required: true
+      media_type:
+        type: MediaType
+        required: true
+      media_id:
+        type: string
+        required: true
+        description: "VideoContent or AudioContent ID"
+      notes:
+        type: string
+
+  # ---------------------------------------------------------------------------
+  # 20. COMMUNITY NEED - Prayer requests and needs
+  # ---------------------------------------------------------------------------
+
+  CommunityNeed:
+    description: "A need shared with the community for prayer/support"
+    properties:
+      id:
+        type: string
+        required: true
+      author_id:
+        type: string
+        required: true
+
+      # Content
+      title:
+        type: string
+        required: true
+        maxLength: 200
+      description:
+        type: string
+        required: true
+        maxLength: 2000
+      need_type:
+        type: NeedType
+        required: true
+
+      # Status
+      status:
+        type: NeedStatus
+        required: true
+        default: Active
+      urgency:
+        type: Urgency
+        default: Normal
+
+      # Privacy
+      visibility:
+        type: NeedVisibility
+        required: true
+        default: Community
+      is_anonymous:
+        type: boolean
+        default: false
+
+      # Location (optional)
+      location:
+        type: string
+        description: "City/region for local needs"
+
+      # Responses
+      prayer_count:
+        type: integer
+        default: 0
+        description: "Number of people praying"
+      response_count:
+        type: integer
+        default: 0
+      responses:
+        type: array
+        items: NeedResponse
+
+      # Fulfillment
+      fulfilled_at:
+        type: datetime
+      fulfillment_notes:
+        type: string
+
+      expires_at:
+        type: datetime
+        description: "When the need expires"
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  NeedResponse:
+    description: "Response to a community need"
+    properties:
+      id:
+        type: string
+        required: true
+      user_id:
+        type: string
+        required: true
+      response_type:
+        type: NeedResponseType
+        required: true
+      message:
+        type: string
+        maxLength: 1000
+      is_anonymous:
+        type: boolean
+        default: false
+      created_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 21. GIVING CAMPAIGN - Donation campaigns
+  # ---------------------------------------------------------------------------
+
+  GivingCampaign:
+    description: "A fundraising or giving campaign"
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+        maxLength: 5000
+
+      # Classification
+      campaign_type:
+        type: CampaignType
+        required: true
+      category:
+        type: GivingCategory
+        required: true
+
+      # Goals
+      goal_amount:
+        type: number
+        description: "Target amount in cents"
+      current_amount:
+        type: number
+        default: 0
+      donor_count:
+        type: integer
+        default: 0
+
+      # Timing
+      start_date:
+        type: date
+        required: true
+      end_date:
+        type: date
+      is_ongoing:
+        type: boolean
+        default: false
+
+      # Status
+      status:
+        type: CampaignStatus
+        required: true
+        default: Active
+
+      # Media
+      cover_image_url:
+        type: string
+        format: uri
+      video_url:
+        type: string
+        format: uri
+
+      # Organization
+      organization_name:
+        type: string
+      organization_url:
+        type: string
+        format: uri
+      is_verified:
+        type: boolean
+        default: false
+
+      # Updates
+      updates:
+        type: array
+        items: CampaignUpdate
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  CampaignUpdate:
+    description: "Progress update for a campaign"
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      content:
+        type: string
+        required: true
+      image_url:
+        type: string
+        format: uri
+      posted_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 22. DONATION - Individual donation record
+  # ---------------------------------------------------------------------------
+
+  Donation:
+    description: "A donation to a campaign or general giving"
+    properties:
+      id:
+        type: string
+        required: true
+      user_id:
+        type: string
+        required: true
+      campaign_id:
+        type: string
+        description: "If for a specific campaign"
+
+      # Amount
+      amount:
+        type: number
+        required: true
+        description: "Amount in cents"
+      currency:
+        type: string
+        default: "USD"
+
+      # Type
+      donation_type:
+        type: DonationType
+        required: true
+      is_recurring:
+        type: boolean
+        default: false
+      recurring_frequency:
+        type: RecurringFrequency
+
+      # Privacy
+      is_anonymous:
+        type: boolean
+        default: false
+      display_name:
+        type: string
+        description: "Name to show if not anonymous"
+
+      # Message
+      message:
+        type: string
+        maxLength: 500
+
+      # Status
+      status:
+        type: DonationStatus
+        required: true
+        default: Completed
+
+      # Payment
+      payment_method:
+        type: string
+        description: "Last 4 digits or type"
+      transaction_id:
+        type: string
+
+      created_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 23. USER GIVING SUMMARY - Aggregate giving stats
+  # ---------------------------------------------------------------------------
+
+  UserGivingSummary:
+    description: "User's giving history and stats"
+    properties:
+      user_id:
+        type: string
+        required: true
+
+      # Totals
+      total_given:
+        type: number
+        default: 0
+        description: "Lifetime total in cents"
+      this_year_given:
+        type: number
+        default: 0
+      this_month_given:
+        type: number
+        default: 0
+      donation_count:
+        type: integer
+        default: 0
+
+      # Recurring
+      active_recurring:
+        type: array
+        items: RecurringGift
+
+      # Preferences
+      preferred_causes:
+        type: array
+        items: GivingCategory
+
+      # Streaks
+      giving_streak_months:
+        type: integer
+        default: 0
+
+      updated_at:
+        type: datetime
+        required: true
+
+  RecurringGift:
+    description: "Active recurring donation"
+    properties:
+      id:
+        type: string
+        required: true
+      campaign_id:
+        type: string
+      amount:
+        type: number
+        required: true
+      frequency:
+        type: RecurringFrequency
+        required: true
+      next_date:
+        type: date
+        required: true
+      status:
+        type: string
+        default: "active"
+
+  # ---------------------------------------------------------------------------
+  # 24. CHURCH - Local church directory entry
+  # ---------------------------------------------------------------------------
+
+  Church:
+    description: "A local church in the directory"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      denomination:
+        type: ChurchDenomination
+
+      # Contact
+      address:
+        type: string
+        required: true
+      city:
+        type: string
+        required: true
+      state:
+        type: string
+      zip_code:
+        type: string
+      country:
+        type: string
+        default: "US"
+      phone:
+        type: string
+      email:
+        type: string
+        format: email
+      website:
+        type: string
+        format: uri
+
+      # Location
+      coordinates:
+        type: GeoPoint
+      distance_miles:
+        type: number
+        description: "Calculated from user location"
+
+      # Services
+      service_times:
+        type: array
+        items: ServiceTime
+      has_childrens_ministry:
+        type: boolean
+        default: false
+      has_youth_group:
+        type: boolean
+        default: false
+      has_nursery:
+        type: boolean
+        default: false
+
+      # Style/culture
+      worship_style:
+        type: WorshipStyle
+      church_size:
+        type: ChurchSize
+      languages:
+        type: array
+        items: string
+        default: ["English"]
+
+      # Media
+      logo_url:
+        type: string
+        format: uri
+      cover_image_url:
+        type: string
+        format: uri
+
+      # Verification
+      is_verified:
+        type: boolean
+        default: false
+      claimed_by_user_id:
+        type: string
+        description: "Church admin who claimed this listing"
+
+      # Stats
+      member_count:
+        type: integer
+      rating:
+        type: number
+        description: "Average rating 1-5"
+      review_count:
+        type: integer
+        default: 0
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ServiceTime:
+    description: "A scheduled service time"
+    properties:
+      day:
+        type: DayOfWeek
+        required: true
+      time:
+        type: string
+        required: true
+        description: "HH:MM format"
+      service_type:
+        type: ServiceType
+        required: true
+      name:
+        type: string
+        description: "e.g., 'Contemporary Service'"
+
+  # ---------------------------------------------------------------------------
+  # 25. SUPPORT GROUP - Recovery, counseling, and support groups
+  # ---------------------------------------------------------------------------
+
+  SupportGroup:
+    description: "Support/recovery group (AA, grief, divorce, etc.)"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      group_type:
+        type: SupportGroupType
+        required: true
+      description:
+        type: string
+
+      # Meeting info
+      meeting_frequency:
+        type: MeetingFrequency
+        required: true
+      meeting_day:
+        type: DayOfWeek
+      meeting_time:
+        type: string
+        description: "HH:MM format"
+      meeting_duration_minutes:
+        type: integer
+        default: 60
+
+      # Location
+      is_virtual:
+        type: boolean
+        default: false
+      virtual_link:
+        type: string
+        format: uri
+      location_name:
+        type: string
+        description: "e.g., 'First Baptist Church - Room 201'"
+      address:
+        type: string
+      city:
+        type: string
+      state:
+        type: string
+      coordinates:
+        type: GeoPoint
+
+      # Contact
+      contact_name:
+        type: string
+      contact_email:
+        type: string
+        format: email
+      contact_phone:
+        type: string
+
+      # Demographics
+      target_audience:
+        type: SupportGroupAudience
+        required: true
+      age_range:
+        type: string
+        description: "e.g., '18+', 'All ages'"
+      is_faith_based:
+        type: boolean
+        default: true
+      program:
+        type: RecoveryProgram
+        description: "e.g., 12-step, Celebrate Recovery"
+
+      # Hosting
+      host_church_id:
+        type: string
+      host_organization:
+        type: string
+
+      # Privacy
+      is_confidential:
+        type: boolean
+        default: true
+      requires_registration:
+        type: boolean
+        default: false
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 26. PLAY GROUP / KIDS GROUP - Family & children meetups
+  # ---------------------------------------------------------------------------
+
+  PlayGroup:
+    description: "Play group, moms group, or family meetup"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      group_type:
+        type: PlayGroupType
+        required: true
+      description:
+        type: string
+
+      # Target audience
+      age_range_min:
+        type: integer
+        description: "Minimum child age in months"
+      age_range_max:
+        type: integer
+        description: "Maximum child age in months"
+      parent_type:
+        type: ParentType
+        description: "Moms only, dads only, or all parents"
+
+      # Meeting info
+      meeting_frequency:
+        type: MeetingFrequency
+        required: true
+      meeting_day:
+        type: DayOfWeek
+      meeting_time:
+        type: string
+      typical_duration_minutes:
+        type: integer
+        default: 90
+
+      # Location
+      location_type:
+        type: PlayGroupLocationType
+        required: true
+      location_name:
+        type: string
+      address:
+        type: string
+      city:
+        type: string
+        required: true
+      state:
+        type: string
+      coordinates:
+        type: GeoPoint
+
+      # Contact
+      organizer_name:
+        type: string
+      contact_email:
+        type: string
+        format: email
+
+      # Group details
+      max_families:
+        type: integer
+      current_families:
+        type: integer
+        default: 0
+      is_accepting_new:
+        type: boolean
+        default: true
+      cost:
+        type: string
+        description: "Free, $5/session, etc."
+
+      # Hosting
+      host_church_id:
+        type: string
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 27. COMMUNITY RESOURCE - General resources (food banks, counseling, etc.)
+  # ---------------------------------------------------------------------------
+
+  CommunityResource:
+    description: "General community resource (food bank, counseling, etc.)"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      resource_type:
+        type: ResourceType
+        required: true
+      description:
+        type: string
+
+      # Contact
+      address:
+        type: string
+      city:
+        type: string
+        required: true
+      state:
+        type: string
+      zip_code:
+        type: string
+      phone:
+        type: string
+      email:
+        type: string
+        format: email
+      website:
+        type: string
+        format: uri
+      coordinates:
+        type: GeoPoint
+
+      # Hours
+      hours_of_operation:
+        type: string
+        description: "Free-form hours text"
+      is_24_hour:
+        type: boolean
+        default: false
+
+      # Services offered
+      services:
+        type: array
+        items: string
+      eligibility:
+        type: string
+        description: "Requirements to receive service"
+      cost:
+        type: string
+        description: "Free, sliding scale, etc."
+
+      # Organization
+      organization_name:
+        type: string
+      is_faith_based:
+        type: boolean
+        default: false
+      host_church_id:
+        type: string
+
+      # Verification
+      is_verified:
+        type: boolean
+        default: false
+      last_verified_at:
+        type: datetime
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 28. RESOURCE REVIEW - User reviews for directory entries
+  # ---------------------------------------------------------------------------
+
+  ResourceReview:
+    description: "User review of a church, group, or resource"
+    properties:
+      id:
+        type: string
+        required: true
+      user_id:
+        type: string
+        required: true
+      resource_type:
+        type: DirectoryResourceType
+        required: true
+      resource_id:
+        type: string
+        required: true
+        description: "ID of Church, SupportGroup, etc."
+
+      # Review content
+      rating:
+        type: integer
+        required: true
+        minimum: 1
+        maximum: 5
+      title:
+        type: string
+        maxLength: 100
+      content:
+        type: string
+        maxLength: 2000
+
+      # Specific ratings
+      welcoming_rating:
+        type: integer
+        minimum: 1
+        maximum: 5
+      kids_friendly_rating:
+        type: integer
+        minimum: 1
+        maximum: 5
+
+      # Status
+      is_verified_visit:
+        type: boolean
+        default: false
+      helpful_count:
+        type: integer
+        default: 0
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 29. SAVED RESOURCE - User's saved/bookmarked resources
+  # ---------------------------------------------------------------------------
+
+  SavedResource:
+    description: "User's saved directory item"
+    properties:
+      user_id:
+        type: string
+        required: true
+      resource_type:
+        type: DirectoryResourceType
+        required: true
+      resource_id:
+        type: string
+        required: true
+      notes:
+        type: string
+      saved_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 30. USER STORY - User-created Bible story
+  # ---------------------------------------------------------------------------
+
+  UserStory:
+    description: "A custom Bible story created by a user"
+    properties:
+      id:
+        type: string
+        required: true
+      creator_id:
+        type: string
+        required: true
+        description: "User who created this story"
+
+      # Story metadata
+      title:
+        type: string
+        required: true
+        maxLength: 100
+      description:
+        type: string
+        maxLength: 500
+      cover_image_url:
+        type: string
+        format: uri
+
+      # Classification
+      story_type:
+        type: StoryType
+        required: true
+      target_age:
+        type: AgeGroup
+        required: true
+      topics:
+        type: array
+        items: StoryTopic
+      bible_characters:
+        type: array
+        items: string
+        description: "IDs of Biblical characters featured"
+      scripture_refs:
+        type: array
+        items: ScriptureRef
+
+      # Content
+      scenes:
+        type: array
+        items: StoryScene
+        description: "Ordered list of scenes"
+
+      # Media
+      has_audio:
+        type: boolean
+        default: false
+      audio_url:
+        type: string
+        format: uri
+      estimated_duration_seconds:
+        type: integer
+
+      # Template
+      template_id:
+        type: string
+        description: "Template used if any"
+
+      # Status & Visibility
+      status:
+        type: StoryStatus
+        default: Draft
+      visibility:
+        type: StoryVisibility
+        default: Private
+      is_featured:
+        type: boolean
+        default: false
+      is_curated:
+        type: boolean
+        default: false
+        description: "Approved by moderators"
+
+      # Stats
+      view_count:
+        type: integer
+        default: 0
+      like_count:
+        type: integer
+        default: 0
+      share_count:
+        type: integer
+        default: 0
+      save_count:
+        type: integer
+        default: 0
+
+      # Timestamps
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+      published_at:
+        type: datetime
+
+  # ---------------------------------------------------------------------------
+  # 31. STORY SCENE - Individual scene in a user story
+  # ---------------------------------------------------------------------------
+
+  StoryScene:
+    description: "A single scene/page in a story"
+    properties:
+      id:
+        type: string
+        required: true
+      story_id:
+        type: string
+        required: true
+      position:
+        type: integer
+        required: true
+        description: "Order in the story (1-based)"
+
+      # Content
+      scene_type:
+        type: SceneType
+        required: true
+      title:
+        type: string
+        maxLength: 100
+      text_content:
+        type: string
+        maxLength: 2000
+
+      # Media
+      background_image_url:
+        type: string
+        format: uri
+      character_images:
+        type: array
+        items: SceneCharacterImage
+      audio_url:
+        type: string
+        format: uri
+        description: "Scene-specific narration"
+
+      # Interactive elements
+      has_quiz:
+        type: boolean
+        default: false
+      quiz_question:
+        type: string
+      quiz_options:
+        type: array
+        items: string
+      quiz_correct_index:
+        type: integer
+
+      # Animation
+      animation_type:
+        type: SceneAnimation
+        default: Fade
+
+      # Scripture
+      scripture_ref:
+        type: ScriptureRef
+
+  # ---------------------------------------------------------------------------
+  # 32. SCENE CHARACTER IMAGE - Character placement in a scene
+  # ---------------------------------------------------------------------------
+
+  SceneCharacterImage:
+    description: "Character image placement in a scene"
+    properties:
+      character_id:
+        type: string
+        description: "Biblical character ID or custom"
+      image_url:
+        type: string
+        format: uri
+        required: true
+      position_x:
+        type: number
+        description: "0-100 percent from left"
+      position_y:
+        type: number
+        description: "0-100 percent from top"
+      scale:
+        type: number
+        default: 1.0
+      is_speaking:
+        type: boolean
+        default: false
+
+  # ---------------------------------------------------------------------------
+  # 33. STORY TEMPLATE - Pre-made templates for story creation
+  # ---------------------------------------------------------------------------
+
+  StoryTemplate:
+    description: "Pre-made template for creating stories"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      thumbnail_url:
+        type: string
+        format: uri
+
+      # Classification
+      template_type:
+        type: TemplateType
+        required: true
+      target_age:
+        type: AgeGroup
+      difficulty:
+        type: Difficulty
+        description: "How complex to customize"
+
+      # Content
+      scene_count:
+        type: integer
+        required: true
+      sample_scenes:
+        type: array
+        items: StoryScene
+
+      # Assets included
+      background_options:
+        type: array
+        items: string
+        description: "URLs to background images"
+      character_options:
+        type: array
+        items: string
+        description: "Character IDs available"
+
+      # Stats
+      uses_count:
+        type: integer
+        default: 0
+
+      is_premium:
+        type: boolean
+        default: false
+      is_active:
+        type: boolean
+        default: true
+
+      created_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 34. STORY ASSET - User-uploaded media for stories
+  # ---------------------------------------------------------------------------
+
+  StoryAsset:
+    description: "User-uploaded or generated asset for stories"
+    properties:
+      id:
+        type: string
+        required: true
+      owner_id:
+        type: string
+        required: true
+
+      # Asset info
+      asset_type:
+        type: StoryAssetType
+        required: true
+      name:
+        type: string
+        required: true
+      file_url:
+        type: string
+        format: uri
+        required: true
+      thumbnail_url:
+        type: string
+        format: uri
+
+      # Metadata
+      file_size_bytes:
+        type: integer
+      mime_type:
+        type: string
+      width:
+        type: integer
+        description: "For images"
+      height:
+        type: integer
+        description: "For images"
+      duration_seconds:
+        type: integer
+        description: "For audio/video"
+
+      # AI-generated
+      is_ai_generated:
+        type: boolean
+        default: false
+      generation_prompt:
+        type: string
+        description: "Prompt used if AI-generated"
+
+      # Permissions
+      is_public:
+        type: boolean
+        default: false
+        description: "Can others use this asset"
+
+      created_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 35. STORY SHARE - Sharing record for stories
+  # ---------------------------------------------------------------------------
+
+  StoryShare:
+    description: "Record of story being shared"
+    properties:
+      id:
+        type: string
+        required: true
+      story_id:
+        type: string
+        required: true
+      sharer_id:
+        type: string
+        required: true
+
+      # Share method
+      share_type:
+        type: ShareType
+        required: true
+      recipient_id:
+        type: string
+        description: "If shared to specific user"
+      recipient_email:
+        type: string
+        format: email
+        description: "If shared via email"
+
+      # Message
+      message:
+        type: string
+        maxLength: 500
+
+      # Tracking
+      was_viewed:
+        type: boolean
+        default: false
+      viewed_at:
+        type: datetime
+
+      shared_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 36. STORY REACTION - Community reactions to stories
+  # ---------------------------------------------------------------------------
+
+  StoryReaction:
+    description: "User reaction to a story (like, comment, etc.)"
+    properties:
+      id:
+        type: string
+        required: true
+      story_id:
+        type: string
+        required: true
+      user_id:
+        type: string
+        required: true
+
+      reaction_type:
+        type: StoryReactionType
+        required: true
+
+      # For comments
+      comment_text:
+        type: string
+        maxLength: 1000
+      parent_reaction_id:
+        type: string
+        description: "For reply threads"
+
+      # Moderation
+      is_hidden:
+        type: boolean
+        default: false
+
+      created_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 37. SAVED STORY - User's saved/bookmarked stories
+  # ---------------------------------------------------------------------------
+
+  SavedStory:
+    description: "User's saved story from showcase"
+    properties:
+      id:
+        type: string
+        required: true
+      user_id:
+        type: string
+        required: true
+      story_id:
+        type: string
+        required: true
+
+      # Organization
+      collection_id:
+        type: string
+        description: "Optional: add to collection"
+      notes:
+        type: string
+        maxLength: 500
+
+      saved_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 38. STORY COLLECTION - User's collection of stories
+  # ---------------------------------------------------------------------------
+
+  StoryCollection:
+    description: "User-created collection of stories"
+    properties:
+      id:
+        type: string
+        required: true
+      owner_id:
+        type: string
+        required: true
+
+      name:
+        type: string
+        required: true
+        maxLength: 100
+      description:
+        type: string
+        maxLength: 500
+      cover_image_url:
+        type: string
+        format: uri
+
+      # Content
+      story_ids:
+        type: array
+        items: string
+      story_count:
+        type: integer
+        default: 0
+
+      # Visibility
+      visibility:
+        type: StoryVisibility
+        default: Private
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 39. STORY PROGRESS - Track user's story viewing progress
+  # ---------------------------------------------------------------------------
+
+  StoryProgress:
+    description: "User's progress through a story"
+    properties:
+      id:
+        type: string
+        required: true
+      user_id:
+        type: string
+        required: true
+      story_id:
+        type: string
+        required: true
+
+      # Progress
+      current_scene:
+        type: integer
+        default: 1
+      total_scenes:
+        type: integer
+        required: true
+      percent_complete:
+        type: integer
+        default: 0
+
+      # Completion
+      is_completed:
+        type: boolean
+        default: false
+      completed_at:
+        type: datetime
+
+      # Time tracking
+      time_spent_seconds:
+        type: integer
+        default: 0
+
+      # Quiz scores if applicable
+      quiz_score:
+        type: integer
+      quiz_total:
+        type: integer
+
+      started_at:
+        type: datetime
+        required: true
+      last_viewed_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # 40. SHOWCASE ITEM - Featured story in the showcase
+  # ---------------------------------------------------------------------------
+
+  ShowcaseItem:
+    description: "Featured story in the community showcase"
+    properties:
+      id:
+        type: string
+        required: true
+      story_id:
+        type: string
+        required: true
+
+      # Feature settings
+      feature_type:
+        type: FeatureType
+        required: true
+      position:
+        type: integer
+        description: "Display order"
+
+      # Display
+      headline:
+        type: string
+        maxLength: 100
+      tagline:
+        type: string
+        maxLength: 200
+
+      # Schedule
+      start_date:
+        type: datetime
+        required: true
+      end_date:
+        type: datetime
+
+      is_active:
+        type: boolean
+        default: true
+
+      created_at:
+        type: datetime
+        required: true
+
+# =============================================================================
+# ENUMS - Organized by domain concern
+# =============================================================================
+
+enums:
+
+  # --- Time & Period ---
+  Testament:
+    values: [Old, New]
+
+  BiblicalPeriod:
+    description: "Major periods in biblical history"
+    values:
+      - Creation           # Genesis 1-11
+      - Patriarchs         # Abraham to Joseph
+      - Exodus             # Moses, wilderness
+      - Conquest           # Joshua
+      - Judges             # Judges period
+      - United_Kingdom     # Saul, David, Solomon
+      - Divided_Kingdom    # Israel & Judah
+      - Exile              # Babylonian captivity
+      - Return             # Post-exile
+      - Intertestamental   # 400 silent years
+      - Gospels            # Life of Christ
+      - Early_Church       # Acts, Epistles
+
+  # --- People ---
+  BiblicalRole:
+    values:
+      - Patriarch
+      - Matriarch
+      - Prophet
+      - Prophetess
+      - King
+      - Queen
+      - Judge
+      - Priest
+      - High_Priest
+      - Apostle
+      - Disciple
+      - Evangelist
+      - Deacon
+      - Teacher
+      - Shepherd
+      - Servant
+      - Warrior
+      - Builder
+
+  FamilyRelationType:
+    values:
+      - Father
+      - Mother
+      - Son
+      - Daughter
+      - Husband
+      - Wife
+      - Brother
+      - Sister
+      - Grandfather
+      - Grandmother
+      - Grandson
+      - Granddaughter
+      - Uncle
+      - Aunt
+      - Cousin
+      - Ancestor
+      - Descendant
+
+  # --- Location ---
+  BiblicalRegion:
+    values:
+      - Mesopotamia
+      - Canaan
+      - Egypt
+      - Sinai
+      - Judah
+      - Israel
+      - Galilee
+      - Samaria
+      - Persia
+      - Babylon
+      - Assyria
+      - Greece
+      - Rome
+      - Asia_Minor
+      - Arabia
+
+  LocationType:
+    values:
+      - City
+      - Town
+      - Village
+      - Mountain
+      - River
+      - Sea
+      - Desert
+      - Valley
+      - Region
+      - Temple
+      - Tabernacle
+
+  # --- Events ---
+  EventType:
+    values:
+      - Creation
+      - Birth
+      - Death
+      - Marriage
+      - Covenant
+      - Miracle
+      - Battle
+      - Judgment
+      - Prophecy
+      - Vision
+      - Healing
+      - Teaching
+      - Journey
+      - Exodus
+      - Conquest
+      - Coronation
+      - Resurrection
+
+  ParticipantRole:
+    values:
+      - Leader
+      - Participant
+      - Witness
+      - Victim
+      - Hero
+      - Antagonist
+      - Speaker
+      - Recipient
+
+  # --- Scripture ---
+  BibleBook:
+    values:
+      # Old Testament
+      - Genesis
+      - Exodus
+      - Leviticus
+      - Numbers
+      - Deuteronomy
+      - Joshua
+      - Judges
+      - Ruth
+      - 1_Samuel
+      - 2_Samuel
+      - 1_Kings
+      - 2_Kings
+      - 1_Chronicles
+      - 2_Chronicles
+      - Ezra
+      - Nehemiah
+      - Esther
+      - Job
+      - Psalms
+      - Proverbs
+      - Ecclesiastes
+      - Song_of_Solomon
+      - Isaiah
+      - Jeremiah
+      - Lamentations
+      - Ezekiel
+      - Daniel
+      - Hosea
+      - Joel
+      - Amos
+      - Obadiah
+      - Jonah
+      - Micah
+      - Nahum
+      - Habakkuk
+      - Zephaniah
+      - Haggai
+      - Zechariah
+      - Malachi
+      # New Testament
+      - Matthew
+      - Mark
+      - Luke
+      - John
+      - Acts
+      - Romans
+      - 1_Corinthians
+      - 2_Corinthians
+      - Galatians
+      - Ephesians
+      - Philippians
+      - Colossians
+      - 1_Thessalonians
+      - 2_Thessalonians
+      - 1_Timothy
+      - 2_Timothy
+      - Titus
+      - Philemon
+      - Hebrews
+      - James
+      - 1_Peter
+      - 2_Peter
+      - 1_John
+      - 2_John
+      - 3_John
+      - Jude
+      - Revelation
+
+  BibleTranslation:
+    values: [NIV, ESV, KJV, NKJV, NLT, NASB, CSB, MSG]
+
+  Language:
+    values: [Hebrew, Aramaic, Greek, Latin, English]
+
+  # --- User/Content ---
+  AgeGroup:
+    values:
+      - Kids_3_6
+      - Kids_7_10
+      - Teen
+      - Adult
+
+  ContentType:
+    values: [Person, Location, Event, Prayer, Trivia]
+
+  # --- Prayer ---
+  PrayerSource:
+    values: [Bible, Traditional, Modern, User]
+
+  PrayerTopic:
+    values:
+      - Gratitude
+      - Forgiveness
+      - Guidance
+      - Protection
+      - Healing
+      - Family
+      - Friends
+      - School
+      - Bedtime
+      - Mealtime
+      - Morning
+      - Praise
+      - Confession
+      - Intercession
+
+  PrayerType:
+    values: [Request, Praise, Confession, Intercession, Thanksgiving, Meditation]
+
+  JournalMood:
+    values: [Joyful, Peaceful, Grateful, Hopeful, Anxious, Sad, Confused, Seeking]
+
+  # --- Shared Journal ---
+  JournalVisibility:
+    description: "Who can see/join a prayer journal"
+    values:
+      - Private       # Only owner
+      - Shared        # Invite-only members
+      - Family        # Family group members
+      - Group         # Church/youth group
+      - Public        # Anyone can view
+
+  JournalRole:
+    description: "Member role in a shared journal"
+    values:
+      - Owner         # Created the journal, full control
+      - Admin         # Can manage members, edit settings
+      - Member        # Can add entries, view others
+      - Viewer        # Can only view, not add
+
+  EntryVisibility:
+    description: "Who can see a prayer entry"
+    values:
+      - Private       # Only author
+      - Journal       # All journal members
+      - Public        # Anyone (if journal is public)
+
+  ReactionType:
+    description: "Reactions to prayer entries"
+    values:
+      - Praying       # Praying with you
+      - Amen          # Agreement
+      - Love          # Heart/support
+      - Praise        # Celebrating answered prayer
+
+  # --- Study Guide ---
+  StudyGuideType:
+    description: "Type of Bible study plan"
+    values:
+      - Book_Study        # Study one book (Proverbs, John)
+      - Topic_Study       # Topical study (Faith, Love)
+      - Character_Study   # Study a person (David, Ruth)
+      - Chronological     # Bible in order
+      - Whole_Bible       # Bible in a year
+      - Devotional        # Daily devotional
+      - Kids_Bible        # Children's Bible stories
+      - Memory_Verses     # Memorization focus
+
+  StudyTopic:
+    description: "Topics covered in study guides"
+    values:
+      - Faith
+      - Love
+      - Prayer
+      - Wisdom
+      - Family
+      - Forgiveness
+      - Courage
+      - Obedience
+      - Trust
+      - Joy
+      - Peace
+      - Patience
+      - Kindness
+      - Goodness
+      - Faithfulness
+      - Gentleness
+      - Self_Control
+      - Salvation
+      - Grace
+      - Hope
+
+  ReadingType:
+    description: "Type of reading in a study day"
+    values:
+      - Primary         # Main reading
+      - Supporting      # Additional context
+      - Cross_Reference # Related passage
+      - Memory_Verse    # Verse to memorize
+      - Optional        # Extra credit
+
+  ActivityType:
+    description: "Type of study activity for kids"
+    values:
+      - Coloring        # Coloring page
+      - Craft           # Art/craft project
+      - Game            # Interactive game
+      - Discussion      # Family discussion
+      - Journal         # Writing/drawing
+      - Song            # Music/worship
+      - Memory          # Memorization activity
+      - Drama           # Act out the story
+
+  StudyStatus:
+    description: "User's status in a study guide"
+    values:
+      - Not_Started
+      - In_Progress
+      - Paused
+      - Completed
+      - Abandoned
+
+  # --- Trivia ---
+  QuestionType:
+    values:
+      - Multiple_Choice
+      - Picture_Match
+      - True_False
+      - Fill_Blank
+      - Who_Am_I
+      - Where_Am_I
+      - Connection
+
+  Difficulty:
+    values: [Easy, Medium, Hard, Expert]
+
+  TriviaTopic:
+    values: [People, Places, Events, Objects, Quotes, Numbers, Relationships]
+
+  GameType:
+    values: [Picture_Match, Quick_Quiz, Speed_Round, Connection_Quiz]
+
+  # --- Media ---
+  VideoType:
+    description: "Types of video content"
+    values:
+      - Animated_Story      # Animated Bible story
+      - Teaching            # Lesson/teaching video
+      - Music_Video         # Worship/songs
+      - Documentary         # Historical/educational
+      - Devotional          # Short devotional
+      - Testimony           # Personal story
+      - Live_Lesson         # Recorded live teaching
+
+  AudioType:
+    description: "Types of audio content"
+    values:
+      - Song                # Worship song
+      - Story               # Audio Bible story
+      - Podcast             # Discussion/teaching
+      - Devotional          # Daily devotional
+      - Memorization        # Memory verse audio
+      - Ambient             # Background/prayer music
+      - Audiobook           # Full book audio
+
+  MediaType:
+    values: [Video, Audio]
+
+  PlaylistType:
+    description: "Types of media playlists"
+    values:
+      - Character_Series    # Videos about a person
+      - Topic_Collection    # By topic
+      - Age_Group           # For specific age
+      - Worship             # Worship songs
+      - Bedtime             # Calming content
+      - Study_Companion     # Goes with study guide
+      - User_Created        # User's playlist
+
+  # --- Community Needs ---
+  NeedType:
+    description: "Types of community needs"
+    values:
+      - Prayer              # Prayer request
+      - Financial           # Financial assistance
+      - Material            # Physical items needed
+      - Service             # Help with something
+      - Emotional           # Support/encouragement
+      - Medical             # Health-related
+      - Housing             # Housing need
+      - Food                # Food assistance
+      - Transportation      # Ride/vehicle need
+      - Childcare           # Childcare need
+      - Other               # Other needs
+
+  NeedStatus:
+    values:
+      - Active              # Currently seeking help
+      - In_Progress         # Being addressed
+      - Fulfilled           # Need met
+      - Expired             # Time passed
+      - Withdrawn           # User removed
+
+  NeedVisibility:
+    values:
+      - Private             # Only specific people
+      - Family              # Family group
+      - Group               # Church/small group
+      - Community           # All app users
+      - Public              # Anyone
+
+  Urgency:
+    values: [Low, Normal, High, Critical]
+
+  NeedResponseType:
+    description: "How someone responds to a need"
+    values:
+      - Praying             # Committed to pray
+      - Can_Help            # Offering assistance
+      - Message             # Sent encouragement
+      - Donated             # Gave financially
+      - Shared              # Shared with others
+
+  # --- Giving/Donations ---
+  CampaignType:
+    description: "Types of giving campaigns"
+    values:
+      - Missions            # Mission trip/work
+      - Building            # Construction project
+      - Ministry            # Ministry support
+      - Relief              # Disaster/emergency
+      - Scholarship         # Education fund
+      - General             # General fund
+      - Special_Project     # Specific project
+
+  GivingCategory:
+    description: "Categories for giving"
+    values:
+      - Local_Church        # Local church
+      - Missions            # Missionary work
+      - Community           # Community outreach
+      - Education           # Schools/education
+      - Hunger              # Food programs
+      - Medical             # Healthcare
+      - Children            # Children's ministry
+      - Disaster_Relief     # Emergency response
+      - Bible_Distribution  # Bible access
+      - Other               # Other causes
+
+  CampaignStatus:
+    values:
+      - Draft               # Not yet published
+      - Active              # Currently accepting
+      - Paused              # Temporarily stopped
+      - Completed           # Goal reached
+      - Closed              # Ended
+
+  DonationType:
+    values:
+      - One_Time            # Single donation
+      - Recurring           # Ongoing
+      - Pledge              # Promised future
+
+  RecurringFrequency:
+    values: [Weekly, Bi_Weekly, Monthly, Quarterly, Annually]
+
+  DonationStatus:
+    values:
+      - Pending             # Processing
+      - Completed           # Successful
+      - Failed              # Payment failed
+      - Refunded            # Money returned
+
+  # --- Resources Directory ---
+  DirectoryResourceType:
+    description: "Type of directory resource"
+    values: [Church, SupportGroup, PlayGroup, CommunityResource]
+
+  ChurchDenomination:
+    description: "Church denomination or affiliation"
+    values:
+      - Non_Denominational
+      - Baptist
+      - Methodist
+      - Presbyterian
+      - Lutheran
+      - Episcopal
+      - Catholic
+      - Orthodox
+      - Pentecostal
+      - Assembly_of_God
+      - Church_of_Christ
+      - Church_of_God
+      - Nazarene
+      - Evangelical_Free
+      - Calvary_Chapel
+      - Vineyard
+      - Foursquare
+      - Seventh_Day_Adventist
+      - AME
+      - Other
+
+  WorshipStyle:
+    values:
+      - Traditional         # Hymns, organ
+      - Contemporary        # Modern worship band
+      - Blended            # Mix of both
+      - Liturgical         # High church, formal
+      - Charismatic        # Spirit-led, expressive
+
+  ChurchSize:
+    values:
+      - Small              # Under 100
+      - Medium             # 100-500
+      - Large              # 500-2000
+      - Mega               # 2000+
+
+  DayOfWeek:
+    values: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
+
+  ServiceType:
+    values:
+      - Sunday_Morning
+      - Sunday_Evening
+      - Wednesday_Night
+      - Saturday_Evening
+      - Youth_Service
+      - Childrens_Service
+      - Spanish_Service
+      - Contemporary
+      - Traditional
+
+  SupportGroupType:
+    description: "Types of support/recovery groups"
+    values:
+      - Addiction_Recovery   # AA, NA, etc.
+      - Grief_Support       # Loss of loved one
+      - Divorce_Care        # Divorce recovery
+      - Mental_Health       # Anxiety, depression
+      - Cancer_Support      # Cancer patients/families
+      - Chronic_Illness     # Ongoing health issues
+      - Caregiver           # Those caring for others
+      - Financial           # Financial struggles
+      - Domestic_Violence   # Abuse recovery
+      - Veterans            # Military veterans
+      - Parenting           # Struggling parents
+      - Marriage            # Marriage struggles
+      - Single_Parent       # Single parenting
+      - Teen_Support        # Teen issues
+      - LGBTQ               # LGBTQ support
+      - General             # General support
+
+  SupportGroupAudience:
+    values:
+      - Men_Only
+      - Women_Only
+      - Mixed
+      - Teens
+      - Young_Adults
+      - Seniors
+      - Couples
+      - Families
+
+  RecoveryProgram:
+    description: "Recovery program type"
+    values:
+      - Twelve_Step         # Traditional AA/NA
+      - Celebrate_Recovery  # Christ-centered 12-step
+      - Re_Generate         # Youth recovery
+      - GriefShare          # Grief support
+      - DivorceCare         # Divorce recovery
+      - Financial_Peace     # Financial recovery
+      - CR_Inside           # Prison ministry
+      - None_Specific       # No specific program
+
+  MeetingFrequency:
+    values:
+      - Daily
+      - Weekly
+      - Bi_Weekly
+      - Monthly
+      - As_Needed
+
+  PlayGroupType:
+    description: "Types of family/kids groups"
+    values:
+      - Moms_Group          # MOPS, etc.
+      - Dads_Group          # Dad meetups
+      - Parents_Group       # All parents
+      - Play_Date           # Informal play
+      - Homeschool          # Homeschool co-op
+      - Special_Needs       # Special needs families
+      - Multiples           # Twins/triplets
+      - Single_Parents      # Single parent meetups
+      - Grandparents        # Grandparent groups
+      - Family_Night        # Whole family events
+
+  ParentType:
+    values: [Moms_Only, Dads_Only, All_Parents, Grandparents]
+
+  PlayGroupLocationType:
+    values:
+      - Church
+      - Park
+      - Community_Center
+      - Library
+      - Home
+      - School
+      - Online
+      - Rotating
+
+  ResourceType:
+    description: "Types of community resources"
+    values:
+      - Food_Bank           # Food assistance
+      - Food_Pantry         # Smaller food assistance
+      - Soup_Kitchen        # Meal service
+      - Clothing_Closet     # Clothing assistance
+      - Shelter             # Emergency housing
+      - Housing_Assistance  # Housing help
+      - Financial_Aid       # Bill assistance
+      - Job_Training        # Employment help
+      - Counseling          # Mental health
+      - Medical_Clinic      # Health services
+      - Dental_Clinic       # Dental services
+      - Legal_Aid           # Legal help
+      - Transportation      # Rides/transportation
+      - Childcare           # Childcare assistance
+      - ESL_Classes         # English classes
+      - Tutoring            # Academic help
+      - Senior_Services     # Elderly assistance
+      - Pregnancy_Center    # Pregnancy help
+      - Crisis_Hotline      # Emergency support
+      - Other               # Other resources
+
+  # --- Story Creator ---
+  StoryType:
+    description: "Types of user-created stories"
+    values:
+      - Retelling           # Retelling of Bible story
+      - Original            # Original faith story
+      - Devotional          # Devotional/reflection
+      - Testimony           # Personal testimony
+      - Parable             # Modern parable
+      - Adventure           # Bible character adventure
+      - Educational         # Teaching focused
+      - Prayer_Story        # Story-form prayer
+
+  StoryTopic:
+    description: "Topics for stories"
+    values:
+      - Faith               # Faith and trust
+      - Love                # God's love
+      - Courage             # Being brave
+      - Forgiveness         # Forgiving others
+      - Kindness            # Being kind
+      - Obedience           # Following God
+      - Prayer              # Talking to God
+      - Friendship          # Being a good friend
+      - Family              # Family relationships
+      - Creation            # God's creation
+      - Miracles            # God's power
+      - Jesus               # Stories about Jesus
+      - Salvation           # God's rescue plan
+      - Heaven              # Eternity
+      - Serving             # Helping others
+
+  StoryStatus:
+    values:
+      - Draft               # Still editing
+      - Ready               # Ready to publish
+      - Published           # Live and visible
+      - Archived            # Hidden/old
+      - Flagged             # Under review
+
+  StoryVisibility:
+    values:
+      - Private             # Only creator
+      - Family              # Family group
+      - Friends             # Selected friends
+      - Community           # All app users
+      - Public              # Anyone with link
+
+  SceneType:
+    description: "Types of scenes in a story"
+    values:
+      - Title               # Title card
+      - Narrative           # Story text
+      - Dialogue            # Character speaking
+      - Action              # Something happening
+      - Question            # Interactive question
+      - Scripture           # Bible verse display
+      - Reflection          # Pause for thought
+      - Ending              # Story conclusion
+
+  SceneAnimation:
+    values:
+      - None                # No animation
+      - Fade                # Fade in/out
+      - Slide_Left          # Slide from left
+      - Slide_Right         # Slide from right
+      - Zoom                # Zoom in
+      - Bounce              # Bounce in
+
+  TemplateType:
+    description: "Types of story templates"
+    values:
+      - Character_Spotlight # Focus on one character
+      - Journey             # Travel/adventure
+      - Miracle             # Miracle story
+      - Parable             # Lesson story
+      - Holiday             # Christmas, Easter, etc.
+      - Bedtime             # Calm bedtime story
+      - Interactive         # Heavy on questions
+      - Simple              # Few scenes, basic
+
+  StoryAssetType:
+    values:
+      - Background          # Scene background
+      - Character           # Character image
+      - Object              # Props/objects
+      - Audio               # Sound/narration
+      - Music               # Background music
+
+  ShareType:
+    description: "How a story is shared"
+    values:
+      - In_App              # Within Bible Buddy
+      - Link                # Public link
+      - Email               # Via email
+      - Family_Group        # To family
+      - Social              # Social media
+
+  StoryReactionType:
+    values:
+      - Like                # Simple like
+      - Love                # Heart/love
+      - Inspired            # Feeling inspired
+      - Praying             # Praying for this
+      - Comment             # Text comment
+      - Share               # Shared story
+
+  FeatureType:
+    description: "Types of showcase features"
+    values:
+      - Editor_Pick         # Staff selected
+      - Trending            # Popular now
+      - New                 # Recently published
+      - Kid_Favorite        # Kids love it
+      - Family_Pick         # Great for families
+      - Seasonal            # Holiday/seasonal
+
+# =============================================================================
+# ACTIONS - CRUD operations
+# =============================================================================
+
+actions:
+
+  ViewPersonAction:
+    type: read
+    operatesOn: BiblicalPerson
+    params:
+      person_id: { type: string, required: true }
+      age_group: { type: AgeGroup, required: true }
+    returns: BiblicalPerson
+
+  CreateJournalEntryAction:
+    type: create
+    operatesOn: PrayerJournalEntry
+    params:
+      content: { type: string, required: true }
+      title: { type: string }
+      prayer_type: { type: PrayerType }
+      mood: { type: JournalMood }
+    returns: PrayerJournalEntry
+
+  MarkPrayerAnsweredAction:
+    type: update
+    operatesOn: PrayerJournalEntry
+    params:
+      entry_id: { type: string, required: true }
+      answer_notes: { type: string }
+    returns: PrayerJournalEntry
+
+  StartTriviaAction:
+    type: create
+    operatesOn: TriviaSession
+    params:
+      game_type: { type: GameType, required: true }
+      age_group: { type: AgeGroup, required: true }
+      topic: { type: TriviaTopic }
+      count: { type: integer, default: 10 }
+    returns: TriviaSession
+
+  SubmitAnswerAction:
+    type: update
+    operatesOn: TriviaSession
+    params:
+      session_id: { type: string, required: true }
+      question_id: { type: string, required: true }
+      answer: { type: string, required: true }
+    returns:
+      is_correct: boolean
+      explanation: string
+      new_score: integer
+
+  GenerateAudioAction:
+    type: create
+    operatesOn: AudioNarration
+    params:
+      content_type: { type: ContentType, required: true }
+      content_id: { type: string, required: true }
+      age_group: { type: AgeGroup, required: true }
+      voice_id: { type: string, default: "Joanna" }
+    returns: AudioNarration
+
+# =============================================================================
+# RELATIONSHIPS - Graph connections
+# =============================================================================
+
+relationships:
+
+  person_to_person:
+    types:
+      - family: FamilyRelationType
+      - mentor: "Teacher/student"
+      - adversary: "Conflict"
+      - ally: "Partnership"
+      - succeeded: "Succession"
+
+  person_to_location:
+    types:
+      - birthplace
+      - deathplace
+      - lived_in
+      - visited
+      - buried_at
+
+  person_to_event:
+    types:
+      - participant
+      - leader
+      - witness
+      - subject_of
+
+  event_to_location:
+    types:
+      - occurred_at
+      - started_at
+      - ended_at

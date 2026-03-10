@@ -1,0 +1,648 @@
+# Routing Domain: Routes & Legs
+# Planned paths from origin to destination
+# Version: 1.0.0
+
+domain: routing-route
+version: "1.0.0"
+status: production
+description: Routes, legs, steps, and path planning
+dependencies:
+  - geo-point
+  - geo-shape
+  - geo-elevation
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Route (complete journey)
+  # ---------------------------------------------------------------------------
+
+  Route:
+    description: Complete path from origin to destination(s)
+    fields:
+      id:
+        type: string
+        required: false
+      origin:
+        type: Waypoint
+        required: true
+        description: Starting point
+      destination:
+        type: Waypoint
+        required: true
+        description: Final destination
+      waypoints:
+        type: array
+        items:
+          type: Waypoint
+        required: false
+        description: Intermediate stops (via points)
+      legs:
+        type: array
+        items:
+          type: Leg
+        required: true
+        description: Route segments between waypoints
+      mode:
+        type: TravelMode
+        required: true
+        description: Primary travel mode
+      geometry:
+        type: LineString
+        required: false
+        description: Full route geometry
+      bounds:
+        type: BoundingBox
+        required: false
+        description: Bounding box of route
+      summary:
+        type: RouteSummary
+        required: false
+        description: Aggregated statistics
+      options:
+        type: RouteOptions
+        required: false
+        description: Preferences used for this route
+      alternatives:
+        type: array
+        items:
+          type: Route
+        required: false
+        description: Alternative routes
+      provider:
+        type: string
+        required: false
+        description: Routing service used
+      computed_at:
+        type: datetime
+        required: false
+        description: When route was calculated
+
+  # ---------------------------------------------------------------------------
+  # Leg (segment between waypoints)
+  # ---------------------------------------------------------------------------
+
+  Leg:
+    description: Route segment between two waypoints
+    fields:
+      start:
+        type: Waypoint
+        required: true
+        description: Leg start point
+      end:
+        type: Waypoint
+        required: true
+        description: Leg end point
+      steps:
+        type: array
+        items:
+          type: Step
+        required: false
+        description: Turn-by-turn instructions
+      geometry:
+        type: LineString
+        required: false
+        description: Leg geometry
+      distance_meters:
+        type: float
+        required: true
+        description: Leg distance
+      duration_seconds:
+        type: float
+        required: true
+        description: Estimated travel time
+      duration_in_traffic_seconds:
+        type: float
+        required: false
+        description: Duration with live traffic
+      traffic_speed_entry:
+        type: array
+        items:
+          type: TrafficSegment
+        required: false
+        description: Traffic conditions along leg
+      summary:
+        type: string
+        required: false
+        description: Human-readable leg summary (e.g., "I-5 N")
+      elevation_profile:
+        type: ElevationProfile
+        required: false
+        description: Elevation along leg
+
+  # ---------------------------------------------------------------------------
+  # Step (individual instruction)
+  # ---------------------------------------------------------------------------
+
+  Step:
+    description: Single navigation instruction
+    fields:
+      instruction:
+        type: string
+        required: true
+        description: Human-readable instruction
+      maneuver:
+        type: Maneuver
+        required: true
+        description: Maneuver details
+      geometry:
+        type: LineString
+        required: false
+        description: Step geometry
+      start_location:
+        type: Point
+        required: true
+      end_location:
+        type: Point
+        required: true
+      distance_meters:
+        type: float
+        required: true
+      duration_seconds:
+        type: float
+        required: true
+      road_name:
+        type: string
+        required: false
+        description: Name of road
+      road_ref:
+        type: string
+        required: false
+        description: Road reference (e.g., "I-5", "A1")
+      exits:
+        type: string
+        required: false
+        description: Exit numbers
+      destinations:
+        type: string
+        required: false
+        description: Destination signs
+      mode:
+        type: TravelMode
+        required: false
+        description: Mode for this step (for multi-modal)
+      transit_details:
+        type: TransitDetails
+        required: false
+        description: Public transit info (if transit step)
+
+  # ---------------------------------------------------------------------------
+  # Maneuver
+  # ---------------------------------------------------------------------------
+
+  Maneuver:
+    description: Navigation maneuver at a point
+    fields:
+      type:
+        type: ManeuverType
+        required: true
+      modifier:
+        type: ManeuverModifier
+        required: false
+        description: Direction modifier (left, right, etc.)
+      bearing_before:
+        type: float
+        required: false
+        description: Bearing entering maneuver (0-360)
+      bearing_after:
+        type: float
+        required: false
+        description: Bearing exiting maneuver
+      location:
+        type: Point
+        required: true
+        description: Maneuver location
+      exit:
+        type: integer
+        required: false
+        description: Roundabout exit number
+      voice_instruction:
+        type: string
+        required: false
+        description: Text for TTS
+      banner_instruction:
+        type: string
+        required: false
+        description: Text for display
+
+  # ---------------------------------------------------------------------------
+  # Route Summary
+  # ---------------------------------------------------------------------------
+
+  RouteSummary:
+    description: Aggregated route statistics
+    fields:
+      total_distance_meters:
+        type: float
+        required: true
+      total_duration_seconds:
+        type: float
+        required: true
+      total_duration_in_traffic:
+        type: float
+        required: false
+        description: With live traffic
+      departure_time:
+        type: datetime
+        required: false
+      arrival_time:
+        type: datetime
+        required: false
+      primary_road:
+        type: string
+        required: false
+        description: Main road used (e.g., "I-5 N")
+      waypoint_count:
+        type: integer
+        required: false
+      leg_count:
+        type: integer
+        required: false
+      toll_cost:
+        type: Money
+        required: false
+        description: Estimated toll cost
+      fuel_cost:
+        type: Money
+        required: false
+        description: Estimated fuel cost
+      total_ascent_meters:
+        type: float
+        required: false
+        description: Total elevation gain
+      total_descent_meters:
+        type: float
+        required: false
+        description: Total elevation loss
+      warnings:
+        type: array
+        items:
+          type: RouteWarning
+        required: false
+
+  RouteWarning:
+    description: Warning about route conditions
+    fields:
+      type:
+        type: RouteWarningType
+        required: true
+      message:
+        type: string
+        required: true
+      location:
+        type: Point
+        required: false
+      severity:
+        type: WarningSeverity
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Traffic
+  # ---------------------------------------------------------------------------
+
+  TrafficSegment:
+    description: Traffic conditions for a road segment
+    fields:
+      geometry:
+        type: LineString
+        required: false
+      speed_mph:
+        type: float
+        required: false
+      speed_kmh:
+        type: float
+        required: false
+      free_flow_speed:
+        type: float
+        required: false
+        description: Speed without traffic
+      congestion_level:
+        type: CongestionLevel
+        required: false
+      delay_seconds:
+        type: float
+        required: false
+        description: Delay vs free-flow
+
+  # ---------------------------------------------------------------------------
+  # Transit Details
+  # ---------------------------------------------------------------------------
+
+  TransitDetails:
+    description: Public transit step details
+    fields:
+      line:
+        type: TransitLine
+        required: true
+      departure_stop:
+        type: TransitStop
+        required: true
+      arrival_stop:
+        type: TransitStop
+        required: true
+      departure_time:
+        type: datetime
+        required: true
+      arrival_time:
+        type: datetime
+        required: true
+      num_stops:
+        type: integer
+        required: false
+      headsign:
+        type: string
+        required: false
+        description: Direction shown on vehicle
+      vehicle_type:
+        type: TransitVehicleType
+        required: false
+
+  TransitLine:
+    description: Public transit line/route
+    fields:
+      name:
+        type: string
+        required: true
+      short_name:
+        type: string
+        required: false
+        description: Line number (e.g., "7", "N")
+      color:
+        type: string
+        required: false
+        description: Line color (hex)
+      text_color:
+        type: string
+        required: false
+      agency:
+        type: string
+        required: false
+      url:
+        type: string
+        required: false
+
+  TransitStop:
+    description: Public transit stop/station
+    fields:
+      name:
+        type: string
+        required: true
+      location:
+        type: Point
+        required: true
+      platform:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Isochrone (reachable area)
+  # ---------------------------------------------------------------------------
+
+  Isochrone:
+    description: Area reachable within time/distance
+    aliases: [ReachableArea, ServiceArea]
+    fields:
+      origin:
+        type: Point
+        required: true
+        description: Starting point
+      mode:
+        type: TravelMode
+        required: true
+      contours:
+        type: array
+        items:
+          type: IsochroneContour
+        required: true
+        description: Reachable area contours
+      departure_time:
+        type: datetime
+        required: false
+      options:
+        type: RouteOptions
+        required: false
+
+  IsochroneContour:
+    description: Single isochrone contour
+    fields:
+      value:
+        type: float
+        required: true
+        description: Time (seconds) or distance (meters)
+      unit:
+        type: IsochroneUnit
+        required: true
+      geometry:
+        type: Polygon
+        required: true
+        description: Reachable area polygon
+
+  # ---------------------------------------------------------------------------
+  # Distance Matrix
+  # ---------------------------------------------------------------------------
+
+  DistanceMatrix:
+    description: N×N travel times/distances between points
+    fields:
+      origins:
+        type: array
+        items:
+          type: Point
+        required: true
+      destinations:
+        type: array
+        items:
+          type: Point
+        required: true
+      mode:
+        type: TravelMode
+        required: true
+      rows:
+        type: array
+        items:
+          type: DistanceMatrixRow
+        required: true
+        description: One row per origin
+      departure_time:
+        type: datetime
+        required: false
+
+  DistanceMatrixRow:
+    description: Distances from one origin to all destinations
+    fields:
+      elements:
+        type: array
+        items:
+          type: DistanceMatrixElement
+        required: true
+
+  DistanceMatrixElement:
+    description: Single origin-destination pair result
+    fields:
+      distance_meters:
+        type: float
+        required: false
+      duration_seconds:
+        type: float
+        required: false
+      duration_in_traffic_seconds:
+        type: float
+        required: false
+      status:
+        type: DistanceMatrixStatus
+        required: true
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  TravelMode:
+    description: Mode of transportation
+    values:
+      # Road
+      - DRIVING           # Car
+      - TRUCKING          # Commercial truck (restrictions)
+      - MOTORCYCLE        # Motorcycle
+      # Active
+      - WALKING           # Pedestrian
+      - CYCLING           # Bicycle
+      - E_BIKE            # Electric bicycle
+      - WHEELCHAIR        # Wheelchair accessible
+      # Transit
+      - TRANSIT           # Public transit (any)
+      - BUS               # Bus only
+      - RAIL              # Rail/subway only
+      - FERRY             # Ferry/boat
+      # Marine
+      - MARINE            # Vessel routing
+      - SAILING           # Sailboat (wind-aware)
+      # Air
+      - FLIGHT            # Air routing
+      # Other
+      - HIKING            # Trail hiking
+      - SKIING            # Ski routes
+      - KAYAK             # Kayak/canoe
+
+  ManeuverType:
+    description: Type of navigation maneuver
+    values:
+      - DEPART            # Start of route
+      - ARRIVE            # End of route
+      - TURN              # Turn onto road
+      - CONTINUE          # Continue on same road
+      - MERGE             # Merge onto highway
+      - FORK              # Fork in road
+      - EXIT_RAMP         # Exit via ramp
+      - ON_RAMP           # Enter via ramp
+      - ROUNDABOUT        # Enter roundabout
+      - ROUNDABOUT_EXIT   # Exit roundabout
+      - UTURN             # U-turn
+      - FERRY             # Board ferry
+      - END_OF_ROAD       # Road ends
+      - WAYPOINT          # Pass waypoint
+      - NOTIFICATION      # Info only (no maneuver)
+
+  ManeuverModifier:
+    description: Direction modifier for maneuver
+    values:
+      - UTURN
+      - SHARP_LEFT
+      - LEFT
+      - SLIGHT_LEFT
+      - STRAIGHT
+      - SLIGHT_RIGHT
+      - RIGHT
+      - SHARP_RIGHT
+
+  CongestionLevel:
+    description: Traffic congestion level
+    values:
+      - UNKNOWN
+      - FREE_FLOW         # Normal speed
+      - LIGHT             # Slightly slower
+      - MODERATE          # Noticeably slower
+      - HEAVY             # Significantly delayed
+      - SEVERE            # Very slow / stop-and-go
+      - CLOSED            # Road closed
+
+  RouteWarningType:
+    description: Types of route warnings
+    values:
+      - TOLL_ROAD
+      - FERRY
+      - UNPAVED
+      - PRIVATE_ROAD
+      - RESTRICTED
+      - SEASONAL
+      - CONSTRUCTION
+      - ACCIDENT
+      - WEATHER
+      - BORDER_CROSSING
+      - PERMIT_REQUIRED
+      - HEIGHT_RESTRICTION
+      - WEIGHT_RESTRICTION
+
+  WarningSeverity:
+    description: Warning severity level
+    values:
+      - INFO
+      - WARNING
+      - ALERT
+      - CRITICAL
+
+  TransitVehicleType:
+    description: Public transit vehicle types
+    values:
+      - BUS
+      - CABLE_CAR
+      - COMMUTER_TRAIN
+      - FERRY
+      - FUNICULAR
+      - GONDOLA
+      - HEAVY_RAIL
+      - HIGH_SPEED_TRAIN
+      - INTERCITY_BUS
+      - LIGHT_RAIL
+      - METRO
+      - MONORAIL
+      - OTHER
+      - RAIL
+      - SHARE_TAXI
+      - SUBWAY
+      - TRAM
+      - TROLLEYBUS
+
+  IsochroneUnit:
+    description: Unit for isochrone contours
+    values:
+      - SECONDS
+      - MINUTES
+      - METERS
+      - KILOMETERS
+      - MILES
+
+  DistanceMatrixStatus:
+    description: Status of distance matrix element
+    values:
+      - OK
+      - NOT_FOUND         # No route found
+      - ZERO_RESULTS      # No route available
+      - MAX_ROUTE_LENGTH_EXCEEDED
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "Google Directions API: https://developers.google.com/maps/documentation/directions"
+  - "Mapbox Directions API: https://docs.mapbox.com/api/navigation/directions/"
+  - "OSRM: http://project-osrm.org/"
+  - "Valhalla: https://github.com/valhalla/valhalla"
+  - "HERE Routing API: https://developer.here.com/documentation/routing-api"
+  - "OpenRouteService: https://openrouteservice.org/"

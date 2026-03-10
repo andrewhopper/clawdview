@@ -1,0 +1,234 @@
+# Expense Report Domain Model
+# Corporate expense reporting and reimbursement
+# Refactored to use finance and workflow domains
+
+domain:
+  name: expense-report
+  version: "2.0.0"
+  description: Corporate expense reporting, reimbursement, and approval workflows
+  dependencies: [core, auth, finance, workflow]
+  created_at: "2025-11-22"
+  updated_at: "2025-11-22"
+
+imports:
+  - from: finance
+    entities: [Payment, PaymentMethodType, TransactionStatus]
+  - from: workflow
+    entities: [WorkflowInstance, StepInstance, StepDecision]
+  - from: core
+    entities: [Money]
+  - from: auth
+    entities: [User]
+
+entities:
+
+  ExpenseReport:
+    description: Collection of expense line items submitted for reimbursement
+    properties:
+      id: { type: string, required: true }
+      title: { type: string, required: true }
+      description: { type: string }
+      submitterId: { type: string, required: true, ref: auth.User }
+      status: { type: ExpenseReportStatus, required: true }
+      totalAmount: { type: Money, from: core }
+      lineItems: { type: array, items: ExpenseLineItem }
+      workflowInstanceId: { type: string, ref: workflow.WorkflowInstance }
+      policyId: { type: string, ref: ExpensePolicy }
+      submittedAt: { type: datetime }
+      approvedAt: { type: datetime }
+      paidAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ExpenseLineItem:
+    description: Individual expense entry within a report
+    properties:
+      id: { type: string, required: true }
+      reportId: { type: string, required: true }
+      expenseDate: { type: date, required: true }
+      category: { type: ExpenseCategory, required: true }
+      amount: { type: Money, required: true, from: core }
+      vendor: { type: string, required: true }
+      paymentMethod: { type: PaymentMethodType, required: true, from: finance }
+      receipt: { type: Receipt }
+      notes: { type: string }
+      isBillable: { type: boolean, default: false }
+      projectCode: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Receipt:
+    description: Proof of purchase attached to expense line item
+    properties:
+      id: { type: string, required: true }
+      lineItemId: { type: string, required: true }
+      fileUrl: { type: uri, required: true }
+      mimeType: { type: string, required: true }
+      fileSize: { type: integer }
+      ocrExtracted: { type: boolean, default: false }
+      extractedAmount: { type: Money, from: core }
+      extractedDate: { type: date }
+      extractedVendor: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ExpensePolicy:
+    description: Corporate policy defining spending limits and allowed categories
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      dailyLimit: { type: Money, from: core }
+      perItemLimit: { type: Money, from: core }
+      requiresReceipt: { type: boolean, default: true }
+      receiptThreshold: { type: Money, from: core, description: "Amount above which receipt required" }
+      allowedCategories: { type: array, items: ExpenseCategory }
+      approvalThreshold: { type: Money, from: core, description: "Amount requiring manager approval" }
+      workflowDefinitionId: { type: string, ref: workflow.WorkflowDefinition }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Reimbursement:
+    description: Payment issued to employee for approved expenses
+    extends: finance.Payment
+    properties:
+      id: { type: string, required: true }
+      reportId: { type: string, required: true, ref: ExpenseReport }
+      amount: { type: Money, required: true, from: core }
+      method: { type: ReimbursementMethod, required: true }
+      status: { type: TransactionStatus, required: true, from: finance }
+      processedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+enums:
+
+  ExpenseReportStatus:
+    description: Status of an expense report
+    values:
+      - Draft          # Being prepared
+      - Submitted      # Submitted for review
+      - PendingApproval # Awaiting manager approval
+      - Approved       # Approved for reimbursement
+      - Rejected       # Rejected, needs revision
+      - Paid           # Reimbursement processed
+      - Cancelled      # Cancelled by submitter
+
+  ExpenseCategory:
+    description: Classification of expense types
+    values:
+      - Travel         # Airfare, train, mileage
+      - Meals          # Business meals, per diem
+      - Lodging        # Hotels, accommodations
+      - Transportation # Taxi, rideshare, rental car, parking
+      - Equipment      # Hardware, office equipment
+      - Software       # Software licenses, subscriptions
+      - Training       # Conferences, courses, certifications
+      - Supplies       # Office supplies, materials
+      - Entertainment  # Client entertainment, team events
+      - Communication  # Phone, internet, data
+      - Other          # Miscellaneous
+
+  ReimbursementMethod:
+    description: How reimbursement is issued
+    values:
+      - DirectDeposit  # ACH to employee bank account
+      - Check          # Paper check
+      - PayrollDeduction # Added to next payroll
+      - CorporateCard  # Credit to corporate card balance
+
+actions:
+
+  CreateExpenseReport:
+    description: Create a new draft expense report
+    parameters:
+      title: { type: string, required: true }
+      description: { type: string }
+      policyId: { type: string }
+    result: ExpenseReport
+
+  AddLineItem:
+    description: Add expense line item to a report
+    parameters:
+      reportId: { type: string, required: true }
+      expenseDate: { type: date, required: true }
+      category: { type: ExpenseCategory, required: true }
+      amount: { type: Money, required: true }
+      vendor: { type: string, required: true }
+      paymentMethod: { type: PaymentMethodType, required: true }
+      notes: { type: string }
+      projectCode: { type: string }
+      isBillable: { type: boolean, default: false }
+    result: ExpenseLineItem
+
+  AttachReceipt:
+    description: Attach receipt to line item with optional OCR
+    parameters:
+      lineItemId: { type: string, required: true }
+      file: { type: File, required: true }
+      runOcr: { type: boolean, default: true }
+    result: Receipt
+
+  SubmitExpenseReport:
+    description: Submit draft report for approval (starts workflow)
+    parameters:
+      reportId: { type: string, required: true }
+    result: ExpenseReport
+    side_effects:
+      - Creates workflow.WorkflowInstance
+      - Notifies approvers
+
+  ApproveExpenseReport:
+    description: Approve expense report (delegates to workflow)
+    parameters:
+      reportId: { type: string, required: true }
+      comments: { type: string }
+    result: ExpenseReport
+    delegates_to: workflow.CompleteStep
+
+  RejectExpenseReport:
+    description: Reject expense report with reason
+    parameters:
+      reportId: { type: string, required: true }
+      reason: { type: string, required: true }
+    result: ExpenseReport
+    delegates_to: workflow.CompleteStep
+
+  ProcessReimbursement:
+    description: Process payment for approved report (delegates to finance)
+    parameters:
+      reportId: { type: string, required: true }
+      method: { type: ReimbursementMethod, default: DirectDeposit }
+    result: Reimbursement
+    delegates_to: finance.CreatePayment
+
+  SearchExpenseReports:
+    description: Search and filter expense reports
+    parameters:
+      status: { type: ExpenseReportStatus }
+      submitterId: { type: string }
+      dateFrom: { type: date }
+      dateTo: { type: date }
+      minAmount: { type: Money }
+      maxAmount: { type: Money }
+    result: { type: array, items: ExpenseReport }
+
+workflows:
+
+  StandardExpenseApproval:
+    description: Standard expense report approval workflow
+    definition_id: expense-approval-v1
+    steps:
+      - name: Manager Approval
+        type: Approval
+        assignee_type: Manager
+        required: true
+      - name: Finance Review
+        type: Review
+        assignee_type: Role
+        assignee_role: finance-team
+        condition: "amount > 1000"
+    triggers:
+      on_submit: Start workflow
+      on_approve: Process reimbursement
+      on_reject: Notify submitter

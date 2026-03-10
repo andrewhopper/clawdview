@@ -1,0 +1,278 @@
+# LLM Evaluation Domain Model
+# Quality scoring, feedback, judging, and improvement
+# Source: LLM-as-Judge research, proto-self-improving-writer-bot
+
+domain:
+  name: llm-evaluation
+  version: "1.0.0"
+  description: LLM output evaluation - quality scoring, feedback loops, judging, and improvement
+  dependencies: [core, llm-message, llm-conversation]
+  sources:
+    - "LLM-as-Judge research"
+    - "proto-self-improving-writer-bot-t8nvi-054"
+    - "Chatbot Arena methodology"
+    - "RouteLLM preference data"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  Evaluation:
+    description: Evaluation of an LLM output
+    properties:
+      id: { type: string, required: true }
+      targetId: { type: string, required: true, description: "Message or turn ID" }
+      targetType: { type: EvaluationTargetType, required: true }
+      evaluatorType: { type: EvaluatorType, required: true }
+      evaluatorId: { type: string, description: "Human or model ID" }
+      overallScore: { type: decimal, required: true, description: "0-10 score" }
+      criterionScores: { type: array, items: CriterionScore }
+      feedback: { type: string }
+      timestamp: { type: datetime, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Criterion:
+    description: An evaluation criterion
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      category: { type: CriterionCategory }
+      weight: { type: decimal, default: 1.0 }
+      minScore: { type: decimal, default: 0 }
+      maxScore: { type: decimal, default: 10 }
+      rubric: { type: string, description: "Scoring rubric" }
+
+  CriterionScore:
+    description: Score for a specific criterion
+    properties:
+      criterionId: { type: string, required: true }
+      score: { type: decimal, required: true }
+      explanation: { type: string }
+
+  Judge:
+    description: An evaluator (human or LLM)
+    properties:
+      id: { type: string, required: true }
+      type: { type: EvaluatorType, required: true }
+      name: { type: string, required: true }
+      modelId: { type: string, description: "For LLM judges" }
+      expertise: { type: array, items: string }
+      calibrationScore: { type: decimal, description: "Agreement with ground truth" }
+      evaluationCount: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PairwiseComparison:
+    description: Comparison between two responses (Chatbot Arena style)
+    properties:
+      id: { type: string, required: true }
+      prompt: { type: string, required: true }
+      responseA: { type: string, required: true }
+      responseB: { type: string, required: true }
+      modelA: { type: string }
+      modelB: { type: string }
+      winner: { type: ComparisonWinner }
+      confidence: { type: decimal }
+      judgeId: { type: string }
+      reasoning: { type: string }
+      comparedAt: { type: datetime, required: true }
+
+  Feedback:
+    description: Human or system feedback on an output
+    properties:
+      id: { type: string, required: true }
+      targetId: { type: string, required: true }
+      feedbackType: { type: FeedbackType, required: true }
+      sentiment: { type: FeedbackSentiment }
+      rating: { type: integer, description: "1-5 star rating" }
+      thumbs: { type: ThumbsRating }
+      comment: { type: string }
+      suggestedImprovement: { type: string }
+      providerId: { type: string, description: "Who provided feedback" }
+      providedAt: { type: datetime, required: true }
+
+  QualityReport:
+    description: Comprehensive quality report for a session or output
+    properties:
+      id: { type: string, required: true }
+      targetId: { type: string, required: true }
+      targetType: { type: EvaluationTargetType }
+      evaluations: { type: array, items: string, description: "Evaluation IDs" }
+      aggregateScore: { type: decimal }
+      strengths: { type: array, items: string }
+      weaknesses: { type: array, items: string }
+      recommendations: { type: array, items: string }
+      generatedAt: { type: datetime, required: true }
+
+  ValidationCheck:
+    description: Automated validation check result
+    properties:
+      id: { type: string, required: true }
+      targetId: { type: string, required: true }
+      checkType: { type: ValidationCheckType, required: true }
+      passed: { type: boolean, required: true }
+      details: { type: string }
+      severity: { type: Severity }
+      checkedAt: { type: datetime, required: true }
+
+  ImprovementSuggestion:
+    description: Suggested improvement for an output
+    properties:
+      id: { type: string, required: true }
+      evaluationId: { type: string, required: true }
+      category: { type: ImprovementCategory }
+      suggestion: { type: string, required: true }
+      expectedImpact: { type: decimal, description: "Expected score improvement" }
+      effort: { type: EffortLevel }
+      priority: { type: integer }
+
+  ABTest:
+    description: A/B test for comparing prompts or configurations
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      variantA: { type: TestVariant }
+      variantB: { type: TestVariant }
+      metric: { type: string, required: true }
+      sampleSize: { type: integer }
+      currentSamples: { type: integer }
+      status: { type: ABTestStatus }
+      winner: { type: string }
+      confidenceLevel: { type: decimal }
+      startedAt: { type: datetime }
+      completedAt: { type: datetime }
+
+  TestVariant:
+    description: A variant in an A/B test
+    properties:
+      name: { type: string, required: true }
+      config: { type: object, description: "Configuration for this variant" }
+      samples: { type: integer }
+      successCount: { type: integer }
+      averageScore: { type: decimal }
+
+  EvaluationMetrics:
+    description: Aggregated evaluation metrics
+    properties:
+      period: { type: string }
+      totalEvaluations: { type: integer }
+      averageScore: { type: decimal }
+      scoreDistribution: { type: object }
+      topCriteria: { type: array, items: string }
+      bottomCriteria: { type: array, items: string }
+      feedbackSentimentBreakdown: { type: object }
+      recordedAt: { type: datetime }
+
+enums:
+
+  EvaluationTargetType:
+    description: Type of thing being evaluated
+    values:
+      - Message        # Single message
+      - Turn           # Full turn (query + response)
+      - Session        # Entire session
+      - Output         # Generated artifact
+      - Completion     # API completion
+
+  EvaluatorType:
+    description: Type of evaluator
+    values:
+      - Human          # Human evaluator
+      - LLM            # LLM-as-Judge
+      - Automated      # Automated checks
+      - Hybrid         # Combination
+      - Crowdsourced   # Multiple humans
+
+  CriterionCategory:
+    description: Category of evaluation criterion
+    values:
+      - Accuracy       # Factual correctness
+      - Relevance      # Relevance to query
+      - Completeness   # Coverage of topic
+      - Coherence      # Logical flow
+      - Helpfulness    # Utility to user
+      - Safety         # Safety and appropriateness
+      - Style          # Writing style
+      - Creativity     # Creative quality
+      - Technical      # Technical accuracy
+
+  ComparisonWinner:
+    description: Winner of pairwise comparison
+    values:
+      - A              # Response A wins
+      - B              # Response B wins
+      - Tie            # Both equal
+      - BothBad        # Neither good
+
+  FeedbackType:
+    description: Type of feedback
+    values:
+      - Rating         # Numeric rating
+      - Thumbs         # Thumbs up/down
+      - Comment        # Text feedback
+      - Correction     # Correction to output
+      - Suggestion     # Improvement suggestion
+      - Report         # Issue report
+
+  FeedbackSentiment:
+    description: Sentiment of feedback
+    values:
+      - Positive
+      - Neutral
+      - Negative
+      - Mixed
+
+  ThumbsRating:
+    description: Thumbs up/down rating
+    values:
+      - Up
+      - Down
+
+  ValidationCheckType:
+    description: Type of automated validation
+    values:
+      - Grammar        # Grammar check
+      - Spelling       # Spelling check
+      - Factuality     # Fact verification
+      - Citation       # Citation verification
+      - Format         # Format compliance
+      - Length         # Length requirements
+      - Toxicity       # Toxicity check
+      - PII            # PII detection
+
+  Severity:
+    description: Severity of validation issue
+    values:
+      - Info
+      - Warning
+      - Error
+      - Critical
+
+  ImprovementCategory:
+    description: Category of improvement
+    values:
+      - Content        # Content quality
+      - Structure      # Organization
+      - Clarity        # Clarity of expression
+      - Accuracy       # Factual accuracy
+      - Tone           # Tone adjustment
+      - Depth          # More/less detail
+
+  EffortLevel:
+    description: Effort required for improvement
+    values:
+      - Low
+      - Medium
+      - High
+
+  ABTestStatus:
+    description: Status of an A/B test
+    values:
+      - Draft
+      - Running
+      - Paused
+      - Completed
+      - Cancelled

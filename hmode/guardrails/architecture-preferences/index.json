@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Architecture Preferences Master Index",
+  "description": "Quick reference to all approved architectural patterns",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-16",
+  "categories": {
+    "process-patterns": {
+      "file": "process-patterns.json",
+      "description": "Development and operational process patterns",
+      "patternCount": 2,
+      "subcategories": [
+        "parallel_execution",
+        "agent_orchestration"
+      ]
+    },
+    "design-patterns": {
+      "file": "design-patterns.json",
+      "description": "Code-level design patterns and best practices",
+      "patternCount": 1,
+      "subcategories": [
+        "creational_patterns",
+        "structural_patterns",
+        "behavioral_patterns",
+        "code_organization"
+      ]
+    },
+    "architecture-patterns": {
+      "file": "architecture-patterns.json",
+      "description": "System-level architecture patterns",
+      "patternCount": 0,
+      "subcategories": [
+        "application_architecture",
+        "service_architecture",
+        "deployment_architecture",
+        "scaling_patterns"
+      ]
+    },
+    "integration-patterns": {
+      "file": "integration-patterns.json",
+      "description": "System integration and communication patterns",
+      "patternCount": 0,
+      "subcategories": [
+        "api_patterns",
+        "messaging_patterns",
+        "data_sync_patterns",
+        "authentication_patterns"
+      ]
+    },
+    "data-patterns": {
+      "file": "data-patterns.json",
+      "description": "Data management and persistence patterns",
+      "patternCount": 1,
+      "subcategories": [
+        "data_access_patterns",
+        "data_modeling_patterns",
+        "caching_patterns",
+        "event_sourcing_patterns"
+      ]
+    }
+  },
+  "totalPatterns": 4,
+  "quickReference": [
+    {
+      "name": "Claude Code CLI Child Processes",
+      "category": "process-patterns",
+      "rank": 1,
+      "useCases": ["multi-agent orchestration", "parallel research", "autonomous agents"]
+    },
+    {
+      "name": "Two-Phase Execution (Data → Synthesis)",
+      "category": "process-patterns",
+      "rank": 1,
+      "useCases": ["research workflows", "data collection + analysis"]
+    },
+    {
+      "name": "Service Layer Pattern",
+      "category": "design-patterns",
+      "rank": 1,
+      "useCases": ["API development", "business logic separation"]
+    },
+    {
+      "name": "Repository Pattern",
+      "category": "data-patterns",
+      "rank": 1,
+      "useCases": ["database abstraction", "testable data layer"]
+    }
+  ]
+}

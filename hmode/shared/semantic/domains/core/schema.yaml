@@ -1,0 +1,341 @@
+# Core Domain Model
+# Foundation primitives for all domain models
+
+domain:
+  name: core
+  version: "1.0.0"
+  description: Foundation primitives - Entity, Person, Time, Money, Address, Media
+  dependencies: []
+  created_at: "2025-11-21"
+  updated_at: "2025-11-24"
+
+entities:
+
+  # ============================================
+  # BASE ENTITIES
+  # ============================================
+
+  Entity:
+    description: Base class for all identifiable things
+    properties:
+      id: { type: string, required: true }
+      name: { type: string }
+      description: { type: string }
+
+  AuditInfo:
+    description: Tracking information for entity lifecycle
+    properties:
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+      createdBy: { type: string }
+      updatedBy: { type: string }
+      version: { type: integer, description: "Optimistic locking version" }
+
+  # ============================================
+  # INDIVIDUAL / PERSON / ORGANIZATION
+  # ============================================
+
+  Individual:
+    description: A single identifiable agent (person, org, or system)
+    extends: Entity
+
+  Person:
+    description: A human individual
+    extends: Individual
+    properties:
+      firstName: { type: string }
+      lastName: { type: string }
+      fullName: { type: string }
+      dateOfBirth: { type: date }
+      contactInfo: { type: ContactInfo }
+      addresses: { type: array, items: Address }
+
+  Organization:
+    description: A company, institution, or group
+    extends: Individual
+    properties:
+      legalName: { type: string }
+      tradingName: { type: string, description: "DBA or brand name" }
+      taxId: { type: string, description: "EIN, VAT number, etc." }
+      contactInfo: { type: ContactInfo }
+      addresses: { type: array, items: Address }
+
+  Group:
+    description: A collection of individuals with shared purpose
+    extends: Entity
+    properties:
+      members: { type: array, items: Individual, description: "Group members" }
+      leader: { type: Individual, description: "Group leader/chair" }
+      purpose: { type: string, description: "Reason the group exists" }
+      formedDate: { type: date }
+      disbandedDate: { type: date }
+      maxSize: { type: integer, description: "Maximum membership" }
+      minSize: { type: integer, description: "Minimum for quorum" }
+
+  # ============================================
+  # TIME PRIMITIVES
+  # ============================================
+
+  TimePoint:
+    description: Specific moment in time with optional timezone
+    properties:
+      timestamp: { type: datetime, required: true }
+      timezone: { type: string, description: "IANA timezone" }
+
+  Duration:
+    description: Length of time
+    properties:
+      isoDuration: { type: string, description: "ISO 8601 format (PT1H30M)" }
+      milliseconds: { type: integer }
+
+  DateRange:
+    description: Time period with start and end
+    properties:
+      startTime: { type: TimePoint, required: true }
+      endTime: { type: TimePoint }
+      duration: { type: Duration }
+
+  Recurrence:
+    description: Repeating time pattern
+    properties:
+      rule: { type: string, description: "RRULE format (RFC 5545)" }
+      frequency: { type: RecurrenceFrequency }
+      interval: { type: integer, default: 1 }
+      count: { type: integer }
+      until: { type: datetime }
+
+  # ============================================
+  # MONEY / CURRENCY
+  # ============================================
+
+  Money:
+    description: Monetary amount with currency
+    properties:
+      amount: { type: decimal, required: true }
+      currency: { type: string, required: true, description: "ISO 4217 code" }
+
+  Currency:
+    description: ISO 4217 currency definition
+    properties:
+      code: { type: string, required: true, description: "3-letter code" }
+      symbol: { type: string, description: "Display symbol ($, €)" }
+      name: { type: string }
+      minorUnits: { type: integer, description: "Decimal places" }
+
+  # ============================================
+  # ADDRESS / LOCATION
+  # ============================================
+
+  Address:
+    description: Physical or mailing address
+    properties:
+      type: { type: AddressType }
+      line1: { type: string, required: true }
+      line2: { type: string }
+      city: { type: string, required: true }
+      stateProvince: { type: string }
+      postalCode: { type: string }
+      country: { type: string, required: true, description: "ISO 3166-1 alpha-2" }
+      geoLocation: { type: GeoLocation }
+
+  GeoLocation:
+    description: Geographic coordinates
+    properties:
+      latitude: { type: decimal, required: true }
+      longitude: { type: decimal, required: true }
+      altitude: { type: decimal, description: "Meters above sea level" }
+      accuracy: { type: decimal, description: "Accuracy radius in meters" }
+
+  # ============================================
+  # CONTACT INFORMATION
+  # ============================================
+
+  ContactInfo:
+    description: Ways to reach an individual or organization
+    properties:
+      email: { type: string }
+      phone: { type: string, description: "E.164 format" }
+      phoneType: { type: PhoneType }
+      website: { type: uri }
+
+  # ============================================
+  # MEASUREMENT / QUANTITY
+  # ============================================
+
+  Quantity:
+    description: Numeric value with unit of measure
+    properties:
+      value: { type: decimal, required: true }
+      unit: { type: string, required: true }
+      system: { type: UnitSystem }
+
+  Weight:
+    extends: Quantity
+    description: Weight measurement
+
+  Length:
+    extends: Quantity
+    description: Length measurement
+
+  Volume:
+    extends: Quantity
+    description: Volume measurement
+
+  Temperature:
+    extends: Quantity
+    description: Temperature measurement
+
+  Percentage:
+    extends: Quantity
+    description: Value between 0 and 100
+
+  # ============================================
+  # MEDIA / ATTACHMENTS
+  # ============================================
+
+  MediaObject:
+    description: Digital media file or reference
+    properties:
+      url: { type: uri, required: true }
+      mimeType: { type: string, required: true }
+      fileSize: { type: integer, description: "Size in bytes" }
+      fileName: { type: string }
+
+  Image:
+    extends: MediaObject
+    description: Image file
+    properties:
+      width: { type: integer }
+      height: { type: integer }
+
+  Document:
+    extends: MediaObject
+    description: Document file
+    properties:
+      pageCount: { type: integer }
+
+  Video:
+    extends: MediaObject
+    description: Video file
+    properties:
+      duration: { type: Duration }
+      width: { type: integer }
+      height: { type: integer }
+
+  Audio:
+    extends: MediaObject
+    description: Audio file
+    properties:
+      duration: { type: Duration }
+
+  # ============================================
+  # STATUS / IDENTIFIERS
+  # ============================================
+
+  Status:
+    description: Generic status indicator
+    properties:
+      code: { type: string, required: true }
+      label: { type: string }
+
+  Identifier:
+    description: External identifier from another system
+    properties:
+      value: { type: string, required: true }
+      type: { type: string, description: "UUID, SKU, ISBN, etc." }
+      source: { type: string, description: "Issuing system" }
+
+  # ============================================
+  # VISIBILITY
+  # ============================================
+
+  Visibility:
+    description: Reusable visibility state for any entity (slides, sections, items)
+    properties:
+      is_visible: { type: boolean, required: true, default: true }
+      hidden_reason: { type: HiddenReason }
+      show_in_modes: { type: array, items: ViewMode, description: "Which modes to display in" }
+
+  # ============================================
+  # AUTHORSHIP
+  # ============================================
+
+  Author:
+    description: Creator or contributor to a work
+    properties:
+      id: { type: uuid, required: true }
+      person_id: { type: uuid, description: "FK to Person" }
+      name: { type: string, required: true, description: "Display name" }
+      email: { type: string }
+      role: { type: AuthorRole, required: true, default: primary }
+      attribution: { type: string, description: "How to credit (e.g., 'Dr. Jane Smith, PhD')" }
+      organization_id: { type: uuid, description: "FK to Organization" }
+      organization_name: { type: string, description: "Denormalized org name" }
+
+enums:
+
+  RecurrenceFrequency:
+    values: [Hourly, Daily, Weekly, Monthly, Yearly]
+
+  TimeOfDay:
+    values:
+      - Morning     # 6:00 - 12:00
+      - Afternoon   # 12:00 - 18:00
+      - Evening     # 18:00 - 21:00
+      - Night       # 21:00 - 6:00
+
+  Season:
+    values: [Spring, Summer, Fall, Winter]
+
+  LifeStage:
+    values:
+      - Infant      # 0-2 years
+      - Child       # 2-12 years
+      - Adolescent  # 12-18 years
+      - YoungAdult  # 18-35 years
+      - Adult       # 35-55 years
+      - MiddleAge   # 55-70 years
+      - Senior      # 70+ years
+
+  AddressType:
+    values: [Home, Work, Billing, Shipping, Mailing]
+
+  PhoneType:
+    values: [Mobile, Landline, Fax, TollFree]
+
+  UnitSystem:
+    values: [Metric, Imperial, USCustomary]
+
+  GenericStatus:
+    values: [Active, Inactive, Pending, Archived, Deleted]
+
+  # Visibility enums
+  HiddenReason:
+    description: Why an item is hidden
+    values:
+      - draft           # Still being worked on
+      - skipped         # Intentionally skipped (e.g., slide)
+      - conditional     # Hidden based on condition/audience
+      - archived        # No longer relevant
+      - private         # Not for external view
+
+  ViewMode:
+    description: Display contexts for visibility
+    values:
+      - edit            # Editing/authoring mode
+      - present         # Presentation/live mode
+      - print           # Print output
+      - export          # Export (PDF, etc.)
+      - preview         # Preview mode
+      - review          # Review/approval mode
+
+  # Authorship enums
+  AuthorRole:
+    description: Role of an author in a work
+    values:
+      - primary         # Main author/creator
+      - co_author       # Equal contributor
+      - contributor     # Supporting contributor
+      - editor          # Edited the work
+      - reviewer        # Reviewed/approved
+      - translator      # Translated content

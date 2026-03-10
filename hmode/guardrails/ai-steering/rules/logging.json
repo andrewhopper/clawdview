@@ -1,0 +1,173 @@
+{
+  "category": "logging",
+  "version": "1.0.0",
+  "last_updated": "2026-01-16",
+  "rules": [
+    {
+      "id": "LOG-001",
+      "name": "python-script-logging",
+      "severity": "error",
+      "description": "All Python scripts and tools MUST implement logging",
+      "rationale": "Centralized logging enables debugging, audit trails, and operational visibility",
+      "context": {
+        "applies_to": [
+          "Python scripts in shared/tools/",
+          "Python utilities in bin/",
+          "Standalone Python tools",
+          "Long-running services",
+          "Background processes"
+        ],
+        "exceptions": [
+          "Simple one-liners (<10 lines)",
+          "Test files (use test output instead)"
+        ]
+      },
+      "pattern": {
+        "required": [
+          "import logging",
+          "Configure logger with appropriate level",
+          "Log to project logs/ or monorepo logs/"
+        ]
+      },
+      "enforcement": {
+        "check": "All .py files in shared/tools/ and bin/ must import logging",
+        "autofix": false,
+        "grace_period": "immediate"
+      },
+      "examples": [
+        {
+          "description": "Monorepo-level tool logging",
+          "code": "import logging\nfrom pathlib import Path\n\nLOG_DIR = Path(__file__).resolve().parent.parent.parent / 'logs' / 'tools'\nLOG_DIR.mkdir(parents=True, exist_ok=True)\nLOG_FILE = LOG_DIR / 'rlhf_tracker.log'\n\nlogging.basicConfig(\n    level=logging.INFO,\n    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',\n    handlers=[\n        logging.FileHandler(LOG_FILE),\n        logging.StreamHandler()  # Also log to console\n    ]\n)\nlogger = logging.getLogger(__name__)"
+        },
+        {
+          "description": "Project-level script logging",
+          "code": "import logging\nfrom pathlib import Path\n\n# Assume running from project root\nLOG_DIR = Path.cwd() / 'logs'\nLOG_DIR.mkdir(parents=True, exist_ok=True)\nLOG_FILE = LOG_DIR / 'deployment.log'\n\nlogging.basicConfig(\n    level=logging.INFO,\n    format='%(asctime)s - %(levelname)s - %(message)s',\n    handlers=[logging.FileHandler(LOG_FILE)]\n)\nlogger = logging.getLogger(__name__)"
+        }
+      ]
+    },
+    {
+      "id": "LOG-002",
+      "name": "log-location-standard",
+      "severity": "error",
+      "description": "Logs MUST go to standardized locations",
+      "rationale": "Predictable log locations enable troubleshooting and log aggregation",
+      "context": {
+        "log_locations": {
+          "monorepo_tools": "logs/tools/<script_name>.log",
+          "project_scripts": "<project_root>/logs/<script_name>.log",
+          "background_services": "logs/<service_name>/<date>.log",
+          "deployment_logs": "<project_root>/logs/deployment.log",
+          "test_logs": "<project_root>/logs/tests/<test_name>.log"
+        }
+      },
+      "pattern": {
+        "required": [
+          "Create logs/ directory if it doesn't exist",
+          "Use script/service name as log filename",
+          "Include .log extension"
+        ]
+      },
+      "enforcement": {
+        "check": "Log files must be in logs/ directory",
+        "autofix": false,
+        "grace_period": "immediate"
+      }
+    },
+    {
+      "id": "LOG-003",
+      "name": "log-format-standard",
+      "severity": "warning",
+      "description": "Use consistent log format across all scripts",
+      "rationale": "Consistent formatting enables log parsing and aggregation",
+      "context": {
+        "standard_format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "minimal_format": "%(asctime)s - %(levelname)s - %(message)s"
+      },
+      "pattern": {
+        "recommended": [
+          "Include timestamp (asctime)",
+          "Include log level (levelname)",
+          "Include message",
+          "Optionally include module name"
+        ]
+      },
+      "enforcement": {
+        "check": "Log format includes asctime and levelname",
+        "autofix": false,
+        "grace_period": "7d"
+      }
+    },
+    {
+      "id": "LOG-004",
+      "name": "log-levels-usage",
+      "severity": "warning",
+      "description": "Use appropriate log levels",
+      "rationale": "Correct log levels enable filtering and alerting",
+      "context": {
+        "levels": {
+          "DEBUG": "Detailed diagnostic information (function calls, variable values)",
+          "INFO": "General informational messages (script started, file processed)",
+          "WARNING": "Something unexpected but handled (deprecated usage, fallback applied)",
+          "ERROR": "Error occurred but script continues (file not found, API failed)",
+          "CRITICAL": "Severe error, script cannot continue (config missing, auth failed)"
+        }
+      },
+      "pattern": {
+        "recommended": [
+          "Use INFO for normal operations",
+          "Use WARNING for recoverable issues",
+          "Use ERROR for failures that don't stop execution",
+          "Use CRITICAL for fatal errors"
+        ]
+      },
+      "examples": [
+        {
+          "description": "Appropriate level usage",
+          "code": "logger.info('Processing file: %s', filepath)\nlogger.warning('Config not found, using defaults')\nlogger.error('Failed to upload to S3: %s', error)\nlogger.critical('Database connection failed, exiting')"
+        }
+      ]
+    },
+    {
+      "id": "LOG-005",
+      "name": "log-rotation",
+      "severity": "info",
+      "description": "Consider log rotation for long-running services",
+      "rationale": "Prevent unbounded log file growth",
+      "context": {
+        "applies_to": [
+          "Background services",
+          "Long-running daemons",
+          "High-frequency scripts (run >1/hour)"
+        ]
+      },
+      "pattern": {
+        "recommended": [
+          "Use RotatingFileHandler for size-based rotation",
+          "Use TimedRotatingFileHandler for time-based rotation",
+          "Keep 5-10 old log files",
+          "Rotate at 10MB for size-based"
+        ]
+      },
+      "examples": [
+        {
+          "description": "Rotating file handler",
+          "code": "from logging.handlers import RotatingFileHandler\n\nhandler = RotatingFileHandler(\n    LOG_FILE,\n    maxBytes=10*1024*1024,  # 10MB\n    backupCount=5\n)\nlogger.addHandler(handler)"
+        }
+      ]
+    }
+  ],
+  "violations": {
+    "LOG-001": {
+      "message": "Python script missing logging configuration",
+      "fix": "Add logging import and basicConfig"
+    },
+    "LOG-002": {
+      "message": "Log file not in logs/ directory",
+      "fix": "Move log output to logs/<script_name>.log"
+    },
+    "LOG-003": {
+      "message": "Non-standard log format",
+      "fix": "Use standard format with asctime and levelname"
+    }
+  }
+}

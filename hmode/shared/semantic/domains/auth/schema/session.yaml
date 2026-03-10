@@ -1,0 +1,38 @@
+# Session Management
+
+entities:
+
+  Session:
+    description: Authenticated session with tokens
+    properties:
+      sessionId:
+        type: string
+        required: true
+        minLength: 16
+      accessToken:
+        type: string
+        required: true
+      refreshToken:
+        type: string
+      expiresAt:
+        type: datetime
+        required: true
+      status:
+        type: SessionStatus
+        default: Active
+      ipAddress:
+        type: string
+      userAgent:
+        type: string
+      createdBy:
+        type: Credential
+        description: Credential used to create session
+
+enums:
+
+  SessionStatus:
+    values:
+      - Active     # Valid session
+      - Expired    # Past expiration time
+      - Revoked    # Explicitly invalidated
+      - Suspended  # Temporarily disabled

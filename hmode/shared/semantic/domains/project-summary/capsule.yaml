@@ -1,0 +1,568 @@
+# =============================================================================
+# Project Capsule - Lean Canvas-Aligned Executive Summary
+# Version: 1.3.0
+# Purpose: 30-second executive summary using Lean Canvas structure
+# Source: Adapted from Running Lean (Maurya, 2012)
+# =============================================================================
+
+domain: project-capsule
+version: "1.5.0"
+description: |
+  CEO-friendly capsule view using Lean Canvas terminology.
+  Grounded in 2500+ years of wisdom: ancient philosophy, religious traditions,
+  mid-century psychology, and modern behavioral economics.
+
+  Structure (Lean Canvas fields used):
+    CUSTOMER SEGMENTS → customer (who)
+    PROBLEM → problem (pain)
+    EXISTING ALTERNATIVES → alternatives (versus)
+    SOLUTION → solution (approach)
+    UNIQUE VALUE PROPOSITION → uvp (differentiator)
+
+  NOT included (internal projects don't need):
+    - Channels, Revenue Streams, Cost Structure, Key Metrics
+
+  File format: .capsule.yaml in project root
+
+  Derived fields (auto-extracted, don't include in .capsule.yaml):
+    - project_id: from .project uuid or folder name pattern *-{id}-{seq}
+    - project_name: from .project name field
+
+owner: platform
+extends: tool-project-portfolio-manager/Project
+
+# =============================================================================
+# FRAMEWORK FOUNDATIONS
+# =============================================================================
+
+theoretical_foundations:
+  description: |
+    This schema is grounded in 2500+ years of wisdom about human nature.
+    See quality-guide.yaml for detailed framework documentation.
+
+  # ANCIENT & CLASSICAL WISDOM (2500+ years)
+  ancient_wisdom:
+    aristotelian_rhetoric:
+      source: "On Rhetoric (Aristotle, 350 BC)"
+      usage: "Ethos/Pathos/Logos - credibility, emotion, logic"
+
+    confucian_wisdom:
+      source: "The Analects (Confucius, ~500 BC)"
+      usage: "Self-cultivation, virtue, relationships"
+
+    buddhist_psychology:
+      source: "Four Noble Truths (Buddha, ~500 BC)"
+      usage: "Dukkha (dissatisfaction), tanha (craving), cessation"
+
+    stoic_philosophy:
+      source: "Enchiridion (Epictetus, ~100 AD)"
+      usage: "Dichotomy of control - focus on what you can control"
+
+    biblical_wisdom:
+      source: "Proverbs, Ecclesiastes (Hebrew Bible, ~1000-300 BC)"
+      usage: "Practical wisdom with honest limits"
+
+  # MID-CENTURY FOUNDATIONS (1940s-1970s)
+  mid_century:
+    logotherapy:
+      source: "Man's Search for Meaning (Viktor Frankl, 1946)"
+      usage: "Will to meaning - purpose beyond pleasure or power"
+
+    two_factor_theory:
+      source: "The Motivation to Work (Herzberg, 1959)"
+      usage: "Hygiene factors vs motivators"
+
+    achievement_motivation:
+      source: "The Achieving Society (McClelland, 1961)"
+      usage: "Achievement, affiliation, power needs"
+
+    humanistic_psychology:
+      source: "On Becoming a Person (Carl Rogers, 1961)"
+      usage: "Unconditional positive regard, self-actualization"
+
+  # MODERN FRAMEWORKS (1980s-present)
+  modern:
+    lean_canvas:
+      source: "Running Lean (Ash Maurya, 2012)"
+      usage: "Field structure and terminology"
+
+    golden_circle:
+      source: "Start With Why (Simon Sinek, 2009)"
+      usage: "UVP communicates WHY, not just WHAT"
+
+    jobs_to_be_done:
+      source: "Competing Against Luck (Clayton Christensen, 2016)"
+      usage: "Customer defined by situation, core_benefit includes emotional outcome"
+
+    behavior_model:
+      source: "Tiny Habits (BJ Fogg, 2019)"
+      usage: "Solution addresses ability (ease), problem addresses motivation"
+
+    self_determination_theory:
+      source: "Self-Determination Theory (Deci & Ryan, 1985)"
+      usage: "Outcome categories: autonomy, competence, relatedness"
+
+    dual_process_theory:
+      source: "Thinking, Fast and Slow (Daniel Kahneman, 2011)"
+      usage: "UVP must work for System 1 (fast, intuitive) thinking"
+
+    emotional_design:
+      source: "Emotional Design (Don Norman, 2004)"
+      usage: "High-level concept creates visceral recognition"
+
+aligned_with:
+  - shared/semantic/domains/business-strategy/schema/lean-canvas.yaml
+  - shared/semantic/domains/project-summary/quality-guide.yaml
+  - projects/unspecified/active/tool-company-research-agent-claude-commands-uiwid-005/schemas.py::LeanCanvas
+
+# =============================================================================
+# CORE ENTITY
+# =============================================================================
+
+entities:
+  ProjectCapsule:
+    description: |
+      Lean Canvas-style capsule for internal projects.
+      Answers: Who? What problem? What do they do now? What's our solution? Why different?
+
+    required:
+      - _meta              # Version control metadata
+      - core_benefit       # One-sentence: [WHO] can [DO WHAT] [CONSTRAINT REMOVED]
+      - customer           # Lean Canvas: Customer Segments
+      - problem            # Lean Canvas: Problem
+      - alternatives       # Lean Canvas: Existing Alternatives
+      - solution           # Lean Canvas: Solution
+      - uvp                # Lean Canvas: Unique Value Proposition
+      - status
+      - next_step
+
+    derived:
+      - project_id         # Extracted from .project file uuid or folder name
+      - project_name       # Extracted from .project file name field
+
+    fields:
+      # ─────────────────────────────────────────────────────────────────
+      # METADATA
+      # ─────────────────────────────────────────────────────────────────
+      _meta:
+        type: Meta
+        required: true
+        description: Version control and tracking metadata
+
+      # ─────────────────────────────────────────────────────────────────
+      # CORE BENEFIT (the ONE thing this enables)
+      # ─────────────────────────────────────────────────────────────────
+      core_benefit:
+        type: string
+        max_length: 150
+        required: true
+        description: |
+          Single sentence stating what the user can DO and WHY it matters.
+          Formula: "[WHO] can [ACTION] [CONSTRAINT REMOVED] so that [OUTCOME]"
+
+          The OUTCOME should address one of these psychological needs:
+          - AUTONOMY: Freedom and control (Self-Determination Theory)
+          - COMPETENCE: Ability to achieve results (Self-Determination Theory)
+          - RELATEDNESS: Connection with others (Self-Determination Theory)
+          - SAFETY: Security and peace of mind (Maslow's Hierarchy)
+          - SIMPLICITY: Reduced friction (BJ Fogg Behavior Model)
+          - POSSIBILITY: New capabilities unlocked (Maslow's Self-Actualization)
+
+          See: quality-guide.yaml → outcome_categories for phrasing examples.
+
+        examples:
+          - benefit: "Developers can interact with AI coding assistants from any device, any time so that they can turn ideas into working code without being tied to their desk"
+            outcome_type: autonomy
+            framework: "Self-Determination Theory - freedom from location constraint"
+
+          - benefit: "Caregivers can monitor their loved one without being physically present so that they have peace of mind and can live their own life"
+            outcome_type: safety
+            framework: "Maslow - security/safety needs"
+
+          - benefit: "Anyone can convert text to natural speech with one command so that creating audio content is as easy as writing"
+            outcome_type: simplicity
+            framework: "Fogg Behavior Model - increased ability"
+
+      # ─────────────────────────────────────────────────────────────────
+      # LEAN CANVAS: CUSTOMER SEGMENTS
+      # ─────────────────────────────────────────────────────────────────
+      customer:
+        type: string
+        max_length: 80
+        lean_canvas_maps_to: customerSegments
+        description: |
+          Who is this for? (3-10 words, plain English)
+
+          Jobs to Be Done (Christensen): Define by SITUATION, not demographics.
+          Formula: "[People] who [situation/job they're trying to do]"
+
+        examples:
+          - "Developers who want quick AI help with code"
+          - "Caregivers who worry about aging parents"
+          - "Busy professionals who need to create audio content"
+
+      early_adopter:
+        type: string
+        max_length: 80
+        optional: true
+        lean_canvas_maps_to: customerSegments.isEarlyAdopter
+        description: Specific early adopter persona
+        example: "Developers on Chromebooks or mobile devices"
+
+      # ─────────────────────────────────────────────────────────────────
+      # LEAN CANVAS: PROBLEM
+      # ─────────────────────────────────────────────────────────────────
+      problem:
+        type: string
+        max_length: 200
+        lean_canvas_maps_to: problem.statement
+        description: Pain point in 1-2 sentences. Focus on frustration, not features.
+        example: "Getting AI code help requires installing tools and having a dev setup. Can't do it from a phone."
+
+      # ─────────────────────────────────────────────────────────────────
+      # LEAN CANVAS: EXISTING ALTERNATIVES
+      # ─────────────────────────────────────────────────────────────────
+      alternatives:
+        type: array
+        items: Alternative
+        min_items: 2
+        max_items: 4
+        lean_canvas_maps_to: problem.existingAlternatives
+        description: What do people do today? Why inadequate?
+
+      # ─────────────────────────────────────────────────────────────────
+      # LEAN CANVAS: SOLUTION
+      # ─────────────────────────────────────────────────────────────────
+      solution:
+        type: string
+        max_length: 200
+        lean_canvas_maps_to: solution.summary
+        description: What does this do? Plain English, outcome-focused.
+        example: "Open a browser, chat with AI, run real code - no setup required."
+
+      features:
+        type: array
+        items: string
+        max_items: 3
+        optional: true
+        lean_canvas_maps_to: solution.features
+        description: Top 3 features addressing the problem
+
+      # ─────────────────────────────────────────────────────────────────
+      # TECHNICAL INNOVATIONS
+      # ─────────────────────────────────────────────────────────────────
+      innovations:
+        type: array
+        items: Innovation
+        max_items: 5
+        optional: true
+        description: Novel technical approaches or breakthroughs in this project
+
+      # ─────────────────────────────────────────────────────────────────
+      # LEAN CANVAS: UNIQUE VALUE PROPOSITION
+      # ─────────────────────────────────────────────────────────────────
+      uvp:
+        type: string
+        max_length: 80
+        lean_canvas_maps_to: uniqueValueProposition.headline
+        description: |
+          Single clear message (< 10 words).
+
+          Golden Circle (Sinek): Communicate WHY, not just WHAT.
+          Kahneman System 1: Must work for fast, intuitive thinking.
+
+          Ask: "Would someone immediately understand why this matters?"
+
+        examples:
+          - "AI coding that works from any device"
+          - "A familiar voice that never forgets"
+          - "Turn any document into natural speech"
+
+      high_level_concept:
+        type: string
+        max_length: 60
+        optional: true
+        lean_canvas_maps_to: uniqueValueProposition.highLevelConcept
+        description: X for Y analogy
+        example: "Claude Code for the browser"
+
+      # ─────────────────────────────────────────────────────────────────
+      # STATUS (project-specific, not in Lean Canvas)
+      # ─────────────────────────────────────────────────────────────────
+      status:
+        type: Status
+        description: Current project state
+
+      next_step:
+        type: string
+        max_length: 100
+        description: Single most important next action
+
+      vision:
+        type: string
+        max_length: 200
+        optional: true
+        description: Long-term direction
+
+      updated_at:
+        type: datetime
+
+  Alternative:
+    description: Current workaround (Lean Canvas: Existing Alternatives)
+    required:
+      - name
+      - gap
+    fields:
+      name:
+        type: string
+        max_length: 40
+        example: "Claude Code CLI"
+
+      gap:
+        type: string
+        max_length: 80
+        example: "Requires terminal and local install"
+
+  Status:
+    description: Project state (not in Lean Canvas)
+    required:
+      - indicator
+      - label
+    fields:
+      indicator:
+        type: StatusIndicator
+
+      label:
+        type: string
+        max_length: 50
+        example: "Building core features"
+
+      percent:
+        type: integer
+        min: 0
+        max: 100
+        optional: true
+
+  Meta:
+    description: Version control and tracking metadata
+    required:
+      - uuid
+      - version
+      - created_at
+      - updated_at
+    fields:
+      uuid:
+        type: string
+        format: uuid
+        description: Unique identifier for this capsule
+        example: "f8e2a1b4-9c3d-4e5f-a6b7-8c9d0e1f2a3b"
+
+      version:
+        type: integer
+        min: 1
+        description: Capsule version number (increments on each update)
+        example: 1
+
+      created_at:
+        type: datetime
+        description: When this capsule was first created
+        example: "2025-11-24T00:00:00Z"
+
+      updated_at:
+        type: datetime
+        description: When this capsule was last modified
+        example: "2025-12-03T14:30:00Z"
+
+  Innovation:
+    description: A novel technical approach or breakthrough
+    required:
+      - title
+      - description
+    fields:
+      title:
+        type: string
+        max_length: 60
+        description: Short name for the innovation
+        example: "Ephemeral container orchestration"
+
+      description:
+        type: string
+        max_length: 200
+        description: What makes this technically novel?
+        example: "Sub-200ms container spin-up using Firecracker microVMs with pre-warmed pools"
+
+      category:
+        type: InnovationCategory
+        optional: true
+        description: Type of innovation
+
+      impact:
+        type: string
+        max_length: 100
+        optional: true
+        description: Business or technical impact
+        example: "10x faster than traditional Docker containers"
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+  StatusIndicator:
+    values:
+      - green      # On track
+      - yellow     # Some friction
+      - red        # Blocked
+      - blue       # Completed
+      - gray       # Paused
+
+  InnovationCategory:
+    description: Type of technical innovation
+    values:
+      - architecture     # Novel system design or architecture
+      - algorithm        # New algorithm or optimization
+      - integration      # Novel way of connecting systems
+      - ux               # User experience breakthrough
+      - performance      # Speed/efficiency improvement
+      - cost             # Cost reduction technique
+      - security         # Security innovation
+      - ai_ml            # AI/ML technique or application
+      - infrastructure   # Infrastructure or DevOps innovation
+      - data             # Data processing or storage innovation
+
+# =============================================================================
+# LEAN CANVAS FIELD MAPPING
+# =============================================================================
+
+lean_canvas_mapping:
+  description: |
+    Maps project capsule fields to full Lean Canvas model.
+    Used for conversion between formats.
+
+  mappings:
+    customer: customerSegments[0].name
+    early_adopter: customerSegments[0].isEarlyAdopter
+    problem: problem.problems[0].statement
+    alternatives: problem.existingAlternatives
+    solution: solution.features[0].description
+    features: solution.features[*].name
+    uvp: uniqueValueProposition.headline
+    high_level_concept: uniqueValueProposition.highLevelConcept
+
+  not_mapped:
+    - channels           # Not relevant for internal projects
+    - revenueStreams     # Not relevant for internal projects
+    - costStructure      # Not relevant for internal projects
+    - keyMetrics         # Could add later
+    - unfairAdvantage    # Similar to uvp for internal use
+
+# =============================================================================
+# FILE FORMAT
+# =============================================================================
+
+file_format:
+  name: ".capsule.yaml"
+  location: "Project root directory"
+  note: |
+    project_id and project_name are DERIVED from .project file:
+      .project → uuid: "t9x2k-189" → project_id
+      .project → name: "gocoder" → project_name
+    Do NOT include these in .capsule.yaml
+
+  example: |
+    # GoCoder - Project Capsule (Lean Canvas aligned)
+    # Schema: project-capsule v1.3.0
+    # Note: project_id derived from .project uuid
+
+    _meta:
+      uuid: f8e2a1b4-9c3d-4e5f-a6b7-8c9d0e1f2a3b
+      version: 1
+      created_at: 2025-11-24T00:00:00Z
+      updated_at: 2025-12-03T14:30:00Z
+
+    # CORE BENEFIT - the ONE thing this enables
+    core_benefit: >
+      Developers can interact with AI coding assistants from any device,
+      any time so that they can turn ideas into working code without
+      being tied to their desk
+
+    # CUSTOMER SEGMENTS
+    customer: Developers who use AI coding assistants
+    early_adopter: Mobile developers or those without local dev setup
+
+    # PROBLEM
+    problem: >
+      AI coding help requires a terminal and local setup.
+      Can't use it from a phone, tablet, or borrowed computer.
+
+    # EXISTING ALTERNATIVES
+    alternatives:
+      - name: Claude Code CLI
+        gap: Requires terminal and local install
+      - name: ChatGPT/Claude Web
+        gap: Can't actually run or test code
+      - name: Replit
+        gap: Full IDE is overkill for quick questions
+
+    # SOLUTION
+    solution: >
+      Open a browser, chat with AI, run real code in an isolated
+      container - no setup required.
+    features:
+      - Chat with AI in Claude-style interface
+      - Execute code in isolated container
+      - Access terminal directly in browser
+
+    # TECHNICAL INNOVATIONS
+    innovations:
+      - title: Ephemeral container orchestration
+        description: Sub-200ms container spin-up using Firecracker microVMs
+        category: performance
+        impact: 10x faster than traditional Docker containers
+      - title: WebSocket terminal bridging
+        description: Direct xterm.js to container PTY connection over WebSocket
+        category: architecture
+
+    # UNIQUE VALUE PROPOSITION
+    uvp: AI coding that works from any device
+    high_level_concept: Claude Code for the browser
+
+    # STATUS
+    status:
+      indicator: yellow
+      label: Building OAuth login
+      percent: 75
+
+    next_step: Add GitHub/Google login
+    vision: Coding assistant that works from any device, anywhere.
+
+# =============================================================================
+# COMPACT FORMATS FOR RENDERING
+# =============================================================================
+
+formats:
+  one_liner:
+    description: Single line for tables/lists
+    template: "{customer} | {problem_short} | {uvp}"
+    example: "Solo devs | No mobile AI coding | AI coding from any device"
+
+  elevator:
+    description: 30-second pitch
+    template: |
+      For {customer},
+      who {problem},
+      {project_name} {solution}.
+      Unlike {alternatives[0].name}, {uvp}.
+
+  ceo_brief:
+    description: Executive briefing card
+    template: |
+      **{project_name}** — {uvp}
+
+      WHO: {customer}
+      PROBLEM: {problem}
+      VS: {alternatives[0].name} ({alternatives[0].gap})
+      SOLUTION: {solution}
+
+      STATUS: {status.indicator} {status.label}
+      NEXT: {next_step}

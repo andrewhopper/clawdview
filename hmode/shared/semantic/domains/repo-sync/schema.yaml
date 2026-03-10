@@ -1,0 +1,189 @@
+# Repo Sync Domain Model
+# Bidirectional sync between monorepo and public repositories
+
+domain:
+  name: repo-sync
+  version: "1.0.0"
+  description: Bidirectional sync between private monorepo and public standalone git repositories
+  dependencies: [core, workflow]
+  created_at: "2025-12-02"
+  updated_at: "2025-12-02"
+
+entities:
+
+  SyncConfig:
+    description: Root configuration for repo-sync (.repo-sync.yml)
+    properties:
+      id: { type: string, required: true }
+      packages: { type: array, items: Package, required: true }
+      settings: { type: Settings }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Package:
+    description: A package configured for sync between monorepo and public repo
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      monorepoPath: { type: string, required: true, description: "Relative path in monorepo" }
+      publicRepo: { type: string, required: true, description: "Git URL of public repo" }
+      branch: { type: string, default: "main" }
+      strategy: { type: SyncStrategy, required: true }
+      include: { type: array, items: string, description: "Glob patterns to include" }
+      exclude: { type: array, items: string, description: "Glob patterns to exclude" }
+      lastSyncedAt: { type: datetime }
+      lastSyncCommit: { type: string, description: "Last synced commit SHA" }
+
+  Settings:
+    description: Global settings for repo-sync
+    properties:
+      dryRunByDefault: { type: boolean, default: true }
+      preserveCommitAuthors: { type: boolean, default: true }
+      autoTagOnPublish: { type: boolean, default: true }
+      tagPrefix: { type: string, default: "v" }
+
+  SyncOperation:
+    description: A single sync operation (publish or pull)
+    properties:
+      id: { type: string, required: true }
+      packageId: { type: string, required: true }
+      direction: { type: SyncDirection, required: true }
+      status: { type: OperationStatus, required: true }
+      isDryRun: { type: boolean, required: true }
+      commits: { type: array, items: CommitInfo }
+      filesChanged: { type: integer }
+      filesAdded: { type: integer }
+      filesDeleted: { type: integer }
+      conflictDetected: { type: boolean, default: false }
+      errorMessage: { type: string }
+      startedAt: { type: datetime, required: true }
+      completedAt: { type: datetime }
+
+  CommitInfo:
+    description: Information about a commit in sync
+    properties:
+      sha: { type: string, required: true }
+      message: { type: string, required: true }
+      author: { type: string, required: true }
+      authorEmail: { type: string }
+      timestamp: { type: datetime, required: true }
+
+  PackageSyncStatus:
+    description: Current sync status between monorepo and public repo
+    properties:
+      packageId: { type: string, required: true }
+      state: { type: SyncState, required: true }
+      monorepoAhead: { type: integer, default: 0 }
+      publicAhead: { type: integer, default: 0 }
+      lastCheckedAt: { type: datetime }
+      monorepoLatestCommit: { type: string }
+      publicLatestCommit: { type: string }
+
+  Conflict:
+    description: Detected conflict between monorepo and public repo
+    properties:
+      id: { type: string, required: true }
+      packageId: { type: string, required: true }
+      conflictType: { type: ConflictType, required: true }
+      filePath: { type: string }
+      monorepoChange: { type: string, description: "Description of monorepo change" }
+      publicChange: { type: string, description: "Description of public change" }
+      resolution: { type: ConflictResolution }
+      resolvedAt: { type: datetime }
+
+enums:
+
+  SyncStrategy:
+    description: Strategy for syncing package
+    values:
+      - CopySync      # Copy files with history filtering (cleanest)
+      - Subtree       # Git subtree (native git, bidirectional)
+
+  SyncDirection:
+    description: Direction of sync operation
+    values:
+      - Publish       # Monorepo → Public
+      - Pull          # Public → Monorepo
+      - Bidirectional # Smart merge both directions
+
+  OperationStatus:
+    description: Status of a sync operation
+    values:
+      - Pending       # Not started
+      - InProgress    # Currently running
+      - Completed     # Finished successfully
+      - Failed        # Failed with error
+      - Cancelled     # Cancelled by user
+      - Conflict      # Stopped due to conflict
+
+  SyncState:
+    description: Current state of package sync
+    values:
+      - InSync        # Both repos at same state
+      - Ahead         # Monorepo has unpublished changes
+      - Behind        # Public repo has changes to pull
+      - Diverged      # Both have changes (potential conflict)
+      - Unknown       # Unable to determine (remote unreachable)
+
+  ConflictType:
+    description: Type of sync conflict
+    values:
+      - BothModified  # Same file modified in both
+      - DeletedHere   # Deleted in monorepo, modified in public
+      - DeletedThere  # Deleted in public, modified in monorepo
+      - AddedBoth     # Same path added in both with different content
+
+  ConflictResolution:
+    description: How conflict was resolved
+    values:
+      - KeepMonorepo  # Use monorepo version
+      - KeepPublic    # Use public version
+      - Merged        # Manual merge
+      - Skipped       # Conflict skipped for now
+
+actions:
+
+  InitConfig:
+    description: Initialize .repo-sync.yml configuration
+    parameters:
+      monorepoRoot: { type: string, required: true }
+      packages: { type: array, items: Package }
+    result: SyncConfig
+
+  AddPackage:
+    description: Add a package to sync configuration
+    parameters:
+      name: { type: string, required: true }
+      monorepoPath: { type: string, required: true }
+      publicRepo: { type: string, required: true }
+      strategy: { type: SyncStrategy, default: CopySync }
+    result: Package
+
+  CheckStatus:
+    description: Check sync status for all or specific packages
+    parameters:
+      packageId: { type: string, description: "Optional, check specific package" }
+    result: { type: array, items: PackageSyncStatus }
+
+  Publish:
+    description: Publish package from monorepo to public repo
+    parameters:
+      packageId: { type: string, required: true }
+      dryRun: { type: boolean, default: true }
+      createTag: { type: boolean, default: false }
+      tagVersion: { type: string }
+    result: SyncOperation
+
+  Pull:
+    description: Pull changes from public repo to monorepo
+    parameters:
+      packageId: { type: string, required: true }
+      dryRun: { type: boolean, default: true }
+    result: SyncOperation
+
+  ResolveConflict:
+    description: Resolve a detected conflict
+    parameters:
+      conflictId: { type: string, required: true }
+      resolution: { type: ConflictResolution, required: true }
+    result: Conflict

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}} - One-Page Pitch</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Dark Theme - shadcn/ui default */
+    :root {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      --secondary: 240 3.7% 15.9%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+      --radius: 0.5rem;
+    }
+    * { border-color: hsl(var(--border)); }
+    body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      border-radius: calc(var(--radius) - 2px); font-size: 0.875rem; font-weight: 500;
+      padding: 0.5rem 1rem; height: 2.5rem; transition: all 0.2s;
+    }
+    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-outline { border: 1px solid hsl(var(--input)); background: transparent; color: hsl(var(--foreground)); }
+    .btn-outline:hover { background: hsl(var(--accent)); }
+    .card { border-radius: var(--radius); border: 1px solid hsl(var(--border)); background: hsl(var(--card)); }
+    .badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.125rem 0.75rem; font-size: 0.75rem; font-weight: 500; background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+    code { background: hsl(var(--secondary)); padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875rem; }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+    <div class="container mx-auto flex h-16 items-center justify-between px-4">
+      <div class="flex items-center gap-4">
+        <span class="text-xl font-bold">{{TITLE}}</span>
+        <span class="badge">Pitch</span>
+      </div>
+      <span class="text-sm text-muted-foreground">{{AUTHOR}}</span>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="container mx-auto px-4 py-16 lg:py-24">
+    <div class="mx-auto max-w-3xl text-center">
+      <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl">
+        {{HEADLINE_PREFIX}}
+        <span class="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{{HEADLINE_HIGHLIGHT}}</span>
+      </h1>
+      <p class="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
+        {{SUBHEADLINE}}
+      </p>
+    </div>
+  </section>
+
+  <!-- Problem Section (Optional - delete if not needed) -->
+  <!--
+  <section class="bg-secondary/30 py-16">
+    <div class="container mx-auto px-4">
+      <div class="mx-auto max-w-3xl">
+        <h2 class="text-2xl font-bold text-center mb-8">The Problem</h2>
+        <p class="text-muted-foreground text-center">{{PROBLEM_STATEMENT}}</p>
+      </div>
+    </div>
+  </section>
+  -->
+
+  <!-- Key Visual / Formula (Optional - customize or delete) -->
+  <!--
+  <section class="container mx-auto px-4 pb-16">
+    <div class="mx-auto max-w-4xl">
+      <div class="bg-secondary border border-border rounded-lg p-6 text-center">
+        <div class="flex flex-wrap items-center justify-center gap-4 text-lg">
+          <div class="card p-4 min-w-[140px]">
+            <div class="text-xs text-muted-foreground mb-1">INPUT 1</div>
+            <div class="font-bold">Value</div>
+          </div>
+          <span class="text-2xl text-muted-foreground">+</span>
+          <div class="card p-4 min-w-[140px]">
+            <div class="text-xs text-muted-foreground mb-1">INPUT 2</div>
+            <div class="font-bold">Value</div>
+          </div>
+          <span class="text-2xl text-muted-foreground">=</span>
+          <div class="card p-4 border-primary border-2 min-w-[180px]">
+            <div class="text-xs text-muted-foreground mb-1">OUTPUT</div>
+            <div class="font-bold text-primary">Result</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  -->
+
+  <!-- Comparison Table -->
+  <section class="container mx-auto px-4 py-16">
+    <div class="mx-auto max-w-3xl">
+      <h2 class="text-2xl font-bold text-center mb-8">{{COMPARISON_TITLE}}</h2>
+      <div class="card overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b bg-secondary/50">
+              <th class="text-left p-4 font-semibold">{{COL1_HEADER}}</th>
+              <th class="text-left p-4 font-semibold">{{COL2_HEADER}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b">
+              <td class="p-4 text-muted-foreground">{{ROW1_COL1}}</td>
+              <td class="p-4">{{ROW1_COL2}}</td>
+            </tr>
+            <tr class="border-b">
+              <td class="p-4 text-muted-foreground">{{ROW2_COL1}}</td>
+              <td class="p-4">{{ROW2_COL2}}</td>
+            </tr>
+            <tr class="border-b">
+              <td class="p-4 text-muted-foreground">{{ROW3_COL1}}</td>
+              <td class="p-4 font-semibold">{{ROW3_COL2}}</td>
+            </tr>
+            <tr>
+              <td class="p-4 text-muted-foreground">{{ROW4_COL1}}</td>
+              <td class="p-4 font-semibold">{{ROW4_COL2}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Grid -->
+  <section class="bg-secondary/30 py-16">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl font-bold text-center mb-8">{{STATS_TITLE}}</h2>
+      <div class="grid gap-6 md:grid-cols-4 max-w-4xl mx-auto">
+        <div class="card p-6 text-center">
+          <div class="text-3xl font-bold">{{STAT1_VALUE}}</div>
+          <div class="text-sm text-muted-foreground mt-1">{{STAT1_LABEL}}</div>
+        </div>
+        <div class="card p-6 text-center">
+          <div class="text-3xl font-bold">{{STAT2_VALUE}}</div>
+          <div class="text-sm text-muted-foreground mt-1">{{STAT2_LABEL}}</div>
+        </div>
+        <div class="card p-6 text-center">
+          <div class="text-3xl font-bold">{{STAT3_VALUE}}</div>
+          <div class="text-sm text-muted-foreground mt-1">{{STAT3_LABEL}}</div>
+        </div>
+        <div class="card p-6 text-center">
+          <div class="text-3xl font-bold">{{STAT4_VALUE}}</div>
+          <div class="text-sm text-muted-foreground mt-1">{{STAT4_LABEL}}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature/Example Table (Optional) -->
+  <!--
+  <section class="container mx-auto px-4 py-16">
+    <div class="mx-auto max-w-4xl">
+      <h2 class="text-2xl font-bold text-center mb-8">{{FEATURES_TITLE}}</h2>
+      <div class="card overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b bg-secondary/50">
+              <th class="text-left p-4 font-semibold">Feature</th>
+              <th class="text-left p-4 font-semibold">Description</th>
+              <th class="text-left p-4 font-semibold">Benefit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b">
+              <td class="p-4">Feature 1</td>
+              <td class="p-4">Description</td>
+              <td class="p-4 text-muted-foreground">Benefit</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+  -->
+
+  <!-- CTA / Tagline -->
+  <section class="container mx-auto px-4 py-16">
+    <div class="card p-12 text-center bg-gradient-to-r from-secondary to-secondary/50 border-0 max-w-3xl mx-auto">
+      <p class="text-2xl md:text-3xl font-bold italic">
+        "{{TAGLINE}}"
+      </p>
+      <div class="mt-8">
+        <span class="badge">{{STATUS_BADGE}}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t py-8">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+        <div>
+          <span class="font-semibold text-foreground">{{AUTHOR}}</span> · {{TITLE}}
+        </div>
+        <div class="flex gap-4">
+          <span>Generated: {{DATE}}</span>
+          <span>·</span>
+          <span>Commit: <code>{{COMMIT_HASH}}</code></span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

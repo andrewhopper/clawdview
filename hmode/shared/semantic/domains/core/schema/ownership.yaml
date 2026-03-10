@@ -1,0 +1,347 @@
+# Ownership & Transfer Documents
+# Records proving and transferring ownership of assets
+# Used by: real estate, vehicles, boats, aircraft, IP, securities
+
+entities:
+
+  OwnershipRecord:
+    description: Record of who owns an asset (title, deed, certificate)
+    properties:
+      id:
+        type: uuid
+        required: true
+      assetIdentifier:
+        type: Identifier
+        required: true
+        description: The asset being owned (VIN, parcel number, patent, etc.)
+      assetDescription:
+        type: string
+        description: Human-readable description of the asset
+      owner:
+        type: string
+        required: true
+        description: FK to owner (Person, Organization, Trust, etc.)
+      ownerType:
+        type: OwnerType
+        required: true
+      ownershipType:
+        type: OwnershipType
+        required: true
+      ownershipPercentage:
+        type: decimal
+        description: For partial ownership (0.0-1.0)
+      documentType:
+        type: OwnershipDocumentType
+        required: true
+      documentNumber:
+        type: string
+        description: Title number, deed recording number, certificate number
+      issuedBy:
+        type: string
+        description: Issuing authority (DMV, County Recorder, USPTO, etc.)
+      issuedAt:
+        type: datetime
+      effectiveDate:
+        type: date
+        required: true
+        description: When ownership became effective
+      expirationDate:
+        type: date
+        description: For registrations that expire
+      encumbrances:
+        type: array
+        items: Encumbrance
+        description: Liens, mortgages, easements against the asset
+      status:
+        type: OwnershipStatus
+        required: true
+      previousOwnerId:
+        type: string
+        description: FK to previous owner for chain of title
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  Encumbrance:
+    description: Claim or liability against an asset (lien, mortgage, easement)
+    properties:
+      id:
+        type: uuid
+        required: true
+      type:
+        type: EncumbranceType
+        required: true
+      holder:
+        type: string
+        required: true
+        description: Who holds the encumbrance (bank, IRS, utility company)
+      amount:
+        type: Money
+        description: For monetary liens
+      priority:
+        type: integer
+        description: Lien priority (1 = first position)
+      recordedAt:
+        type: datetime
+      recordingReference:
+        type: string
+        description: Recording number, instrument number
+      description:
+        type: string
+      status:
+        type: EncumbranceStatus
+        required: true
+      releasedAt:
+        type: datetime
+      releaseReference:
+        type: string
+        description: Satisfaction/release document reference
+
+  TransferRecord:
+    description: Record of ownership transfer (bill of sale, deed, assignment)
+    properties:
+      id:
+        type: uuid
+        required: true
+      assetIdentifier:
+        type: Identifier
+        required: true
+      documentType:
+        type: TransferDocumentType
+        required: true
+      documentNumber:
+        type: string
+      # Parties
+      grantor:
+        type: string
+        required: true
+        description: Seller/transferor
+      grantorType:
+        type: OwnerType
+        required: true
+      grantee:
+        type: string
+        required: true
+        description: Buyer/transferee
+      granteeType:
+        type: OwnerType
+        required: true
+      # Transaction details
+      consideration:
+        type: Money
+        description: Price paid (may be $0 for gift, $1 for nominal)
+      transferType:
+        type: TransferType
+        required: true
+      executedAt:
+        type: datetime
+        required: true
+      effectiveDate:
+        type: date
+        required: true
+      # Recording
+      recordedAt:
+        type: datetime
+      recordingJurisdiction:
+        type: string
+        description: County, state, or federal office
+      recordingReference:
+        type: string
+        description: Book/page, instrument number, etc.
+      # Witnesses/Notarization
+      witnesses:
+        type: array
+        items: string
+        description: Names of witnesses
+      notarized:
+        type: boolean
+        default: false
+      notaryName:
+        type: string
+      notaryCommissionExpiration:
+        type: date
+      # Warranties
+      warranties:
+        type: array
+        items: WarrantyType
+        description: Warranties made by grantor
+      # Linked records
+      previousOwnershipRecordId:
+        type: uuid
+        description: FK to outgoing OwnershipRecord
+      newOwnershipRecordId:
+        type: uuid
+        description: FK to incoming OwnershipRecord
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  Lien:
+    description: Specific monetary claim against an asset
+    extends: Encumbrance
+    properties:
+      lienType:
+        type: LienType
+        required: true
+      originalAmount:
+        type: Money
+        required: true
+      currentBalance:
+        type: Money
+      interestRate:
+        type: decimal
+      maturityDate:
+        type: date
+      paymentSchedule:
+        type: string
+        description: FK to payment schedule if applicable
+      defaulted:
+        type: boolean
+        default: false
+      foreclosureInitiated:
+        type: boolean
+        default: false
+
+enums:
+
+  OwnerType:
+    values:
+      - individual         # Natural person
+      - joint_tenants      # Multiple individuals, right of survivorship
+      - tenants_in_common  # Multiple individuals, no survivorship
+      - corporation        # C-corp, S-corp
+      - llc                # Limited liability company
+      - partnership        # General or limited partnership
+      - trust              # Living trust, irrevocable trust
+      - estate             # Decedent's estate
+      - government         # Federal, state, local government
+      - nonprofit          # 501(c)(3) or similar
+
+  OwnershipType:
+    values:
+      - fee_simple         # Full ownership (real property)
+      - leasehold          # Ownership of lease rights
+      - life_estate        # Ownership for lifetime
+      - easement           # Right to use another's property
+      - registered         # Registered owner (vehicles, securities)
+      - beneficial         # Beneficial owner (trusts)
+      - legal              # Legal owner (may differ from beneficial)
+
+  OwnershipDocumentType:
+    values:
+      # Real property
+      - warranty_deed      # Deed with title warranties
+      - quitclaim_deed     # Deed without warranties
+      - grant_deed         # Deed with limited warranties
+      - trust_deed         # Deed to trustee (for mortgages)
+      - tax_deed           # Deed from tax sale
+      # Vehicles/Boats/Aircraft
+      - certificate_of_title    # Vehicle/boat title
+      - certificate_of_origin   # Manufacturer's certificate (new)
+      - registration            # Aircraft registration
+      # Intellectual Property
+      - patent_certificate
+      - trademark_certificate
+      - copyright_certificate
+      # Securities
+      - stock_certificate
+      - bond_certificate
+      # General
+      - bill_of_sale       # Also acts as ownership proof in some cases
+      - certificate_of_ownership
+
+  TransferDocumentType:
+    values:
+      # Real property
+      - warranty_deed
+      - quitclaim_deed
+      - grant_deed
+      - special_warranty_deed
+      - bargain_and_sale_deed
+      # Personal property
+      - bill_of_sale
+      - assignment         # For IP, contracts
+      - gift_deed          # Transfer without consideration
+      # Vehicles
+      - title_assignment   # Back of title document
+      - dealer_reassignment
+      # Securities
+      - stock_transfer
+      - bond_transfer
+
+  TransferType:
+    values:
+      - sale               # Arm's length sale
+      - gift               # No consideration
+      - inheritance        # Transfer from estate
+      - foreclosure        # Forced sale
+      - tax_sale           # Government tax lien sale
+      - condemnation       # Government taking (eminent domain)
+      - court_order        # Divorce, judgment
+      - exchange           # 1031 exchange, trade
+      - contribution       # Transfer to entity (LLC, trust)
+      - distribution       # Transfer from entity
+
+  EncumbranceType:
+    values:
+      - mortgage           # Real property loan
+      - deed_of_trust      # Similar to mortgage (trustee holds title)
+      - lien               # General monetary claim
+      - easement           # Right to use property
+      - covenant           # Restriction on use
+      - judgment           # Court judgment
+      - lis_pendens        # Pending litigation
+      - mechanic_lien      # Contractor/supplier claim
+      - tax_lien           # Government tax claim
+      - hoa_lien           # Homeowner association claim
+      - ucc_filing         # Personal property security interest
+
+  EncumbranceStatus:
+    values:
+      - active
+      - satisfied          # Paid off
+      - released           # Formally released
+      - expired            # Time-limited encumbrance expired
+      - subordinated       # Priority reduced
+      - foreclosed         # Encumbrance holder took possession
+
+  LienType:
+    values:
+      - mortgage
+      - home_equity        # HELOC, second mortgage
+      - auto_loan
+      - boat_loan
+      - equipment_loan
+      - judgment
+      - tax_federal
+      - tax_state
+      - tax_property
+      - mechanic
+      - hoa
+      - child_support
+      - student_loan
+
+  OwnershipStatus:
+    values:
+      - active             # Current valid ownership
+      - transferred        # Ownership transferred to another
+      - expired            # Registration expired
+      - suspended          # Temporarily invalid
+      - revoked            # Permanently invalidated
+
+  WarrantyType:
+    description: Warranties/guarantees made in transfer documents
+    values:
+      - covenant_of_seisin       # Grantor owns the property
+      - covenant_of_right        # Grantor has right to convey
+      - covenant_against_encumbrances  # No undisclosed encumbrances
+      - covenant_of_quiet_enjoyment    # Grantee won't be disturbed
+      - covenant_of_warranty     # Grantor will defend title
+      - covenant_of_further_assurance  # Grantor will execute additional docs
+      - as_is                    # No warranties (quitclaim)

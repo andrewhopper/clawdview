@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lo-Fi Landing Page Example | SaaS Product</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            lofi: {
+              white: '#FFFFFF',
+              100: '#F5F5F5',
+              200: '#E5E5E5',
+              300: '#D4D4D4',
+              400: '#A3A3A3',
+              500: '#737373',
+              700: '#404040',
+              900: '#171717',
+              black: '#000000',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #FFFFFF; color: #171717; }
+
+    /* Buttons */
+    .lofi-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 0.375rem;
+      background: linear-gradient(180deg, #404040 0%, #171717 100%);
+      color: #FFFFFF;
+      border: 1px solid #000000;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .lofi-btn:hover { background: linear-gradient(180deg, #171717 0%, #000000 100%); }
+    .lofi-btn-outline {
+      background: #FFFFFF;
+      color: #171717;
+      border: 1px solid #171717;
+    }
+    .lofi-btn-outline:hover { background: #F5F5F5; }
+    .lofi-btn-ghost {
+      background: transparent;
+      color: #404040;
+      border: 1px solid transparent;
+    }
+    .lofi-btn-ghost:hover { background: #F5F5F5; }
+    .lofi-btn-lg { padding: 0.875rem 1.75rem; font-size: 1rem; }
+    .lofi-btn-sm { padding: 0.375rem 0.875rem; font-size: 0.75rem; }
+
+    /* Cards */
+    .lofi-card {
+      background: #FFFFFF;
+      border: 1px solid #E5E5E5;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Image Placeholders */
+    .lofi-img {
+      background: linear-gradient(180deg, #F5F5F5 0%, #E5E5E5 100%);
+      border: 1px solid #D4D4D4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #737373;
+      font-size: 0.75rem;
+      font-weight: 500;
+      position: relative;
+      overflow: hidden;
+    }
+    .lofi-img::before, .lofi-img::after {
+      content: '';
+      position: absolute;
+      background: #D4D4D4;
+      width: 141%;
+      height: 1px;
+    }
+    .lofi-img::before { transform: rotate(45deg); }
+    .lofi-img::after { transform: rotate(-45deg); }
+    .lofi-img-circle { border-radius: 9999px; }
+
+    /* Navigation */
+    .lofi-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #E5E5E5;
+      background: #FFFFFF;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    /* Inputs */
+    .lofi-input {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      font-size: 0.875rem;
+      background: #FFFFFF;
+      border: 1px solid #D4D4D4;
+      border-radius: 0.375rem;
+    }
+    .lofi-input::placeholder { color: #A3A3A3; }
+    .lofi-input:focus { outline: none; border-color: #171717; }
+
+    /* Badge */
+    .lofi-badge {
+      display: inline-flex;
+      padding: 0.25rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 9999px;
+      background: #F5F5F5;
+      color: #404040;
+      border: 1px solid #E5E5E5;
+    }
+
+    /* Sections */
+    .lofi-section { padding: 5rem 0; }
+    .lofi-section-alt { background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%); }
+
+    /* Shadow */
+    .lofi-shadow { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+    .lofi-shadow-lg { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); }
+
+    /* Text */
+    .lofi-text-muted { color: #737373; }
+  </style>
+</head>
+<body>
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="lofi-nav">
+    <div class="flex items-center gap-8">
+      <div class="font-bold text-xl">[Logo]</div>
+      <div class="hidden md:flex gap-6">
+        <a href="#features" class="text-sm text-gray-500 hover:text-black">Features</a>
+        <a href="#how-it-works" class="text-sm text-gray-500 hover:text-black">How It Works</a>
+        <a href="#pricing" class="text-sm text-gray-500 hover:text-black">Pricing</a>
+        <a href="#testimonials" class="text-sm text-gray-500 hover:text-black">Testimonials</a>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="lofi-btn-ghost lofi-btn-sm">Sign In</button>
+      <button class="lofi-btn lofi-btn-sm">Start Free Trial</button>
+    </div>
+  </nav>
+
+  <!-- ==================== HERO ==================== -->
+  <section class="lofi-section">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <span class="lofi-badge mb-4 inline-block">New Feature Released</span>
+          <h1 class="text-5xl font-bold leading-tight mb-6">
+            Ship products faster with AI assistance
+          </h1>
+          <p class="text-xl lofi-text-muted mb-8 leading-relaxed">
+            Accelerate your development workflow. Write better code, catch bugs early, and deploy with confidence.
+          </p>
+          <div class="flex flex-wrap gap-4 mb-8">
+            <button class="lofi-btn lofi-btn-lg">Get Started Free</button>
+            <button class="lofi-btn lofi-btn-outline lofi-btn-lg">Watch Demo</button>
+          </div>
+          <p class="text-sm lofi-text-muted">No credit card required. 14-day free trial.</p>
+        </div>
+        <div class="lofi-img aspect-square rounded-xl lofi-shadow-lg">
+          Product Screenshot
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== LOGOS ==================== -->
+  <section class="py-12 border-y border-gray-200">
+    <div class="max-w-6xl mx-auto px-6">
+      <p class="text-center text-sm lofi-text-muted mb-8">Trusted by teams at</p>
+      <div class="flex flex-wrap justify-center items-center gap-12">
+        <div class="lofi-img w-28 h-10 rounded">[Logo 1]</div>
+        <div class="lofi-img w-28 h-10 rounded">[Logo 2]</div>
+        <div class="lofi-img w-28 h-10 rounded">[Logo 3]</div>
+        <div class="lofi-img w-28 h-10 rounded">[Logo 4]</div>
+        <div class="lofi-img w-28 h-10 rounded">[Logo 5]</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FEATURES ==================== -->
+  <section id="features" class="lofi-section">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="lofi-badge mb-4 inline-block">Features</span>
+        <h2 class="text-3xl font-bold mb-4">Everything you need to build faster</h2>
+        <p class="text-lg lofi-text-muted max-w-2xl mx-auto">
+          Powerful tools designed to streamline your workflow and boost productivity.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="lofi-card p-6">
+          <div class="lofi-img w-12 h-12 rounded-lg mb-4">[Icon]</div>
+          <h3 class="font-semibold text-lg mb-2">Smart Autocomplete</h3>
+          <p class="lofi-text-muted text-sm">
+            AI-powered code suggestions that understand your codebase and coding patterns.
+          </p>
+        </div>
+
+        <div class="lofi-card p-6">
+          <div class="lofi-img w-12 h-12 rounded-lg mb-4">[Icon]</div>
+          <h3 class="font-semibold text-lg mb-2">Code Review</h3>
+          <p class="lofi-text-muted text-sm">
+            Automated code review that catches bugs and suggests improvements instantly.
+          </p>
+        </div>
+
+        <div class="lofi-card p-6">
+          <div class="lofi-img w-12 h-12 rounded-lg mb-4">[Icon]</div>
+          <h3 class="font-semibold text-lg mb-2">Documentation</h3>
+          <p class="lofi-text-muted text-sm">
+            Generate clear documentation from your code with a single command.
+          </p>
+        </div>
+
+        <div class="lofi-card p-6">
+          <div class="lofi-img w-12 h-12 rounded-lg mb-4">[Icon]</div>
+          <h3 class="font-semibold text-lg mb-2">Test Generation</h3>
+          <p class="lofi-text-muted text-sm">
+            Automatically generate comprehensive test suites for your functions.
+          </p>
+        </div>
+
+        <div class="lofi-card p-6">
+          <div class="lofi-img w-12 h-12 rounded-lg mb-4">[Icon]</div>
+          <h3 class="font-semibold text-lg mb-2">Refactoring</h3>
+          <p class="lofi-text-muted text-sm">
+            Intelligent refactoring suggestions to keep your codebase clean.
+          </p>
+        </div>
+
+        <div class="lofi-card p-6">
+          <div class="lofi-img w-12 h-12 rounded-lg mb-4">[Icon]</div>
+          <h3 class="font-semibold text-lg mb-2">Team Collaboration</h3>
+          <p class="lofi-text-muted text-sm">
+            Share knowledge and coding standards across your entire team.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== HOW IT WORKS ==================== -->
+  <section id="how-it-works" class="lofi-section lofi-section-alt">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="lofi-badge mb-4 inline-block">How It Works</span>
+        <h2 class="text-3xl font-bold mb-4">Get started in minutes</h2>
+        <p class="text-lg lofi-text-muted max-w-2xl mx-auto">
+          Three simple steps to supercharge your development workflow.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center text-xl font-bold mx-auto mb-4">1</div>
+          <h3 class="font-semibold text-lg mb-2">Install Extension</h3>
+          <p class="lofi-text-muted text-sm">
+            One-click install for VS Code, JetBrains, or your favorite editor.
+          </p>
+          <div class="lofi-img aspect-video rounded-lg mt-6 lofi-shadow">[Screenshot]</div>
+        </div>
+
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center text-xl font-bold mx-auto mb-4">2</div>
+          <h3 class="font-semibold text-lg mb-2">Connect Repo</h3>
+          <p class="lofi-text-muted text-sm">
+            Link your GitHub, GitLab, or Bitbucket repositories securely.
+          </p>
+          <div class="lofi-img aspect-video rounded-lg mt-6 lofi-shadow">[Screenshot]</div>
+        </div>
+
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center text-xl font-bold mx-auto mb-4">3</div>
+          <h3 class="font-semibold text-lg mb-2">Start Coding</h3>
+          <p class="lofi-text-muted text-sm">
+            Get instant suggestions as you type. Ship code faster.
+          </p>
+          <div class="lofi-img aspect-video rounded-lg mt-6 lofi-shadow">[Screenshot]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TESTIMONIALS ==================== -->
+  <section id="testimonials" class="lofi-section">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="lofi-badge mb-4 inline-block">Testimonials</span>
+        <h2 class="text-3xl font-bold mb-4">Loved by developers</h2>
+        <p class="text-lg lofi-text-muted max-w-2xl mx-auto">
+          See what teams are saying about their experience.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="lofi-card p-6">
+          <div class="flex gap-1 mb-4">
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+          </div>
+          <p class="mb-6 text-sm">
+            "This tool has completely transformed how our team writes code. We ship 40% faster now."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="lofi-img w-10 h-10 lofi-img-circle">[Avatar]</div>
+            <div>
+              <p class="font-medium text-sm">Sarah Chen</p>
+              <p class="text-xs lofi-text-muted">Engineering Lead, TechCorp</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="lofi-card p-6">
+          <div class="flex gap-1 mb-4">
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+          </div>
+          <p class="mb-6 text-sm">
+            "The code review feature alone is worth the price. Catches bugs I would have missed."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="lofi-img w-10 h-10 lofi-img-circle">[Avatar]</div>
+            <div>
+              <p class="font-medium text-sm">Marcus Johnson</p>
+              <p class="text-xs lofi-text-muted">Senior Developer, StartupXYZ</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="lofi-card p-6">
+          <div class="flex gap-1 mb-4">
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+            <span class="text-black">&#9733;</span>
+          </div>
+          <p class="mb-6 text-sm">
+            "Finally, an AI tool that actually understands context. The suggestions are spot-on."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="lofi-img w-10 h-10 lofi-img-circle">[Avatar]</div>
+            <div>
+              <p class="font-medium text-sm">Emily Rodriguez</p>
+              <p class="text-xs lofi-text-muted">CTO, DevAgency</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PRICING ==================== -->
+  <section id="pricing" class="lofi-section lofi-section-alt">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="lofi-badge mb-4 inline-block">Pricing</span>
+        <h2 class="text-3xl font-bold mb-4">Simple, transparent pricing</h2>
+        <p class="text-lg lofi-text-muted max-w-2xl mx-auto">
+          Start free. Upgrade when you need more power.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <!-- Free -->
+        <div class="lofi-card p-8">
+          <h3 class="font-semibold text-lg mb-2">Free</h3>
+          <p class="lofi-text-muted text-sm mb-4">For individual developers</p>
+          <div class="mb-6">
+            <span class="text-4xl font-bold">$0</span>
+            <span class="lofi-text-muted">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8 text-sm">
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 border border-black rounded flex items-center justify-center text-xs">&#10003;</span>
+              Basic autocomplete
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 border border-black rounded flex items-center justify-center text-xs">&#10003;</span>
+              100 suggestions/day
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 border border-black rounded flex items-center justify-center text-xs">&#10003;</span>
+              Community support
+            </li>
+          </ul>
+          <button class="lofi-btn lofi-btn-outline w-full">Get Started</button>
+        </div>
+
+        <!-- Pro -->
+        <div class="lofi-card p-8 border-2 border-black lofi-shadow-lg relative">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+            <span class="lofi-badge bg-black text-white border-black">Most Popular</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Pro</h3>
+          <p class="lofi-text-muted text-sm mb-4">For professional developers</p>
+          <div class="mb-6">
+            <span class="text-4xl font-bold">$19</span>
+            <span class="lofi-text-muted">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8 text-sm">
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 bg-black text-white rounded flex items-center justify-center text-xs">&#10003;</span>
+              Advanced autocomplete
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 bg-black text-white rounded flex items-center justify-center text-xs">&#10003;</span>
+              Unlimited suggestions
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 bg-black text-white rounded flex items-center justify-center text-xs">&#10003;</span>
+              Code review
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 bg-black text-white rounded flex items-center justify-center text-xs">&#10003;</span>
+              Priority support
+            </li>
+          </ul>
+          <button class="lofi-btn w-full">Start Free Trial</button>
+        </div>
+
+        <!-- Team -->
+        <div class="lofi-card p-8">
+          <h3 class="font-semibold text-lg mb-2">Team</h3>
+          <p class="lofi-text-muted text-sm mb-4">For growing teams</p>
+          <div class="mb-6">
+            <span class="text-4xl font-bold">$49</span>
+            <span class="lofi-text-muted">/user/month</span>
+          </div>
+          <ul class="space-y-3 mb-8 text-sm">
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 border border-black rounded flex items-center justify-center text-xs">&#10003;</span>
+              Everything in Pro
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 border border-black rounded flex items-center justify-center text-xs">&#10003;</span>
+              Team management
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 border border-black rounded flex items-center justify-center text-xs">&#10003;</span>
+              Custom models
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-4 h-4 border border-black rounded flex items-center justify-center text-xs">&#10003;</span>
+              SSO & audit logs
+            </li>
+          </ul>
+          <button class="lofi-btn lofi-btn-outline w-full">Contact Sales</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CTA ==================== -->
+  <section class="lofi-section">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <h2 class="text-3xl font-bold mb-4">Ready to ship faster?</h2>
+      <p class="text-lg lofi-text-muted mb-8">
+        Join thousands of developers who are already building better software.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+        <input class="lofi-input flex-1" placeholder="Enter your email">
+        <button class="lofi-btn lofi-btn-lg">Get Started</button>
+      </div>
+      <p class="text-xs lofi-text-muted mt-4">Free 14-day trial. No credit card required.</p>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="py-12 border-t border-gray-200 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="font-bold text-xl mb-4">[Logo]</div>
+          <p class="text-sm lofi-text-muted">
+            AI-powered development tools for modern teams.
+          </p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4 text-sm">Product</h4>
+          <ul class="space-y-2 text-sm lofi-text-muted">
+            <li><a href="#" class="hover:text-black">Features</a></li>
+            <li><a href="#" class="hover:text-black">Pricing</a></li>
+            <li><a href="#" class="hover:text-black">Changelog</a></li>
+            <li><a href="#" class="hover:text-black">Integrations</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4 text-sm">Company</h4>
+          <ul class="space-y-2 text-sm lofi-text-muted">
+            <li><a href="#" class="hover:text-black">About</a></li>
+            <li><a href="#" class="hover:text-black">Blog</a></li>
+            <li><a href="#" class="hover:text-black">Careers</a></li>
+            <li><a href="#" class="hover:text-black">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4 text-sm">Legal</h4>
+          <ul class="space-y-2 text-sm lofi-text-muted">
+            <li><a href="#" class="hover:text-black">Privacy</a></li>
+            <li><a href="#" class="hover:text-black">Terms</a></li>
+            <li><a href="#" class="hover:text-black">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p class="text-sm lofi-text-muted">&copy; 2024 Company Name. All rights reserved.</p>
+        <div class="flex gap-4">
+          <div class="lofi-img w-8 h-8 rounded">[X]</div>
+          <div class="lofi-img w-8 h-8 rounded">[GH]</div>
+          <div class="lofi-img w-8 h-8 rounded">[LI]</div>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

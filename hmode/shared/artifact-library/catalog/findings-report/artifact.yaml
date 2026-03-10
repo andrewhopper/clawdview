@@ -1,0 +1,274 @@
+# Findings Report Artifact Definition
+# Category: report
+# Complexity: moderate
+
+id: findings-report
+name: Findings Report
+version: "1.0.0"
+description: Structured report documenting research findings, analysis results, or investigation outcomes
+category: report
+complexity: moderate
+created_at: "2025-11-22"
+updated_at: "2025-11-22"
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: title
+      name: Title
+      description: Clear, descriptive title indicating subject and scope
+      required: true
+      format: prose
+      word_limit: 15
+
+    - id: metadata
+      name: Metadata
+      description: Date, author, version, status
+      required: true
+      format: table
+      fields:
+        - date
+        - author
+        - version
+        - status
+        - classification
+
+    - id: executive-summary
+      name: Executive Summary
+      description: Key findings and recommendations in 3-5 sentences
+      required: true
+      format: prose
+      word_limit: 150
+
+    - id: background
+      name: Background & Context
+      description: Why this investigation was conducted
+      required: true
+      format: prose
+      word_limit: 200
+
+    - id: methodology
+      name: Methodology
+      description: How the investigation was conducted
+      required: true
+      format: bullets
+      bullet_count: 3-7
+      topics:
+        - data sources
+        - analysis approach
+        - tools used
+        - timeframe
+        - scope/limitations
+
+    - id: findings
+      name: Key Findings
+      description: Numbered list of findings with supporting evidence
+      required: true
+      format: numbered
+      item_count: 3-10
+      subformat:
+        - finding statement
+        - supporting evidence
+        - confidence level
+
+    - id: analysis
+      name: Analysis
+      description: Interpretation of findings and patterns identified
+      required: true
+      format: prose
+      word_limit: 300
+
+    - id: recommendations
+      name: Recommendations
+      description: Actionable recommendations based on findings
+      required: true
+      format: numbered
+      item_count: 3-7
+      subformat:
+        - recommendation
+        - priority (high/medium/low)
+        - effort estimate
+        - owner (if known)
+
+    - id: risks
+      name: Risks & Considerations
+      description: Potential risks or caveats to consider
+      required: false
+      format: bullets
+      bullet_count: 2-5
+
+    - id: next-steps
+      name: Next Steps
+      description: Immediate actions to be taken
+      required: true
+      format: numbered
+      item_count: 2-5
+
+    - id: appendix
+      name: Appendix
+      description: Supporting data, references, or detailed tables
+      required: false
+      format: mixed
+
+  required_inputs:
+    - name: subject
+      type: string
+      description: Subject of the findings report
+      required: true
+    - name: context
+      type: text
+      description: Background information and reason for investigation
+      required: true
+    - name: data
+      type: text
+      description: Raw data, observations, or source material
+      required: true
+    - name: audience
+      type: string
+      description: Target audience for the report
+      default: "Technical stakeholders"
+    - name: author
+      type: string
+      description: Author name
+      default: "Analysis Team"
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a senior analyst who writes clear, evidence-based findings reports.
+
+    Your writing principles:
+    - Lead with conclusions, support with evidence
+    - Number all findings for easy reference
+    - Distinguish facts from interpretations
+    - Be specific about confidence levels
+    - Make recommendations actionable
+
+    Evidence standards:
+    - Cite specific data points
+    - Acknowledge limitations
+    - Differentiate correlation from causation
+    - Use hedging language appropriately (likely, appears to, suggests)
+
+  task: |
+    Generate a findings report on: {{SUBJECT}}
+
+    Context:
+    {{CONTEXT}}
+
+    Data/Observations:
+    {{DATA}}
+
+    Audience: {{AUDIENCE}}
+    Author: {{AUTHOR}}
+
+    Structure your report:
+    1. **Title** - Clear, descriptive
+    2. **Metadata** - Date, author, version, status
+    3. **Executive Summary** - Key findings in 3-5 sentences
+    4. **Background & Context** - Why this was investigated
+    5. **Methodology** - How the investigation was conducted
+    6. **Key Findings** - Numbered findings with evidence
+       - Format each as: "Finding N: [Statement]. Evidence: [Data]. Confidence: [High/Medium/Low]"
+    7. **Analysis** - Interpretation and patterns
+    8. **Recommendations** - Numbered, with priority and effort
+    9. **Risks & Considerations** - Caveats
+    10. **Next Steps** - Immediate actions
+
+  tone: professional
+  reading_level: technical
+  density: standard
+
+# -----------------------------------------
+# VALIDATORS: Quality Checks
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 600
+      max: 2000
+    severity: error
+    message: "Findings report should be 600-2000 words"
+
+  - id: has-findings
+    name: Has Numbered Findings
+    type: regex
+    rule:
+      pattern: "Finding \\d+:|^\\d+\\."
+      min_matches: 3
+    severity: error
+    message: "Must have at least 3 numbered findings"
+
+  - id: has-recommendations
+    name: Has Recommendations
+    type: section_presence
+    rule:
+      required: [recommendations]
+    severity: error
+    message: "Missing recommendations section"
+
+  - id: has-evidence
+    name: Evidence Cited
+    type: regex
+    rule:
+      pattern: "\\b(evidence|data|observed|found|shows|indicates|suggests)\\b"
+      min_matches: 5
+    severity: warning
+    message: "Findings should be supported by evidence"
+
+  - id: has-confidence
+    name: Confidence Levels
+    type: regex
+    rule:
+      pattern: "\\b(high|medium|low)\\s+confidence|confidence:\\s*(high|medium|low)"
+      min_matches: 1
+    severity: info
+    message: "Consider adding confidence levels to findings"
+
+  - id: has-priorities
+    name: Priority Levels
+    type: regex
+    rule:
+      pattern: "\\b(high|medium|low)\\s+priority|priority:\\s*(high|medium|low)"
+      min_matches: 1
+    severity: info
+    message: "Consider adding priority levels to recommendations"
+
+  - id: no-unsupported-claims
+    name: No Unsupported Claims
+    type: regex
+    rule:
+      pattern: "\\b(clearly|obviously|everyone knows|it's obvious)\\b"
+      should_not_match: true
+    severity: warning
+    message: "Avoid unsupported claims - cite evidence"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 600
+  max_words: 2000
+  reading_level: technical
+  density: standard
+  output_formats:
+    - markdown
+    - docx
+    - pdf
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - findings
+  - report
+  - analysis
+  - investigation
+  - research
+  - evidence-based

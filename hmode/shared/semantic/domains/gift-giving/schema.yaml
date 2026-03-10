@@ -1,0 +1,1182 @@
+# Gift-Giving Domain Model
+# Gift exchanges, wishlists, occasions, and group gifting for mobile apps
+# Composes with: core, calendar, finance, notification, social-media, messaging, linking, data-sync
+
+domain:
+  name: gift-giving
+  version: "1.1.0"
+  description: Gift exchanges, wishlists, occasions, group gifting, and gift recommendations
+  dependencies: [core, calendar, finance, notification, social-media, messaging, auth, linking, data-sync]
+  use_case: Gift-giving mobile apps, wishlist management, occasion tracking, group gifting
+  created_at: "2025-11-25"
+  updated_at: "2025-11-25"
+
+entities:
+
+  # ============================================
+  # GIFT TRACKING
+  # ============================================
+
+  Gift:
+    description: A gift given, received, or planned
+    properties:
+      id: { type: uuid, required: true }
+      title: { type: string, required: true, maxLength: 200 }
+      description: { type: string, maxLength: 2000 }
+      gifterId: { type: string, description: "FK to auth:User - who is giving" }
+      recipientId: { type: string, required: true, description: "FK to auth:User - who receives" }
+      occasionId: { type: uuid, description: "FK to Occasion" }
+      wishlistItemId: { type: uuid, description: "FK to WishlistItem if fulfilled" }
+      status: { type: GiftStatus, required: true, default: idea }
+      # Pricing
+      estimatedPrice: { type: Money, from: core }
+      actualPrice: { type: Money, from: core }
+      purchaseUrl: { type: uri }
+      purchasedAt: { type: datetime }
+      # Media
+      images: { type: array, items: GiftImage }
+      giftWrapStyle: { type: GiftWrapStyle }
+      # Delivery
+      deliveryMethod: { type: DeliveryMethod, default: in_person }
+      deliveryAddress: { type: Address, from: core }
+      trackingNumber: { type: string }
+      trackingCarrier: { type: string }
+      estimatedDeliveryDate: { type: date }
+      deliveredAt: { type: datetime }
+      # Group gift
+      isGroupGift: { type: boolean, default: false }
+      groupGiftId: { type: uuid, description: "FK to GroupGift if part of group" }
+      # Thank you
+      thankYouReceived: { type: boolean, default: false }
+      thankYouReceivedAt: { type: datetime }
+      thankYouMessageId: { type: string, description: "FK to messaging:Message" }
+      # Metadata
+      notes: { type: string, description: "Private notes about this gift" }
+      tags: { type: array, items: string }
+      giftedAt: { type: datetime, description: "When gift was given" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  GiftImage:
+    description: Image of a gift
+    properties:
+      id: { type: uuid, required: true }
+      giftId: { type: uuid, required: true }
+      url: { type: uri, required: true }
+      thumbnailUrl: { type: uri }
+      altText: { type: string }
+      isPrimary: { type: boolean, default: false }
+      order: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # WISHLISTS
+  # ============================================
+
+  Wishlist:
+    description: Collection of desired gift items
+    properties:
+      id: { type: uuid, required: true }
+      ownerId: { type: string, required: true, description: "FK to auth:User" }
+      name: { type: string, required: true, maxLength: 100 }
+      description: { type: string, maxLength: 500 }
+      visibility: { type: WishlistVisibility, required: true, default: friends }
+      # Occasion association
+      occasionId: { type: uuid, description: "FK to Occasion (e.g., birthday wishlist)" }
+      occasionType: { type: OccasionType, description: "Type if not linked to specific occasion" }
+      # Settings
+      allowAnonymousClaims: { type: boolean, default: false }
+      showPurchasedItems: { type: boolean, default: false }
+      # Stats
+      itemCount: { type: integer, default: 0 }
+      claimedCount: { type: integer, default: 0 }
+      # Sharing - linking domain integration
+      shareToken: { type: string, description: "For link_only visibility" }
+      shareUrl: { type: uri }
+      deepLinkId: { type: uuid, description: "FK to linking:DeepLink for mobile sharing" }
+      qrCodeId: { type: uuid, description: "FK to linking:QRCode for physical sharing" }
+      # Metadata
+      coverImageUrl: { type: uri }
+      sortOrder: { type: integer, default: 0 }
+      isPinned: { type: boolean, default: false }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+      # Sync - data-sync domain integration
+      syncVersion: { type: integer, default: 0, description: "For offline conflict detection" }
+      lastSyncedAt: { type: datetime }
+
+  WishlistItem:
+    description: Single item on a wishlist
+    properties:
+      id: { type: uuid, required: true }
+      wishlistId: { type: uuid, required: true }
+      title: { type: string, required: true, maxLength: 200 }
+      description: { type: string, maxLength: 1000 }
+      # Source - linking domain integration
+      url: { type: uri, description: "Link to product" }
+      productLinkId: { type: uuid, description: "FK to linking:ProductLink for rich product data" }
+      retailer: { type: string }
+      productId: { type: string, description: "External product ID" }
+      # Barcode scanning (mobile)
+      barcode: { type: string, description: "Scanned barcode value" }
+      barcodeFormat: { type: BarcodeFormat }
+      upc: { type: string, description: "Universal Product Code" }
+      ean: { type: string, description: "European Article Number" }
+      asin: { type: string, description: "Amazon ASIN" }
+      # Pricing
+      price: { type: Money, from: core }
+      priceRange: { type: PriceRange, description: "If exact price unknown" }
+      # Preferences
+      priority: { type: Priority, required: true, default: nice_to_have }
+      quantity: { type: integer, default: 1 }
+      quantityFulfilled: { type: integer, default: 0 }
+      size: { type: string }
+      color: { type: string }
+      preferredVariant: { type: string, description: "Size/color/style notes" }
+      # Status (hidden from wishlist owner)
+      status: { type: WishlistItemStatus, required: true, default: wanted }
+      claimedById: { type: string, description: "Hidden from owner - FK to auth:User" }
+      claimedAt: { type: datetime }
+      purchasedById: { type: string, description: "Hidden from owner" }
+      purchasedAt: { type: datetime }
+      # Media
+      images: { type: array, items: WishlistItemImage }
+      # Metadata
+      category: { type: GiftCategory }
+      tags: { type: array, items: string }
+      notes: { type: string, description: "Owner's notes" }
+      sortOrder: { type: integer, default: 0 }
+      addedAt: { type: datetime, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+      # Sync - data-sync domain integration
+      syncVersion: { type: integer, default: 0, description: "For offline conflict detection" }
+      lastSyncedAt: { type: datetime }
+
+  WishlistItemImage:
+    description: Image for wishlist item
+    properties:
+      id: { type: uuid, required: true }
+      itemId: { type: uuid, required: true }
+      url: { type: uri, required: true }
+      thumbnailUrl: { type: uri }
+      isPrimary: { type: boolean, default: false }
+      order: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+
+  WishlistClaim:
+    description: Claim on a wishlist item (audit trail)
+    properties:
+      id: { type: uuid, required: true }
+      wishlistItemId: { type: uuid, required: true }
+      claimerId: { type: string, required: true, description: "FK to auth:User" }
+      action: { type: ClaimAction, required: true }
+      quantity: { type: integer, default: 1 }
+      notes: { type: string }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # OCCASIONS & REMINDERS
+  # ============================================
+
+  Occasion:
+    description: Gift-giving event (birthday, anniversary, holiday)
+    properties:
+      id: { type: uuid, required: true }
+      userId: { type: string, required: true, description: "FK to auth:User who created" }
+      personId: { type: string, required: true, description: "FK to Person this occasion is for" }
+      type: { type: OccasionType, required: true }
+      customName: { type: string, description: "Custom occasion name if type=custom" }
+      # Date/Time
+      date: { type: date, required: true }
+      time: { type: time, description: "Time if relevant (party time)" }
+      timezone: { type: string }
+      # Recurrence
+      isRecurring: { type: boolean, default: true }
+      recurrence: { type: Recurrence, from: core }
+      nextOccurrence: { type: date }
+      # Reminders
+      reminderDays: { type: array, items: integer, default: [30, 7, 1] }
+      remindersEnabled: { type: boolean, default: true }
+      lastReminderSentAt: { type: datetime }
+      # Calendar sync
+      calendarEventId: { type: uuid, description: "FK to calendar:Event" }
+      syncedToCalendar: { type: boolean, default: false }
+      # Gift tracking
+      budget: { type: Money, from: core }
+      giftCount: { type: integer, default: 0 }
+      totalSpent: { type: Money, from: core }
+      # Metadata
+      notes: { type: string }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  OccasionReminder:
+    description: Individual reminder for an occasion
+    properties:
+      id: { type: uuid, required: true }
+      occasionId: { type: uuid, required: true }
+      userId: { type: string, required: true }
+      daysBefore: { type: integer, required: true }
+      scheduledFor: { type: datetime, required: true }
+      status: { type: ReminderStatus, required: true, default: scheduled }
+      sentAt: { type: datetime }
+      notificationId: { type: string, description: "FK to notification:Notification" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # PERSON (GIFT RECIPIENT) PROFILE
+  # ============================================
+
+  GiftRecipient:
+    description: Extended profile for gift recipient with preferences
+    properties:
+      id: { type: uuid, required: true }
+      userId: { type: string, description: "FK to auth:User if they have account" }
+      createdById: { type: string, required: true, description: "FK to auth:User who created" }
+      # Basic info (from core:Person)
+      firstName: { type: string, required: true }
+      lastName: { type: string }
+      nickname: { type: string }
+      relationship: { type: Relationship, required: true }
+      customRelationship: { type: string }
+      # Contact
+      email: { type: string }
+      phone: { type: string }
+      address: { type: Address, from: core }
+      # Demographics
+      dateOfBirth: { type: date }
+      age: { type: integer, description: "Calculated or estimated" }
+      gender: { type: Gender }
+      # Preferences
+      interests: { type: array, items: string }
+      favoriteColors: { type: array, items: string }
+      clothingSizes: { type: ClothingSizes }
+      allergies: { type: array, items: string }
+      dislikes: { type: array, items: string }
+      # Gift preferences
+      preferredCategories: { type: array, items: GiftCategory }
+      preferredPriceRange: { type: PriceRange }
+      preferExperiences: { type: boolean }
+      preferHandmade: { type: boolean }
+      preferPractical: { type: boolean }
+      # Social
+      profileImageUrl: { type: uri }
+      wishlistIds: { type: array, items: uuid }
+      # Stats
+      giftsGivenCount: { type: integer, default: 0 }
+      giftsReceivedCount: { type: integer, default: 0 }
+      occasionCount: { type: integer, default: 0 }
+      # Metadata
+      notes: { type: string, description: "Private notes" }
+      lastGiftedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ClothingSizes:
+    description: Clothing size preferences
+    properties:
+      shirtSize: { type: string }
+      pantSize: { type: string }
+      dressSize: { type: string }
+      shoeSize: { type: string }
+      ringSize: { type: string }
+      hatSize: { type: string }
+
+  # ============================================
+  # GROUP GIFTING
+  # ============================================
+
+  GroupGift:
+    description: Collaborative gift from multiple contributors
+    properties:
+      id: { type: uuid, required: true }
+      organizerId: { type: string, required: true, description: "FK to auth:User" }
+      recipientId: { type: string, required: true }
+      occasionId: { type: uuid }
+      # Gift details
+      title: { type: string, required: true }
+      description: { type: string }
+      giftUrl: { type: uri }
+      targetAmount: { type: Money, required: true, from: core }
+      currentAmount: { type: Money, from: core }
+      minimumContribution: { type: Money, from: core }
+      suggestedContribution: { type: Money, from: core }
+      # Status
+      status: { type: GroupGiftStatus, required: true, default: collecting }
+      contributorCount: { type: integer, default: 0 }
+      # Deadline
+      deadline: { type: datetime }
+      purchaseBy: { type: date }
+      # Reveal
+      isSecret: { type: boolean, default: true }
+      revealedAt: { type: datetime }
+      # Images
+      images: { type: array, items: GiftImage }
+      # Messaging
+      messageThreadId: { type: string, description: "FK to messaging for coordination" }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  GroupGiftContribution:
+    description: Individual contribution to a group gift
+    properties:
+      id: { type: uuid, required: true }
+      groupGiftId: { type: uuid, required: true }
+      contributorId: { type: string, required: true, description: "FK to auth:User" }
+      # Amount
+      amount: { type: Money, required: true, from: core }
+      status: { type: ContributionStatus, required: true, default: pledged }
+      # Payment
+      paymentId: { type: string, description: "FK to finance:Payment" }
+      paymentMethod: { type: PaymentMethodType, from: finance }
+      paidAt: { type: datetime }
+      # Refund
+      refundedAmount: { type: Money, from: core }
+      refundedAt: { type: datetime }
+      refundReason: { type: string }
+      # Personal message
+      message: { type: string, maxLength: 500 }
+      includeNameOnCard: { type: boolean, default: true }
+      isAnonymous: { type: boolean, default: false }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  GroupGiftInvitation:
+    description: Invitation to contribute to a group gift
+    properties:
+      id: { type: uuid, required: true }
+      groupGiftId: { type: uuid, required: true }
+      inviterId: { type: string, required: true }
+      inviteeEmail: { type: string }
+      inviteeUserId: { type: string }
+      inviteePhone: { type: string }
+      status: { type: InvitationStatus, required: true, default: pending }
+      message: { type: string }
+      sentAt: { type: datetime }
+      viewedAt: { type: datetime }
+      respondedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # GIFT EXCHANGES (Secret Santa, etc.)
+  # ============================================
+
+  GiftExchange:
+    description: Group gift exchange event (Secret Santa, White Elephant)
+    properties:
+      id: { type: uuid, required: true }
+      organizerId: { type: string, required: true, description: "FK to auth:User" }
+      name: { type: string, required: true, maxLength: 100 }
+      description: { type: string }
+      type: { type: ExchangeType, required: true }
+      # Dates
+      exchangeDate: { type: date, required: true }
+      exchangeTime: { type: time }
+      timezone: { type: string }
+      signupDeadline: { type: datetime }
+      # Budget
+      minBudget: { type: Money, from: core }
+      maxBudget: { type: Money, from: core }
+      # Settings
+      status: { type: ExchangeStatus, required: true, default: open }
+      matchingAlgorithm: { type: MatchingAlgorithm, default: random }
+      allowWishlist: { type: boolean, default: true }
+      allowExclusions: { type: boolean, default: true }
+      maxExclusions: { type: integer, default: 2 }
+      # Matching (after draw)
+      matchedAt: { type: datetime }
+      matchingNotes: { type: string }
+      # Stats
+      participantCount: { type: integer, default: 0 }
+      matchedCount: { type: integer, default: 0 }
+      giftedCount: { type: integer, default: 0 }
+      # Location
+      location: { type: string }
+      locationAddress: { type: Address, from: core }
+      isVirtual: { type: boolean, default: false }
+      virtualMeetingUrl: { type: uri }
+      # Messaging
+      groupChatEnabled: { type: boolean, default: true }
+      messageThreadId: { type: string }
+      # Metadata
+      coverImageUrl: { type: uri }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ExchangeParticipant:
+    description: Participant in a gift exchange
+    properties:
+      id: { type: uuid, required: true }
+      exchangeId: { type: uuid, required: true }
+      userId: { type: string, required: true, description: "FK to auth:User" }
+      role: { type: ExchangeRole, required: true, default: participant }
+      # Status
+      status: { type: ParticipantStatus, required: true, default: invited }
+      joinedAt: { type: datetime }
+      # Matching (hidden until reveal)
+      assignedToUserId: { type: string, description: "Who they give gift to" }
+      receivesFromUserId: { type: string, description: "Who gives them gift" }
+      hasViewedAssignment: { type: boolean, default: false }
+      viewedAssignmentAt: { type: datetime }
+      # Gift status
+      giftStatus: { type: GiftStatus, default: idea }
+      giftPurchasedAt: { type: datetime }
+      giftWrappedAt: { type: datetime }
+      giftGivenAt: { type: datetime }
+      # Preferences
+      wishlistId: { type: uuid, description: "Their wishlist for this exchange" }
+      giftPreferences: { type: string }
+      exclusions: { type: array, items: string, description: "User IDs they can't be matched with" }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # GIFT IDEAS & RECOMMENDATIONS
+  # ============================================
+
+  GiftIdea:
+    description: Gift suggestion (saved or AI-recommended)
+    properties:
+      id: { type: uuid, required: true }
+      userId: { type: string, required: true, description: "FK to auth:User who saved/received" }
+      # Target
+      forRecipientId: { type: uuid, description: "FK to GiftRecipient" }
+      forOccasionType: { type: OccasionType }
+      forOccasionId: { type: uuid }
+      # Gift details
+      title: { type: string, required: true }
+      description: { type: string }
+      url: { type: uri }
+      retailer: { type: string }
+      # Pricing
+      price: { type: Money, from: core }
+      priceRange: { type: PriceRange }
+      # Categorization
+      category: { type: GiftCategory }
+      tags: { type: array, items: string }
+      # Source
+      source: { type: IdeaSource, required: true }
+      sourceUrl: { type: uri }
+      sourceNote: { type: string }
+      # AI scoring (if AI-suggested)
+      relevanceScore: { type: decimal, description: "0.0-1.0 relevance" }
+      confidenceScore: { type: decimal, description: "AI confidence" }
+      matchReasons: { type: array, items: string }
+      # Status
+      status: { type: IdeaStatus, required: true, default: saved }
+      convertedToGiftId: { type: uuid, description: "FK to Gift if converted" }
+      convertedAt: { type: datetime }
+      # Media
+      imageUrl: { type: uri }
+      thumbnailUrl: { type: uri }
+      # Metadata
+      rating: { type: integer, description: "User rating 1-5" }
+      notes: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  GiftRecommendationRequest:
+    description: Request for AI gift recommendations
+    properties:
+      id: { type: uuid, required: true }
+      userId: { type: string, required: true }
+      recipientId: { type: uuid }
+      occasionType: { type: OccasionType }
+      # Criteria
+      priceMin: { type: Money, from: core }
+      priceMax: { type: Money, from: core }
+      categories: { type: array, items: GiftCategory }
+      excludeCategories: { type: array, items: GiftCategory }
+      keywords: { type: array, items: string }
+      # Preferences
+      preferExperiences: { type: boolean }
+      preferHandmade: { type: boolean }
+      preferLocal: { type: boolean }
+      # Results
+      status: { type: RecommendationStatus, required: true, default: pending }
+      resultCount: { type: integer }
+      processedAt: { type: datetime }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # THANK YOU NOTES
+  # ============================================
+
+  ThankYouNote:
+    description: Thank you message for a received gift
+    properties:
+      id: { type: uuid, required: true }
+      giftId: { type: uuid, required: true }
+      senderId: { type: string, required: true, description: "FK to auth:User - recipient" }
+      recipientId: { type: string, required: true, description: "FK to auth:User - gifter" }
+      # Content
+      message: { type: string, required: true }
+      # Media
+      images: { type: array, items: ThankYouImage }
+      videoUrl: { type: uri }
+      # Delivery
+      deliveryMethod: { type: ThankYouDeliveryMethod, required: true, default: in_app }
+      status: { type: ThankYouStatus, required: true, default: draft }
+      sentAt: { type: datetime }
+      viewedAt: { type: datetime }
+      # External
+      messageId: { type: string, description: "FK to messaging:Message" }
+      emailId: { type: string, description: "FK to email:Email" }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ThankYouImage:
+    description: Image attached to thank you note
+    properties:
+      id: { type: uuid, required: true }
+      noteId: { type: uuid, required: true }
+      url: { type: uri, required: true }
+      thumbnailUrl: { type: uri }
+      caption: { type: string }
+      order: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+
+# ============================================
+# ENUMS
+# ============================================
+
+enums:
+
+  GiftStatus:
+    values:
+      - idea          # Just an idea
+      - saved         # Saved for later
+      - purchased     # Bought
+      - wrapped       # Gift wrapped
+      - shipped       # In transit
+      - delivered     # Arrived at destination
+      - given         # Handed to recipient
+      - received      # Confirmed received
+      - thanked       # Thank you received
+
+  WishlistVisibility:
+    values:
+      - private       # Only owner
+      - friends       # Friends/followers only
+      - family        # Family circle only
+      - public        # Anyone can view
+      - link_only     # Anyone with link
+
+  WishlistItemStatus:
+    values:
+      - wanted        # On wishlist
+      - claimed       # Someone claimed it
+      - purchased     # Someone bought it
+      - received      # Owner received it
+      - removed       # Removed from list
+
+  BarcodeFormat:
+    description: Barcode formats for mobile scanning
+    values:
+      - upc_a         # UPC-A (12 digits)
+      - upc_e         # UPC-E (8 digits)
+      - ean_8         # EAN-8 (8 digits)
+      - ean_13        # EAN-13 (13 digits)
+      - code_39       # Code 39
+      - code_93       # Code 93
+      - code_128      # Code 128
+      - itf           # Interleaved 2 of 5
+      - qr_code       # QR Code
+      - data_matrix   # Data Matrix
+      - pdf_417       # PDF417
+      - aztec         # Aztec code
+
+  ClaimAction:
+    values:
+      - claimed       # User claimed item
+      - unclaimed     # User unclaimed
+      - purchased     # User marked purchased
+      - gifted        # Item was given
+
+  Priority:
+    values:
+      - must_have     # Really want this
+      - nice_to_have  # Would be nice
+      - dream         # Dream item (expensive/unlikely)
+      - any           # No strong preference
+
+  PriceRange:
+    values:
+      - under_25      # Under $25
+      - 25_to_50      # $25 - $50
+      - 50_to_100     # $50 - $100
+      - 100_to_200    # $100 - $200
+      - 200_to_500    # $200 - $500
+      - over_500      # Over $500
+
+  OccasionType:
+    values:
+      - birthday
+      - anniversary
+      - wedding
+      - engagement
+      - graduation
+      - baby_shower
+      - new_baby
+      - housewarming
+      - retirement
+      - promotion
+      - christmas
+      - hanukkah
+      - diwali
+      - eid
+      - lunar_new_year
+      - valentines
+      - mothers_day
+      - fathers_day
+      - grandparents_day
+      - thank_you
+      - get_well
+      - sympathy
+      - congratulations
+      - just_because
+      - secret_santa
+      - white_elephant
+      - custom
+
+  Relationship:
+    values:
+      - spouse
+      - partner
+      - parent
+      - child
+      - sibling
+      - grandparent
+      - grandchild
+      - aunt_uncle
+      - niece_nephew
+      - cousin
+      - in_law
+      - friend
+      - best_friend
+      - colleague
+      - boss
+      - employee
+      - neighbor
+      - teacher
+      - student
+      - mentor
+      - client
+      - acquaintance
+      - other
+
+  Gender:
+    values:
+      - male
+      - female
+      - non_binary
+      - prefer_not_to_say
+      - other
+
+  GiftCategory:
+    values:
+      - electronics
+      - home_decor
+      - kitchen
+      - fashion_clothing
+      - fashion_accessories
+      - jewelry
+      - beauty_skincare
+      - health_wellness
+      - books
+      - music
+      - movies_tv
+      - games_toys
+      - sports_outdoors
+      - experiences
+      - travel
+      - food_drink
+      - wine_spirits
+      - handmade_crafts
+      - art
+      - plants_garden
+      - pets
+      - baby_kids
+      - office_supplies
+      - subscription
+      - gift_card
+      - charity_donation
+      - other
+
+  DeliveryMethod:
+    values:
+      - in_person
+      - mail
+      - courier
+      - pickup
+      - digital
+      - experience
+
+  GiftWrapStyle:
+    values:
+      - none
+      - standard
+      - premium
+      - eco_friendly
+      - gift_bag
+      - custom
+
+  ReminderStatus:
+    values:
+      - scheduled
+      - sent
+      - failed
+      - cancelled
+      - snoozed
+
+  GroupGiftStatus:
+    values:
+      - draft         # Setting up
+      - collecting    # Accepting contributions
+      - funded        # Reached target
+      - purchasing    # Buying the gift
+      - purchased     # Gift bought
+      - wrapping      # Being wrapped
+      - shipped       # In transit
+      - delivered     # Arrived
+      - given         # Presented to recipient
+      - completed     # All done
+
+  ContributionStatus:
+    values:
+      - pledged       # Promised
+      - pending       # Payment in progress
+      - paid          # Payment confirmed
+      - failed        # Payment failed
+      - refunded      # Money returned
+      - cancelled     # Cancelled
+
+  InvitationStatus:
+    values:
+      - pending
+      - sent
+      - viewed
+      - accepted
+      - declined
+      - expired
+
+  ExchangeType:
+    values:
+      - secret_santa
+      - white_elephant
+      - yankee_swap
+      - grab_bag
+      - pollyanna
+      - custom
+
+  ExchangeStatus:
+    values:
+      - draft         # Setting up
+      - open          # Accepting participants
+      - closed        # No more signups
+      - matching      # Running matching algorithm
+      - matched       # Matches assigned
+      - active        # Exchange in progress
+      - completed     # Exchange finished
+      - cancelled     # Exchange cancelled
+
+  MatchingAlgorithm:
+    values:
+      - random        # Pure random
+      - weighted      # Respect exclusions
+      - couples       # Avoid matching couples
+      - family        # Avoid matching family members
+      - balanced      # Balance give/receive history
+
+  ExchangeRole:
+    values:
+      - organizer
+      - co_organizer
+      - participant
+
+  ParticipantStatus:
+    values:
+      - invited
+      - joined
+      - confirmed
+      - withdrawn
+      - removed
+
+  IdeaSource:
+    values:
+      - manual        # User added manually
+      - ai_suggested  # AI recommendation
+      - friend_shared # Shared by friend
+      - wishlist      # From someone's wishlist
+      - browsing      # Detected from browsing
+      - import        # Imported from external source
+      - trending      # Popular/trending item
+
+  IdeaStatus:
+    values:
+      - saved         # Saved for consideration
+      - shortlisted   # Shortlisted
+      - converted     # Converted to gift
+      - dismissed     # Not interested
+      - expired       # No longer available
+
+  RecommendationStatus:
+    values:
+      - pending
+      - processing
+      - completed
+      - failed
+
+  ThankYouDeliveryMethod:
+    values:
+      - in_app        # App notification
+      - email         # Email
+      - sms           # Text message
+      - mail          # Physical card
+      - video         # Video message
+
+  ThankYouStatus:
+    values:
+      - draft
+      - scheduled
+      - sent
+      - delivered
+      - viewed
+      - failed
+
+# ============================================
+# ACTIONS
+# ============================================
+
+actions:
+
+  # Gift CRUD
+  CreateGift:
+    description: Create a new gift record
+    parameters:
+      title: { type: string, required: true }
+      recipientId: { type: string, required: true }
+      occasionId: { type: uuid }
+      estimatedPrice: { type: Money }
+      purchaseUrl: { type: uri }
+    result: Gift
+    permission: gift:create
+    idempotent: false
+
+  UpdateGiftStatus:
+    description: Update gift status through lifecycle
+    parameters:
+      giftId: { type: uuid, required: true }
+      status: { type: GiftStatus, required: true }
+      notes: { type: string }
+    result: Gift
+    permission: gift:update
+    idempotent: true
+
+  RecordGiftDelivery:
+    description: Mark gift as delivered
+    parameters:
+      giftId: { type: uuid, required: true }
+      deliveredAt: { type: datetime }
+      trackingNumber: { type: string }
+      proofImageUrl: { type: uri }
+    result: Gift
+    permission: gift:update
+
+  # Wishlist CRUD
+  CreateWishlist:
+    description: Create a new wishlist
+    parameters:
+      name: { type: string, required: true }
+      visibility: { type: WishlistVisibility }
+      occasionId: { type: uuid }
+    result: Wishlist
+    permission: wishlist:create
+
+  AddWishlistItem:
+    description: Add item to wishlist
+    parameters:
+      wishlistId: { type: uuid, required: true }
+      title: { type: string, required: true }
+      url: { type: uri }
+      price: { type: Money }
+      priority: { type: Priority }
+      notes: { type: string }
+    result: WishlistItem
+    permission: wishlist:update
+
+  ClaimWishlistItem:
+    description: Claim an item (hidden from owner)
+    parameters:
+      itemId: { type: uuid, required: true }
+      claimerId: { type: string, required: true }
+    result: WishlistItem
+    permission: wishlist:claim
+    errors: [ALREADY_CLAIMED, SELF_CLAIM, ITEM_NOT_FOUND]
+
+  UnclaimWishlistItem:
+    description: Release claim on item
+    parameters:
+      itemId: { type: uuid, required: true }
+      claimerId: { type: string, required: true }
+    result: WishlistItem
+    permission: wishlist:claim
+    idempotent: true
+
+  # Occasion management
+  CreateOccasion:
+    description: Create a new occasion for a person
+    parameters:
+      personId: { type: string, required: true }
+      type: { type: OccasionType, required: true }
+      date: { type: date, required: true }
+      isRecurring: { type: boolean, default: true }
+      reminderDays: { type: array, items: integer }
+    result: Occasion
+    permission: occasion:create
+
+  SyncOccasionToCalendar:
+    description: Sync occasion to calendar app
+    parameters:
+      occasionId: { type: uuid, required: true }
+      calendarId: { type: uuid }
+    result: Occasion
+    permission: occasion:update
+
+  # Group gifts
+  CreateGroupGift:
+    description: Start a new group gift
+    parameters:
+      title: { type: string, required: true }
+      recipientId: { type: string, required: true }
+      targetAmount: { type: Money, required: true }
+      deadline: { type: datetime }
+      giftUrl: { type: uri }
+    result: GroupGift
+    permission: group_gift:create
+
+  ContributeToGroupGift:
+    description: Make contribution to group gift
+    parameters:
+      groupGiftId: { type: uuid, required: true }
+      amount: { type: Money, required: true }
+      message: { type: string }
+      isAnonymous: { type: boolean }
+    result: GroupGiftContribution
+    permission: group_gift:contribute
+
+  InviteToGroupGift:
+    description: Invite someone to contribute
+    parameters:
+      groupGiftId: { type: uuid, required: true }
+      inviteeEmail: { type: string }
+      inviteePhone: { type: string }
+      message: { type: string }
+    result: GroupGiftInvitation
+    permission: group_gift:invite
+
+  # Gift exchanges
+  CreateGiftExchange:
+    description: Create a new gift exchange
+    parameters:
+      name: { type: string, required: true }
+      type: { type: ExchangeType, required: true }
+      exchangeDate: { type: date, required: true }
+      minBudget: { type: Money }
+      maxBudget: { type: Money }
+    result: GiftExchange
+    permission: exchange:create
+
+  JoinGiftExchange:
+    description: Join a gift exchange
+    parameters:
+      exchangeId: { type: uuid, required: true }
+      wishlistId: { type: uuid }
+      giftPreferences: { type: string }
+      exclusions: { type: array, items: string }
+    result: ExchangeParticipant
+    permission: exchange:join
+
+  DrawExchangeMatches:
+    description: Run matching algorithm
+    parameters:
+      exchangeId: { type: uuid, required: true }
+    result: GiftExchange
+    permission: exchange:manage
+    errors: [NOT_ENOUGH_PARTICIPANTS, MATCHING_IMPOSSIBLE]
+
+  RevealExchangeMatch:
+    description: Reveal match assignment to participant
+    parameters:
+      participantId: { type: uuid, required: true }
+    result: ExchangeParticipant
+    permission: exchange:view_match
+
+  # Gift ideas
+  SaveGiftIdea:
+    description: Save a gift idea
+    parameters:
+      title: { type: string, required: true }
+      forRecipientId: { type: uuid }
+      forOccasionType: { type: OccasionType }
+      url: { type: uri }
+      price: { type: Money }
+      category: { type: GiftCategory }
+      source: { type: IdeaSource, default: manual }
+    result: GiftIdea
+    permission: idea:create
+
+  GetGiftRecommendations:
+    description: Request AI gift recommendations
+    parameters:
+      recipientId: { type: uuid }
+      occasionType: { type: OccasionType }
+      priceMin: { type: Money }
+      priceMax: { type: Money }
+      categories: { type: array, items: GiftCategory }
+    result: GiftRecommendationRequest
+    permission: idea:recommend
+
+  ConvertIdeaToGift:
+    description: Convert saved idea to actual gift
+    parameters:
+      ideaId: { type: uuid, required: true }
+      recipientId: { type: string, required: true }
+      occasionId: { type: uuid }
+    result: Gift
+    permission: gift:create
+
+  # Thank you notes
+  SendThankYouNote:
+    description: Send thank you for a gift
+    parameters:
+      giftId: { type: uuid, required: true }
+      message: { type: string, required: true }
+      deliveryMethod: { type: ThankYouDeliveryMethod }
+      imageUrls: { type: array, items: uri }
+    result: ThankYouNote
+    permission: thank_you:send
+
+# ============================================
+# RELATIONSHIPS
+# ============================================
+
+relationships:
+
+  - type: one_to_many
+    from: GiftRecipient
+    to: Gift
+    foreign_key: recipientId
+    description: A recipient receives many gifts
+
+  - type: one_to_many
+    from: GiftRecipient
+    to: Occasion
+    foreign_key: personId
+    description: A recipient has many occasions
+
+  - type: one_to_many
+    from: Wishlist
+    to: WishlistItem
+    foreign_key: wishlistId
+    description: A wishlist contains many items
+
+  - type: one_to_many
+    from: Occasion
+    to: Gift
+    foreign_key: occasionId
+    description: An occasion has many gifts
+
+  - type: one_to_many
+    from: Occasion
+    to: OccasionReminder
+    foreign_key: occasionId
+    description: An occasion has many reminders
+
+  - type: one_to_many
+    from: GroupGift
+    to: GroupGiftContribution
+    foreign_key: groupGiftId
+    description: A group gift has many contributions
+
+  - type: one_to_many
+    from: GroupGift
+    to: GroupGiftInvitation
+    foreign_key: groupGiftId
+    description: A group gift has many invitations
+
+  - type: one_to_many
+    from: GiftExchange
+    to: ExchangeParticipant
+    foreign_key: exchangeId
+    description: An exchange has many participants
+
+  - type: one_to_one
+    from: Gift
+    to: ThankYouNote
+    foreign_key: giftId
+    description: A gift may have one thank you note
+
+  # Cross-domain relationships
+  - type: one_to_one
+    from: Occasion
+    to: calendar:Event
+    foreign_key: calendarEventId
+    description: Occasion syncs to calendar event
+
+  - type: one_to_one
+    from: OccasionReminder
+    to: notification:Notification
+    foreign_key: notificationId
+    description: Reminder triggers notification
+
+  - type: one_to_one
+    from: GroupGiftContribution
+    to: finance:Payment
+    foreign_key: paymentId
+    description: Contribution links to payment
+
+  - type: one_to_one
+    from: ThankYouNote
+    to: messaging:Message
+    foreign_key: messageId
+    description: Thank you can be a message
+
+  - type: one_to_one
+    from: WishlistItem
+    to: Gift
+    foreign_key: wishlistItemId
+    description: Wishlist item fulfilled by gift
+
+  # Cross-domain: linking
+  - type: one_to_one
+    from: Wishlist
+    to: linking:DeepLink
+    foreign_key: deepLinkId
+    description: Wishlist shareable via deep link
+
+  - type: one_to_one
+    from: Wishlist
+    to: linking:QRCode
+    foreign_key: qrCodeId
+    description: Wishlist shareable via QR code
+
+  - type: one_to_one
+    from: WishlistItem
+    to: linking:ProductLink
+    foreign_key: productLinkId
+    description: Wishlist item links to product with rich metadata
+
+  # Cross-domain: data-sync (for offline support)
+  # Note: Entities embed sync fields (syncVersion, lastSyncedAt)
+  # and link to data-sync:OfflineSyncQueue at app level

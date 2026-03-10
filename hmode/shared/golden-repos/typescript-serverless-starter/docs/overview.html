@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serverless Starter - Architecture Overview</title>
+  <!--
+    Asset: Serverless Starter Overview
+    Project: typescript-serverless-starter
+    Asset ID: viz-sls-starter-a7f3b2c1.v1
+    Date: 2024-12-20
+    Design System: shared/design-system
+
+    Atomic Level: page
+
+    Tokens Used:
+    - Colors: CSS variables for theme switching
+    - Spacing: rem-based scale
+    - Typography: system fonts
+  -->
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-pink: #ec4899;
+      --accent-cyan: #06b6d4;
+      --border-color: #334155;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 3rem 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 3rem;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .header .subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+    }
+
+    .badges {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-blue { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
+    .badge-purple { background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); }
+    .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+    .badge-orange { background: rgba(245, 158, 11, 0.2); color: var(--accent-orange); }
+    .badge-cyan { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); }
+
+    /* Architecture Diagram */
+    .architecture {
+      background: var(--bg-secondary);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .architecture h2 {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .arch-layer {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .arch-box {
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1.25rem 1.5rem;
+      min-width: 180px;
+      text-align: center;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .arch-box:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .arch-box.frontend { border-color: var(--accent-blue); }
+    .arch-box.gateway { border-color: var(--accent-purple); }
+    .arch-box.lambda-ts { border-color: var(--accent-green); }
+    .arch-box.lambda-py { border-color: var(--accent-orange); }
+    .arch-box.database { border-color: var(--accent-cyan); }
+    .arch-box.auth { border-color: var(--accent-pink); }
+
+    .arch-box-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .arch-box-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .arch-box-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+    }
+
+    .arch-arrow svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Features Grid */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .feature-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow);
+    }
+
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .feature-icon.blue { background: rgba(59, 130, 246, 0.2); }
+    .feature-icon.purple { background: rgba(139, 92, 246, 0.2); }
+    .feature-icon.green { background: rgba(16, 185, 129, 0.2); }
+    .feature-icon.orange { background: rgba(245, 158, 11, 0.2); }
+    .feature-icon.cyan { background: rgba(6, 182, 212, 0.2); }
+    .feature-icon.pink { background: rgba(236, 72, 153, 0.2); }
+
+    .feature-title {
+      font-weight: 600;
+      font-size: 1.125rem;
+    }
+
+    .feature-list {
+      list-style: none;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .feature-list li::before {
+      content: "→";
+      color: var(--accent-green);
+    }
+
+    /* Project Structure */
+    .structure {
+      background: var(--bg-secondary);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .structure h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tree {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.875rem;
+      background: var(--bg-primary);
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+    }
+
+    .tree-folder {
+      color: var(--accent-blue);
+    }
+
+    .tree-file {
+      color: var(--text-secondary);
+    }
+
+    .tree-comment {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Commands */
+    .commands {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .command-group {
+      background: var(--bg-secondary);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .command-group h3 {
+      font-size: 1rem;
+      color: var(--accent-purple);
+      margin-bottom: 0.75rem;
+    }
+
+    .command {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      background: var(--bg-primary);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent-green);
+    }
+
+    .command-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      margin-bottom: 0.75rem;
+    }
+
+    /* API Endpoints */
+    .endpoints {
+      background: var(--bg-secondary);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .endpoints h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .endpoint-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .endpoint-section h3 {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .endpoint {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      margin-bottom: 0.375rem;
+    }
+
+    .endpoint:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .method {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .method.get { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+    .method.post { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
+    .method.put { background: rgba(245, 158, 11, 0.2); color: var(--accent-orange); }
+    .method.delete { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+    .endpoint-path {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+    }
+
+    .endpoint-lock {
+      margin-left: auto;
+      font-size: 0.875rem;
+    }
+
+    /* Auth Flow */
+    .auth-flow {
+      background: var(--bg-secondary);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .auth-flow h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .auth-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 1.5rem;
+      background: var(--bg-primary);
+      border-radius: 0.75rem;
+    }
+
+    .auth-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .auth-step-box {
+      background: var(--bg-tertiary);
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      border: 2px solid var(--accent-pink);
+      text-align: center;
+    }
+
+    .auth-step-num {
+      font-size: 0.75rem;
+      color: var(--accent-pink);
+      font-weight: 600;
+    }
+
+    .auth-step-label {
+      font-size: 0.875rem;
+      color: var(--text-primary);
+    }
+
+    .auth-arrow {
+      color: var(--text-muted);
+      font-size: 1.25rem;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .footer a {
+      color: var(--accent-blue);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* SSM Config Section */
+    .config-priority {
+      background: var(--bg-secondary);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .config-priority h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .priority-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      padding: 1.5rem;
+    }
+
+    .priority-item {
+      background: var(--bg-tertiary);
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      min-width: 150px;
+    }
+
+    .priority-num {
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .priority-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .priority-example {
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .priority-arrow {
+      color: var(--text-muted);
+      font-size: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .arch-layer {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .arch-box {
+        width: 100%;
+        max-width: 250px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>Serverless Starter</h1>
+      <p class="subtitle">Full-stack AWS serverless template with React 19, CDK, and auth.b.lfg.new</p>
+      <div class="badges">
+        <span class="badge badge-blue">React 19</span>
+        <span class="badge badge-purple">AWS CDK</span>
+        <span class="badge badge-green">TypeScript</span>
+        <span class="badge badge-orange">Python 3.11</span>
+        <span class="badge badge-cyan">Bedrock AI</span>
+      </div>
+    </header>
+
+    <!-- Architecture Diagram -->
+    <section class="architecture">
+      <h2>Architecture Overview</h2>
+      <div class="arch-diagram">
+        <!-- Frontend Layer -->
+        <div class="arch-layer">
+          <div class="arch-box frontend">
+            <div class="arch-box-icon">⚛️</div>
+            <div class="arch-box-title">React 19 + Vite</div>
+            <div class="arch-box-desc">Tailwind CSS + shadcn/ui</div>
+          </div>
+          <div class="arch-box auth">
+            <div class="arch-box-icon">🔐</div>
+            <div class="arch-box-title">AWS Amplify</div>
+            <div class="arch-box-desc">auth.b.lfg.new Cognito</div>
+          </div>
+        </div>
+
+        <div class="arch-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12l7 7 7-7"/>
+          </svg>
+        </div>
+
+        <!-- API Gateway Layer -->
+        <div class="arch-layer">
+          <div class="arch-box gateway" style="min-width: 400px;">
+            <div class="arch-box-icon">🌐</div>
+            <div class="arch-box-title">API Gateway (REST)</div>
+            <div class="arch-box-desc">CloudWatch Logs • X-Ray Tracing • Cognito Authorizer</div>
+          </div>
+        </div>
+
+        <div class="arch-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12l7 7 7-7"/>
+          </svg>
+        </div>
+
+        <!-- Lambda Layer -->
+        <div class="arch-layer">
+          <div class="arch-box lambda-ts">
+            <div class="arch-box-icon">🟢</div>
+            <div class="arch-box-title">Lambda (TypeScript)</div>
+            <div class="arch-box-desc">Node.js 20 • CRUD API</div>
+          </div>
+          <div class="arch-box lambda-py">
+            <div class="arch-box-icon">🟡</div>
+            <div class="arch-box-title">Lambda (Python)</div>
+            <div class="arch-box-desc">Bedrock AI • Powertools</div>
+          </div>
+        </div>
+
+        <div class="arch-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12l7 7 7-7"/>
+          </svg>
+        </div>
+
+        <!-- Data Layer -->
+        <div class="arch-layer">
+          <div class="arch-box database">
+            <div class="arch-box-icon">📊</div>
+            <div class="arch-box-title">DynamoDB</div>
+            <div class="arch-box-desc">Single-table design + GSI</div>
+          </div>
+          <div class="arch-box database">
+            <div class="arch-box-icon">🔑</div>
+            <div class="arch-box-title">Secrets Manager</div>
+            <div class="arch-box-desc">API keys & credentials</div>
+          </div>
+          <div class="arch-box database">
+            <div class="arch-box-icon">🤖</div>
+            <div class="arch-box-title">Bedrock</div>
+            <div class="arch-box-desc">Claude • Titan Embeddings</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="features">
+      <div class="feature-card">
+        <div class="feature-header">
+          <div class="feature-icon blue">⚛️</div>
+          <h3 class="feature-title">Frontend</h3>
+        </div>
+        <ul class="feature-list">
+          <li>React 19 with concurrent features</li>
+          <li>Vite 6 for fast builds</li>
+          <li>Tailwind CSS 3.4</li>
+          <li>shadcn/ui components</li>
+          <li>Light/Dark mode toggle</li>
+          <li>AWS Amplify for auth</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <div class="feature-icon green">🟢</div>
+          <h3 class="feature-title">TypeScript Lambda</h3>
+        </div>
+        <ul class="feature-list">
+          <li>Node.js 20 runtime</li>
+          <li>CRUD operations</li>
+          <li>DynamoDB integration</li>
+          <li>X-Ray tracing enabled</li>
+          <li>Source maps for debugging</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <div class="feature-icon orange">🟡</div>
+          <h3 class="feature-title">Python Lambda</h3>
+        </div>
+        <ul class="feature-list">
+          <li>Python 3.11 runtime</li>
+          <li>Lambda Powertools (logs, metrics, tracing)</li>
+          <li>Pydantic validation</li>
+          <li>Bedrock Claude chat</li>
+          <li>Titan embeddings</li>
+          <li>Secrets Manager integration</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <div class="feature-icon purple">🏗️</div>
+          <h3 class="feature-title">Infrastructure</h3>
+        </div>
+        <ul class="feature-list">
+          <li>AWS CDK (TypeScript)</li>
+          <li>API Gateway REST API</li>
+          <li>DynamoDB with GSI</li>
+          <li>Cognito integration</li>
+          <li>CloudWatch logging</li>
+          <li>Capistrano-style deploys</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <div class="feature-icon pink">🔐</div>
+          <h3 class="feature-title">Authentication</h3>
+        </div>
+        <ul class="feature-list">
+          <li>auth.b.lfg.new Cognito pool</li>
+          <li>SSM Parameter Store config</li>
+          <li>OAuth 2.0 / OIDC</li>
+          <li>JWT token validation</li>
+          <li>API Gateway authorizer</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <div class="feature-icon cyan">📊</div>
+          <h3 class="feature-title">Observability</h3>
+        </div>
+        <ul class="feature-list">
+          <li>CloudWatch Logs (all tiers)</li>
+          <li>X-Ray distributed tracing</li>
+          <li>Custom metrics</li>
+          <li>Structured logging</li>
+          <li>Access logs (JSON)</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Auth Config Priority -->
+    <section class="config-priority">
+      <h2>Auth Configuration Priority</h2>
+      <div class="priority-flow">
+        <div class="priority-item">
+          <div class="priority-num">1. Environment Variables</div>
+          <div class="priority-label">Highest Priority</div>
+          <div class="priority-example">COGNITO_USER_POOL_ID</div>
+        </div>
+        <div class="priority-arrow">→</div>
+        <div class="priority-item">
+          <div class="priority-num">2. SSM Parameter Store</div>
+          <div class="priority-label">Shared Config</div>
+          <div class="priority-example">/shared/auth/user-pool-id</div>
+        </div>
+        <div class="priority-arrow">→</div>
+        <div class="priority-item">
+          <div class="priority-num">3. Hardcoded Default</div>
+          <div class="priority-label">Fallback</div>
+          <div class="priority-example">auth.b.lfg.new</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API Endpoints -->
+    <section class="endpoints">
+      <h2>API Endpoints</h2>
+      <div class="endpoint-grid">
+        <div class="endpoint-section">
+          <h3>Public (No Auth)</h3>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/health</span>
+          </div>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/hello</span>
+          </div>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/ai/health</span>
+          </div>
+        </div>
+
+        <div class="endpoint-section">
+          <h3>Protected (Cognito Auth)</h3>
+          <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/hello</span>
+            <span class="endpoint-lock">🔒</span>
+          </div>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/items</span>
+            <span class="endpoint-lock">🔒</span>
+          </div>
+          <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/items</span>
+            <span class="endpoint-lock">🔒</span>
+          </div>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/items/{id}</span>
+            <span class="endpoint-lock">🔒</span>
+          </div>
+          <div class="endpoint">
+            <span class="method put">PUT</span>
+            <span class="endpoint-path">/items/{id}</span>
+            <span class="endpoint-lock">🔒</span>
+          </div>
+          <div class="endpoint">
+            <span class="method delete">DELETE</span>
+            <span class="endpoint-path">/items/{id}</span>
+            <span class="endpoint-lock">🔒</span>
+          </div>
+        </div>
+
+        <div class="endpoint-section">
+          <h3>AI Endpoints (Bedrock)</h3>
+          <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/ai/chat</span>
+            <span class="endpoint-lock">🔒</span>
+          </div>
+          <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/ai/embeddings</span>
+            <span class="endpoint-lock">🔒</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Project Structure -->
+    <section class="structure">
+      <h2>Project Structure</h2>
+      <pre class="tree">
+<span class="tree-folder">typescript-serverless-starter/</span>
+├── <span class="tree-file">Makefile</span>               <span class="tree-comment"># Build and deploy commands</span>
+├── <span class="tree-file">package.json</span>           <span class="tree-comment"># Root workspace config</span>
+│
+├── <span class="tree-folder">infra/</span>                  <span class="tree-comment"># AWS CDK Infrastructure</span>
+│   ├── <span class="tree-file">app.ts</span>             <span class="tree-comment"># CDK entry (SSM lookup)</span>
+│   ├── <span class="tree-folder">stacks/</span>
+│   │   └── <span class="tree-file">serverless-stack.ts</span>
+│   └── <span class="tree-folder">deploys/</span>           <span class="tree-comment"># Capistrano-style releases</span>
+│       ├── <span class="tree-folder">releases/</span>      <span class="tree-comment"># Timestamped deploys</span>
+│       └── <span class="tree-file">current</span> → ...  <span class="tree-comment"># Symlink to active</span>
+│
+├── <span class="tree-folder">backend/</span>                <span class="tree-comment"># TypeScript Lambda</span>
+│   └── <span class="tree-folder">src/</span>
+│       ├── <span class="tree-folder">handlers/</span>
+│       │   └── <span class="tree-file">hello.ts</span>
+│       └── <span class="tree-folder">lib/</span>
+│           └── <span class="tree-file">dynamodb.ts</span>
+│
+├── <span class="tree-folder">backend-python/</span>         <span class="tree-comment"># Python Lambda</span>
+│   └── <span class="tree-folder">src/</span>
+│       ├── <span class="tree-folder">handlers/</span>
+│       │   └── <span class="tree-file">bedrock_handler.py</span>
+│       ├── <span class="tree-folder">lib/</span>
+│       │   └── <span class="tree-file">secrets.py</span>
+│       └── <span class="tree-folder">models/</span>
+│           └── <span class="tree-file">requests.py</span>
+│
+├── <span class="tree-folder">frontend/</span>               <span class="tree-comment"># Vite + React 19</span>
+│   └── <span class="tree-folder">src/</span>
+│       ├── <span class="tree-folder">components/</span>
+│       │   ├── <span class="tree-folder">ui/</span>        <span class="tree-comment"># shadcn/ui components</span>
+│       │   └── <span class="tree-file">ThemeToggle.tsx</span>
+│       ├── <span class="tree-folder">hooks/</span>
+│       │   └── <span class="tree-file">useAuth.ts</span>
+│       ├── <span class="tree-folder">lib/</span>
+│       │   ├── <span class="tree-file">amplify.ts</span> <span class="tree-comment"># Cognito config</span>
+│       │   └── <span class="tree-file">api.ts</span>
+│       └── <span class="tree-folder">pages/</span>
+│
+└── <span class="tree-folder">scripts/</span>
+    └── <span class="tree-file">setup-auth-params.py</span> <span class="tree-comment"># SSM setup</span>
+      </pre>
+    </section>
+
+    <!-- Commands -->
+    <section>
+      <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Make Commands</h2>
+      <div class="commands">
+        <div class="command-group">
+          <h3>Setup</h3>
+          <div class="command">make install</div>
+          <div class="command-desc">Install all dependencies</div>
+          <div class="command">make setup-auth-params</div>
+          <div class="command-desc">Setup SSM parameters</div>
+        </div>
+
+        <div class="command-group">
+          <h3>Development</h3>
+          <div class="command">make dev</div>
+          <div class="command-desc">Start frontend dev server</div>
+          <div class="command">make build</div>
+          <div class="command-desc">Build all packages</div>
+        </div>
+
+        <div class="command-group">
+          <h3>Infrastructure</h3>
+          <div class="command">make infra-bootstrap</div>
+          <div class="command-desc">Bootstrap CDK</div>
+          <div class="command">make infra-deploy</div>
+          <div class="command-desc">Deploy to AWS</div>
+          <div class="command">make infra-destroy</div>
+          <div class="command-desc">Tear down stack</div>
+        </div>
+
+        <div class="command-group">
+          <h3>Utilities</h3>
+          <div class="command">make update-frontend-env</div>
+          <div class="command-desc">Update .env from CDK outputs</div>
+          <div class="command">make outputs</div>
+          <div class="command-desc">Show deployment outputs</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>
+        Serverless Starter Template •
+        <a href="https://github.com/protoflow" target="_blank">Protoflow</a>
+      </p>
+      <p style="margin-top: 0.5rem;">
+        Built with AWS CDK • React 19 • TypeScript • Python
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

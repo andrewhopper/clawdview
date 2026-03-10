@@ -1,0 +1,645 @@
+# Process Domain
+# Transformation of inputs to outputs via instructions
+# Used by: recipes, manufacturing, lab protocols, software builds
+# Version: 1.0.0
+
+domain:
+  name: process
+  version: "1.0.0"
+  status: production
+  description: Transformation process - input materials + instructions = output
+  dependencies: [core, material]
+  use_case: Recipes, manufacturing work orders, lab protocols, build pipelines
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Process:
+    description: A defined procedure that transforms inputs to outputs
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      version:
+        type: string
+        description: Process version (recipes evolve)
+
+      # Classification
+      process_type:
+        type: ProcessType
+        required: true
+      category:
+        type: string
+        description: Domain-specific category
+
+      # Inputs
+      inputs:
+        type: array
+        items: ProcessInput
+        required: true
+        description: Materials required
+
+      # Steps
+      steps:
+        type: array
+        items: ProcessStep
+        required: true
+
+      # Outputs
+      outputs:
+        type: array
+        items: ProcessOutput
+        required: true
+
+      # Equipment
+      equipment:
+        type: array
+        items: EquipmentRequirement
+
+      # Time
+      total_duration:
+        type: Duration
+        description: Estimated total time
+      active_time:
+        type: Duration
+        description: Time requiring attention (vs passive waiting)
+
+      # Yield
+      expected_yield:
+        type: Yield
+      yield_variance:
+        type: decimal
+        description: Acceptable variance (0.0-1.0)
+
+      # Conditions
+      environment:
+        type: EnvironmentRequirements
+        description: Temperature, humidity, etc.
+
+      # Quality
+      quality_criteria:
+        type: array
+        items: QualityCriterion
+
+      # Safety
+      hazards:
+        type: array
+        items: string
+        description: Process-level hazards
+      safety_requirements:
+        type: array
+        items: string
+
+      # Metadata
+      author:
+        type: string
+      source:
+        type: string
+        description: Where process came from (cookbook, SOP doc, etc.)
+      tags:
+        type: array
+        items: string
+
+      # Status
+      status:
+        type: ProcessStatus
+        required: true
+        default: active
+
+      # Audit
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ProcessInput:
+    description: Material input to a process
+    properties:
+      material_id:
+        type: uuid
+        required: true
+        description: FK to Material
+      name:
+        type: string
+        required: true
+        description: Display name for this input
+      quantity:
+        type: Quantity
+        required: true
+      preparation:
+        type: string
+        description: How to prepare input (diced, pre-heated, filtered)
+      is_optional:
+        type: boolean
+        default: false
+      notes:
+        type: string
+      substitutes:
+        type: array
+        items: uuid
+        description: FK to acceptable substitute Materials
+
+  ProcessStep:
+    description: Single step in a process
+    properties:
+      id:
+        type: uuid
+        required: true
+      sequence:
+        type: integer
+        required: true
+        description: Order of execution
+      name:
+        type: string
+      instruction:
+        type: string
+        required: true
+        description: What to do
+
+      # Time
+      duration:
+        type: Duration
+        description: How long this step takes
+      wait_time:
+        type: Duration
+        description: Passive waiting time (baking, incubating)
+      is_timed:
+        type: boolean
+        default: false
+        description: Whether timing is critical
+
+      # Equipment
+      equipment:
+        type: array
+        items: string
+        description: Equipment used in this step
+
+      # Conditions
+      conditions:
+        type: array
+        items: StepCondition
+        description: Temperature, speed, pressure, etc.
+
+      # Completion
+      completion_criteria:
+        type: array
+        items: string
+        description: How to know step is done ("until golden", "reaches 165°F")
+
+      # Dependencies
+      depends_on:
+        type: array
+        items: uuid
+        description: Step IDs that must complete first
+      can_parallel:
+        type: boolean
+        default: false
+        description: Can run parallel with next step
+
+      # Substeps
+      substeps:
+        type: array
+        items: ProcessStep
+        description: Nested substeps
+
+      # Checkpoints
+      checkpoint:
+        type: boolean
+        default: false
+        description: Requires verification before continuing
+      checkpoint_criteria:
+        type: string
+
+      # Notes
+      notes:
+        type: string
+      tips:
+        type: array
+        items: string
+      warnings:
+        type: array
+        items: string
+
+  StepCondition:
+    description: Condition/parameter for a step
+    properties:
+      parameter:
+        type: string
+        required: true
+        description: What parameter (temperature, speed, pressure)
+      value:
+        type: string
+        required: true
+      unit:
+        type: string
+      min_value:
+        type: decimal
+      max_value:
+        type: decimal
+      is_critical:
+        type: boolean
+        default: false
+
+  ProcessOutput:
+    description: Output of a process
+    properties:
+      material_id:
+        type: uuid
+        description: FK to Material (for defined outputs)
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      output_type:
+        type: OutputType
+        required: true
+      expected_quantity:
+        type: Quantity
+      is_primary:
+        type: boolean
+        default: true
+        description: Primary output vs byproduct
+
+  EquipmentRequirement:
+    description: Equipment needed for process
+    properties:
+      equipment_type:
+        type: string
+        required: true
+        description: Type of equipment (oven, mixer, reactor)
+      name:
+        type: string
+        description: Specific equipment name
+      capabilities:
+        type: array
+        items: string
+        description: Required capabilities (temperature range, capacity)
+      is_optional:
+        type: boolean
+        default: false
+      alternatives:
+        type: array
+        items: string
+        description: Alternative equipment types
+
+  Yield:
+    description: Expected output quantity
+    properties:
+      quantity:
+        type: Quantity
+        required: true
+      servings:
+        type: integer
+        description: Number of servings (for recipes)
+      units_produced:
+        type: integer
+        description: Number of units (for manufacturing)
+      batch_size:
+        type: string
+        description: Batch description
+
+  EnvironmentRequirements:
+    description: Environmental conditions for process
+    properties:
+      temperature_min:
+        type: decimal
+      temperature_max:
+        type: decimal
+      temperature_unit:
+        type: string
+        default: "C"
+      humidity_min:
+        type: decimal
+      humidity_max:
+        type: decimal
+      clean_room:
+        type: boolean
+        default: false
+      clean_room_class:
+        type: string
+        description: ISO class if clean room required
+      ventilation:
+        type: boolean
+        default: false
+      lighting:
+        type: string
+        description: Lighting requirements
+
+  QualityCriterion:
+    description: How to evaluate output quality
+    properties:
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      measurement:
+        type: string
+        description: How to measure
+      acceptable_range:
+        type: string
+        description: Acceptable values
+      pass_fail:
+        type: boolean
+        default: false
+        description: Binary pass/fail vs measurement
+      is_critical:
+        type: boolean
+        default: false
+        description: Failure = reject output
+
+  ProcessExecution:
+    description: Record of a process being executed
+    properties:
+      id:
+        type: uuid
+        required: true
+      process_id:
+        type: uuid
+        required: true
+        description: FK to Process
+      process_version:
+        type: string
+
+      # Timing
+      started_at:
+        type: datetime
+        required: true
+      ended_at:
+        type: datetime
+      actual_duration:
+        type: Duration
+
+      # Inputs used
+      inputs_used:
+        type: array
+        items: InputUsage
+
+      # Steps completed
+      steps_completed:
+        type: array
+        items: StepCompletion
+
+      # Actual output
+      actual_output:
+        type: array
+        items: ActualOutput
+
+      # Quality
+      quality_checks:
+        type: array
+        items: QualityCheck
+
+      # Who/what executed
+      executor_id:
+        type: string
+        description: Person or machine that executed
+      executor_type:
+        type: string
+        description: human, machine, automated
+
+      # Status
+      status:
+        type: ExecutionStatus
+        required: true
+
+      # Notes
+      notes:
+        type: string
+      deviations:
+        type: array
+        items: string
+        description: Any deviations from defined process
+
+  InputUsage:
+    description: Actual input used in execution
+    properties:
+      process_input_id:
+        type: uuid
+        description: FK to ProcessInput
+      material_id:
+        type: uuid
+        description: Actual material used (may be substitute)
+      quantity_used:
+        type: Quantity
+        required: true
+      lot_number:
+        type: string
+        description: For traceability
+
+  StepCompletion:
+    description: Record of step completion
+    properties:
+      step_id:
+        type: uuid
+        required: true
+      started_at:
+        type: datetime
+      completed_at:
+        type: datetime
+      actual_duration:
+        type: Duration
+      conditions_met:
+        type: array
+        items: ConditionRecord
+      notes:
+        type: string
+      skipped:
+        type: boolean
+        default: false
+      skip_reason:
+        type: string
+
+  ConditionRecord:
+    description: Actual condition values during step
+    properties:
+      parameter:
+        type: string
+        required: true
+      target_value:
+        type: string
+      actual_value:
+        type: string
+      in_spec:
+        type: boolean
+
+  ActualOutput:
+    description: Actual output from execution
+    properties:
+      output_id:
+        type: uuid
+        description: FK to ProcessOutput
+      material_id:
+        type: uuid
+      quantity:
+        type: Quantity
+        required: true
+      lot_number:
+        type: string
+      quality_status:
+        type: QualityStatus
+
+  QualityCheck:
+    description: Quality check performed
+    properties:
+      criterion_id:
+        type: uuid
+        description: FK to QualityCriterion
+      performed_at:
+        type: datetime
+      measured_value:
+        type: string
+      passed:
+        type: boolean
+        required: true
+      notes:
+        type: string
+      checked_by:
+        type: string
+
+enums:
+
+  ProcessType:
+    values:
+      # Food/Beverage
+      - recipe
+      - brewing
+      - fermentation
+
+      # Manufacturing
+      - assembly
+      - machining
+      - fabrication
+      - finishing
+      - packaging
+
+      # Lab/Chemical
+      - synthesis
+      - analysis
+      - extraction
+      - purification
+
+      # Software
+      - build
+      - deployment
+      - migration
+
+      # Service
+      - service_procedure
+      - maintenance
+      - inspection
+
+      # General
+      - transformation
+      - treatment
+
+  OutputType:
+    values:
+      - primary           # Main intended output
+      - byproduct         # Secondary output with value
+      - waste             # Output to dispose
+      - scrap             # Recyclable waste
+      - sample            # Testing sample
+
+  ProcessStatus:
+    values:
+      - draft
+      - active
+      - superseded        # Replaced by newer version
+      - deprecated
+      - archived
+
+  ExecutionStatus:
+    values:
+      - planned
+      - in_progress
+      - paused
+      - completed
+      - completed_with_deviations
+      - failed
+      - cancelled
+
+  QualityStatus:
+    values:
+      - pending_inspection
+      - passed
+      - passed_with_deviations
+      - failed
+      - hold              # Awaiting decision
+      - rework            # Needs rework
+      - scrapped
+
+examples:
+
+  chocolate_chip_cookies:
+    name: "Chocolate Chip Cookies"
+    process_type: recipe
+    category: "baking"
+    inputs:
+      - material_id: "flour_001"
+        name: "All-Purpose Flour"
+        quantity: { value: 280, unit: "g" }
+      - material_id: "butter_001"
+        name: "Butter"
+        quantity: { value: 225, unit: "g" }
+        preparation: "softened"
+      - material_id: "sugar_001"
+        name: "Brown Sugar"
+        quantity: { value: 200, unit: "g" }
+      - material_id: "eggs_001"
+        name: "Eggs"
+        quantity: { value: 2, unit: "each" }
+      - material_id: "choc_chips_001"
+        name: "Chocolate Chips"
+        quantity: { value: 340, unit: "g" }
+    steps:
+      - sequence: 1
+        instruction: "Preheat oven to 375°F (190°C)"
+        conditions:
+          - parameter: temperature
+            value: "375"
+            unit: "°F"
+      - sequence: 2
+        instruction: "Cream butter and sugar until fluffy"
+        duration: "PT3M"
+        equipment: ["stand_mixer"]
+      - sequence: 3
+        instruction: "Add eggs one at a time, mixing well"
+      - sequence: 4
+        instruction: "Gradually add flour, mixing until just combined"
+      - sequence: 5
+        instruction: "Fold in chocolate chips"
+      - sequence: 6
+        instruction: "Drop rounded tablespoons onto baking sheet"
+      - sequence: 7
+        instruction: "Bake until edges are golden"
+        duration: "PT12M"
+        conditions:
+          - parameter: temperature
+            value: "375"
+            unit: "°F"
+        completion_criteria: ["edges golden brown", "centers slightly soft"]
+    outputs:
+      - name: "Chocolate Chip Cookies"
+        output_type: primary
+        expected_quantity: { value: 36, unit: "cookies" }
+    expected_yield:
+      quantity: { value: 36, unit: "cookies" }
+      servings: 36
+    total_duration: "PT45M"
+    active_time: "PT20M"
+
+sources:
+  - "ISO 9001 Quality Management"
+  - "cGMP (Current Good Manufacturing Practice)"
+  - "HACCP Food Safety"
+  - "Recipe standardization practices"

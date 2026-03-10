@@ -1,0 +1,853 @@
+@prefix expense: <http://hopperlabs.ai/ontology/expense-report#> .
+@prefix core: <http://hopperlabs.ai/ontology/core#> .
+@prefix action: <http://hopperlabs.ai/ontology/action#> .
+@prefix auth: <http://hopperlabs.ai/ontology/auth#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# ============================================
+# Expense Report Domain Ontology
+# Description: Corporate expense reporting, reimbursement, and approval workflows
+# Created: 2025-11-22
+# ============================================
+
+# ----------------
+# SEMANTIC LAYER: Entities (What Exists)
+# ----------------
+
+expense:ExpenseReport a owl:Class ;
+    rdfs:label "Expense Report" ;
+    rdfs:comment "Collection of expense line items submitted for reimbursement" .
+
+expense:ExpenseLineItem a owl:Class ;
+    rdfs:label "Expense Line Item" ;
+    rdfs:comment "Individual expense entry within a report" .
+
+expense:Receipt a owl:Class ;
+    rdfs:label "Receipt" ;
+    rdfs:comment "Proof of purchase attached to expense line item" .
+
+expense:ExpensePolicy a owl:Class ;
+    rdfs:label "Expense Policy" ;
+    rdfs:comment "Corporate policy defining spending limits and allowed categories" .
+
+expense:ApprovalStep a owl:Class ;
+    rdfs:label "Approval Step" ;
+    rdfs:comment "Single step in multi-level approval workflow" .
+
+expense:Reimbursement a owl:Class ;
+    rdfs:label "Reimbursement" ;
+    rdfs:comment "Payment issued to employee for approved expenses" .
+
+# ----------------
+# Enums
+# ----------------
+
+expense:ExpenseReportStatus a owl:Class ;
+    rdfs:label "Expense Report Status" ;
+    owl:oneOf (expense:Draft expense:Submitted expense:PendingApproval expense:Approved expense:Rejected expense:Paid expense:Cancelled) .
+
+expense:Draft a expense:ExpenseReportStatus ;
+    rdfs:label "Draft" ;
+    rdfs:comment "Report is being prepared, not yet submitted" .
+
+expense:Submitted a expense:ExpenseReportStatus ;
+    rdfs:label "Submitted" ;
+    rdfs:comment "Report submitted for review" .
+
+expense:PendingApproval a expense:ExpenseReportStatus ;
+    rdfs:label "Pending Approval" ;
+    rdfs:comment "Report awaiting manager approval" .
+
+expense:Approved a expense:ExpenseReportStatus ;
+    rdfs:label "Approved" ;
+    rdfs:comment "Report approved for reimbursement" .
+
+expense:Rejected a expense:ExpenseReportStatus ;
+    rdfs:label "Rejected" ;
+    rdfs:comment "Report rejected, requires revision" .
+
+expense:Paid a expense:ExpenseReportStatus ;
+    rdfs:label "Paid" ;
+    rdfs:comment "Reimbursement has been processed" .
+
+expense:Cancelled a expense:ExpenseReportStatus ;
+    rdfs:label "Cancelled" ;
+    rdfs:comment "Report cancelled by submitter" .
+
+expense:ExpenseCategory a owl:Class ;
+    rdfs:label "Expense Category" ;
+    owl:oneOf (expense:Travel expense:Meals expense:Lodging expense:Transportation expense:Equipment expense:Software expense:Training expense:Supplies expense:Entertainment expense:Communication expense:Other) .
+
+expense:Travel a expense:ExpenseCategory ;
+    rdfs:label "Travel" ;
+    rdfs:comment "Airfare, train, mileage reimbursement" .
+
+expense:Meals a expense:ExpenseCategory ;
+    rdfs:label "Meals" ;
+    rdfs:comment "Business meals, per diem" .
+
+expense:Lodging a expense:ExpenseCategory ;
+    rdfs:label "Lodging" ;
+    rdfs:comment "Hotels, accommodations" .
+
+expense:Transportation a expense:ExpenseCategory ;
+    rdfs:label "Transportation" ;
+    rdfs:comment "Taxi, rideshare, rental car, parking" .
+
+expense:Equipment a expense:ExpenseCategory ;
+    rdfs:label "Equipment" ;
+    rdfs:comment "Hardware, office equipment" .
+
+expense:Software a expense:ExpenseCategory ;
+    rdfs:label "Software" ;
+    rdfs:comment "Software licenses, subscriptions" .
+
+expense:Training a expense:ExpenseCategory ;
+    rdfs:label "Training" ;
+    rdfs:comment "Conferences, courses, certifications" .
+
+expense:Supplies a expense:ExpenseCategory ;
+    rdfs:label "Supplies" ;
+    rdfs:comment "Office supplies, materials" .
+
+expense:Entertainment a expense:ExpenseCategory ;
+    rdfs:label "Entertainment" ;
+    rdfs:comment "Client entertainment, team events" .
+
+expense:Communication a expense:ExpenseCategory ;
+    rdfs:label "Communication" ;
+    rdfs:comment "Phone, internet, data" .
+
+expense:Other a expense:ExpenseCategory ;
+    rdfs:label "Other" ;
+    rdfs:comment "Miscellaneous expenses" .
+
+expense:PaymentMethod a owl:Class ;
+    rdfs:label "Payment Method" ;
+    owl:oneOf (expense:CorporateCard expense:PersonalCard expense:Cash expense:DirectDebit expense:Check) .
+
+expense:CorporateCard a expense:PaymentMethod ;
+    rdfs:label "Corporate Card" .
+
+expense:PersonalCard a expense:PaymentMethod ;
+    rdfs:label "Personal Card" .
+
+expense:Cash a expense:PaymentMethod ;
+    rdfs:label "Cash" .
+
+expense:DirectDebit a expense:PaymentMethod ;
+    rdfs:label "Direct Debit" .
+
+expense:Check a expense:PaymentMethod ;
+    rdfs:label "Check" .
+
+# ----------------
+# ExpenseReport Properties
+# ----------------
+
+expense:reportId a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range xsd:string ;
+    rdfs:label "Report ID" ;
+    rdfs:comment "Unique identifier for the expense report" .
+
+expense:title a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range xsd:string ;
+    rdfs:label "Title" ;
+    rdfs:comment "Descriptive title for the expense report" .
+
+expense:description a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range xsd:string ;
+    rdfs:label "Description" ;
+    rdfs:comment "Detailed description or business purpose" .
+
+expense:submitter a owl:ObjectProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range auth:User ;
+    rdfs:label "Submitter" ;
+    rdfs:comment "Employee who submitted the report" .
+
+expense:status a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range expense:ExpenseReportStatus ;
+    rdfs:label "Status" ;
+    rdfs:comment "Current status of the expense report" .
+
+expense:totalAmount a owl:ObjectProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range core:Money ;
+    rdfs:label "Total Amount" ;
+    rdfs:comment "Sum of all line item amounts" .
+
+expense:hasLineItem a owl:ObjectProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range expense:ExpenseLineItem ;
+    rdfs:label "Has Line Item" ;
+    rdfs:comment "Line items belonging to this report" .
+
+expense:hasApprovalStep a owl:ObjectProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range expense:ApprovalStep ;
+    rdfs:label "Has Approval Step" ;
+    rdfs:comment "Approval workflow steps for this report" .
+
+expense:appliesPolicy a owl:ObjectProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range expense:ExpensePolicy ;
+    rdfs:label "Applies Policy" ;
+    rdfs:comment "Expense policy governing this report" .
+
+expense:submittedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Submitted At" ;
+    rdfs:comment "Timestamp when report was submitted" .
+
+expense:approvedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Approved At" ;
+    rdfs:comment "Timestamp when report was approved" .
+
+expense:paidAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Paid At" ;
+    rdfs:comment "Timestamp when reimbursement was processed" .
+
+expense:createdAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Created At" ;
+    rdfs:comment "Timestamp when record was created" .
+
+expense:updatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseReport ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Updated At" ;
+    rdfs:comment "Timestamp when record was last updated" .
+
+# ----------------
+# ExpenseLineItem Properties
+# ----------------
+
+expense:lineItemId a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range xsd:string ;
+    rdfs:label "Line Item ID" ;
+    rdfs:comment "Unique identifier for the line item" .
+
+expense:expenseDate a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range xsd:date ;
+    rdfs:label "Expense Date" ;
+    rdfs:comment "Date when expense was incurred" .
+
+expense:category a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range expense:ExpenseCategory ;
+    rdfs:label "Category" ;
+    rdfs:comment "Expense category classification" .
+
+expense:amount a owl:ObjectProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range core:Money ;
+    rdfs:label "Amount" ;
+    rdfs:comment "Expense amount with currency" .
+
+expense:vendor a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range xsd:string ;
+    rdfs:label "Vendor" ;
+    rdfs:comment "Merchant or vendor name" .
+
+expense:paymentMethod a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range expense:PaymentMethod ;
+    rdfs:label "Payment Method" ;
+    rdfs:comment "How the expense was paid" .
+
+expense:hasReceipt a owl:ObjectProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range expense:Receipt ;
+    rdfs:label "Has Receipt" ;
+    rdfs:comment "Receipt attached to line item" .
+
+expense:notes a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range xsd:string ;
+    rdfs:label "Notes" ;
+    rdfs:comment "Additional notes or justification" .
+
+expense:isBillable a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Is Billable" ;
+    rdfs:comment "Whether expense is billable to a client" .
+
+expense:projectCode a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range xsd:string ;
+    rdfs:label "Project Code" ;
+    rdfs:comment "Project or cost center code for allocation" .
+
+expense:lineItemCreatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Created At" ;
+    rdfs:comment "Timestamp when line item was created" .
+
+expense:lineItemUpdatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpenseLineItem ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Updated At" ;
+    rdfs:comment "Timestamp when line item was last updated" .
+
+# ----------------
+# Receipt Properties
+# ----------------
+
+expense:receiptId a owl:DatatypeProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range xsd:string ;
+    rdfs:label "Receipt ID" ;
+    rdfs:comment "Unique identifier for the receipt" .
+
+expense:fileUrl a owl:DatatypeProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "File URL" ;
+    rdfs:comment "URL to receipt image or PDF" .
+
+expense:mimeType a owl:DatatypeProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range xsd:string ;
+    rdfs:label "MIME Type" ;
+    rdfs:comment "File type (image/jpeg, application/pdf, etc.)" .
+
+expense:fileSize a owl:DatatypeProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range xsd:integer ;
+    rdfs:label "File Size" ;
+    rdfs:comment "File size in bytes" .
+
+expense:ocrExtracted a owl:DatatypeProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "OCR Extracted" ;
+    rdfs:comment "Whether data was extracted via OCR" .
+
+expense:extractedAmount a owl:ObjectProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range core:Money ;
+    rdfs:label "Extracted Amount" ;
+    rdfs:comment "Amount extracted from receipt via OCR" .
+
+expense:extractedDate a owl:DatatypeProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range xsd:date ;
+    rdfs:label "Extracted Date" ;
+    rdfs:comment "Date extracted from receipt via OCR" .
+
+expense:extractedVendor a owl:DatatypeProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range xsd:string ;
+    rdfs:label "Extracted Vendor" ;
+    rdfs:comment "Vendor name extracted from receipt via OCR" .
+
+expense:receiptCreatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Created At" ;
+    rdfs:comment "Timestamp when receipt was uploaded" .
+
+expense:receiptUpdatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:Receipt ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Updated At" ;
+    rdfs:comment "Timestamp when receipt was last updated" .
+
+# ----------------
+# ApprovalStep Properties
+# ----------------
+
+expense:stepId a owl:DatatypeProperty ;
+    rdfs:domain expense:ApprovalStep ;
+    rdfs:range xsd:string ;
+    rdfs:label "Step ID" ;
+    rdfs:comment "Unique identifier for the approval step" .
+
+expense:stepOrder a owl:DatatypeProperty ;
+    rdfs:domain expense:ApprovalStep ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Step Order" ;
+    rdfs:comment "Order in approval workflow (1, 2, 3...)" .
+
+expense:approver a owl:ObjectProperty ;
+    rdfs:domain expense:ApprovalStep ;
+    rdfs:range auth:User ;
+    rdfs:label "Approver" ;
+    rdfs:comment "User designated to approve this step" .
+
+expense:stepStatus a owl:DatatypeProperty ;
+    rdfs:domain expense:ApprovalStep ;
+    rdfs:range xsd:string ;
+    rdfs:label "Step Status" ;
+    owl:oneOf ("pending" "approved" "rejected") .
+
+expense:decision a owl:DatatypeProperty ;
+    rdfs:domain expense:ApprovalStep ;
+    rdfs:range xsd:string ;
+    rdfs:label "Decision" ;
+    rdfs:comment "Approval decision (approved/rejected)" .
+
+expense:comments a owl:DatatypeProperty ;
+    rdfs:domain expense:ApprovalStep ;
+    rdfs:range xsd:string ;
+    rdfs:label "Comments" ;
+    rdfs:comment "Approver comments or rejection reason" .
+
+expense:decidedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ApprovalStep ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Decided At" ;
+    rdfs:comment "Timestamp when decision was made" .
+
+expense:stepCreatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ApprovalStep ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Created At" ;
+    rdfs:comment "Timestamp when step was created" .
+
+expense:stepUpdatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ApprovalStep ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Updated At" ;
+    rdfs:comment "Timestamp when step was last updated" .
+
+# ----------------
+# ExpensePolicy Properties
+# ----------------
+
+expense:policyId a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range xsd:string ;
+    rdfs:label "Policy ID" ;
+    rdfs:comment "Unique identifier for the policy" .
+
+expense:policyName a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range xsd:string ;
+    rdfs:label "Policy Name" ;
+    rdfs:comment "Name of the expense policy" .
+
+expense:dailyLimit a owl:ObjectProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range core:Money ;
+    rdfs:label "Daily Limit" ;
+    rdfs:comment "Maximum daily expense limit" .
+
+expense:perItemLimit a owl:ObjectProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range core:Money ;
+    rdfs:label "Per Item Limit" ;
+    rdfs:comment "Maximum amount for single expense item" .
+
+expense:requiresReceipt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Requires Receipt" ;
+    rdfs:comment "Whether receipts are required for all expenses" .
+
+expense:receiptThreshold a owl:ObjectProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range core:Money ;
+    rdfs:label "Receipt Threshold" ;
+    rdfs:comment "Amount above which receipt is required" .
+
+expense:allowedCategories a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range expense:ExpenseCategory ;
+    rdfs:label "Allowed Categories" ;
+    rdfs:comment "Categories permitted under this policy" .
+
+expense:approvalThreshold a owl:ObjectProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range core:Money ;
+    rdfs:label "Approval Threshold" ;
+    rdfs:comment "Amount requiring manager approval" .
+
+expense:policyCreatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Created At" ;
+    rdfs:comment "Timestamp when policy was created" .
+
+expense:policyUpdatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:ExpensePolicy ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Updated At" ;
+    rdfs:comment "Timestamp when policy was last updated" .
+
+# ----------------
+# Reimbursement Properties
+# ----------------
+
+expense:reimbursementId a owl:DatatypeProperty ;
+    rdfs:domain expense:Reimbursement ;
+    rdfs:range xsd:string ;
+    rdfs:label "Reimbursement ID" ;
+    rdfs:comment "Unique identifier for the reimbursement" .
+
+expense:forReport a owl:ObjectProperty ;
+    rdfs:domain expense:Reimbursement ;
+    rdfs:range expense:ExpenseReport ;
+    rdfs:label "For Report" ;
+    rdfs:comment "Expense report being reimbursed" .
+
+expense:reimbursementAmount a owl:ObjectProperty ;
+    rdfs:domain expense:Reimbursement ;
+    rdfs:range core:Money ;
+    rdfs:label "Reimbursement Amount" ;
+    rdfs:comment "Total amount being reimbursed" .
+
+expense:reimbursementMethod a owl:DatatypeProperty ;
+    rdfs:domain expense:Reimbursement ;
+    rdfs:range xsd:string ;
+    rdfs:label "Reimbursement Method" ;
+    rdfs:comment "How reimbursement is issued (direct deposit, check)" .
+
+expense:processedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:Reimbursement ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Processed At" ;
+    rdfs:comment "Timestamp when reimbursement was processed" .
+
+expense:reimbursementCreatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:Reimbursement ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Created At" ;
+    rdfs:comment "Timestamp when reimbursement record was created" .
+
+expense:reimbursementUpdatedAt a owl:DatatypeProperty ;
+    rdfs:domain expense:Reimbursement ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Updated At" ;
+    rdfs:comment "Timestamp when reimbursement was last updated" .
+
+# ----------------
+# KINETIC LAYER: Actions (What Can Be Done)
+# ----------------
+
+expense:CreateExpenseReportAction a action:CreateAction ;
+    rdfs:label "Create Expense Report" ;
+    rdfs:comment "Create a new draft expense report" ;
+    action:operatesOn expense:ExpenseReport ;
+    action:requiresPermission "expense:create" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Creates expense report with Draft status" ;
+    action:errorConditions "VALIDATION_ERROR, UNAUTHORIZED" .
+
+expense:CreateExpenseReportAction action:requires [
+    action:parameterName "title" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Report title"
+] , [
+    action:parameterName "description" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "Report description or business purpose"
+] .
+
+expense:CreateExpenseReportAction action:produces [
+    action:resultType "ExpenseReport" ;
+    rdfs:comment "Newly created expense report in Draft status"
+] .
+
+# ----------------
+
+expense:AddLineItemAction a action:CreateAction ;
+    rdfs:label "Add Line Item" ;
+    rdfs:comment "Add expense line item to a report" ;
+    action:operatesOn expense:ExpenseLineItem ;
+    action:requiresPermission "expense:edit" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Creates line item, updates report total" ;
+    action:errorConditions "REPORT_NOT_FOUND, REPORT_NOT_DRAFT, VALIDATION_ERROR" .
+
+expense:AddLineItemAction action:requires [
+    action:parameterName "reportId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "expenseDate" ;
+    action:parameterType "Date" ;
+    action:isRequired true
+] , [
+    action:parameterName "category" ;
+    action:parameterType "ExpenseCategory" ;
+    action:isRequired true
+] , [
+    action:parameterName "amount" ;
+    action:parameterType "Money" ;
+    action:isRequired true
+] , [
+    action:parameterName "vendor" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "paymentMethod" ;
+    action:parameterType "PaymentMethod" ;
+    action:isRequired true
+] , [
+    action:parameterName "notes" ;
+    action:parameterType "string" ;
+    action:isRequired false
+] , [
+    action:parameterName "projectCode" ;
+    action:parameterType "string" ;
+    action:isRequired false
+] , [
+    action:parameterName "isBillable" ;
+    action:parameterType "boolean" ;
+    action:isRequired false ;
+    action:defaultValue "false"
+] .
+
+expense:AddLineItemAction action:produces [
+    action:resultType "ExpenseLineItem" ;
+    rdfs:comment "Newly created line item"
+] .
+
+# ----------------
+
+expense:AttachReceiptAction a action:CreateAction ;
+    rdfs:label "Attach Receipt" ;
+    rdfs:comment "Attach receipt image or PDF to line item" ;
+    action:operatesOn expense:Receipt ;
+    action:requiresPermission "expense:edit" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Uploads file, creates receipt record, optionally runs OCR" ;
+    action:errorConditions "LINE_ITEM_NOT_FOUND, FILE_TOO_LARGE, INVALID_FILE_TYPE" .
+
+expense:AttachReceiptAction action:requires [
+    action:parameterName "lineItemId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "file" ;
+    action:parameterType "File" ;
+    action:isRequired true
+] , [
+    action:parameterName "runOcr" ;
+    action:parameterType "boolean" ;
+    action:isRequired false ;
+    action:defaultValue "true" ;
+    rdfs:comment "Extract data from receipt via OCR"
+] .
+
+expense:AttachReceiptAction action:produces [
+    action:resultType "Receipt" ;
+    rdfs:comment "Created receipt with optional OCR data"
+] .
+
+# ----------------
+
+expense:SubmitExpenseReportAction a action:UpdateAction ;
+    rdfs:label "Submit Expense Report" ;
+    rdfs:comment "Submit draft report for approval" ;
+    action:operatesOn expense:ExpenseReport ;
+    action:requiresPermission "expense:submit" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Updates status to Submitted, creates approval workflow, notifies approvers" ;
+    action:errorConditions "REPORT_NOT_FOUND, REPORT_EMPTY, MISSING_RECEIPTS, POLICY_VIOLATION" .
+
+expense:SubmitExpenseReportAction action:requires [
+    action:parameterName "reportId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] .
+
+expense:SubmitExpenseReportAction action:produces [
+    action:resultType "ExpenseReport" ;
+    rdfs:comment "Report with Submitted status and approval workflow"
+] .
+
+# ----------------
+
+expense:ApproveExpenseReportAction a action:UpdateAction ;
+    rdfs:label "Approve Expense Report" ;
+    rdfs:comment "Approve expense report at current approval step" ;
+    action:operatesOn expense:ExpenseReport ;
+    action:requiresPermission "expense:approve" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Updates approval step, advances workflow or marks Approved if final" ;
+    action:errorConditions "REPORT_NOT_FOUND, NOT_PENDING_APPROVAL, NOT_AUTHORIZED_APPROVER" .
+
+expense:ApproveExpenseReportAction action:requires [
+    action:parameterName "reportId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "comments" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "Optional approval comments"
+] .
+
+expense:ApproveExpenseReportAction action:produces [
+    action:resultType "ExpenseReport" ;
+    rdfs:comment "Report with updated approval status"
+] .
+
+# ----------------
+
+expense:RejectExpenseReportAction a action:UpdateAction ;
+    rdfs:label "Reject Expense Report" ;
+    rdfs:comment "Reject expense report with reason" ;
+    action:operatesOn expense:ExpenseReport ;
+    action:requiresPermission "expense:approve" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Updates status to Rejected, notifies submitter" ;
+    action:errorConditions "REPORT_NOT_FOUND, NOT_PENDING_APPROVAL, NOT_AUTHORIZED_APPROVER" .
+
+expense:RejectExpenseReportAction action:requires [
+    action:parameterName "reportId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "reason" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Reason for rejection (required)"
+] .
+
+expense:RejectExpenseReportAction action:produces [
+    action:resultType "ExpenseReport" ;
+    rdfs:comment "Report with Rejected status"
+] .
+
+# ----------------
+
+expense:ProcessReimbursementAction a action:CreateAction ;
+    rdfs:label "Process Reimbursement" ;
+    rdfs:comment "Process payment for approved expense report" ;
+    action:operatesOn expense:Reimbursement ;
+    action:requiresPermission "expense:reimburse" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Creates reimbursement record, initiates payment, updates report status to Paid" ;
+    action:errorConditions "REPORT_NOT_APPROVED, PAYMENT_FAILED" .
+
+expense:ProcessReimbursementAction action:requires [
+    action:parameterName "reportId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "method" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    action:defaultValue "direct_deposit" ;
+    rdfs:comment "Payment method (direct_deposit, check)"
+] .
+
+expense:ProcessReimbursementAction action:produces [
+    action:resultType "Reimbursement" ;
+    rdfs:comment "Reimbursement record with payment details"
+] .
+
+# ----------------
+
+expense:SearchExpenseReportsAction a action:ReadAction ;
+    rdfs:label "Search Expense Reports" ;
+    rdfs:comment "Search and filter expense reports" ;
+    action:operatesOn expense:ExpenseReport ;
+    action:requiresPermission "expense:read" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "None (read-only query)" ;
+    action:errorConditions "INVALID_QUERY" .
+
+expense:SearchExpenseReportsAction action:requires [
+    action:parameterName "status" ;
+    action:parameterType "ExpenseReportStatus" ;
+    action:isRequired false
+] , [
+    action:parameterName "submitterId" ;
+    action:parameterType "string" ;
+    action:isRequired false
+] , [
+    action:parameterName "dateFrom" ;
+    action:parameterType "Date" ;
+    action:isRequired false
+] , [
+    action:parameterName "dateTo" ;
+    action:parameterType "Date" ;
+    action:isRequired false
+] , [
+    action:parameterName "minAmount" ;
+    action:parameterType "Money" ;
+    action:isRequired false
+] , [
+    action:parameterName "maxAmount" ;
+    action:parameterType "Money" ;
+    action:isRequired false
+] .
+
+expense:SearchExpenseReportsAction action:produces [
+    action:resultType "ExpenseReport[]" ;
+    rdfs:comment "Array of matching expense reports"
+] .
+
+# ----------------
+# Workflow: Standard Expense Approval
+# ----------------
+
+expense:StandardApprovalWorkflow a action:ActionSequence ;
+    rdfs:label "Standard Expense Approval Workflow" ;
+    rdfs:comment "Typical workflow for expense report lifecycle" ;
+    action:hasStep expense:CreateExpenseReportAction ,
+                   expense:AddLineItemAction ,
+                   expense:AttachReceiptAction ,
+                   expense:SubmitExpenseReportAction ,
+                   expense:ApproveExpenseReportAction ,
+                   expense:ProcessReimbursementAction ;
+    rdfs:comment "Create → Add Items → Attach Receipts → Submit → Approve → Reimburse" .
+
+# ----------------
+# LLM Agent Integration
+# ----------------
+
+expense:ExpenseReportCapability a action:AgentCapability ;
+    rdfs:label "Expense Report Capability" ;
+    action:naturalLanguageDescription """
+You can perform the following expense report operations:
+- Create new expense reports with title and description
+- Add expense line items with date, category, amount, vendor
+- Attach receipt images/PDFs with automatic OCR extraction
+- Submit reports for manager approval
+- Approve or reject pending expense reports (managers only)
+- Process reimbursements for approved reports (finance only)
+- Search and filter expense reports by status, date, amount
+
+All operations require appropriate permissions.
+""" ;
+    action:exampleUsage """
+Example 1: Create expense report
+Input: { title: "Q4 Client Visit - Acme Corp" }
+Output: { reportId: "exp-123", status: "Draft", totalAmount: 0 }
+
+Example 2: Add line item
+Input: { reportId: "exp-123", category: "Travel", amount: { amount: 450.00, currency: "USD" }, vendor: "Delta Airlines", expenseDate: "2025-11-15" }
+Output: { lineItemId: "li-456", reportId: "exp-123", category: "Travel", amount: 450.00 }
+
+Example 3: Submit for approval
+Input: { reportId: "exp-123" }
+Output: { reportId: "exp-123", status: "Submitted", submittedAt: "2025-11-22T10:30:00Z" }
+""" .

@@ -1,0 +1,669 @@
+# Human Task Domain Model
+# Human-in-the-loop review and approval of AI-generated content
+
+domain:
+  name: human-task
+  version: "1.2.0"
+  description: Human task queue, review workflows, decisions, multi-reviewer approval patterns, review cases, and queue management
+  dependencies: [core, auth, notification, work-item]
+  extends: work-item
+  use_case: Human-in-the-loop review for RLHF training data, clinical notes, architecture approvals, and content moderation
+  created_at: "2025-11-22"
+  updated_at: "2025-12-01"
+
+entities:
+
+  # ============================================
+  # CORE TASK ENTITIES
+  # ============================================
+
+  Task:
+    description: A unit of work requiring judgment from an actor
+    extends: work-item:WorkItem
+    properties:
+      id: { type: uuid, required: true }
+      typeId: { type: string, required: true, description: "FK to TaskType" }
+      assignedTo: { type: Actor, required: true }
+      status: { type: TaskStatus, required: true }
+      input: { type: TaskInput, required: true }
+      priority: { type: Priority, required: true }
+      source: { type: Actor, required: true, description: "What created this task" }
+      sourceRef: { type: ExternalRef }
+      correlationId: { type: string, description: "Cross-system tracing" }
+      contextTags: { type: array, items: string }
+      recommendation: { type: Recommendation }
+      dependencies: { type: array, items: TaskDependency }
+      impacts: { type: array, items: DownstreamImpact }
+      dueAt: { type: datetime }
+      expiresAt: { type: datetime }
+      completedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  TaskInput:
+    description: Content to be reviewed - validated by TaskType.inputSchema
+    properties:
+      brief: { type: string, required: true, maxLength: 50, description: "For minimal UI/voice" }
+      summary: { type: string, required: true, maxLength: 200, description: "Scannable summary" }
+      payload: { type: object, required: true, description: "Full content, validated by TaskType.inputSchema" }
+      attachments: { type: array, items: Attachment }
+      context: { type: InputContext }
+
+  TaskDecision:
+    description: The outcome of an actor's judgment
+    properties:
+      id: { type: uuid, required: true }
+      taskId: { type: uuid, required: true }
+      actor: { type: Actor, required: true }
+      actionId: { type: string, required: true, description: "FK to ActionType" }
+      feedback: { type: array, items: FeedbackSignal }
+      note: { type: string }
+      noteAttachmentRef: { type: ExternalRef, description: "Voice/file -> Communication domain" }
+      followedRecommendation: { type: boolean }
+      latencyMs: { type: integer }
+      createdAt: { type: datetime, required: true }
+
+  Reminder:
+    description: A deferred task with trigger conditions
+    properties:
+      id: { type: uuid, required: true }
+      taskId: { type: uuid, required: true }
+      actor: { type: Actor, required: true }
+      trigger: { type: ReminderTrigger, required: true }
+      status: { type: ReminderStatus, required: true }
+      notificationRef: { type: ExternalRef, description: "-> Notification domain when fired" }
+      triggeredAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ReviewQueue:
+    description: Collection of tasks assigned to specific reviewers or roles
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true, maxLength: 100 }
+      description: { type: string, maxLength: 500 }
+      queueType: { type: QueueType, required: true }
+      taskTypeIds: { type: array, items: string, description: "Filter: only tasks of these types" }
+      assignedActors: { type: array, items: Actor, description: "Who can review from this queue" }
+      priorityStrategy: { type: PriorityStrategy, required: true }
+      maxConcurrent: { type: integer, description: "Max tasks in Active status per actor" }
+      autoAssign: { type: boolean, default: false, description: "Automatically assign when pulled" }
+      slaHours: { type: integer, description: "Expected time to complete" }
+      status: { type: QueueStatus, required: true }
+      sourceRef: { type: ExternalRef }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ReviewCase:
+    description: Group of related tasks that need review (e.g., RLHF dataset, clinical notes batch, architecture proposal)
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true, maxLength: 200 }
+      description: { type: string }
+      caseType: { type: CaseType, required: true }
+      tasks: { type: array, items: uuid, required: true, description: "FK to Task[]" }
+      queueId: { type: uuid, description: "FK to ReviewQueue if assigned" }
+      assignedTo: { type: Actor }
+      status: { type: CaseStatus, required: true }
+      metadata: { type: object, description: "Case-specific metadata" }
+      completionCriteria: { type: CompletionCriteria }
+      progress: { type: CaseProgress, required: true }
+      dueAt: { type: datetime }
+      completedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  TaskBundle:
+    description: Tasks that must be reviewed together
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      bundleType: { type: BundleType, required: true }
+      tasks: { type: array, items: BundleTask, required: true }
+      status: { type: BundleStatus, required: true }
+      approvalPatternId: { type: string, required: true }
+      source: { type: Actor, required: true }
+      sourceRef: { type: ExternalRef }
+      completedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # MULTI-REVIEWER ENTITIES
+  # ============================================
+
+  TaskAssignment:
+    description: Track who is assigned to review a task
+    properties:
+      id: { type: uuid, required: true }
+      taskId: { type: uuid, required: true }
+      actor: { type: Actor, required: true }
+      role: { type: ReviewerRole, required: true }
+      weight: { type: decimal, default: 1.0, description: "For weighted voting" }
+      isRequired: { type: boolean, required: true }
+      status: { type: AssignmentStatus, required: true }
+      delegatedTo: { type: Actor }
+      assignedAt: { type: datetime, required: true }
+      remindedAt: { type: datetime }
+      completedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AggregateDecision:
+    description: Computed result of multiple reviewers
+    properties:
+      id: { type: uuid, required: true }
+      taskId: { type: uuid, required: true }
+      patternId: { type: string, required: true }
+      individualDecisions: { type: array, items: uuid, required: true, description: "FK to TaskDecision[]" }
+      resultActionId: { type: string, required: true }
+      resultConfidence: { type: decimal, required: true }
+      voteSummary: { type: VoteSummary, required: true }
+      isUnanimous: { type: boolean, required: true }
+      dissentingActors: { type: array, items: Actor }
+      computedAt: { type: datetime, required: true }
+      createdAt: { type: datetime, required: true }
+
+  ReviewAuditLog:
+    description: Immutable record of what happened
+    properties:
+      id: { type: uuid, required: true }
+      taskId: { type: uuid, required: true }
+      bundleId: { type: uuid }
+      eventType: { type: AuditEventType, required: true }
+      actor: { type: Actor, required: true }
+      details: { type: object, required: true, description: "Event-specific data" }
+      metadata: { type: object }
+      timestamp: { type: datetime, required: true }
+
+  # ============================================
+  # CONFIGURATION ENTITIES
+  # ============================================
+
+  TaskType:
+    description: Defines a category of human tasks and their schema
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      inputSchema: { type: object, required: true, description: "JSON Schema validating TaskInput.payload" }
+      availableActions: { type: array, items: string, required: true, description: "FK to ActionType[]" }
+      feedbackDimensions: { type: array, items: DimensionRef }
+      defaultApprovalPatternId: { type: string }
+      isActive: { type: boolean, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ActionType:
+    description: Defines an action an actor can take on a task
+    properties:
+      id: { type: string, required: true, description: "approve, reject, defer, request_changes" }
+      name: { type: string, required: true }
+      description: { type: string }
+      isTerminal: { type: boolean, required: true, description: "Does this complete the task?" }
+      requiresFeedback: { type: boolean }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  FeedbackDimension:
+    description: Defines an axis along which actors can provide feedback
+    properties:
+      id: { type: string, required: true, description: "length, formality, detail, tone" }
+      name: { type: string, required: true }
+      description: { type: string }
+      scaleType: { type: ScaleType, required: true }
+      minValue: { type: decimal, required: true }
+      maxValue: { type: decimal, required: true }
+      defaultValue: { type: decimal, required: true }
+      minLabel: { type: string, required: true, description: "Shorter, Casual, Brief" }
+      maxLabel: { type: string, required: true, description: "Longer, Formal, Detailed" }
+      midLabel: { type: string }
+      discreteOptions: { type: array, items: DiscreteOption }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ApprovalPattern:
+    description: Configures how multi-reviewer decisions are aggregated
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ApprovalPatternType, required: true }
+      threshold: { type: decimal, description: "For quorum (0.0-1.0)" }
+      minReviewers: { type: integer }
+      timeoutHours: { type: integer }
+      tieBreaker: { type: TieBreakerStrategy }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # SUPPORTING VALUE OBJECTS
+  # ============================================
+
+  Actor:
+    description: Abstraction over who/what is performing an action
+    properties:
+      type: { type: ActorType, required: true }
+      id: { type: string, required: true, description: "References entity in appropriate domain" }
+      displayName: { type: string }
+
+  ExternalRef:
+    description: Reference to entity in another domain
+    properties:
+      domain: { type: string, required: true, description: "identity, notification, calendar" }
+      entity: { type: string, required: true, description: "user, notification, event" }
+      id: { type: string, required: true }
+      version: { type: integer }
+
+  Priority:
+    description: Task priority for queue ordering (per-actor)
+    properties:
+      score: { type: decimal, required: true, min: 0.0, max: 1.0, description: "Higher = more urgent" }
+      reason: { type: string }
+      factors: { type: array, items: PriorityFactor }
+      computedAt: { type: datetime, required: true }
+      override: { type: PriorityOverride }
+
+  PriorityFactor:
+    description: Component contributing to priority score
+    properties:
+      name: { type: string, required: true, description: "urgency, age, deadline_proximity" }
+      weight: { type: decimal, required: true }
+      value: { type: decimal, required: true }
+      contribution: { type: decimal, required: true, description: "weight * value" }
+
+  PriorityOverride:
+    description: Actor-level priority adjustment
+    properties:
+      actor: { type: Actor, required: true }
+      adjustment: { type: decimal, required: true, description: "-1.0 to +1.0" }
+      reason: { type: string }
+      expiresAt: { type: datetime }
+
+  Recommendation:
+    description: AI recommendation for task decision
+    properties:
+      actionId: { type: string, required: true }
+      confidence: { type: decimal, required: true, min: 0.0, max: 1.0 }
+      strength: { type: RecommendationStrength, required: true }
+      reason: { type: string, maxLength: 100 }
+      factors: { type: array, items: RecommendationFactor }
+
+  RecommendationFactor:
+    properties:
+      name: { type: string, required: true }
+      weight: { type: decimal, required: true }
+      explanation: { type: string, required: true }
+
+  FeedbackSignal:
+    description: Instance of feedback on a specific dimension
+    properties:
+      dimensionId: { type: string, required: true }
+      value: { type: decimal, required: true, description: "Normalized to scale" }
+      sourceModality: { type: Modality, required: true }
+      rawInput: { type: string, description: "Original input (voice text, gesture name)" }
+      confidence: { type: decimal, description: "NLU confidence for voice" }
+
+  TaskDependency:
+    properties:
+      taskId: { type: uuid, required: true }
+      type: { type: DependencyType, required: true }
+      isBlocking: { type: boolean, required: true }
+      condition: { type: string }
+
+  DownstreamImpact:
+    properties:
+      type: { type: ImpactType, required: true }
+      description: { type: string, required: true }
+      severity: { type: ImpactSeverity, required: true }
+      affectedEntities: { type: array, items: ExternalRef }
+      conditionalOn: { type: string, description: "Which action triggers this" }
+
+  BundleTask:
+    properties:
+      taskId: { type: uuid, required: true }
+      sequence: { type: integer }
+      isRequired: { type: boolean, required: true }
+      dependencyIds: { type: array, items: uuid }
+
+  VoteSummary:
+    properties:
+      total: { type: integer, required: true }
+      byAction: { type: object, required: true, description: "Map<actionId, count>" }
+      weightedByAction: { type: object, description: "Map<actionId, weightedCount>" }
+      abstentions: { type: integer, required: true }
+      pending: { type: integer, required: true }
+
+  CompletionCriteria:
+    description: Criteria that must be met for case completion
+    properties:
+      requireAllTasksCompleted: { type: boolean, default: true }
+      minTasksCompleted: { type: integer }
+      minPercentCompleted: { type: decimal, min: 0.0, max: 1.0 }
+      customRules: { type: array, items: object }
+
+  CaseProgress:
+    description: Progress tracking for a review case
+    properties:
+      totalTasks: { type: integer, required: true }
+      completedTasks: { type: integer, required: true }
+      pendingTasks: { type: integer, required: true }
+      percentComplete: { type: decimal, required: true, min: 0.0, max: 1.0 }
+      estimatedCompletionAt: { type: datetime }
+
+  DimensionRef:
+    properties:
+      dimensionId: { type: string, required: true }
+      priority: { type: integer, required: true }
+      required: { type: boolean, required: true }
+      labelOverrides: { type: object }
+
+  DiscreteOption:
+    properties:
+      value: { type: decimal, required: true }
+      label: { type: string, required: true }
+      voiceTriggers: { type: array, items: string }
+
+  ReminderTrigger:
+    description: Trigger condition for reminder (time, location, event, context)
+    properties:
+      type: { type: ReminderTriggerType, required: true }
+      at: { type: datetime, description: "For time trigger" }
+      timezone: { type: string }
+      placeRef: { type: ExternalRef, description: "For location trigger" }
+      radiusMeters: { type: integer }
+      onEnter: { type: boolean }
+      eventRef: { type: ExternalRef, description: "For event trigger" }
+      timing: { type: string, description: "before, after" }
+      offsetMinutes: { type: integer }
+      conditions: { type: array, items: object, description: "For context trigger" }
+
+  Attachment:
+    properties:
+      id: { type: string, required: true }
+      type: { type: AttachmentType, required: true }
+      name: { type: string, required: true }
+      url: { type: uri, required: true }
+      mimeType: { type: string }
+      preview: { type: string }
+
+  InputContext:
+    properties:
+      relatedTasks: { type: array, items: uuid }
+      externalLinks: { type: array, items: ExternalRef }
+
+enums:
+
+  # Task Status
+  TaskStatus:
+    values:
+      - Pending       # Awaiting attention
+      - Active        # Currently being reviewed
+      - Deferred      # User chose "later"
+      - Completed     # Decision made
+      - Expired       # Past expiration
+      - Cancelled     # Withdrawn by source
+
+  ReminderStatus:
+    values: [Pending, Triggered, Dismissed, Expired]
+
+  BundleType:
+    values:
+      - Parallel      # Review all independently
+      - Sequential    # Review in order
+      - Atomic        # All-or-nothing
+      - Conditional   # Later tasks depend on earlier
+
+  BundleStatus:
+    values: [Pending, Active, Partial, Completed, Failed, Cancelled]
+
+  # Queue Types
+  QueueType:
+    values:
+      - Personal        # Individual actor's queue
+      - Shared          # Multiple actors can pull from queue
+      - RoundRobin      # Auto-assign in rotation
+      - Specialized     # Requires specific skills/role
+
+  QueueStatus:
+    values: [Active, Paused, Archived]
+
+  PriorityStrategy:
+    values:
+      - FIFO            # First in, first out
+      - LIFO            # Last in, first out
+      - HighestPriority # Sort by priority score
+      - DueDate         # Sort by due date
+      - Custom          # Custom sorting logic
+
+  # Case Types
+  CaseType:
+    values:
+      - RLHFDataset          # RLHF training data labeling
+      - ClinicalReview       # Medical clinical note review
+      - ArchitectureApproval # Architecture proposal review
+      - ContentModeration    # Content moderation batch
+      - QualityAssurance     # QA review batch
+      - Custom               # Application-specific
+
+  CaseStatus:
+    values: [Draft, Pending, Active, Completed, Expired, Cancelled]
+
+  ReviewerRole:
+    values: [Primary, Secondary, Approver, Observer, Delegate]
+
+  AssignmentStatus:
+    values: [Pending, Viewed, Completed, Recused, Delegated, Expired]
+
+  # Approval Patterns
+  ApprovalPatternType:
+    values:
+      - Single        # One designated reviewer
+      - Any           # First reviewer decides
+      - All           # Unanimous required
+      - Majority      # >50% must agree
+      - Quorum        # Configurable threshold
+      - Weighted      # Reviewers have different weights
+
+  TieBreakerStrategy:
+    values: [Reject, Approve, Escalate, Oldest, Defer]
+
+  # Recommendations
+  RecommendationStrength:
+    values:
+      - Strong        # >= 0.90 confidence
+      - Moderate      # 0.70-0.89
+      - Weak          # 0.50-0.69
+      - None          # < 0.50
+
+  # Feedback
+  ScaleType:
+    values: [Continuous, Discrete, Binary]
+
+  # Dependencies
+  DependencyType:
+    values:
+      - RequiresApproval
+      - RequiresCompletion
+      - RequiresData
+      - ConflictsWith
+      - Supersedes
+
+  # Impact
+  ImpactType:
+    values: [System, Process, Financial, Communication, Access, Data, External]
+
+  ImpactSeverity:
+    values: [Info, Low, Medium, High, Critical]
+
+  # Actor Types
+  ActorType:
+    values:
+      - User          # -> Identity domain
+      - System        # Internal service
+      - Service       # External integration
+      - Automation    # Rule-based
+      - Delegate      # Acting for another
+      - Agent         # AI agent
+
+  # Interaction
+  Modality:
+    values:
+      - VisualTouch   # Phone/tablet swipe
+      - VisualClick   # Desktop
+      - Voice         # Voice assistant
+      - VoiceWithDisplay # Echo Show, CarPlay
+      - Haptic        # Watch
+      - Ambient       # Background only
+
+  AttachmentType:
+    values: [Image, File, Code, Link]
+
+  ReminderTriggerType:
+    values: [Time, Location, Event, Context]
+
+  # Audit Events
+  AuditEventType:
+    values:
+      # Task lifecycle
+      - TaskCreated
+      - TaskAssigned
+      - TaskViewed
+      - TaskActivated
+      - TaskDeferred
+      - TaskCompleted
+      - TaskExpired
+      - TaskCancelled
+      # Decision events
+      - DecisionSubmitted
+      - DecisionChanged
+      - FeedbackAdded
+      # Multi-reviewer
+      - ReviewerAssigned
+      - ReviewerRemoved
+      - ReviewerRecused
+      - AggregateComputed
+      - EscalationTriggered
+      # Bundle
+      - BundleCreated
+      - BundleCompleted
+      # Reminder
+      - ReminderSet
+      - ReminderTriggered
+      - ReminderDismissed
+      # Recommendation
+      - RecommendationGenerated
+      - RecommendationFollowed
+      - RecommendationOverridden
+
+actions:
+
+  CreateTask:
+    description: Create a new task for human review
+    parameters:
+      typeId: { type: string, required: true }
+      input: { type: TaskInput, required: true }
+      assignTo: { type: Actor }
+      dueAt: { type: datetime }
+      expiresAt: { type: datetime }
+      recommendation: { type: Recommendation }
+    result: Task
+    permission: task:create
+    idempotent: false
+
+  SubmitDecision:
+    description: Submit actor's decision on a task
+    parameters:
+      taskId: { type: uuid, required: true }
+      actionId: { type: string, required: true }
+      feedback: { type: array, items: FeedbackSignal }
+      note: { type: string }
+    result: TaskDecision
+    permission: task:decide
+    idempotent: false
+
+  DeferTask:
+    description: Defer task with reminder
+    parameters:
+      taskId: { type: uuid, required: true }
+      trigger: { type: ReminderTrigger, required: true }
+    result: Reminder
+    permission: task:defer
+    idempotent: false
+
+  GetQueue:
+    description: Get actor's prioritized task queue
+    parameters:
+      status: { type: array, items: TaskStatus, default: [Pending, Active] }
+      typeIds: { type: array, items: string }
+      minPriority: { type: decimal }
+      limit: { type: integer, default: 20 }
+      cursor: { type: string }
+    result: { type: object, description: "TaskQueue with tasks and pagination" }
+    permission: task:read
+    idempotent: true
+
+  AssignReviewer:
+    description: Assign reviewer to task
+    parameters:
+      taskId: { type: uuid, required: true }
+      actor: { type: Actor, required: true }
+      role: { type: ReviewerRole, required: true }
+      isRequired: { type: boolean, default: true }
+    result: TaskAssignment
+    permission: task:assign
+    idempotent: false
+
+  ComputeAggregateDecision:
+    description: Compute aggregate decision from multiple reviewers
+    parameters:
+      taskId: { type: uuid, required: true }
+    result: AggregateDecision
+    permission: task:aggregate
+    idempotent: true
+
+  CreateReviewQueue:
+    description: Create a new review queue
+    parameters:
+      name: { type: string, required: true }
+      queueType: { type: QueueType, required: true }
+      taskTypeIds: { type: array, items: string }
+      assignedActors: { type: array, items: Actor }
+      priorityStrategy: { type: PriorityStrategy, required: true }
+      maxConcurrent: { type: integer }
+      slaHours: { type: integer }
+    result: ReviewQueue
+    permission: queue:create
+    idempotent: false
+
+  PullFromQueue:
+    description: Pull next task from queue for review
+    parameters:
+      queueId: { type: uuid, required: true }
+      actor: { type: Actor, required: true }
+      limit: { type: integer, default: 1 }
+    result: { type: object, description: "Array of Task" }
+    permission: queue:pull
+    idempotent: false
+
+  CreateReviewCase:
+    description: Create a new review case (group of related tasks)
+    parameters:
+      name: { type: string, required: true }
+      caseType: { type: CaseType, required: true }
+      tasks: { type: array, items: uuid, required: true }
+      queueId: { type: uuid }
+      assignedTo: { type: Actor }
+      dueAt: { type: datetime }
+      completionCriteria: { type: CompletionCriteria }
+    result: ReviewCase
+    permission: case:create
+    idempotent: false
+
+  GetCaseProgress:
+    description: Get progress summary for a review case
+    parameters:
+      caseId: { type: uuid, required: true }
+    result: CaseProgress
+    permission: case:read
+    idempotent: true

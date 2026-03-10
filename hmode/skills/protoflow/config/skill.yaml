@@ -1,0 +1,114 @@
+# File UUID: d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a
+
+name: protoflow:config
+version: 1.0.0
+description: Unified monorepo configuration manager for guardrails, golden repos, design system, domain models, and code standards
+author: ProtoFlow System
+
+aliases:
+  - config
+  - configure
+  - setup
+
+# Additional command aliases that jump to specific sections
+additional_commands:
+  - name: guardrails
+    description: Configure tech/arch preferences and AI steering rules
+    args: "--section=guardrails"
+
+  - name: golden-repo
+    description: Manage project templates and golden repos
+    args: "--section=golden-repos"
+
+  - name: design-system
+    description: Manage design tokens and UI components
+    args: "--section=design-system"
+
+tags:
+  - configuration
+  - setup
+  - monorepo
+  - guardrails
+  - design-system
+
+examples:
+  - command: /config
+    description: Interactive configuration menu
+
+  - command: /config --section=guardrails
+    description: Jump to guardrails configuration
+
+  - command: /config --add-tech fastapi backend
+    description: Add FastAPI to approved backend technologies
+
+  - command: /guardrails
+    description: Alias for guardrails section (same as /config --section=guardrails)
+
+  - command: /golden-repo
+    description: Alias for golden repos section
+
+  - command: /design-system
+    description: Alias for design system section
+
+  - command: /config --add-color success
+    description: Add 'success' color token to design system
+
+  - command: /config --add-component button atom
+    description: Add new atom-level button component
+
+  - command: /config --list-domains
+    description: List all registered semantic domains
+
+help: |
+  Monorepo Configuration Manager
+
+  Unified interface for managing all monorepo configuration:
+
+  Sections:
+    - Guardrails: Tech/arch preferences, AI steering rules
+    - Golden Repos: Project templates and starters
+    - Design System: Design tokens, UI components, guidelines
+    - Domain Models: Semantic domain registry
+    - Code Standards: Language-specific patterns
+
+  Usage:
+    /config                                    # Interactive menu
+    /config --section=<name>                   # Jump to section
+    /config --add-tech <name> <category>       # Add approved tech
+    /guardrails                                # Alias for guardrails
+    /golden-repo                               # Alias for golden repos
+    /design-system                             # Alias for design system
+
+  Guardrails Operations:
+    --add-tech <name> <category>               Add approved technology
+    --remove-tech <name> <category>            Remove technology
+    --add-arch-pattern <pattern>               Add architecture pattern
+    --add-steering-rule <level> <cat> <rule>   Add AI steering rule
+
+  Golden Repo Operations:
+    --add-golden-repo <name>                   Add new template
+    --update-golden-repo <name>                Update existing template
+
+  Design System Operations:
+    --add-color <name>                         Add color token
+    --add-component <name> <level>             Add UI component
+    --update-guidelines                        Update guidelines
+
+  Domain Model Operations:
+    --add-domain <name>                        Add domain (spawns agent)
+    --list-domains                             List all domains
+
+  Code Standards Operations:
+    --add-standard <lang> <name>               Add code standard
+
+notes: |
+  Protection Levels:
+  - Guardrails: HIGH - Requires explicit approval for all changes
+  - Golden Repos: MEDIUM - Verifies structure before adding
+  - Design System: MEDIUM - Must maintain consistency
+  - Domain Models: Delegates to domain-modeling-specialist agent
+  - Code Standards: LOW - Direct modifications allowed
+
+  All guardrail modifications request confirmation before execution.
+  Design system changes validate against existing token patterns.
+  Domain model operations spawn specialized agents for complex work.

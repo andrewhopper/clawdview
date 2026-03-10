@@ -1,0 +1,458 @@
+# actions.yaml - Talking Avatar Domain Actions
+# Generated: 2025-11-25
+# Status: PENDING APPROVAL
+#
+# Based on Kinetic Layer pattern (action domain in registry)
+
+actions:
+  # Avatar Management Actions
+  ListAvatarsAction:
+    description: "List available avatars with filtering"
+    operation_type: read
+    parameters:
+      - name: provider
+        type: AvatarProvider
+        required: false
+        description: "Filter by provider"
+      - name: avatar_type
+        type: AvatarType
+        required: false
+      - name: gender
+        type: AvatarGender
+        required: false
+      - name: style
+        type: AvatarStyle
+        required: false
+      - name: is_custom
+        type: boolean
+        required: false
+        description: "Show only custom avatars"
+      - name: user_id
+        type: uuid
+        required: false
+        description: "Filter by owner"
+    returns:
+      type: array
+      items: Avatar
+    example: "List all female professional avatars from HeyGen"
+
+  GetAvatarAction:
+    description: "Get avatar details by ID"
+    operation_type: read
+    parameters:
+      - name: avatar_id
+        type: uuid
+        required: true
+    returns:
+      type: Avatar
+    permissions: ["avatar:read"]
+
+  CreateInstantAvatarAction:
+    description: "Create instant avatar from single photo (no training)"
+    operation_type: create
+    parameters:
+      - name: name
+        type: string
+        required: true
+      - name: photo_url
+        type: string
+        required: true
+        description: "URL to source photo"
+      - name: provider
+        type: AvatarProvider
+        required: true
+    returns:
+      type: Avatar
+    permissions: ["avatar:create"]
+    side_effects: "Creates Avatar record, may consume API credits"
+    example: "D-ID instant avatar from headshot photo"
+
+  # Avatar Training Actions
+  StartAvatarTrainingAction:
+    description: "Start training custom avatar from multiple photos"
+    operation_type: create
+    parameters:
+      - name: name
+        type: string
+        required: true
+      - name: training_photos
+        type: array
+        items: string
+        required: true
+        description: "Array of photo URLs (typically 5-10 photos)"
+      - name: provider
+        type: AvatarProvider
+        required: true
+      - name: training_options
+        type: object
+        required: false
+        description: "Provider-specific options"
+    returns:
+      type: AvatarTrainingJob
+    permissions: ["avatar:train"]
+    side_effects: "Creates AvatarTrainingJob, queues training, consumes credits"
+    estimated_duration: "10-60 minutes depending on provider"
+    example: "HeyGen custom avatar training with 8 photos"
+
+  CheckTrainingStatusAction:
+    description: "Check status of avatar training job"
+    operation_type: read
+    parameters:
+      - name: training_job_id
+        type: uuid
+        required: true
+    returns:
+      type: AvatarTrainingJob
+    permissions: ["avatar:read"]
+
+  CancelTrainingAction:
+    description: "Cancel in-progress avatar training"
+    operation_type: update
+    parameters:
+      - name: training_job_id
+        type: uuid
+        required: true
+    returns:
+      type: AvatarTrainingJob
+    permissions: ["avatar:train"]
+    side_effects: "Stops training, may partially refund credits"
+
+  # Voice Management Actions
+  ListVoicesAction:
+    description: "List available voices with filtering"
+    operation_type: read
+    parameters:
+      - name: provider
+        type: VoiceProvider
+        required: false
+      - name: language_code
+        type: string
+        required: false
+        description: "ISO 639-1 code (e.g., en-US)"
+      - name: gender
+        type: VoiceGender
+        required: false
+      - name: style
+        type: VoiceStyle
+        required: false
+      - name: is_custom
+        type: boolean
+        required: false
+    returns:
+      type: array
+      items: Voice
+    example: "List all English (US) professional female voices"
+
+  GetVoiceAction:
+    description: "Get voice details and preview"
+    operation_type: read
+    parameters:
+      - name: voice_id
+        type: uuid
+        required: true
+    returns:
+      type: Voice
+    permissions: ["voice:read"]
+
+  CloneVoiceAction:
+    description: "Clone custom voice from audio samples"
+    operation_type: create
+    parameters:
+      - name: name
+        type: string
+        required: true
+      - name: audio_samples
+        type: array
+        items: string
+        required: true
+        description: "URLs to audio samples (typically 1-5 minutes)"
+      - name: provider
+        type: VoiceProvider
+        required: true
+      - name: language_code
+        type: string
+        required: true
+    returns:
+      type: Voice
+    permissions: ["voice:clone"]
+    side_effects: "Creates custom voice, consumes credits"
+    example: "Clone voice from 3 minutes of audio via ElevenLabs"
+
+  # Video Generation Actions
+  CreateAvatarVideoAction:
+    description: "Generate talking avatar video (async)"
+    operation_type: create
+    parameters:
+      - name: title
+        type: string
+        required: false
+      - name: avatar_id
+        type: uuid
+        required: true
+      - name: voice_id
+        type: uuid
+        required: true
+      - name: scene_id
+        type: uuid
+        required: false
+      - name: script_text
+        type: string
+        required: false
+        description: "Text to be spoken (TTS mode)"
+      - name: script_audio_url
+        type: string
+        required: false
+        description: "Pre-recorded audio (lip-sync mode)"
+      - name: aspect_ratio
+        type: AspectRatio
+        required: true
+        default: "16:9"
+      - name: video_quality
+        type: VideoQuality
+        required: true
+        default: hd
+      - name: webhook_url
+        type: string
+        required: false
+        description: "URL to notify on completion"
+    returns:
+      type: AvatarVideo
+    permissions: ["video:create"]
+    side_effects: "Creates AvatarVideo record (status: pending), queues generation, consumes credits"
+    validation:
+      - "Must provide either script_text OR script_audio_url"
+      - "Avatar and voice must be from compatible providers"
+    estimated_duration: "2-10 minutes"
+    example: "Generate HeyGen video with script text"
+
+  GetVideoStatusAction:
+    description: "Check video generation status"
+    operation_type: read
+    parameters:
+      - name: video_id
+        type: uuid
+        required: true
+    returns:
+      type: AvatarVideo
+    permissions: ["video:read"]
+
+  CancelVideoGenerationAction:
+    description: "Cancel pending video generation"
+    operation_type: update
+    parameters:
+      - name: video_id
+        type: uuid
+        required: true
+    returns:
+      type: AvatarVideo
+    permissions: ["video:manage"]
+    side_effects: "Changes status to cancelled"
+
+  ListVideosAction:
+    description: "List generated videos"
+    operation_type: read
+    parameters:
+      - name: user_id
+        type: uuid
+        required: false
+      - name: status
+        type: VideoStatus
+        required: false
+      - name: avatar_id
+        type: uuid
+        required: false
+      - name: limit
+        type: integer
+        required: false
+        default: 50
+      - name: offset
+        type: integer
+        required: false
+        default: 0
+    returns:
+      type: array
+      items: AvatarVideo
+    permissions: ["video:read"]
+
+  # Scene Management Actions
+  ListScenesAction:
+    description: "List available scenes/templates"
+    operation_type: read
+    parameters:
+      - name: scene_type
+        type: SceneType
+        required: false
+      - name: is_custom
+        type: boolean
+        required: false
+    returns:
+      type: array
+      items: Scene
+    example: "List all professional office scenes"
+
+  CreateCustomSceneAction:
+    description: "Create custom scene with background"
+    operation_type: create
+    parameters:
+      - name: name
+        type: string
+        required: true
+      - name: background_type
+        type: BackgroundType
+        required: true
+      - name: background_url
+        type: string
+        required: false
+        description: "Image/video URL for background"
+      - name: background_color
+        type: string
+        required: false
+        description: "Hex color (if solid_color type)"
+      - name: avatar_position
+        type: AvatarPosition
+        required: true
+      - name: avatar_size
+        type: AvatarSize
+        required: true
+    returns:
+      type: Scene
+    permissions: ["scene:create"]
+    validation:
+      - "background_url required if type is image or video"
+      - "background_color required if type is solid_color"
+
+  # Streaming Session Actions
+  StartStreamingSessionAction:
+    description: "Start real-time interactive avatar session"
+    operation_type: create
+    parameters:
+      - name: avatar_id
+        type: uuid
+        required: true
+      - name: voice_id
+        type: uuid
+        required: true
+      - name: quality
+        type: StreamingQuality
+        required: true
+        default: medium
+      - name: session_name
+        type: string
+        required: false
+    returns:
+      type: StreamingSession
+    permissions: ["streaming:start"]
+    side_effects: "Creates session, establishes WebRTC, consumes per-minute credits"
+    example: "Start HeyGen Streaming API session"
+
+  SendStreamingMessageAction:
+    description: "Send message to interactive avatar during session"
+    operation_type: create
+    parameters:
+      - name: session_id
+        type: uuid
+        required: true
+      - name: message_text
+        type: string
+        required: true
+      - name: message_type
+        type: StreamingMessageType
+        required: true
+        default: text
+      - name: emotion
+        type: AvatarEmotion
+        required: false
+    returns:
+      type: StreamingMessage
+    permissions: ["streaming:send"]
+    side_effects: "Avatar speaks message, creates StreamingMessage record"
+
+  EndStreamingSessionAction:
+    description: "End interactive streaming session"
+    operation_type: update
+    parameters:
+      - name: session_id
+        type: uuid
+        required: true
+    returns:
+      type: StreamingSession
+    permissions: ["streaming:end"]
+    side_effects: "Closes WebRTC connection, finalizes billing"
+
+  GetStreamingSessionStatusAction:
+    description: "Check streaming session status"
+    operation_type: read
+    parameters:
+      - name: session_id
+        type: uuid
+        required: true
+    returns:
+      type: StreamingSession
+    permissions: ["streaming:read"]
+
+  # Batch Operations
+  BatchCreateVideosAction:
+    description: "Generate multiple videos from script variants"
+    operation_type: create
+    parameters:
+      - name: avatar_id
+        type: uuid
+        required: true
+      - name: voice_id
+        type: uuid
+        required: true
+      - name: scene_id
+        type: uuid
+        required: false
+      - name: scripts
+        type: array
+        items: string
+        required: true
+        description: "Array of script texts to generate"
+      - name: video_quality
+        type: VideoQuality
+        required: true
+        default: hd
+    returns:
+      type: array
+      items: AvatarVideo
+    permissions: ["video:create:batch"]
+    side_effects: "Creates multiple AvatarVideo records, queues all for generation"
+    example: "Generate 10 videos with different scripts for A/B testing"
+
+# Action Patterns and Workflows
+
+workflows:
+  instant_video_generation:
+    description: "Quick video from stock avatar"
+    steps:
+      - ListAvatarsAction: "Browse available avatars"
+      - ListVoicesAction: "Choose voice"
+      - CreateAvatarVideoAction: "Generate video"
+      - GetVideoStatusAction: "Poll until complete"
+    duration: "5-10 minutes"
+
+  custom_avatar_video:
+    description: "Video with custom trained avatar"
+    steps:
+      - StartAvatarTrainingAction: "Upload photos, train avatar"
+      - CheckTrainingStatusAction: "Wait for training (10-60 min)"
+      - CreateAvatarVideoAction: "Generate video with custom avatar"
+      - GetVideoStatusAction: "Wait for video generation"
+    duration: "15-70 minutes"
+
+  interactive_session:
+    description: "Real-time avatar conversation"
+    steps:
+      - StartStreamingSessionAction: "Initialize WebRTC session"
+      - SendStreamingMessageAction: "Send messages (repeatable)"
+      - EndStreamingSessionAction: "Clean up session"
+    duration: "Real-time"
+
+  voice_cloned_video:
+    description: "Video with custom voice"
+    steps:
+      - CloneVoiceAction: "Create voice from audio samples"
+      - ListAvatarsAction: "Choose avatar"
+      - CreateAvatarVideoAction: "Generate with custom voice"
+    duration: "10-15 minutes"

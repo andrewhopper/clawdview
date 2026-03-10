@@ -1,0 +1,109 @@
+# Action Domain Model
+# CRUD operations as first-class semantic entities (Kinetic Layer)
+# Inspired by Palantir Foundry
+
+domain:
+  name: action
+  version: "1.0.0"
+  description: Actions/verbs as first-class entities - the Kinetic Layer pattern
+  dependencies: []
+  source: Palantir Foundry Kinetic Layer
+  created_at: "2025-11-21"
+  updated_at: "2025-11-22"
+
+entities:
+
+  Action:
+    description: A capability that performs an operation on entities
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      operatesOn: { type: string, required: true, description: "Entity type this action operates on" }
+      parameters: { type: array, items: Parameter }
+      result: { type: Result }
+      requiresPermission: { type: string }
+      isIdempotent: { type: boolean, default: false }
+      sideEffects: { type: string, description: "Description of side effects" }
+      errorConditions: { type: array, items: string }
+
+  ReadAction:
+    extends: Action
+    description: Retrieves entity state without modification
+
+  WriteAction:
+    extends: Action
+    description: Modifies entity state
+
+  CreateAction:
+    extends: WriteAction
+    description: Creates a new entity instance
+
+  UpdateAction:
+    extends: WriteAction
+    description: Modifies existing entity state
+
+  DeleteAction:
+    extends: WriteAction
+    description: Removes entity or marks as deleted
+
+  TransformAction:
+    extends: Action
+    description: Converts entity from one state/type to another
+
+  ValidationAction:
+    extends: Action
+    description: Validates entity against constraints without modification
+
+  Parameter:
+    description: Input parameter for an action
+    properties:
+      name: { type: string, required: true }
+      type: { type: string, required: true }
+      description: { type: string }
+      isRequired: { type: boolean, default: true }
+      defaultValue: { type: string }
+
+  Result:
+    description: Output produced by action execution
+    properties:
+      type: { type: string, required: true }
+      description: { type: string }
+      isArray: { type: boolean, default: false }
+
+  ActionSequence:
+    description: Ordered sequence of actions (workflow)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      steps: { type: array, items: ActionStep }
+
+  ActionStep:
+    description: Step in an action sequence
+    properties:
+      order: { type: integer, required: true }
+      actionId: { type: string, required: true }
+      condition: { type: string, description: "Condition for executing this step" }
+      onError: { type: ErrorHandling }
+
+  AgentCapability:
+    description: Action exposed to LLM agents
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      wrapsActionId: { type: string, required: true }
+      naturalLanguageDescription: { type: string, required: true }
+      exampleUsage: { type: string }
+
+enums:
+
+  ErrorHandling:
+    values:
+      - Stop        # Stop workflow on error
+      - Continue    # Continue to next step
+      - Retry       # Retry this step
+      - Rollback    # Rollback previous steps
+
+# Meta: This domain defines how actions are structured
+# Other domains define specific actions using this pattern

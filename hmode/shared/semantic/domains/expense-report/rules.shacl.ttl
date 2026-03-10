@@ -1,0 +1,318 @@
+@prefix expense: <http://hopperlabs.ai/ontology/expense-report#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================
+# Expense Report SHACL Validation Rules
+# ============================================
+
+# ----------------
+# ExpenseReport Validation
+# ----------------
+
+expense:ExpenseReportShape a sh:NodeShape ;
+    sh:targetClass expense:ExpenseReport ;
+    sh:property [
+        sh:path expense:reportId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^exp-[a-zA-Z0-9]+$" ;
+        sh:message "Report ID is required and must match pattern exp-{alphanumeric}"
+    ] ;
+    sh:property [
+        sh:path expense:title ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:minLength 3 ;
+        sh:maxLength 200 ;
+        sh:message "Title is required and must be 3-200 characters"
+    ] ;
+    sh:property [
+        sh:path expense:status ;
+        sh:minCount 1 ;
+        sh:in (expense:Draft expense:Submitted expense:PendingApproval expense:Approved expense:Rejected expense:Paid expense:Cancelled) ;
+        sh:message "Status is required and must be a valid ExpenseReportStatus"
+    ] ;
+    sh:property [
+        sh:path expense:submitter ;
+        sh:minCount 1 ;
+        sh:message "Submitter is required"
+    ] ;
+    sh:property [
+        sh:path expense:createdAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "createdAt timestamp is required"
+    ] ;
+    sh:property [
+        sh:path expense:updatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "updatedAt timestamp is required"
+    ] .
+
+# ----------------
+# ExpenseLineItem Validation
+# ----------------
+
+expense:ExpenseLineItemShape a sh:NodeShape ;
+    sh:targetClass expense:ExpenseLineItem ;
+    sh:property [
+        sh:path expense:lineItemId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^li-[a-zA-Z0-9]+$" ;
+        sh:message "Line Item ID is required and must match pattern li-{alphanumeric}"
+    ] ;
+    sh:property [
+        sh:path expense:expenseDate ;
+        sh:datatype xsd:date ;
+        sh:minCount 1 ;
+        sh:message "Expense date is required"
+    ] ;
+    sh:property [
+        sh:path expense:category ;
+        sh:minCount 1 ;
+        sh:in (expense:Travel expense:Meals expense:Lodging expense:Transportation expense:Equipment expense:Software expense:Training expense:Supplies expense:Entertainment expense:Communication expense:Other) ;
+        sh:message "Category is required and must be a valid ExpenseCategory"
+    ] ;
+    sh:property [
+        sh:path expense:amount ;
+        sh:minCount 1 ;
+        sh:message "Amount is required"
+    ] ;
+    sh:property [
+        sh:path expense:vendor ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:minLength 1 ;
+        sh:maxLength 200 ;
+        sh:message "Vendor name is required and must be 1-200 characters"
+    ] ;
+    sh:property [
+        sh:path expense:paymentMethod ;
+        sh:minCount 1 ;
+        sh:in (expense:CorporateCard expense:PersonalCard expense:Cash expense:DirectDebit expense:Check) ;
+        sh:message "Payment method is required and must be a valid PaymentMethod"
+    ] ;
+    sh:property [
+        sh:path expense:projectCode ;
+        sh:datatype xsd:string ;
+        sh:pattern "^[A-Z0-9-]+$" ;
+        sh:message "Project code must be uppercase alphanumeric with dashes"
+    ] ;
+    sh:property [
+        sh:path expense:lineItemCreatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "createdAt timestamp is required"
+    ] ;
+    sh:property [
+        sh:path expense:lineItemUpdatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "updatedAt timestamp is required"
+    ] .
+
+# ----------------
+# Receipt Validation
+# ----------------
+
+expense:ReceiptShape a sh:NodeShape ;
+    sh:targetClass expense:Receipt ;
+    sh:property [
+        sh:path expense:receiptId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^rcpt-[a-zA-Z0-9]+$" ;
+        sh:message "Receipt ID is required and must match pattern rcpt-{alphanumeric}"
+    ] ;
+    sh:property [
+        sh:path expense:fileUrl ;
+        sh:datatype xsd:anyURI ;
+        sh:minCount 1 ;
+        sh:message "File URL is required"
+    ] ;
+    sh:property [
+        sh:path expense:mimeType ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:in ("image/jpeg" "image/png" "image/gif" "image/webp" "application/pdf") ;
+        sh:message "MIME type is required and must be a supported format"
+    ] ;
+    sh:property [
+        sh:path expense:fileSize ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:minInclusive 1 ;
+        sh:maxInclusive 10485760 ;
+        sh:message "File size is required and must be between 1 byte and 10MB"
+    ] ;
+    sh:property [
+        sh:path expense:receiptCreatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "createdAt timestamp is required"
+    ] ;
+    sh:property [
+        sh:path expense:receiptUpdatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "updatedAt timestamp is required"
+    ] .
+
+# ----------------
+# ApprovalStep Validation
+# ----------------
+
+expense:ApprovalStepShape a sh:NodeShape ;
+    sh:targetClass expense:ApprovalStep ;
+    sh:property [
+        sh:path expense:stepId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^step-[a-zA-Z0-9]+$" ;
+        sh:message "Step ID is required and must match pattern step-{alphanumeric}"
+    ] ;
+    sh:property [
+        sh:path expense:stepOrder ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:minInclusive 1 ;
+        sh:message "Step order is required and must be >= 1"
+    ] ;
+    sh:property [
+        sh:path expense:approver ;
+        sh:minCount 1 ;
+        sh:message "Approver is required"
+    ] ;
+    sh:property [
+        sh:path expense:stepStatus ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:in ("pending" "approved" "rejected") ;
+        sh:message "Step status is required and must be pending, approved, or rejected"
+    ] ;
+    sh:property [
+        sh:path expense:stepCreatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "createdAt timestamp is required"
+    ] ;
+    sh:property [
+        sh:path expense:stepUpdatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "updatedAt timestamp is required"
+    ] .
+
+# ----------------
+# ExpensePolicy Validation
+# ----------------
+
+expense:ExpensePolicyShape a sh:NodeShape ;
+    sh:targetClass expense:ExpensePolicy ;
+    sh:property [
+        sh:path expense:policyId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^policy-[a-zA-Z0-9]+$" ;
+        sh:message "Policy ID is required and must match pattern policy-{alphanumeric}"
+    ] ;
+    sh:property [
+        sh:path expense:policyName ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:minLength 3 ;
+        sh:maxLength 100 ;
+        sh:message "Policy name is required and must be 3-100 characters"
+    ] ;
+    sh:property [
+        sh:path expense:policyCreatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "createdAt timestamp is required"
+    ] ;
+    sh:property [
+        sh:path expense:policyUpdatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "updatedAt timestamp is required"
+    ] .
+
+# ----------------
+# Reimbursement Validation
+# ----------------
+
+expense:ReimbursementShape a sh:NodeShape ;
+    sh:targetClass expense:Reimbursement ;
+    sh:property [
+        sh:path expense:reimbursementId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^reimb-[a-zA-Z0-9]+$" ;
+        sh:message "Reimbursement ID is required and must match pattern reimb-{alphanumeric}"
+    ] ;
+    sh:property [
+        sh:path expense:forReport ;
+        sh:minCount 1 ;
+        sh:message "Associated expense report is required"
+    ] ;
+    sh:property [
+        sh:path expense:reimbursementAmount ;
+        sh:minCount 1 ;
+        sh:message "Reimbursement amount is required"
+    ] ;
+    sh:property [
+        sh:path expense:reimbursementMethod ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:in ("direct_deposit" "check" "wire_transfer") ;
+        sh:message "Reimbursement method is required and must be direct_deposit, check, or wire_transfer"
+    ] ;
+    sh:property [
+        sh:path expense:reimbursementCreatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "createdAt timestamp is required"
+    ] ;
+    sh:property [
+        sh:path expense:reimbursementUpdatedAt ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+        sh:message "updatedAt timestamp is required"
+    ] .
+
+# ----------------
+# Business Rule Constraints
+# ----------------
+
+# Expense date cannot be in the future
+expense:ExpenseDateConstraint a sh:NodeShape ;
+    sh:targetClass expense:ExpenseLineItem ;
+    sh:sparql [
+        sh:message "Expense date cannot be in the future" ;
+        sh:prefixes expense: ;
+        sh:select """
+            SELECT $this
+            WHERE {
+                $this expense:expenseDate ?date .
+                FILTER (?date > NOW())
+            }
+        """
+    ] .
+
+# Rejected reports must have rejection comments
+expense:RejectionCommentsConstraint a sh:NodeShape ;
+    sh:targetClass expense:ApprovalStep ;
+    sh:sparql [
+        sh:message "Rejected approval steps must have comments explaining the reason" ;
+        sh:prefixes expense: ;
+        sh:select """
+            SELECT $this
+            WHERE {
+                $this expense:stepStatus "rejected" .
+                FILTER NOT EXISTS { $this expense:comments ?comments }
+            }
+        """
+    ] .

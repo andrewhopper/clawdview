@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Architecture Preferences Approval Log",
+  "description": "Audit trail of all pattern approvals, rejections, and pending reviews",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-16",
+  "approvals": [
+    {
+      "pattern": "Claude Code CLI Child Processes",
+      "category": "process-patterns",
+      "subcategory": "parallel_execution",
+      "approvedBy": "Andy Hopper",
+      "approvedDate": "2025-11-16T10:00:00Z",
+      "version": "1.0.0",
+      "rationale": "Proven in proto-company-researcher-uiwid-005, enables scalable multi-agent workflows with isolated execution",
+      "status": "approved",
+      "exampleLocation": "prototypes/proto-company-researcher-uiwid-005/orchestrator.py",
+      "metrics": {
+        "usageCount": 1,
+        "successRate": "100%",
+        "timeSavings": "3x faster than sequential (18 agents in 5 min vs 9+ min)"
+      }
+    },
+    {
+      "pattern": "Two-Phase Execution (Data Gathering → Synthesis)",
+      "category": "process-patterns",
+      "subcategory": "agent_orchestration",
+      "approvedBy": "Andy Hopper",
+      "approvedDate": "2025-11-16T10:00:00Z",
+      "version": "1.0.0",
+      "rationale": "Maximizes parallelization while respecting agent dependencies, proven effective in research workflows",
+      "status": "approved",
+      "exampleLocation": "prototypes/proto-company-researcher-uiwid-005/orchestrator.py",
+      "metrics": {
+        "usageCount": 1,
+        "successRate": "100%",
+        "timeSavings": "Enables maximum parallelization (5-18 agents concurrent)"
+      }
+    },
+    {
+      "pattern": "Service Layer Pattern",
+      "category": "design-patterns",
+      "subcategory": "code_organization",
+      "approvedBy": "Andy Hopper",
+      "approvedDate": "2025-11-16T10:00:00Z",
+      "version": "1.0.0",
+      "rationale": "Standard pattern across Node.js and Python projects, improves testability and separation of concerns",
+      "status": "approved",
+      "exampleLocation": "shared/standards/code/nodejs/",
+      "metrics": {
+        "usageCount": 10,
+        "successRate": "100%"
+      }
+    },
+    {
+      "pattern": "Repository Pattern",
+      "category": "data-patterns",
+      "subcategory": "data_access_patterns",
+      "approvedBy": "Andy Hopper",
+      "approvedDate": "2025-11-16T10:00:00Z",
+      "version": "1.0.0",
+      "rationale": "Abstracts data access, enables testability, separates domain from persistence concerns",
+      "status": "approved",
+      "exampleLocation": "shared/standards/code/python/",
+      "metrics": {
+        "usageCount": 8,
+        "successRate": "100%"
+      }
+    }
+  ],
+  "rejections": [],
+  "pending": [],
+  "observerCandidates": {
+    "lastGenerated": null,
+    "nextReview": "2025-02-16",
+    "candidates": []
+  }
+}

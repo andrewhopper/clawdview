@@ -1,0 +1,209 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-19",
+  "rules": [
+    {
+      "id": "confirm-bulk-file-operations",
+      "level": "MUST",
+      "category": "file_operations",
+      "description": "Confirm before operating on 20+ files",
+      "context": {
+        "when": ["modifying files", "creating files", "deleting files"],
+        "fileCount": {
+          "min": 20
+        },
+        "taskType": ["Chore", "Task"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "Bulk file operations (20+ files)",
+        "message": "Operating on {count} files. Time estimate: {estimate}. Confirm?"
+      },
+      "rationale": "Prevent accidental large-scale changes, give user visibility and control",
+      "examples": [
+        {
+          "scenario": "User: 'Update all .project files with new field'",
+          "correct": "Count files (30), confirm with user before proceeding",
+          "incorrect": "Immediately update all 30 files without confirmation"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "brief-summary-medium-file-operations",
+      "level": "SHOULD",
+      "category": "file_operations",
+      "description": "Brief summary for 6-20 file operations",
+      "context": {
+        "when": ["modifying files", "creating files"],
+        "fileCount": {
+          "min": 6,
+          "max": 19
+        }
+      },
+      "action": {
+        "directive": "paraphrase",
+        "target": "Medium file operations (6-19 files)",
+        "message": "Updating {count} files: {brief_list}. Proceeding."
+      },
+      "rationale": "Balance between visibility and efficiency",
+      "examples": [
+        {
+          "scenario": "User: 'Add prettier config to all packages'",
+          "correct": "Brief: 'Adding prettier to 8 packages. Proceeding.'",
+          "incorrect": "Silently update all 8 without mention"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "execute-small-file-operations",
+      "level": "PREFER",
+      "category": "file_operations",
+      "description": "Execute immediately for 1-5 file operations",
+      "context": {
+        "when": ["modifying files", "creating files"],
+        "fileCount": {
+          "max": 5
+        }
+      },
+      "action": {
+        "directive": "use",
+        "target": "Immediate execution",
+        "message": "Updating {count} file(s). Done."
+      },
+      "rationale": "Small operations obvious, don't need confirmation overhead",
+      "examples": [
+        {
+          "scenario": "User: 'Fix the typo in README.md'",
+          "correct": "Immediately fix typo, mention completion",
+          "incorrect": "Ask for confirmation to fix 1 file"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "confirm-destructive-operations",
+      "level": "MUST",
+      "category": "file_operations",
+      "description": "Always confirm destructive operations",
+      "context": {
+        "when": ["deleting files", "force operations", "major refactors"],
+        "destructive": true
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "Destructive file operations",
+        "message": "Destructive operation: {action} on {target}. Cannot undo. Confirm?"
+      },
+      "rationale": "Prevent data loss, irreversible changes require explicit approval",
+      "examples": [
+        {
+          "scenario": "User: 'Delete all old test files'",
+          "correct": "List files to delete, confirm before deletion",
+          "incorrect": "Immediately delete without showing what will be removed"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "prefer-edit-over-write-existing",
+      "level": "ALWAYS",
+      "category": "file_operations",
+      "description": "Use Edit instead of Write for existing files",
+      "context": {
+        "when": ["modifying existing file content"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Edit tool for existing files",
+        "alternative": "Write only for new files"
+      },
+      "rationale": "Edit safer for modifications, prevents accidental overwrites, preserves context",
+      "examples": [
+        {
+          "scenario": "User: 'Update the API endpoint in config.ts'",
+          "correct": "Use Edit with old_string/new_string",
+          "incorrect": "Use Write to overwrite entire file"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved",
+        "relatedRules": ["use-write-over-echo"]
+      }
+    },
+    {
+      "id": "read-before-write-existing",
+      "level": "MUST",
+      "category": "file_operations",
+      "description": "Read existing file before using Write tool",
+      "context": {
+        "when": ["using Write tool", "file exists"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Read file before Write",
+        "message": "Must read existing file before overwriting with Write tool"
+      },
+      "rationale": "Write tool will error if file not read first, prevents accidental overwrites",
+      "examples": [
+        {
+          "scenario": "User: 'Rewrite the entire config file'",
+          "correct": "Read config file first, then use Write",
+          "incorrect": "Use Write without reading (will error)"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "no-proactive-documentation",
+      "level": "NEVER",
+      "category": "file_operations",
+      "description": "Never create documentation files unless explicitly requested",
+      "context": {
+        "when": ["creating files"],
+        "filePattern": "**/*.md"
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "Proactive README/doc creation",
+        "alternative": "Only create docs when user explicitly asks"
+      },
+      "rationale": "Avoid cluttering codebase, user knows when docs needed",
+      "examples": [
+        {
+          "scenario": "Just created a new util function",
+          "correct": "Do not create README.md for the util",
+          "incorrect": "Proactively create README.md documenting the util"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    }
+  ]
+}

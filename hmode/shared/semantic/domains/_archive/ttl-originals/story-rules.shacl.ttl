@@ -1,0 +1,427 @@
+@prefix story: <http://hopperlabs.ai/domain/story#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# ============================================
+# SHACL Validation Rules for Story Domain
+# Business constraints and validation logic
+# ============================================
+
+# ----------------
+# Story Entity Constraints
+# ----------------
+
+story:StoryShape a sh:NodeShape ;
+    sh:targetClass story:Story ;
+    rdfs:comment "Validation constraints for Story entity" ;
+
+    # Title is required, 1-200 characters
+    sh:property [
+        sh:path story:title ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 200 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Story title is required and must be between 1-200 characters"
+    ] ;
+
+    # Status is required
+    sh:property [
+        sh:path story:status ;
+        sh:in (story:Draft story:InProgress story:Complete story:Published) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Story status is required and must be one of: Draft, InProgress, Complete, Published"
+    ] ;
+
+    # Story must have at least one character
+    sh:property [
+        sh:path story:hasCharacter ;
+        sh:class story:Character ;
+        sh:minCount 1 ;
+        sh:message "Story must have at least one character"
+    ] ;
+
+    # Story must have at least one scene
+    sh:property [
+        sh:path story:hasScene ;
+        sh:class story:Scene ;
+        sh:minCount 1 ;
+        sh:message "Story must have at least one scene"
+    ] .
+
+# ----------------
+# Published Story Constraint
+# ----------------
+
+story:PublishedStoryRule a sh:NodeShape ;
+    sh:targetClass story:Story ;
+    rdfs:comment "Published stories must have Complete status" ;
+    sh:sparql [
+        sh:message "Story with status 'Published' must first be marked as 'Complete'" ;
+        sh:select """
+            PREFIX story: <http://hopperlabs.ai/domain/story#>
+            SELECT $this
+            WHERE {
+                $this story:status story:Published .
+                FILTER NOT EXISTS { $this story:status story:Complete }
+            }
+        """
+    ] .
+
+# ----------------
+# Character Entity Constraints
+# ----------------
+
+story:CharacterShape a sh:NodeShape ;
+    sh:targetClass story:Character ;
+    rdfs:comment "Validation constraints for Character entity" ;
+
+    # Character name is required
+    sh:property [
+        sh:path story:characterName ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 100 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Character name is required and must be 1-100 characters"
+    ] ;
+
+    # Character type is required
+    sh:property [
+        sh:path story:characterType ;
+        sh:in (story:Human story:Animal story:AnthropomorphicAnimal
+               story:InanimateObject story:Imaginary story:Mythical) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Character type is required"
+    ] ;
+
+    # Role is required
+    sh:property [
+        sh:path story:role ;
+        sh:in (story:Protagonist story:Antagonist story:Supporting story:Minor) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Character role is required"
+    ] .
+
+# ----------------
+# Anthropomorphic Animal Constraint
+# ----------------
+
+story:AnthropomorphicAnimalRule a sh:NodeShape ;
+    sh:targetClass story:Character ;
+    rdfs:comment "Anthropomorphic animals should have species and traits" ;
+    sh:sparql [
+        sh:message "Anthropomorphic animals should have species defined" ;
+        sh:select """
+            PREFIX story: <http://hopperlabs.ai/domain/story#>
+            SELECT $this
+            WHERE {
+                $this story:characterType story:AnthropomorphicAnimal .
+                FILTER NOT EXISTS { $this story:species ?species }
+            }
+        """
+    ] .
+
+# ----------------
+# Scene Entity Constraints
+# ----------------
+
+story:SceneShape a sh:NodeShape ;
+    sh:targetClass story:Scene ;
+    rdfs:comment "Validation constraints for Scene entity" ;
+
+    # Scene must reference a location
+    sh:property [
+        sh:path story:takesPlaceAt ;
+        sh:class story:Location ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Scene must take place at a valid location"
+    ] ;
+
+    # Scene number is required and positive
+    sh:property [
+        sh:path story:sceneNumber ;
+        sh:datatype xsd:integer ;
+        sh:minInclusive 1 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Scene number is required and must be positive integer"
+    ] ;
+
+    # Scene content is required
+    sh:property [
+        sh:path story:sceneContent ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "Scene content is required and must not be empty"
+    ] .
+
+# ----------------
+# Location Entity Constraints
+# ----------------
+
+story:LocationShape a sh:NodeShape ;
+    sh:targetClass story:Location ;
+    rdfs:comment "Validation constraints for Location entity" ;
+
+    # Location name is required
+    sh:property [
+        sh:path story:locationName ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 200 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Location name is required and must be 1-200 characters"
+    ] ;
+
+    # Location type is required
+    sh:property [
+        sh:path story:locationType ;
+        sh:in (story:Landmark story:Building story:Park story:Street
+               story:Natural story:Indoor story:Outdoor) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Location type is required"
+    ] .
+
+# ----------------
+# Real-World Location Constraint
+# ----------------
+
+story:RealWorldLocationRule a sh:NodeShape ;
+    sh:targetClass story:Location ;
+    rdfs:comment "Real-world locations should have city/state" ;
+    sh:sparql [
+        sh:message "Real-world locations should have city and state/country defined" ;
+        sh:select """
+            PREFIX story: <http://hopperlabs.ai/domain/story#>
+            SELECT $this
+            WHERE {
+                $this story:isRealWorld true .
+                FILTER NOT EXISTS { $this story:city ?city }
+            }
+        """
+    ] .
+
+# ----------------
+# Object Entity Constraints
+# ----------------
+
+story:ObjectShape a sh:NodeShape ;
+    sh:targetClass story:Object ;
+    rdfs:comment "Validation constraints for Object entity" ;
+
+    # Object name is required
+    sh:property [
+        sh:path story:objectName ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 200 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Object name is required and must be 1-200 characters"
+    ] ;
+
+    # Object type is required
+    sh:property [
+        sh:path story:objectType ;
+        sh:in (story:Prop story:Weapon story:Vehicle story:Artifact
+               story:NaturalObject story:SymbolicObject) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Object type is required"
+    ] .
+
+# ----------------
+# Symbolic Object Constraint
+# ----------------
+
+story:SymbolicObjectRule a sh:NodeShape ;
+    sh:targetClass story:Object ;
+    rdfs:comment "Symbolic objects should have symbolism defined" ;
+    sh:sparql [
+        sh:message "Objects marked as symbolic should have symbolism text defined" ;
+        sh:select """
+            PREFIX story: <http://hopperlabs.ai/domain/story#>
+            SELECT $this
+            WHERE {
+                $this story:isSymbolic true .
+                FILTER NOT EXISTS { $this story:symbolism ?symbolism }
+            }
+        """
+    ] .
+
+# ----------------
+# Time Point Constraints
+# ----------------
+
+story:TimePointShape a sh:NodeShape ;
+    sh:targetClass story:TimePoint ;
+    rdfs:comment "Validation constraints for TimePoint entity" ;
+
+    # Timestamp is required
+    sh:property [
+        sh:path story:timestamp ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "TimePoint timestamp is required (can be datetime, descriptive, or day)"
+    ] .
+
+# ----------------
+# Character At Time Constraints
+# ----------------
+
+story:CharacterAtTimeShape a sh:NodeShape ;
+    sh:targetClass story:CharacterAtTime ;
+    rdfs:comment "Validation constraints for CharacterAtTime entity" ;
+
+    # Must reference a time point
+    sh:property [
+        sh:path story:atTimePoint ;
+        sh:class story:TimePoint ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "CharacterAtTime must reference a valid TimePoint"
+    ] ;
+
+    # Physical description is required
+    sh:property [
+        sh:path story:physicalDescription ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:minCount 1 ;
+        sh:message "Physical description is required for CharacterAtTime"
+    ] .
+
+# ----------------
+# Transformation Constraints
+# ----------------
+
+story:TransformationShape a sh:NodeShape ;
+    sh:targetClass story:Transformation ;
+    rdfs:comment "Validation constraints for Transformation entity" ;
+
+    # Transformation type is required
+    sh:property [
+        sh:path story:transformationType ;
+        sh:in (story:Metamorphosis story:Aging story:MagicalTransformation
+               story:ImaginaryCreation story:EnvironmentalChange) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Transformation type is required"
+    ] ;
+
+    # From state is required
+    sh:property [
+        sh:path story:fromState ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:minCount 1 ;
+        sh:message "Transformation fromState is required"
+    ] ;
+
+    # To state is required
+    sh:property [
+        sh:path story:toState ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:minCount 1 ;
+        sh:message "Transformation toState is required"
+    ] .
+
+# ----------------
+# Repetitive Pattern Constraints
+# ----------------
+
+story:RepetitivePatternShape a sh:NodeShape ;
+    sh:targetClass story:RepetitivePattern ;
+    rdfs:comment "Validation constraints for RepetitivePattern entity" ;
+
+    # Pattern type is required
+    sh:property [
+        sh:path story:patternType ;
+        sh:in (story:Refrain story:Ritual story:QuestionAnswer story:Escalation) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Pattern type is required"
+    ] ;
+
+    # Base content is required
+    sh:property [
+        sh:path story:baseContent ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:minCount 1 ;
+        sh:message "Base content is required for repetitive pattern"
+    ] ;
+
+    # Occurrences must be positive
+    sh:property [
+        sh:path story:occurrences ;
+        sh:datatype xsd:integer ;
+        sh:minInclusive 2 ;
+        sh:minCount 1 ;
+        sh:message "Occurrences must be at least 2 for a repetitive pattern"
+    ] .
+
+# ----------------
+# Character Group Constraints
+# ----------------
+
+story:CharacterGroupShape a sh:NodeShape ;
+    sh:targetClass story:CharacterGroup ;
+    rdfs:comment "Validation constraints for CharacterGroup entity" ;
+
+    # Group name is required
+    sh:property [
+        sh:path story:groupName ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 100 ;
+        sh:minCount 1 ;
+        sh:message "Character group name is required"
+    ] ;
+
+    # Group must have at least 2 members
+    sh:property [
+        sh:path story:hasMember ;
+        sh:class story:GroupMember ;
+        sh:minCount 2 ;
+        sh:message "Character group must have at least 2 members"
+    ] .
+
+# ----------------
+# Dialogue Constraints
+# ----------------
+
+story:DialogueShape a sh:NodeShape ;
+    sh:targetClass story:Dialogue ;
+    rdfs:comment "Validation constraints for Dialogue entity" ;
+
+    # Dialogue must reference a character (speaker)
+    sh:property [
+        sh:path story:speaker ;
+        sh:class story:Character ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Dialogue must have a character as speaker"
+    ] ;
+
+    # Dialogue content is required
+    sh:property [
+        sh:path story:dialogueContent ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:minCount 1 ;
+        sh:message "Dialogue content is required and must not be empty"
+    ] .

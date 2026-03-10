@@ -1,0 +1,258 @@
+# File UUID: 52d0fbee-50ee-4bb0-bca0-86621cb1095c
+# File UUID: adapt-ui-a7f3b2c1
+# Adaptive UI Domain Schema
+# Version: 1.1.0
+# Purpose: Define UI transformations based on visitor context
+# Dimensions: Person, Device, Goal, Personality
+
+domain: adaptive-ui
+version: "1.1.0"
+description: "Schema for multi-dimensional adaptive user interfaces"
+
+enums:
+  VisitorGoal:
+    description: "Primary intent of the visitor"
+    values:
+      - hire: "Looking to hire for a role"
+      - learn: "Wanting to learn from content"
+      - collaborate: "Seeking partnership or collaboration"
+      - browse: "Casually exploring"
+      - contact: "Wanting to reach out directly"
+      - assess: "Evaluating technical competency"
+      - follow: "Looking to subscribe or follow updates"
+
+  DeviceType:
+    description: "Device form factor"
+    values:
+      - mobile: "Smartphone (< 768px)"
+      - tablet: "Tablet (768px - 1024px)"
+      - desktop: "Desktop/Laptop (> 1024px)"
+      - large: "Large display (> 1440px)"
+
+  PersonalityAxis:
+    description: "Personality preference axes"
+    values:
+      - analytical: "Prefers data, logic, detailed information"
+      - intuitive: "Prefers big picture, patterns, possibilities"
+      - visual: "Prefers images, diagrams, visual content"
+      - textual: "Prefers written content, documentation"
+      - social: "Values testimonials, community, collaboration"
+      - independent: "Values self-discovery, exploration"
+      - quick: "Wants fast answers, summaries"
+      - thorough: "Wants comprehensive deep-dives"
+
+  VisitorType:
+    description: "Type of visitor based on context"
+    values:
+      - recruiter: "HR or hiring manager"
+      - developer: "Software engineer or developer"
+      - designer: "UX/UI designer"
+      - founder: "Startup founder or executive"
+      - student: "Student or early-career learner"
+      - peer: "Industry peer or colleague"
+      - investor: "VC or angel investor"
+      - journalist: "Tech writer or journalist"
+      - unknown: "Unidentified visitor"
+
+  SectionType:
+    description: "Types of content sections"
+    values:
+      - hero: "Primary hero/intro section"
+      - projects: "Project showcase"
+      - blog: "Blog posts and articles"
+      - skills: "Technical skills and expertise"
+      - experience: "Work history and experience"
+      - contact: "Contact information and forms"
+      - testimonials: "Social proof and recommendations"
+      - chat: "AI chat interface"
+
+  VisualEmphasis:
+    description: "Level of visual prominence"
+    values:
+      - primary: "Maximum visual weight"
+      - secondary: "Supporting prominence"
+      - tertiary: "Background/supporting"
+      - hidden: "Not displayed"
+
+  ContentDensity:
+    description: "Information density level"
+    values:
+      - minimal: "Headlines and key points only"
+      - standard: "Balanced content"
+      - detailed: "Comprehensive information"
+      - exhaustive: "Full documentation"
+
+  InteractionStyle:
+    description: "How user interacts with content"
+    values:
+      - scroll: "Vertical scroll through content"
+      - cards: "Card-based browsing"
+      - tabs: "Tabbed navigation"
+      - accordion: "Expandable sections"
+      - wizard: "Step-by-step guided flow"
+
+types:
+  VisitorContext:
+    description: "Complete visitor context for UI adaptation"
+    fields:
+      id:
+        type: string
+        required: true
+      person:
+        type: PersonProfile
+        required: true
+      device:
+        type: DeviceProfile
+        required: true
+      goal:
+        type: VisitorGoal
+        required: true
+      personality:
+        type: PersonalityProfile
+        required: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  PersonProfile:
+    description: "Visitor person dimension"
+    fields:
+      type:
+        type: VisitorType
+        required: true
+      industry:
+        type: string
+        required: false
+      referralSource:
+        type: string
+        required: false
+
+  DeviceProfile:
+    description: "Visitor device dimension"
+    fields:
+      type:
+        type: DeviceType
+        required: true
+      capabilities:
+        type: array
+        required: true
+      width:
+        type: integer
+        required: true
+      height:
+        type: integer
+        required: true
+
+  PersonalityProfile:
+    description: "Visitor personality dimension"
+    fields:
+      axes:
+        type: array
+        required: true
+      contentPreference:
+        type: ContentDensity
+        required: true
+      interactionPreference:
+        type: InteractionStyle
+        required: true
+
+  UIMode:
+    description: "Complete UI configuration based on context"
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      triggers:
+        type: ModeTriggers
+        required: true
+      layout:
+        type: LayoutConfig
+        required: true
+      sections:
+        type: array
+        required: true
+      chatContext:
+        type: string
+        required: false
+      primaryCTA:
+        type: CallToAction
+        required: true
+
+  ModeTriggers:
+    description: "Conditions that activate a UI mode"
+    fields:
+      goals:
+        type: array
+        required: false
+      personTypes:
+        type: array
+        required: false
+      deviceTypes:
+        type: array
+        required: false
+      personalities:
+        type: array
+        required: false
+      priority:
+        type: integer
+        default: 0
+
+  LayoutConfig:
+    description: "Overall layout configuration"
+    fields:
+      navigation:
+        type: string
+        required: true
+      contentDensity:
+        type: ContentDensity
+        required: true
+      interactionStyle:
+        type: InteractionStyle
+        required: true
+      showGoalSelector:
+        type: boolean
+        default: true
+      enableChat:
+        type: boolean
+        default: true
+
+  AdaptiveSection:
+    description: "Configuration for a section in a specific mode"
+    fields:
+      type:
+        type: SectionType
+        required: true
+      order:
+        type: integer
+        required: true
+      emphasis:
+        type: VisualEmphasis
+        required: true
+      expanded:
+        type: boolean
+        default: false
+      contentFilter:
+        type: array
+        required: false
+      maxItems:
+        type: integer
+        required: false
+
+  CallToAction:
+    description: "Primary action button configuration"
+    fields:
+      label:
+        type: string
+        required: true
+      href:
+        type: string
+        required: true
+      icon:
+        type: string
+        required: false

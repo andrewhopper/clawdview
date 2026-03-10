@@ -1,0 +1,330 @@
+# Primitive: Audio
+# Audio signal measurements and metrics
+# Physics: Sound - mechanical waves through medium
+# Psychoacoustics: Perceived loudness, pitch, timbre
+# Signal Processing: Frequency, amplitude, duration
+
+domain:
+  name: primitive-audio
+  version: "1.0.0"
+  description: Audio signal measurements and acoustic quantities
+  layer: primitive
+  dependencies: [primitive-quantity]
+  created_at: "2025-12-04"
+  updated_at: "2025-12-04"
+
+entities:
+
+  # ============================================
+  # LOUDNESS MEASUREMENTS
+  # ============================================
+
+  Loudness:
+    description: Sound pressure level measurement
+    properties:
+      value:
+        type: number
+        required: true
+        description: Numeric loudness value
+      unit:
+        type: LoudnessUnit
+        required: true
+        default: dB_SPL
+      weighting:
+        type: FrequencyWeighting
+        default: A
+        description: Frequency weighting curve applied
+      referenceLevel:
+        type: number
+        description: Reference level for dB calculation
+    meta:
+      physics: "Sound pressure level relative to reference"
+      psychoacoustics: "Perceived loudness varies with frequency"
+    conversions:
+      - from: dB_SPL
+        to: normalized
+        formula: "clamp((value + 60) / 100, 0, 1)"
+        description: "Map -60 to +40 dB to 0-1 range"
+
+  LoudnessNormalized:
+    description: Loudness on 0-100 scale for display
+    properties:
+      value:
+        type: number
+        required: true
+        minimum: 0
+        maximum: 100
+      sourceUnit:
+        type: LoudnessUnit
+        description: Original unit before normalization
+    meta:
+      usage: "UI display, threshold comparison"
+
+  PeakAmplitude:
+    description: Maximum signal amplitude in time window
+    properties:
+      value: { type: number, required: true }
+      unit: { type: AmplitudeUnit, default: dB_FS }
+      windowMs: { type: number, description: "Time window in milliseconds" }
+
+  # ============================================
+  # FREQUENCY MEASUREMENTS
+  # ============================================
+
+  Frequency:
+    description: Pitch/frequency measurement
+    properties:
+      value:
+        type: number
+        required: true
+        minimum: 0
+        description: Frequency value
+      unit:
+        type: FrequencyUnit
+        default: Hz
+    meta:
+      physics: "Oscillations per second"
+      music: "Pitch - A4 = 440 Hz"
+    conversions:
+      - from: Hz
+        to: kHz
+        formula: "value / 1000"
+
+  FrequencyRange:
+    description: Band of frequencies
+    properties:
+      low: { type: Frequency, required: true }
+      high: { type: Frequency, required: true }
+      label: { type: string, description: "e.g., 'bass', 'midrange', 'treble'" }
+
+  PitchEstimate:
+    description: Estimated fundamental frequency with confidence
+    properties:
+      frequency: { type: Frequency, required: true }
+      confidence: { type: number, minimum: 0, maximum: 1 }
+      method: { type: PitchDetectionMethod }
+
+  # ============================================
+  # TIME MEASUREMENTS
+  # ============================================
+
+  AudioDuration:
+    description: Length of audio segment
+    properties:
+      value:
+        type: number
+        required: true
+        minimum: 0
+      unit:
+        type: DurationUnit
+        default: ms
+    conversions:
+      - from: ms
+        to: s
+        formula: "value / 1000"
+      - from: s
+        to: samples
+        formula: "value * sampleRate"
+
+  Timestamp:
+    description: Position within audio stream
+    properties:
+      value: { type: number, required: true }
+      unit: { type: DurationUnit, default: ms }
+      referencePoint: { type: TimestampReference, default: stream_start }
+
+  TimeRange:
+    description: Span of time in audio
+    properties:
+      start: { type: Timestamp, required: true }
+      end: { type: Timestamp, required: true }
+    computed:
+      duration: { type: AudioDuration, formula: "end - start" }
+
+  # ============================================
+  # RATE MEASUREMENTS
+  # ============================================
+
+  SpeechRate:
+    description: Speaking speed measurement
+    properties:
+      value:
+        type: number
+        required: true
+        minimum: 0
+      unit:
+        type: SpeechRateUnit
+        default: words_per_minute
+    meta:
+      typical_range: "120-180 words/minute for English"
+
+  SampleRate:
+    description: Audio sampling frequency
+    properties:
+      value:
+        type: integer
+        required: true
+        minimum: 1
+      unit:
+        type: FrequencyUnit
+        default: Hz
+    meta:
+      common_values: [8000, 16000, 22050, 44100, 48000, 96000]
+
+  # ============================================
+  # RATIO MEASUREMENTS
+  # ============================================
+
+  SignalToNoise:
+    description: Ratio of signal power to noise power
+    properties:
+      value: { type: number, required: true }
+      unit: { type: string, default: "dB" }
+    meta:
+      interpretation: "Higher = cleaner signal"
+
+  DynamicRange:
+    description: Ratio between loudest and quietest parts
+    properties:
+      value: { type: number, required: true }
+      unit: { type: string, default: "dB" }
+      peakLevel: { type: Loudness }
+      noiseFloor: { type: Loudness }
+
+  # ============================================
+  # AGGREGATE METRICS
+  # ============================================
+
+  AudioMetrics:
+    description: Collection of audio measurements for a segment
+    properties:
+      loudness:
+        type: Loudness
+        description: Average loudness
+      loudnessNormalized:
+        type: LoudnessNormalized
+        description: 0-100 scale for UI
+      peakAmplitude:
+        type: PeakAmplitude
+        description: Maximum amplitude in segment
+      rmsLevel:
+        type: Loudness
+        description: Root mean square level
+      avgFrequency:
+        type: Frequency
+        description: Average fundamental frequency
+      speechRate:
+        type: SpeechRate
+        description: Words per minute (if speech)
+      signalToNoise:
+        type: SignalToNoise
+        description: SNR measurement
+      duration:
+        type: AudioDuration
+        description: Length of measured segment
+      sampleRate:
+        type: SampleRate
+        description: Sampling rate of audio
+
+  AudioStatistics:
+    description: Statistical summary of audio metrics over time
+    properties:
+      count: { type: integer, description: "Number of samples" }
+      loudness:
+        type: object
+        properties:
+          min: { type: Loudness }
+          max: { type: Loudness }
+          mean: { type: Loudness }
+          stdDev: { type: number }
+      frequency:
+        type: object
+        properties:
+          min: { type: Frequency }
+          max: { type: Frequency }
+          mean: { type: Frequency }
+
+enums:
+
+  LoudnessUnit:
+    description: Units for measuring loudness
+    values:
+      - dB_SPL        # Decibels Sound Pressure Level (ref: 20 µPa)
+      - dB_FS         # Decibels Full Scale (digital, 0 = max)
+      - LUFS          # Loudness Units Full Scale (ITU-R BS.1770)
+      - LKFS          # Loudness K-weighted Full Scale (same as LUFS)
+      - sone          # Perceived loudness (linear scale)
+      - phon          # Equal-loudness contour level
+
+  AmplitudeUnit:
+    description: Units for signal amplitude
+    values:
+      - dB_FS         # Decibels relative to full scale
+      - linear        # Linear amplitude (0-1)
+      - percent       # Percentage of full scale
+
+  FrequencyUnit:
+    description: Units for frequency measurement
+    values:
+      - Hz            # Hertz (cycles per second)
+      - kHz           # Kilohertz
+      - MHz           # Megahertz
+      - midi          # MIDI note number
+      - cents         # Cents (1/100 semitone)
+
+  FrequencyWeighting:
+    description: Frequency weighting curves for loudness
+    values:
+      - A             # A-weighting (approximates human ear)
+      - B             # B-weighting (historical)
+      - C             # C-weighting (flat, for peak)
+      - Z             # Z-weighting (no weighting, flat)
+      - K             # K-weighting (for LUFS/LKFS)
+
+  DurationUnit:
+    description: Units for time duration
+    values:
+      - ms            # Milliseconds
+      - s             # Seconds
+      - min           # Minutes
+      - samples       # Sample count (depends on sample rate)
+
+  SpeechRateUnit:
+    description: Units for speech rate
+    values:
+      - words_per_minute
+      - syllables_per_second
+      - phonemes_per_second
+
+  TimestampReference:
+    description: Reference point for timestamps
+    values:
+      - stream_start  # From beginning of audio stream
+      - segment_start # From beginning of current segment
+      - absolute      # Absolute wall clock time
+
+  PitchDetectionMethod:
+    description: Algorithm used for pitch detection
+    values:
+      - yin           # YIN algorithm
+      - autocorrelation
+      - fft           # FFT-based
+      - cepstrum      # Cepstral analysis
+
+meta:
+  theoretical_basis:
+    physics: "Acoustics - mechanical wave propagation"
+    psychoacoustics: "Human perception of sound"
+    signal_processing: "Digital audio analysis"
+
+  standards:
+    - "ITU-R BS.1770 (loudness measurement)"
+    - "IEC 61672 (sound level meters)"
+    - "AES17 (digital audio measurement)"
+
+  composition_role: "How loud, what pitch, how long"
+
+  related_primitives:
+    - quantity: "Audio measurements are quantities"
+    - event: "Audio events occur over time"
+    - time: "Audio exists in time domain"

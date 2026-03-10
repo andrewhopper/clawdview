@@ -1,0 +1,821 @@
+# Database Domain Model
+# Core database concepts: schemas, tables, indexes, constraints, queries
+# Source: PostgreSQL, MySQL, SQL standards, database theory
+
+domain:
+  name: database
+  version: "1.0.0"
+  description: Relational and NoSQL database structures, indexes, constraints, queries, and migrations
+  dependencies: [core]
+  sources:
+    - "PostgreSQL Documentation: https://www.postgresql.org/docs/"
+    - "MySQL Documentation: https://dev.mysql.com/doc/"
+    - "SQL:2016 Standard (ISO/IEC 9075)"
+    - "Database System Concepts (Silberschatz, Korth, Sudarshan)"
+    - "PostgreSQL Index Types: https://www.postgresql.org/docs/current/indexes-types.html"
+  created_at: "2025-11-25"
+  updated_at: "2025-11-25"
+
+entities:
+
+  # ============================================
+  # SCHEMA & STRUCTURE
+  # ============================================
+
+  DatabaseSchema:
+    description: Logical namespace for database objects
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      databaseId: { type: string, required: true }
+      owner: { type: string }
+      description: { type: string }
+      isPublic: { type: boolean, default: false }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Table:
+    description: Database table with columns and constraints
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      schemaId: { type: string, required: true }
+      description: { type: string }
+      columns: { type: array, items: Column }
+      primaryKey: { type: PrimaryKey }
+      foreignKeys: { type: array, items: ForeignKey }
+      uniqueConstraints: { type: array, items: UniqueConstraint }
+      checkConstraints: { type: array, items: CheckConstraint }
+      indexes: { type: array, items: Index }
+      triggers: { type: array, items: Trigger }
+      rowCount: { type: integer, description: "Estimated row count" }
+      sizeBytes: { type: integer, description: "Table size in bytes" }
+      isPartitioned: { type: boolean, default: false }
+      partitionStrategy: { type: PartitionStrategy }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Column:
+    description: Table column definition
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      dataType: { type: DataType, required: true }
+      isNullable: { type: boolean, default: true }
+      defaultValue: { type: string }
+      maxLength: { type: integer }
+      precision: { type: integer, description: "Numeric precision" }
+      scale: { type: integer, description: "Numeric scale" }
+      isAutoIncrement: { type: boolean, default: false }
+      isUnique: { type: boolean, default: false }
+      description: { type: string }
+      ordinalPosition: { type: integer, description: "Column order in table" }
+      collation: { type: string }
+
+  # ============================================
+  # CONSTRAINTS
+  # ============================================
+
+  PrimaryKey:
+    description: Primary key constraint
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      columns: { type: array, items: string, required: true, description: "Column names" }
+      isClustered: { type: boolean, default: true }
+
+  ForeignKey:
+    description: Foreign key constraint for referential integrity
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      columns: { type: array, items: string, required: true }
+      referencedTableId: { type: string, required: true }
+      referencedColumns: { type: array, items: string, required: true }
+      onDelete: { type: ReferentialAction, default: NoAction }
+      onUpdate: { type: ReferentialAction, default: NoAction }
+      isDeferrable: { type: boolean, default: false }
+      isEnforced: { type: boolean, default: true }
+
+  UniqueConstraint:
+    description: Unique constraint on one or more columns
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      columns: { type: array, items: string, required: true }
+      isNullsDistinct: { type: boolean, default: true, description: "Whether NULL values are considered distinct" }
+
+  CheckConstraint:
+    description: Check constraint with custom validation logic
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      expression: { type: string, required: true, description: "Boolean SQL expression" }
+      isEnforced: { type: boolean, default: true }
+
+  # ============================================
+  # INDEXES
+  # ============================================
+
+  Index:
+    description: Database index for query optimization
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      tableId: { type: string, required: true }
+      type: { type: IndexType, required: true }
+      columns: { type: array, items: IndexColumn }
+      isUnique: { type: boolean, default: false }
+      isPrimary: { type: boolean, default: false }
+      isClustered: { type: boolean, default: false }
+      whereClause: { type: string, description: "Partial index filter" }
+      includeColumns: { type: array, items: string, description: "Non-key columns in index" }
+      fillFactor: { type: integer, description: "Percentage of page fullness" }
+      sizeBytes: { type: integer }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  IndexColumn:
+    description: Column within an index
+    properties:
+      columnName: { type: string, required: true }
+      sortOrder: { type: SortOrder, default: Ascending }
+      isDescending: { type: boolean, default: false }
+      nullsFirst: { type: boolean }
+      collation: { type: string }
+
+  # ============================================
+  # VIEWS & MATERIALIZED VIEWS
+  # ============================================
+
+  View:
+    description: Virtual table defined by a query
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      schemaId: { type: string, required: true }
+      definition: { type: string, required: true, description: "SQL query defining the view" }
+      isMaterialized: { type: boolean, default: false }
+      isUpdatable: { type: boolean, default: false }
+      checkOption: { type: ViewCheckOption }
+      description: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  MaterializedView:
+    description: Materialized view with cached query results
+    extends: View
+    properties:
+      lastRefreshedAt: { type: datetime }
+      refreshSchedule: { type: string, description: "Cron expression or interval" }
+      isAutoRefresh: { type: boolean, default: false }
+      sizeBytes: { type: integer }
+      rowCount: { type: integer }
+
+  # ============================================
+  # STORED PROCEDURES & FUNCTIONS
+  # ============================================
+
+  StoredProcedure:
+    description: Stored procedure or function in the database
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      schemaId: { type: string, required: true }
+      language: { type: ProcedureLanguage, required: true }
+      definition: { type: string, required: true }
+      parameters: { type: array, items: ProcedureParameter }
+      returnType: { type: DataType }
+      isFunction: { type: boolean, default: false }
+      isAggregate: { type: boolean, default: false }
+      securityType: { type: SecurityType, default: Definer }
+      description: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ProcedureParameter:
+    description: Parameter for stored procedure or function
+    properties:
+      name: { type: string, required: true }
+      dataType: { type: DataType, required: true }
+      mode: { type: ParameterMode, required: true }
+      defaultValue: { type: string }
+      ordinalPosition: { type: integer }
+
+  # ============================================
+  # TRIGGERS
+  # ============================================
+
+  Trigger:
+    description: Database trigger that executes on table events
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      tableId: { type: string, required: true }
+      timing: { type: TriggerTiming, required: true }
+      event: { type: TriggerEvent, required: true }
+      level: { type: TriggerLevel, default: Row }
+      condition: { type: string, description: "WHEN clause condition" }
+      procedureId: { type: string, required: true }
+      isEnabled: { type: boolean, default: true }
+      executionOrder: { type: integer }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # SEQUENCES
+  # ============================================
+
+  Sequence:
+    description: Database sequence for generating unique numbers
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      schemaId: { type: string, required: true }
+      currentValue: { type: integer, required: true }
+      increment: { type: integer, default: 1 }
+      minValue: { type: integer }
+      maxValue: { type: integer }
+      startValue: { type: integer, default: 1 }
+      cache: { type: integer, description: "Number of values to cache" }
+      isCycle: { type: boolean, default: false }
+      ownedByTable: { type: string }
+      ownedByColumn: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # PARTITIONING
+  # ============================================
+
+  Partition:
+    description: Table partition for horizontal partitioning
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      parentTableId: { type: string, required: true }
+      strategy: { type: PartitionStrategy, required: true }
+      expression: { type: string, description: "Partition key expression" }
+      bounds: { type: PartitionBounds }
+      sizeBytes: { type: integer }
+      rowCount: { type: integer }
+      createdAt: { type: datetime, required: true }
+
+  PartitionBounds:
+    description: Bounds for range or list partition
+    properties:
+      lower: { type: string }
+      upper: { type: string }
+      values: { type: array, items: string, description: "For list partitions" }
+      modulus: { type: integer, description: "For hash partitions" }
+      remainder: { type: integer, description: "For hash partitions" }
+
+  # ============================================
+  # QUERY & EXECUTION
+  # ============================================
+
+  Query:
+    description: SQL query or statement
+    properties:
+      id: { type: string, required: true }
+      sql: { type: string, required: true }
+      queryType: { type: QueryType, required: true }
+      parameters: { type: array, items: QueryParameter }
+      executionPlan: { type: QueryPlan }
+      estimatedCost: { type: decimal }
+      estimatedRows: { type: integer }
+      executedAt: { type: datetime }
+      durationMs: { type: integer }
+      rowsAffected: { type: integer }
+
+  QueryParameter:
+    description: Parameterized query parameter
+    properties:
+      name: { type: string, required: true }
+      dataType: { type: DataType, required: true }
+      value: { type: string }
+      ordinalPosition: { type: integer }
+
+  QueryPlan:
+    description: Query execution plan
+    properties:
+      id: { type: string, required: true }
+      queryId: { type: string, required: true }
+      root: { type: ExecutionNode }
+      totalCost: { type: decimal }
+      startupCost: { type: decimal }
+      planningTime: { type: decimal }
+      executionTime: { type: decimal }
+      createdAt: { type: datetime, required: true }
+
+  ExecutionNode:
+    description: Node in query execution plan tree
+    properties:
+      id: { type: string, required: true }
+      nodeType: { type: ExecutionNodeType, required: true }
+      parentNodeId: { type: string }
+      relationName: { type: string, description: "Table or view name" }
+      indexName: { type: string }
+      scanMethod: { type: ScanMethod }
+      joinType: { type: JoinType }
+      joinCondition: { type: string }
+      filter: { type: string }
+      estimatedRows: { type: integer }
+      estimatedCost: { type: decimal }
+      actualRows: { type: integer }
+      actualLoops: { type: integer }
+      children: { type: array, items: ExecutionNode }
+
+  # ============================================
+  # TRANSACTIONS & LOCKS
+  # ============================================
+
+  Transaction:
+    description: Database transaction
+    properties:
+      id: { type: string, required: true }
+      isolationLevel: { type: IsolationLevel, required: true }
+      status: { type: TransactionStatus, required: true }
+      isReadOnly: { type: boolean, default: false }
+      startedAt: { type: datetime, required: true }
+      committedAt: { type: datetime }
+      rolledBackAt: { type: datetime }
+      savepoints: { type: array, items: Savepoint }
+
+  Savepoint:
+    description: Transaction savepoint for partial rollback
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      transactionId: { type: string, required: true }
+      createdAt: { type: datetime, required: true }
+
+  Lock:
+    description: Database lock on a resource
+    properties:
+      id: { type: string, required: true }
+      resourceType: { type: LockResourceType, required: true }
+      resourceId: { type: string, required: true }
+      lockMode: { type: LockMode, required: true }
+      transactionId: { type: string, required: true }
+      isBlocking: { type: boolean, default: false }
+      blockedBy: { type: string, description: "Lock ID that is blocking this" }
+      acquiredAt: { type: datetime, required: true }
+      releasedAt: { type: datetime }
+
+  # ============================================
+  # MIGRATIONS
+  # ============================================
+
+  Migration:
+    description: Database schema migration
+    properties:
+      id: { type: string, required: true }
+      version: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      steps: { type: array, items: MigrationStep }
+      status: { type: MigrationStatus, required: true }
+      direction: { type: MigrationDirection, required: true }
+      executedAt: { type: datetime }
+      durationMs: { type: integer }
+      errorMessage: { type: string }
+      checksum: { type: string, description: "Hash of migration content" }
+      createdAt: { type: datetime, required: true }
+
+  MigrationStep:
+    description: Individual step within a migration
+    properties:
+      id: { type: string, required: true }
+      stepNumber: { type: integer, required: true }
+      operation: { type: MigrationOperation, required: true }
+      sql: { type: string, required: true }
+      rollbackSql: { type: string }
+      isReversible: { type: boolean, default: true }
+      executedAt: { type: datetime }
+      errorMessage: { type: string }
+
+  # ============================================
+  # REPLICATION & SHARDING
+  # ============================================
+
+  Replica:
+    description: Database replica for read scaling and availability
+    properties:
+      id: { type: string, required: true }
+      primaryDatabaseId: { type: string, required: true }
+      endpoint: { type: string, required: true }
+      region: { type: string }
+      role: { type: ReplicaRole, required: true }
+      replicationLag: { type: integer, description: "Lag in milliseconds" }
+      status: { type: ReplicaStatus, required: true }
+      isPrimary: { type: boolean, default: false }
+      priority: { type: integer, description: "Failover priority" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Shard:
+    description: Database shard for horizontal scaling
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      shardKey: { type: string, required: true, description: "Column used for sharding" }
+      keyRange: { type: ShardKeyRange }
+      databaseId: { type: string, required: true }
+      endpoint: { type: string }
+      status: { type: ShardStatus, required: true }
+      rowCount: { type: integer }
+      sizeBytes: { type: integer }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ShardKeyRange:
+    description: Key range for a shard
+    properties:
+      minValue: { type: string, required: true }
+      maxValue: { type: string, required: true }
+      isMinInclusive: { type: boolean, default: true }
+      isMaxInclusive: { type: boolean, default: false }
+
+enums:
+
+  DataType:
+    description: SQL data types
+    values:
+      # Numeric
+      - Integer
+      - BigInt
+      - SmallInt
+      - Decimal
+      - Numeric
+      - Real
+      - DoublePrecision
+      - Serial
+      - BigSerial
+      # Character
+      - Char
+      - Varchar
+      - Text
+      # Binary
+      - Bytea
+      - Blob
+      # Date/Time
+      - Date
+      - Time
+      - Timestamp
+      - TimestampTz
+      - Interval
+      # Boolean
+      - Boolean
+      # JSON
+      - Json
+      - Jsonb
+      # Array
+      - Array
+      # UUID
+      - Uuid
+      # Network
+      - Inet
+      - Cidr
+      - MacAddr
+      # Geometric
+      - Point
+      - Line
+      - Box
+      - Circle
+      - Polygon
+      # Other
+      - Xml
+      - Money
+      - Enum
+      - Range
+
+  IndexType:
+    description: Database index types
+    values:
+      - BTree           # Balanced tree (default)
+      - Hash            # Hash index for equality
+      - GiST            # Generalized Search Tree
+      - SpGiST          # Space-Partitioned GiST
+      - GIN             # Generalized Inverted Index
+      - BRIN            # Block Range Index
+      - Bitmap          # Bitmap index
+      - FullText        # Full-text search index
+      - Spatial         # Spatial/geometric index
+      - Clustered       # Clustered index
+      - Nonclustered    # Non-clustered index
+      - Covering        # Covering/include index
+      - Filtered        # Partial/filtered index
+      - Columnstore     # Columnar index
+
+  SortOrder:
+    description: Index sort order
+    values:
+      - Ascending
+      - Descending
+
+  ReferentialAction:
+    description: Foreign key referential action
+    values:
+      - NoAction        # Reject if referenced
+      - Restrict        # Reject (checked immediately)
+      - Cascade         # Delete/update cascade
+      - SetNull         # Set to NULL
+      - SetDefault      # Set to default value
+
+  ViewCheckOption:
+    description: View WITH CHECK OPTION setting
+    values:
+      - None
+      - Local
+      - Cascaded
+
+  ProcedureLanguage:
+    description: Stored procedure programming language
+    values:
+      - SQL
+      - PLpgSQL
+      - PLPython
+      - PLPerl
+      - PLJava
+      - PLSQL          # Oracle
+      - TSQL           # SQL Server
+      - JavaScript
+
+  ParameterMode:
+    description: Procedure parameter direction
+    values:
+      - In             # Input only
+      - Out            # Output only
+      - InOut          # Both input and output
+      - Variadic       # Variable number of arguments
+
+  SecurityType:
+    description: Procedure security context
+    values:
+      - Definer        # Run with definer privileges
+      - Invoker        # Run with invoker privileges
+
+  TriggerTiming:
+    description: When trigger executes relative to event
+    values:
+      - Before
+      - After
+      - InsteadOf
+
+  TriggerEvent:
+    description: Event that activates trigger
+    values:
+      - Insert
+      - Update
+      - Delete
+      - Truncate
+
+  TriggerLevel:
+    description: Trigger execution granularity
+    values:
+      - Row            # For each row
+      - Statement      # For each statement
+
+  PartitionStrategy:
+    description: Table partitioning strategy
+    values:
+      - Range          # Range partitioning
+      - List           # List partitioning
+      - Hash           # Hash partitioning
+      - Composite      # Multiple strategies
+
+  QueryType:
+    description: Type of SQL query
+    values:
+      - Select
+      - Insert
+      - Update
+      - Delete
+      - CreateTable
+      - AlterTable
+      - DropTable
+      - CreateIndex
+      - DropIndex
+      - Transaction
+      - DDL            # Data Definition Language
+      - DML            # Data Manipulation Language
+      - DCL            # Data Control Language
+
+  ExecutionNodeType:
+    description: Query execution plan node type
+    values:
+      - SeqScan        # Sequential scan
+      - IndexScan      # Index scan
+      - IndexOnlyScan  # Index-only scan
+      - BitmapScan     # Bitmap scan
+      - NestedLoop     # Nested loop join
+      - HashJoin       # Hash join
+      - MergeJoin      # Merge join
+      - Sort           # Sort operation
+      - Aggregate      # Aggregation
+      - Group          # Grouping
+      - Limit          # Limit/offset
+      - Materialize    # Materialization
+      - Append         # Append (UNION)
+      - Unique         # Remove duplicates
+
+  ScanMethod:
+    description: Table scan method
+    values:
+      - Sequential     # Full table scan
+      - Index          # Index scan
+      - IndexOnly      # Index-only scan
+      - Bitmap         # Bitmap index scan
+      - TidScan        # Tuple ID scan
+
+  JoinType:
+    description: SQL join type
+    values:
+      - Inner
+      - Left
+      - Right
+      - Full
+      - Cross
+      - Semi           # Semi join
+      - Anti           # Anti join
+
+  IsolationLevel:
+    description: Transaction isolation level
+    values:
+      - ReadUncommitted
+      - ReadCommitted
+      - RepeatableRead
+      - Serializable
+
+  TransactionStatus:
+    description: Transaction state
+    values:
+      - Active
+      - Committed
+      - RolledBack
+      - Aborted
+      - Prepared       # Two-phase commit
+
+  LockResourceType:
+    description: Type of resource being locked
+    values:
+      - Table
+      - Row
+      - Page
+      - Database
+      - Schema
+      - Index
+
+  LockMode:
+    description: Lock mode/level
+    values:
+      - Shared         # Read lock
+      - Exclusive      # Write lock
+      - IntentShared   # Intent to acquire shared
+      - IntentExclusive # Intent to acquire exclusive
+      - Update         # Update lock
+
+  MigrationStatus:
+    description: Migration execution status
+    values:
+      - Pending
+      - InProgress
+      - Completed
+      - Failed
+      - RolledBack
+      - Skipped
+
+  MigrationDirection:
+    description: Migration direction
+    values:
+      - Up             # Forward migration
+      - Down           # Rollback migration
+
+  MigrationOperation:
+    description: Type of migration operation
+    values:
+      - CreateTable
+      - DropTable
+      - AlterTable
+      - AddColumn
+      - DropColumn
+      - AlterColumn
+      - CreateIndex
+      - DropIndex
+      - CreateConstraint
+      - DropConstraint
+      - RawSql
+
+  ReplicaRole:
+    description: Database replica role
+    values:
+      - Primary
+      - ReadReplica
+      - StandbySync    # Synchronous standby
+      - StandbyAsync   # Asynchronous standby
+
+  ReplicaStatus:
+    description: Replica health status
+    values:
+      - Active
+      - Replicating
+      - Lagging
+      - Failed
+      - Offline
+
+  ShardStatus:
+    description: Shard operational status
+    values:
+      - Active
+      - Inactive
+      - Migrating
+      - Splitting
+      - Merging
+
+actions:
+
+  CreateTable:
+    description: Create a new database table
+    parameters:
+      schemaId: { type: string, required: true }
+      name: { type: string, required: true }
+      columns: { type: array, items: Column, required: true }
+      primaryKey: { type: PrimaryKey }
+    result: Table
+
+  CreateIndex:
+    description: Create an index on a table
+    parameters:
+      tableId: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: IndexType, required: true }
+      columns: { type: array, items: IndexColumn, required: true }
+      isUnique: { type: boolean, default: false }
+      whereClause: { type: string }
+    result: Index
+
+  AddColumn:
+    description: Add a column to an existing table
+    parameters:
+      tableId: { type: string, required: true }
+      column: { type: Column, required: true }
+    result: Column
+
+  AddForeignKey:
+    description: Add foreign key constraint
+    parameters:
+      tableId: { type: string, required: true }
+      foreignKey: { type: ForeignKey, required: true }
+    result: ForeignKey
+
+  ExecuteQuery:
+    description: Execute a SQL query
+    parameters:
+      sql: { type: string, required: true }
+      parameters: { type: array, items: QueryParameter }
+      timeout: { type: integer, description: "Query timeout in milliseconds" }
+    result: Query
+
+  ExplainQuery:
+    description: Get query execution plan
+    parameters:
+      sql: { type: string, required: true }
+      analyze: { type: boolean, default: false, description: "Actually execute query" }
+    result: QueryPlan
+
+  CreateMigration:
+    description: Create a new schema migration
+    parameters:
+      version: { type: string, required: true }
+      name: { type: string, required: true }
+      steps: { type: array, items: MigrationStep, required: true }
+    result: Migration
+
+  ApplyMigration:
+    description: Apply a migration to the database
+    parameters:
+      migrationId: { type: string, required: true }
+    result: Migration
+
+  RollbackMigration:
+    description: Rollback a migration
+    parameters:
+      migrationId: { type: string, required: true }
+    result: Migration
+
+  CreateReplica:
+    description: Create a read replica
+    parameters:
+      primaryDatabaseId: { type: string, required: true }
+      region: { type: string }
+      role: { type: ReplicaRole, default: ReadReplica }
+    result: Replica
+
+  CreateShard:
+    description: Create a new database shard
+    parameters:
+      name: { type: string, required: true }
+      shardKey: { type: string, required: true }
+      keyRange: { type: ShardKeyRange, required: true }
+    result: Shard

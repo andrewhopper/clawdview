@@ -1,0 +1,28 @@
+// File UUID: 4b7e9c3f-2a1d-4e8f-9c3a-6d5e7f8a9b0c
+
+{
+  "name": "@protoflow/ssm-resolver",
+  "version": "1.0.0",
+  "description": "Hierarchical SSM Parameter Store resolver with automatic fallback chain",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "keywords": ["ssm", "parameter-store", "aws", "cdk", "config"],
+  "author": "Protoflow",
+  "license": "MIT",
+  "peerDependencies": {
+    "aws-cdk-lib": "^2.0.0",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  }
+}

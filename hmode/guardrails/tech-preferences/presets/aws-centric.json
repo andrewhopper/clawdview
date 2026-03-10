@@ -1,0 +1,386 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AWS-Centric Tech Preferences Preset",
+  "description": "Defaults all technology choices to AWS services for AWS-native projects",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "presetName": "aws-centric",
+  "note": "Use this preset for prototypes that should use AWS services by default. Copy to .tech-preferences.local.json in project root.",
+  "overrides": {
+    "ui_component_libraries": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Cloudscape",
+          "version": "latest",
+          "rationale": "AWS design system, cloud-focused patterns, accessible, enterprise-grade",
+          "useCases": [
+            "AWS console-like apps",
+            "enterprise cloud UIs",
+            "internal AWS tools"
+          ],
+          "docsUrl": "https://cloudscape.design/get-started/",
+          "examplesUrl": "https://cloudscape.design/patterns/"
+        }
+      ]
+    },
+    "asr_speech_recognition": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Transcribe",
+          "version": "AWS",
+          "rationale": "AWS-native, batch + streaming, speaker identification, custom vocabulary",
+          "useCases": [
+            "AWS apps",
+            "compliance",
+            "large-scale transcription"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/transcribe/",
+          "examplesUrl": "https://docs.aws.amazon.com/transcribe/latest/dg/getting-started.html"
+        }
+      ]
+    },
+    "tts_text_to_speech": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Polly",
+          "version": "AWS",
+          "rationale": "AWS-native, neural voices, SSML, pay-per-character, multiple languages",
+          "useCases": [
+            "AWS apps",
+            "voiceovers",
+            "accessibility"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/polly/",
+          "examplesUrl": "https://docs.aws.amazon.com/polly/latest/dg/getting-started.html"
+        }
+      ]
+    },
+    "ocr_document_intelligence": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Textract + Comprehend",
+          "version": "AWS",
+          "rationale": "AWS-native OCR + NLP, forms, tables, expense analysis, medical documents",
+          "useCases": [
+            "AWS apps",
+            "document processing",
+            "form extraction"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/textract/",
+          "examplesUrl": "https://docs.aws.amazon.com/textract/latest/dg/getting-started.html"
+        }
+      ]
+    },
+    "llm_inference": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Bedrock (Claude)",
+          "version": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+          "rationale": "AWS-native, no data retention, enterprise compliance, VPC support",
+          "useCases": [
+            "AWS apps",
+            "enterprise compliance",
+            "production applications"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/bedrock/latest/userguide/",
+          "examplesUrl": "https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html"
+        }
+      ]
+    },
+    "vector_embeddings": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Bedrock (Titan Embeddings)",
+          "version": "amazon.titan-embed-text-v2:0",
+          "rationale": "AWS-native, 8K context, multilingual, cost-effective, no data retention",
+          "useCases": [
+            "AWS apps",
+            "enterprise compliance",
+            "high-scale RAG"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html",
+          "examplesUrl": "https://docs.aws.amazon.com/bedrock/latest/userguide/embeddings.html"
+        }
+      ]
+    },
+    "databases": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Amazon DynamoDB",
+          "version": "AWS",
+          "rationale": "AWS-native NoSQL, serverless, single-digit ms latency, auto-scaling",
+          "useCases": [
+            "AWS serverless apps",
+            "high-scale",
+            "key-value + document"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/dynamodb/",
+          "examplesUrl": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.html"
+        }
+      ]
+    },
+    "storage": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS S3",
+          "version": "AWS",
+          "rationale": "AWS-native, 11 9s durability, versioning, lifecycle policies, cost tiers",
+          "useCases": [
+            "all AWS apps",
+            "file storage",
+            "static assets",
+            "data lakes"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/s3/",
+          "examplesUrl": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/GetStartedWithS3.html"
+        }
+      ]
+    },
+    "email_sending": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS SES",
+          "version": "AWS",
+          "rationale": "AWS-native, affordable, high deliverability, production-ready",
+          "useCases": [
+            "AWS apps",
+            "high volume",
+            "cost optimization"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/ses/",
+          "examplesUrl": "https://docs.aws.amazon.com/ses/latest/dg/send-an-email-using-sdk-programmatically.html"
+        }
+      ]
+    },
+    "authentication": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Cognito",
+          "version": "AWS",
+          "rationale": "AWS-native, SAML/OIDC, MFA, user pools, pay-as-you-go",
+          "useCases": [
+            "AWS apps",
+            "enterprise SSO",
+            "compliance requirements"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/cognito/",
+          "examplesUrl": "https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-getting-started.html"
+        }
+      ]
+    },
+    "deployment_frontend": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Amplify",
+          "version": "Gen 2",
+          "rationale": "AWS-native, branch previews, SSR support, env vars, CI/CD",
+          "useCases": [
+            "AWS apps",
+            "Next.js SSR",
+            "branch deployments"
+          ],
+          "docsUrl": "https://docs.amplify.aws/",
+          "examplesUrl": "https://docs.amplify.aws/gen2/"
+        }
+      ]
+    },
+    "deployment_backend": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Lambda + API Gateway",
+          "version": "AWS",
+          "rationale": "Serverless, auto-scaling, pay-per-use, AWS ecosystem integration",
+          "useCases": [
+            "AWS apps",
+            "serverless APIs",
+            "event-driven architectures"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/lambda/",
+          "examplesUrl": "https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html"
+        }
+      ]
+    },
+    "monitoring": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS CloudWatch",
+          "version": "AWS",
+          "rationale": "AWS-native, logs + metrics + alarms, Lambda insights, cost-effective",
+          "useCases": [
+            "AWS apps",
+            "centralized logging",
+            "infrastructure monitoring"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/cloudwatch/",
+          "examplesUrl": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/GettingStarted.html"
+        }
+      ]
+    },
+    "ci_cd": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS CodePipeline + CodeBuild",
+          "version": "AWS",
+          "rationale": "AWS-native, deep AWS integration, VPC support, cost-effective",
+          "useCases": [
+            "AWS-native apps",
+            "complex AWS deployments",
+            "private VPC"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/codepipeline/",
+          "examplesUrl": "https://docs.aws.amazon.com/codepipeline/latest/userguide/tutorials.html"
+        }
+      ]
+    },
+    "caching": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS ElastiCache Redis",
+          "version": "7.x",
+          "rationale": "AWS-native, managed, cluster mode, auto-failover, VPC-isolated",
+          "useCases": [
+            "AWS apps",
+            "high-throughput",
+            "complex caching"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/elasticache/",
+          "examplesUrl": "https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/GettingStarted.html"
+        }
+      ]
+    },
+    "search": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS OpenSearch",
+          "version": "2.x",
+          "rationale": "AWS-native, Elasticsearch-compatible, analytics, log search",
+          "useCases": [
+            "AWS apps",
+            "log analytics",
+            "complex queries"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/opensearch-service/",
+          "examplesUrl": "https://docs.aws.amazon.com/opensearch-service/latest/developerguide/gsg.html"
+        }
+      ]
+    },
+    "task_queues": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS SQS + Lambda",
+          "version": "AWS",
+          "rationale": "AWS-native, serverless, FIFO + standard queues, DLQ, auto-scaling",
+          "useCases": [
+            "AWS apps",
+            "async processing",
+            "decoupling services"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/sqs/",
+          "examplesUrl": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-getting-started.html"
+        }
+      ]
+    },
+    "workflow_orchestration": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Step Functions",
+          "version": "AWS",
+          "rationale": "AWS-native, visual workflow, serverless, AWS service integration",
+          "useCases": [
+            "AWS apps",
+            "serverless workflows",
+            "AWS service orchestration"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/step-functions/",
+          "examplesUrl": "https://docs.aws.amazon.com/step-functions/latest/dg/getting-started.html"
+        }
+      ]
+    },
+    "infrastructure_as_code": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS CDK",
+          "version": "2.x",
+          "rationale": "AWS-native, TypeScript/Python, high-level constructs, CloudFormation under the hood",
+          "useCases": [
+            "AWS infrastructure",
+            "type-safe IaC",
+            "CloudFormation abstractions"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/cdk/v2/guide/home.html",
+          "examplesUrl": "https://github.com/aws-samples/aws-cdk-examples"
+        }
+      ]
+    },
+    "data_transformation": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Glue",
+          "version": "AWS",
+          "rationale": "Serverless ETL, AWS-native, Spark-based, automatic schema discovery",
+          "useCases": [
+            "AWS data lakes",
+            "serverless ETL",
+            "large-scale transformations"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/glue/",
+          "examplesUrl": "https://github.com/aws-samples/aws-glue-samples"
+        }
+      ]
+    },
+    "data_warehouses": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Redshift",
+          "version": "AWS",
+          "rationale": "AWS-native, columnar storage, scalable, SQL interface",
+          "useCases": [
+            "AWS data warehouses",
+            "large-scale analytics",
+            "OLAP queries"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/redshift/",
+          "examplesUrl": "https://github.com/aws-samples/amazon-redshift-primer"
+        }
+      ]
+    },
+    "data_lakes": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS S3 + Lake Formation",
+          "version": "AWS",
+          "rationale": "AWS-native, fine-grained access control, integrated with Glue/Athena",
+          "useCases": [
+            "AWS data lakes",
+            "centralized governance",
+            "secure data sharing"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/lake-formation/",
+          "examplesUrl": "https://github.com/aws-samples/aws-lake-formation-samples"
+        }
+      ]
+    }
+  }
+}

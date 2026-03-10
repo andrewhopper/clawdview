@@ -1,0 +1,282 @@
+# Primitive: Relation
+# Connections between entities - how things relate
+# Physics: Forces/Fields (electromagnetic, gravitational binding)
+# Philosophy: Category of relation (Aristotle, Kant)
+# Biology: Symbiosis, ecology (predator-prey, mutualism)
+
+domain:
+  name: primitive-relation
+  version: "1.0.0"
+  description: Relations and connections - how entities link together
+  layer: primitive
+  dependencies: [primitive-entity]
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  # ============================================
+  # FUNDAMENTAL RELATIONS
+  # ============================================
+
+  Relation:
+    description: A connection between two or more entities
+    properties:
+      id: { type: string }
+      name: { type: string, required: true }
+      type: { type: RelationType, required: true }
+      description: { type: string }
+      isSymmetric: { type: boolean, default: false }
+      isTransitive: { type: boolean, default: false }
+      isReflexive: { type: boolean, default: false }
+    meta:
+      philosophy: "Category of relation - how things stand to each other"
+      physics: "Force/field - binding between particles"
+      biology: "Ecological relationship"
+
+  Link:
+    description: Instance of a relation between specific entities
+    properties:
+      relationName: { type: string, required: true }
+      source: { type: string, required: true, description: "Source entity ID" }
+      sourceType: { type: string }
+      target: { type: string, required: true, description: "Target entity ID" }
+      targetType: { type: string }
+      properties: { type: object, description: "Edge properties" }
+      validFrom: { type: datetime }
+      validTo: { type: datetime }
+    meta:
+      graph_theory: "Edge in a graph"
+
+  DirectedLink:
+    extends: Link
+    description: Asymmetric connection (A→B ≠ B→A)
+    properties:
+      direction: { type: Direction }
+    examples:
+      - "owns (person owns car, car doesn't own person)"
+      - "parent_of (asymmetric)"
+
+  UndirectedLink:
+    extends: Link
+    description: Symmetric connection (A—B = B—A)
+    examples:
+      - "sibling_of"
+      - "connected_to"
+      - "adjacent_to"
+
+  # ============================================
+  # CARDINALITY
+  # ============================================
+
+  Cardinality:
+    description: Quantity constraints on a relationship
+    properties:
+      min: { type: integer, default: 0 }
+      max: { type: integer, description: "null = unbounded" }
+    examples:
+      - "1..1 (exactly one)"
+      - "0..* (zero or more)"
+      - "1..* (one or more)"
+
+  RelationDefinition:
+    description: Schema for a type of relation
+    properties:
+      name: { type: string, required: true }
+      sourceType: { type: string, required: true }
+      targetType: { type: string, required: true }
+      sourceCardinality: { type: Cardinality }
+      targetCardinality: { type: Cardinality }
+      inverse: { type: string, description: "Name of inverse relation" }
+
+  # ============================================
+  # ROLES
+  # ============================================
+
+  Role:
+    description: Function an entity plays in a relationship
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      permissions: { type: array, items: string }
+      responsibilities: { type: array, items: string }
+      cardinality: { type: Cardinality }
+    examples:
+      - "buyer in a transaction"
+      - "approver in a workflow"
+      - "parent in a family"
+
+  RoleAssignment:
+    description: Entity assigned to a role in a context
+    properties:
+      role: { type: string, required: true }
+      entityId: { type: string, required: true }
+      context: { type: string, description: "Scope of role assignment" }
+      assignedAt: { type: datetime }
+      assignedBy: { type: string }
+      validFrom: { type: datetime }
+      validTo: { type: datetime }
+
+  # ============================================
+  # STRUCTURAL PATTERNS
+  # ============================================
+
+  Hierarchy:
+    description: Tree structure with parent-child relations
+    properties:
+      name: { type: string, required: true }
+      rootType: { type: string }
+      parentRelation: { type: string, default: "parent_of" }
+      childRelation: { type: string, default: "child_of" }
+      maxDepth: { type: integer }
+    meta:
+      examples: ["org chart", "file system", "taxonomy"]
+
+  HierarchyNode:
+    description: Node in a hierarchy
+    properties:
+      entityId: { type: string, required: true }
+      parentId: { type: string }
+      path: { type: string, description: "Materialized path from root" }
+      depth: { type: integer }
+      order: { type: integer, description: "Sibling order" }
+
+  Graph:
+    description: Network of entities with arbitrary connections
+    properties:
+      name: { type: string, required: true }
+      nodeType: { type: string }
+      edgeType: { type: string }
+      isDirected: { type: boolean, default: true }
+      isWeighted: { type: boolean, default: false }
+      allowCycles: { type: boolean, default: true }
+      allowMultipleEdges: { type: boolean, default: false }
+
+  # ============================================
+  # CONTAINMENT
+  # ============================================
+
+  Composition:
+    description: Whole-part relationship where parts cannot exist independently
+    properties:
+      wholeName: { type: string, required: true }
+      partName: { type: string, required: true }
+      partCardinality: { type: Cardinality }
+    meta:
+      philosophy: "Mereology - study of parts and wholes"
+      uml: "Composition (filled diamond)"
+    examples:
+      - "Order contains OrderLines (lines don't exist without order)"
+      - "Body contains organs"
+
+  Aggregation:
+    description: Whole-part relationship where parts can exist independently
+    properties:
+      wholeName: { type: string, required: true }
+      partName: { type: string, required: true }
+      partCardinality: { type: Cardinality }
+    meta:
+      uml: "Aggregation (hollow diamond)"
+    examples:
+      - "Team has Members (members exist without team)"
+      - "Playlist has Songs"
+
+  # ============================================
+  # ASSOCIATION PATTERNS
+  # ============================================
+
+  Association:
+    description: Simple reference between entities
+    properties:
+      name: { type: string, required: true }
+      sourceType: { type: string, required: true }
+      targetType: { type: string, required: true }
+      navigability: { type: Navigability }
+
+  AssociationClass:
+    description: Relationship with its own attributes
+    properties:
+      name: { type: string, required: true }
+      sourceType: { type: string, required: true }
+      targetType: { type: string, required: true }
+      properties: { type: object }
+    examples:
+      - "Employment (person-company with salary, start_date)"
+      - "Enrollment (student-course with grade)"
+
+  # ============================================
+  # DEPENDENCY
+  # ============================================
+
+  Dependency:
+    description: One entity depends on another
+    properties:
+      dependent: { type: string, required: true }
+      dependsOn: { type: string, required: true }
+      type: { type: DependencyType, required: true }
+      strength: { type: DependencyStrength }
+    meta:
+      physics: "Coupling between systems"
+
+enums:
+
+  RelationType:
+    description: Fundamental types of relations
+    values:
+      - association     # Simple reference
+      - composition     # Whole-part (part can't exist alone)
+      - aggregation     # Whole-part (part can exist alone)
+      - inheritance     # Is-a relationship
+      - dependency      # Uses/needs
+      - realization     # Implements
+
+  Direction:
+    description: Direction of relationship
+    values:
+      - outgoing        # From source to target
+      - incoming        # From target to source
+      - bidirectional   # Both directions
+
+  Navigability:
+    description: Which direction can be traversed
+    values:
+      - source_to_target
+      - target_to_source
+      - bidirectional
+      - unspecified
+
+  DependencyType:
+    description: How entities depend on each other
+    values:
+      - uses            # Uses functionality
+      - creates         # Creates instances
+      - calls           # Invokes methods
+      - imports         # Imports definitions
+      - extends         # Inherits from
+      - implements      # Implements interface
+
+  DependencyStrength:
+    description: How strong the dependency is
+    values:
+      - required        # Cannot function without
+      - optional        # Can function without
+      - weak            # Loosely coupled
+
+meta:
+  theoretical_basis:
+    philosophy: "Category of relation (Aristotle) - how things stand to each other"
+    mathematics: "Set theory relations, graph theory"
+    physics: "Forces, fields, interactions"
+    biology: "Symbiosis, predator-prey, mutualism"
+
+  patterns:
+    - "Entity-Relationship (ER) modeling"
+    - "UML associations"
+    - "Graph databases"
+    - "Linked data / RDF"
+
+  composition_role: "Connects entities into structures"
+
+  related_primitives:
+    - entity: "Relations connect entities"
+    - role: "Entities play roles in relations"

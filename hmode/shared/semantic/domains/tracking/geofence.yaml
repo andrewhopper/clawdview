@@ -1,0 +1,602 @@
+# Tracking Domain: Geofences & Boundaries
+# Virtual boundaries with enter/exit triggers
+# Version: 1.0.0
+
+domain: tracking-geofence
+version: "1.0.0"
+status: production
+description: Geofences, virtual boundaries, zone monitoring, and spatial triggers
+dependencies:
+  - geo-point
+  - geo-shape
+  - tracking-position
+  - tracking-asset
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Geofence
+  # ---------------------------------------------------------------------------
+
+  Geofence:
+    description: Virtual boundary that triggers events on entry/exit
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+        required: false
+      status:
+        type: GeofenceStatus
+        required: true
+        default: ACTIVE
+      geometry:
+        type: Geometry
+        required: true
+        description: Polygon, circle, or corridor
+      geometry_type:
+        type: GeofenceGeometryType
+        required: false
+      center:
+        type: Point
+        required: false
+        description: Center point (for circular geofences)
+      radius_meters:
+        type: float
+        required: false
+        description: Radius (for circular geofences)
+      buffer_meters:
+        type: float
+        required: false
+        default: 0
+        description: Buffer zone for hysteresis
+      bounds:
+        type: BoundingBox
+        required: false
+        description: Bounding box for fast filtering
+      category:
+        type: GeofenceCategory
+        required: false
+      tags:
+        type: array
+        items:
+          type: string
+        required: false
+      address:
+        type: Address
+        required: false
+      place:
+        type: Place
+        required: false
+      triggers:
+        type: GeofenceTriggers
+        required: false
+        default:
+          on_enter: true
+          on_exit: true
+          on_dwell: false
+      dwell_threshold_seconds:
+        type: integer
+        required: false
+        description: Time inside before dwell trigger
+      schedule:
+        type: GeofenceSchedule
+        required: false
+        description: When geofence is active
+      assigned_assets:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Asset IDs monitored (null = all)
+      metadata:
+        type: object
+        required: false
+      created_at:
+        type: datetime
+        required: false
+      updated_at:
+        type: datetime
+        required: false
+      created_by:
+        type: string
+        required: false
+
+  GeofenceTriggers:
+    description: What events to trigger
+    fields:
+      on_enter:
+        type: boolean
+        required: false
+        default: true
+      on_exit:
+        type: boolean
+        required: false
+        default: true
+      on_dwell:
+        type: boolean
+        required: false
+        default: false
+        description: Trigger after dwelling inside
+      on_approach:
+        type: boolean
+        required: false
+        default: false
+        description: Trigger when approaching
+      approach_distance_meters:
+        type: float
+        required: false
+        description: Distance for approach trigger
+
+  GeofenceSchedule:
+    description: When geofence monitoring is active
+    fields:
+      always_active:
+        type: boolean
+        required: false
+        default: true
+      timezone:
+        type: string
+        required: false
+      periods:
+        type: array
+        items:
+          type: SchedulePeriod
+        required: false
+      effective_from:
+        type: datetime
+        required: false
+      effective_until:
+        type: datetime
+        required: false
+
+  SchedulePeriod:
+    description: Active time period
+    fields:
+      days:
+        type: array
+        items:
+          type: DayOfWeek
+        required: true
+      start_time:
+        type: string
+        required: true
+        description: Start time (HH:MM)
+      end_time:
+        type: string
+        required: true
+        description: End time (HH:MM)
+
+  # ---------------------------------------------------------------------------
+  # Geofence Event
+  # ---------------------------------------------------------------------------
+
+  GeofenceEvent:
+    description: Event triggered by geofence crossing
+    fields:
+      id:
+        type: string
+        required: true
+      geofence_id:
+        type: string
+        required: true
+      geofence_name:
+        type: string
+        required: false
+      asset_id:
+        type: string
+        required: true
+      asset_name:
+        type: string
+        required: false
+      event_type:
+        type: GeofenceEventType
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+      location:
+        type: Point
+        required: true
+        description: Position when event triggered
+      speed_mps:
+        type: float
+        required: false
+      heading:
+        type: float
+        required: false
+      dwell_time_seconds:
+        type: float
+        required: false
+        description: Time spent inside (for exit/dwell events)
+      distance_from_boundary_meters:
+        type: float
+        required: false
+      crossing_direction:
+        type: string
+        required: false
+        description: Direction of boundary crossing
+      acknowledged:
+        type: boolean
+        required: false
+        default: false
+      acknowledged_by:
+        type: string
+        required: false
+      acknowledged_at:
+        type: datetime
+        required: false
+      notes:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Asset-Geofence State
+  # ---------------------------------------------------------------------------
+
+  AssetGeofenceState:
+    description: Current state of asset relative to geofence
+    fields:
+      asset_id:
+        type: string
+        required: true
+      geofence_id:
+        type: string
+        required: true
+      state:
+        type: GeofenceState
+        required: true
+      entered_at:
+        type: datetime
+        required: false
+        description: When asset entered (if inside)
+      dwell_time_seconds:
+        type: float
+        required: false
+        description: Current dwell time (if inside)
+      last_position:
+        type: Point
+        required: false
+      last_updated:
+        type: datetime
+        required: true
+      distance_to_boundary_meters:
+        type: float
+        required: false
+        description: Distance to nearest boundary
+
+  # ---------------------------------------------------------------------------
+  # Zone (named area with attributes)
+  # ---------------------------------------------------------------------------
+
+  Zone:
+    description: Named area with semantic meaning
+    extends: Geofence
+    fields:
+      zone_type:
+        type: ZoneType
+        required: true
+      parent_zone_id:
+        type: string
+        required: false
+        description: Containing zone (hierarchy)
+      child_zones:
+        type: array
+        items:
+          type: string
+        required: false
+      capacity:
+        type: integer
+        required: false
+        description: Maximum occupancy
+      current_occupancy:
+        type: integer
+        required: false
+      speed_limit_kmh:
+        type: float
+        required: false
+        description: Speed limit in zone
+      rules:
+        type: array
+        items:
+          type: ZoneRule
+        required: false
+
+  ZoneRule:
+    description: Rule that applies within a zone
+    fields:
+      rule_type:
+        type: ZoneRuleType
+        required: true
+      description:
+        type: string
+        required: false
+      value:
+        type: string
+        required: false
+      applies_to:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Asset types or IDs
+
+  # ---------------------------------------------------------------------------
+  # Corridor (path with width)
+  # ---------------------------------------------------------------------------
+
+  RouteCorridor:
+    description: Buffered route path for deviation monitoring
+    extends: Geofence
+    fields:
+      route_id:
+        type: string
+        required: false
+        description: Associated route
+      centerline:
+        type: LineString
+        required: true
+        description: Center path
+      width_meters:
+        type: float
+        required: true
+        description: Corridor width (buffer on each side)
+      checkpoints:
+        type: array
+        items:
+          type: CorridorCheckpoint
+        required: false
+
+  CorridorCheckpoint:
+    description: Checkpoint along corridor
+    fields:
+      id:
+        type: string
+        required: true
+      location:
+        type: Point
+        required: true
+      name:
+        type: string
+        required: false
+      sequence:
+        type: integer
+        required: false
+      required:
+        type: boolean
+        required: false
+        default: true
+        description: Must pass through
+      expected_time:
+        type: datetime
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Alert Configuration
+  # ---------------------------------------------------------------------------
+
+  GeofenceAlertConfig:
+    description: Alert configuration for geofence events
+    fields:
+      geofence_id:
+        type: string
+        required: true
+      alert_on:
+        type: array
+        items:
+          type: GeofenceEventType
+        required: true
+      severity:
+        type: AlertSeverity
+        required: false
+        default: MEDIUM
+      notify:
+        type: array
+        items:
+          type: NotificationTarget
+        required: false
+      cooldown_seconds:
+        type: integer
+        required: false
+        description: Minimum time between alerts
+      escalation_minutes:
+        type: integer
+        required: false
+        description: Escalate if not acknowledged
+
+  NotificationTarget:
+    description: Who/where to send notifications
+    fields:
+      type:
+        type: NotificationType
+        required: true
+      target:
+        type: string
+        required: true
+        description: Email, phone, webhook URL, etc.
+
+  # ---------------------------------------------------------------------------
+  # Bulk Operations
+  # ---------------------------------------------------------------------------
+
+  GeofenceCheckRequest:
+    description: Request to check positions against geofences
+    fields:
+      positions:
+        type: array
+        items:
+          type: Position
+        required: true
+      geofence_ids:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Specific geofences (null = all)
+      include_distance:
+        type: boolean
+        required: false
+        default: false
+
+  GeofenceCheckResult:
+    description: Result of geofence check
+    fields:
+      asset_id:
+        type: string
+        required: true
+      position:
+        type: Position
+        required: true
+      inside:
+        type: array
+        items:
+          type: GeofenceMatch
+        required: false
+        description: Geofences currently inside
+      approaching:
+        type: array
+        items:
+          type: GeofenceMatch
+        required: false
+        description: Geofences approaching
+
+  GeofenceMatch:
+    description: Matched geofence with details
+    fields:
+      geofence_id:
+        type: string
+        required: true
+      geofence_name:
+        type: string
+        required: false
+      distance_meters:
+        type: float
+        required: false
+        description: Distance to boundary (negative = inside)
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  GeofenceStatus:
+    description: Geofence operational status
+    values:
+      - ACTIVE          # Monitoring enabled
+      - INACTIVE        # Not monitoring
+      - DRAFT           # Not yet activated
+      - ARCHIVED        # Historical only
+
+  GeofenceGeometryType:
+    description: Type of geofence geometry
+    values:
+      - CIRCLE          # Radius around point
+      - POLYGON         # Custom polygon
+      - RECTANGLE       # Bounding box
+      - CORRIDOR        # Buffered line
+      - MULTIPOLYGON    # Multiple areas
+
+  GeofenceCategory:
+    description: Category of geofence
+    values:
+      - CUSTOMER        # Customer location
+      - DEPOT           # Depot/warehouse
+      - RESTRICTED      # Restricted area
+      - SPEED_ZONE      # Speed limit zone
+      - SAFETY          # Safety/hazard zone
+      - PARKING         # Parking area
+      - LOADING         # Loading/unloading
+      - HOME            # Home base
+      - SCHOOL          # School zone
+      - HOSPITAL        # Hospital zone
+      - BORDER          # Geographic border
+      - CUSTOM          # User-defined
+
+  GeofenceEventType:
+    description: Type of geofence event
+    values:
+      - ENTER           # Asset entered geofence
+      - EXIT            # Asset exited geofence
+      - DWELL           # Asset dwelling inside
+      - APPROACH        # Asset approaching
+      - SPEEDING        # Speeding in zone
+      - ROUTE_DEVIATION # Left corridor
+
+  GeofenceState:
+    description: Asset state relative to geofence
+    values:
+      - INSIDE          # Currently inside
+      - OUTSIDE         # Currently outside
+      - APPROACHING     # Moving toward
+      - DEPARTING       # Moving away
+      - UNKNOWN         # State unknown
+
+  ZoneType:
+    description: Type of zone
+    values:
+      - FACILITY        # Building/facility
+      - CAMPUS          # Campus with sub-zones
+      - REGION          # Geographic region
+      - DISTRICT        # District/territory
+      - ROUTE           # Delivery route area
+      - PARKING_LOT     # Parking area
+      - LOADING_DOCK    # Loading area
+      - WAREHOUSE       # Warehouse floor
+      - YARD            # Outdoor yard
+      - GATE            # Entry/exit gate
+      - CHECKPOINT      # Inspection point
+      - HAZARD          # Hazardous area
+      - NO_GO           # Prohibited area
+      - SPEED_ZONE      # Speed restricted
+      - QUIET_ZONE      # Noise restricted
+
+  ZoneRuleType:
+    description: Type of zone rule
+    values:
+      - SPEED_LIMIT     # Maximum speed
+      - NO_ENTRY        # Entry prohibited
+      - AUTHORIZED_ONLY # Requires authorization
+      - NO_IDLING       # No engine idling
+      - PPE_REQUIRED    # Safety equipment
+      - CHECK_IN        # Must check in
+      - TIME_LIMIT      # Maximum dwell time
+      - WEIGHT_LIMIT    # Maximum weight
+      - HEIGHT_LIMIT    # Maximum height
+
+  AlertSeverity:
+    description: Alert severity level
+    values:
+      - LOW
+      - MEDIUM
+      - HIGH
+      - CRITICAL
+
+  NotificationType:
+    description: Type of notification
+    values:
+      - EMAIL
+      - SMS
+      - PUSH
+      - WEBHOOK
+      - SLACK
+      - TEAMS
+      - IN_APP
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "GeoJSON RFC 7946"
+  - "OGC Simple Features"
+  - "Geofencing: Location-based Services"
+  - "Fleet Management Best Practices"

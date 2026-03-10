@@ -1,0 +1,556 @@
+# Food & Beverage Domain
+# Menu items, modifiers, sizes, nutrition, recipes for restaurant/cafe ordering
+# Version: 1.0.0
+# Status: PENDING APPROVAL
+
+domain:
+  name: food-beverage
+  version: "1.0.0"
+  status: draft
+  description: Food and beverage menu items with customization support
+  dependencies: [core, product]
+  use_case: Restaurant ordering, cafe POS, food delivery apps
+  created_at: "2026-02-02"
+  updated_at: "2026-02-02"
+
+entities:
+
+  MenuItem:
+    description: Food or beverage item available for order
+    extends: Product  # Inherits id, name, description, images, status from product domain
+    properties:
+      menu_item_type:
+        type: MenuItemType
+        required: true
+        description: Food, beverage, or combo
+
+      # Category
+      menu_category_id:
+        type: uuid
+        description: FK to MenuCategory (Drinks, Food, Desserts)
+
+      # Availability
+      available_times:
+        type: array
+        items: TimeRange
+        description: When item is available (breakfast, lunch, all-day)
+      available_days:
+        type: array
+        items: DayOfWeek
+        description: Days item is available
+
+      # Pricing
+      base_price:
+        type: Money
+        required: true
+        description: Base price before modifiers
+
+      # Nutrition
+      nutritional_info:
+        type: NutritionalInfo
+        description: Calories, allergens, dietary info
+
+      # Customization
+      modifier_groups:
+        type: array
+        items: uuid
+        description: FK to ModifierGroup - customization options
+
+      # Size support
+      has_sizes:
+        type: boolean
+        default: false
+      sizes:
+        type: array
+        items: uuid
+        description: FK to Size - available sizes
+
+      # Recipe
+      recipe_id:
+        type: uuid
+        description: FK to Recipe - preparation instructions
+
+      # Preparation time
+      prep_time_minutes:
+        type: integer
+        description: Estimated preparation time
+
+      # Serving info
+      serving_size:
+        type: string
+        description: "e.g., '16 oz', '1 sandwich', '2 pieces'"
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  MenuCategory:
+    description: Category grouping for menu items
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Hot Drinks, Cold Brew, Food, Bakery"
+      slug:
+        type: string
+      description:
+        type: string
+
+      # Hierarchy
+      parent_id:
+        type: uuid
+        description: FK to parent category
+      sort_order:
+        type: integer
+        default: 0
+
+      # Display
+      icon:
+        type: string
+        description: Icon identifier
+      image_url:
+        type: string
+
+      # Availability
+      available_times:
+        type: array
+        items: TimeRange
+
+      status:
+        type: CategoryStatus
+        required: true
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ModifierGroup:
+    description: Group of related modifiers (e.g., "Milk Type", "Size", "Syrup Flavors")
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Milk Options, Syrup Flavors, Toppings"
+      display_name:
+        type: string
+        description: Customer-facing name
+
+      # Selection rules
+      selection_type:
+        type: SelectionType
+        required: true
+        description: Single select, multi-select, or optional
+      min_selections:
+        type: integer
+        default: 0
+        description: Minimum required selections
+      max_selections:
+        type: integer
+        description: Maximum allowed selections (null = unlimited)
+
+      # Default selection
+      default_modifier_id:
+        type: uuid
+        description: FK to Modifier - auto-selected option
+
+      # Display
+      sort_order:
+        type: integer
+        default: 0
+
+      status:
+        type: GenericStatus
+        required: true
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Modifier:
+    description: Customization option within a modifier group
+    properties:
+      id:
+        type: uuid
+        required: true
+      modifier_group_id:
+        type: uuid
+        required: true
+        description: FK to ModifierGroup
+
+      name:
+        type: string
+        required: true
+        description: "Oat Milk, Vanilla Syrup, Extra Shot"
+      display_name:
+        type: string
+
+      # Pricing
+      price_adjustment:
+        type: Money
+        description: Additional cost (can be negative for discounts)
+
+      # Availability
+      available:
+        type: boolean
+        default: true
+      out_of_stock:
+        type: boolean
+        default: false
+
+      # Display
+      sort_order:
+        type: integer
+        default: 0
+
+      # Nutritional impact
+      calories_adjustment:
+        type: integer
+        description: Calorie change from this modifier
+
+      status:
+        type: GenericStatus
+        required: true
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Size:
+    description: Size option for menu items (especially beverages)
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Tall, Grande, Venti" or "Small, Medium, Large"
+      display_name:
+        type: string
+
+      # Volume
+      volume_oz:
+        type: decimal
+        description: Size in fluid ounces
+      volume_ml:
+        type: decimal
+        description: Size in milliliters
+
+      # Pricing
+      price_adjustment:
+        type: Money
+        description: Price difference from base size
+
+      # Display
+      sort_order:
+        type: integer
+        default: 0
+      abbreviation:
+        type: string
+        description: "T, G, V" or "S, M, L"
+
+      # Nutritional impact
+      calorie_multiplier:
+        type: decimal
+        default: 1.0
+        description: Multiplier for nutritional values
+
+      status:
+        type: GenericStatus
+        required: true
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  NutritionalInfo:
+    description: Nutritional information and allergen data
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # Calories
+      calories:
+        type: integer
+        description: Total calories
+
+      # Macronutrients (grams)
+      protein_g:
+        type: decimal
+      carbohydrates_g:
+        type: decimal
+      fat_g:
+        type: decimal
+      saturated_fat_g:
+        type: decimal
+      trans_fat_g:
+        type: decimal
+      fiber_g:
+        type: decimal
+      sugar_g:
+        type: decimal
+
+      # Micronutrients (milligrams)
+      sodium_mg:
+        type: decimal
+      cholesterol_mg:
+        type: decimal
+      caffeine_mg:
+        type: decimal
+
+      # Allergens
+      allergens:
+        type: array
+        items: Allergen
+        description: Present allergens
+
+      # Dietary tags
+      dietary_tags:
+        type: array
+        items: DietaryTag
+        description: "Vegan, Gluten-Free, Keto, etc."
+
+      # Serving info
+      serving_size:
+        type: string
+        description: "16 oz", "1 sandwich"
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Recipe:
+    description: Preparation instructions for menu item
+    properties:
+      id:
+        type: uuid
+        required: true
+      menu_item_id:
+        type: uuid
+        required: true
+        description: FK to MenuItem
+
+      # Instructions
+      steps:
+        type: array
+        items: RecipeStep
+        description: Sequential preparation steps
+
+      # Ingredients (for inventory tracking)
+      ingredients:
+        type: array
+        items: RecipeIngredient
+
+      # Timing
+      prep_time_minutes:
+        type: integer
+      total_time_minutes:
+        type: integer
+
+      # Difficulty
+      complexity:
+        type: RecipeComplexity
+
+      # Notes
+      notes:
+        type: string
+        description: Special instructions or tips
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  RecipeStep:
+    description: Single step in recipe preparation
+    properties:
+      order:
+        type: integer
+        required: true
+      instruction:
+        type: string
+        required: true
+      duration_seconds:
+        type: integer
+        description: Time for this step
+
+  RecipeIngredient:
+    description: Ingredient used in recipe
+    properties:
+      ingredient_id:
+        type: uuid
+        description: FK to inventory item (if tracked)
+      name:
+        type: string
+        required: true
+      quantity:
+        type: decimal
+        required: true
+      unit:
+        type: string
+        required: true
+        description: "oz, ml, g, tsp, cups"
+
+  TimeRange:
+    description: Time window for availability
+    properties:
+      start_time:
+        type: string
+        required: true
+        description: "HH:MM format (e.g., '06:00')"
+      end_time:
+        type: string
+        required: true
+        description: "HH:MM format (e.g., '11:00')"
+      label:
+        type: string
+        description: "Breakfast, Lunch, All Day"
+
+enums:
+
+  MenuItemType:
+    values:
+      - food          # Solid food item
+      - beverage      # Drink
+      - combo         # Combination of food and beverage
+
+  SelectionType:
+    values:
+      - single        # Choose exactly one
+      - multi         # Choose multiple (up to max)
+      - optional      # Choose zero or more
+
+  Allergen:
+    values:
+      - dairy
+      - eggs
+      - fish
+      - shellfish
+      - tree_nuts
+      - peanuts
+      - wheat
+      - soy
+      - sesame
+
+  DietaryTag:
+    values:
+      - vegetarian
+      - vegan
+      - gluten_free
+      - dairy_free
+      - nut_free
+      - keto
+      - paleo
+      - low_carb
+      - high_protein
+      - organic
+      - halal
+      - kosher
+
+  DayOfWeek:
+    values:
+      - monday
+      - tuesday
+      - wednesday
+      - thursday
+      - friday
+      - saturday
+      - sunday
+
+  CategoryStatus:
+    values:
+      - active
+      - inactive
+      - hidden
+
+  RecipeComplexity:
+    values:
+      - simple       # 1-2 steps
+      - moderate     # 3-5 steps
+      - complex      # 6+ steps
+
+examples:
+
+  menu_item_latte:
+    name: "Caffè Latte"
+    menu_item_type: beverage
+    base_price: { amount: 4.95, currency: "USD" }
+    has_sizes: true
+    prep_time_minutes: 3
+    serving_size: "16 oz"
+    modifier_groups:
+      - milk_options_group_id
+      - syrup_flavors_group_id
+      - espresso_shots_group_id
+
+  modifier_group_milk:
+    name: "Milk Options"
+    selection_type: single
+    min_selections: 1
+    max_selections: 1
+    default_modifier_id: "whole_milk_modifier_id"
+
+  modifier_oat_milk:
+    name: "Oat Milk"
+    modifier_group_id: "milk_options_group_id"
+    price_adjustment: { amount: 0.70, currency: "USD" }
+    calories_adjustment: 20
+
+  size_grande:
+    name: "Grande"
+    display_name: "Grande (16 oz)"
+    volume_oz: 16
+    volume_ml: 473
+    price_adjustment: { amount: 0.00, currency: "USD" }
+    abbreviation: "G"
+    calorie_multiplier: 1.0
+
+  nutritional_info_latte:
+    calories: 190
+    protein_g: 13
+    carbohydrates_g: 18
+    fat_g: 7
+    saturated_fat_g: 4.5
+    sugar_g: 17
+    sodium_mg: 170
+    caffeine_mg: 150
+    allergens: [dairy]
+    dietary_tags: [vegetarian]
+
+sources:
+  - "Schema.org MenuItem and NutritionInformation types"
+  - "Square API OrderLineItemModifier pattern"
+  - "Enatega multi-vendor delivery system (GitHub, 1.1k stars)"
+  - "FDA nutrition labeling requirements"
+  - "Restaurant POS industry standards"

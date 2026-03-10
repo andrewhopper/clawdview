@@ -1,0 +1,64 @@
+# ===========================================
+# Personal Context - Blue Stage (Production A)
+# ===========================================
+
+# AWS Account & Region
+account: "507745175693"  # Personal AWS account
+region: "us-east-1"
+
+# Project Settings
+projectName: "my-personal-project"
+stackPrefix: "personal"
+
+# ===========================================
+# Domain Configuration
+# ===========================================
+domain:
+  rootDomain: "blue.b.lfg.new"
+  subdomain: "api"
+
+# ===========================================
+# Notification Configuration
+# ===========================================
+notifications:
+  adminEmail: "andy@example.com"
+
+# ===========================================
+# Database Configuration
+# ===========================================
+database:
+  instanceClass: "t3.small"
+  allocatedStorage: 50
+  multiAz: true
+  deletionProtection: true
+  backupRetentionDays: 30
+
+# ===========================================
+# Compute Configuration
+# ===========================================
+compute:
+  lambdaMemory: 512
+  lambdaTimeout: 60
+  taskCpu: 512
+  taskMemory: 1024
+  desiredCount: 2
+  minCount: 2
+  maxCount: 10
+
+# ===========================================
+# Monitoring Configuration
+# ===========================================
+monitoring:
+  enableDashboards: true
+  enableTracing: true
+  logRetentionDays: 90
+  alarmEvaluationPeriods: 3
+
+# ===========================================
+# Resource Tags
+# ===========================================
+tags:
+  Owner: "Andy"
+  Context: "personal"
+  Purpose: "Production"
+  Stage: "Blue"

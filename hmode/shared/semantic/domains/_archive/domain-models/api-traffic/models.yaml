@@ -1,0 +1,2652 @@
+# API Traffic Capture & Reverse Engineering Models
+# Extension to api domain for traffic analysis and API discovery
+# Generated: 2025-11-24
+# Updated: 2025-11-24 (added HAR, Chrome DevTools, Cookie models)
+# Status: PENDING APPROVAL
+
+entities:
+
+  # ============================================
+  # HAR (HTTP Archive) FORMAT SUPPORT
+  # Source: HAR 1.2 Spec (http://www.softwareishard.com/blog/har-12-spec/)
+  # ============================================
+
+  HARFile:
+    description: "HTTP Archive format file (HAR 1.2 spec)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      log:
+        type: HARLog
+        required: true
+        description: "Root HAR log object"
+      captureId:
+        type: uuid
+        description: "Associated TrafficCapture ID after import"
+      filePath:
+        type: string
+        description: "Original file path"
+      importedAt:
+        type: datetime
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  HARLog:
+    description: "HAR log container"
+    properties:
+      version:
+        type: string
+        required: true
+        default: "1.2"
+      creator:
+        type: HARCreator
+        required: true
+      browser:
+        type: HARCreator
+        description: "Browser that created HAR"
+      pages:
+        type: array
+        items: HARPage
+        description: "Page metadata"
+      entries:
+        type: array
+        items: HAREntry
+        required: true
+        description: "HTTP transactions"
+      comment:
+        type: string
+
+  HARCreator:
+    description: "Creator/browser info in HAR"
+    properties:
+      name:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
+      comment:
+        type: string
+
+  HARPage:
+    description: "Page timing and metadata"
+    properties:
+      startedDateTime:
+        type: datetime
+        required: true
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+      pageTimings:
+        type: HARPageTimings
+        required: true
+      comment:
+        type: string
+
+  HARPageTimings:
+    description: "Page load timing"
+    properties:
+      onContentLoad:
+        type: number
+        description: "Time to DOMContentLoaded (ms)"
+      onLoad:
+        type: number
+        description: "Time to window.onLoad (ms)"
+      comment:
+        type: string
+
+  HAREntry:
+    description: "Single HTTP transaction in HAR"
+    properties:
+      pageref:
+        type: string
+        description: "Reference to parent page ID"
+      startedDateTime:
+        type: datetime
+        required: true
+      time:
+        type: number
+        required: true
+        description: "Total elapsed time (ms)"
+      request:
+        type: HARRequest
+        required: true
+      response:
+        type: HARResponse
+        required: true
+      cache:
+        type: HARCache
+        required: true
+      timings:
+        type: HARTimings
+        required: true
+      serverIPAddress:
+        type: string
+      connection:
+        type: string
+        description: "Connection ID for keep-alive"
+      comment:
+        type: string
+
+  HARRequest:
+    description: "HTTP request in HAR format"
+    properties:
+      method:
+        type: string
+        required: true
+      url:
+        type: string
+        required: true
+      httpVersion:
+        type: string
+        required: true
+      cookies:
+        type: array
+        items: HARCookie
+        required: true
+      headers:
+        type: array
+        items: HARNameValue
+        required: true
+      queryString:
+        type: array
+        items: HARNameValue
+        required: true
+      postData:
+        type: HARPostData
+        description: "Request body"
+      headersSize:
+        type: integer
+        required: true
+        description: "Size of headers in bytes"
+      bodySize:
+        type: integer
+        required: true
+        description: "Size of body in bytes"
+      comment:
+        type: string
+
+  HARResponse:
+    description: "HTTP response in HAR format"
+    properties:
+      status:
+        type: integer
+        required: true
+      statusText:
+        type: string
+        required: true
+      httpVersion:
+        type: string
+        required: true
+      cookies:
+        type: array
+        items: HARCookie
+        required: true
+      headers:
+        type: array
+        items: HARNameValue
+        required: true
+      content:
+        type: HARContent
+        required: true
+      redirectURL:
+        type: string
+        required: true
+      headersSize:
+        type: integer
+        required: true
+      bodySize:
+        type: integer
+        required: true
+      comment:
+        type: string
+
+  HARCookie:
+    description: "HTTP cookie in HAR format"
+    properties:
+      name:
+        type: string
+        required: true
+      value:
+        type: string
+        required: true
+      path:
+        type: string
+      domain:
+        type: string
+      expires:
+        type: datetime
+        description: "Cookie expiration (ISO 8601)"
+      httpOnly:
+        type: boolean
+      secure:
+        type: boolean
+      sameSite:
+        type: enum
+        enum_ref: SameSitePolicy
+      comment:
+        type: string
+
+  HARNameValue:
+    description: "Generic name-value pair (header, query param)"
+    properties:
+      name:
+        type: string
+        required: true
+      value:
+        type: string
+        required: true
+      comment:
+        type: string
+
+  HARPostData:
+    description: "POST request body in HAR"
+    properties:
+      mimeType:
+        type: string
+        required: true
+      params:
+        type: array
+        items: HARParam
+        description: "Form parameters"
+      text:
+        type: string
+        description: "Plain text body"
+      comment:
+        type: string
+
+  HARParam:
+    description: "POST parameter (form field or file)"
+    properties:
+      name:
+        type: string
+        required: true
+      value:
+        type: string
+        description: "Parameter value (omit for files)"
+      fileName:
+        type: string
+        description: "File name for uploads"
+      contentType:
+        type: string
+        description: "MIME type for files"
+      comment:
+        type: string
+
+  HARContent:
+    description: "Response body content in HAR"
+    properties:
+      size:
+        type: integer
+        required: true
+        description: "Length in bytes"
+      compression:
+        type: integer
+        description: "Bytes saved by compression"
+      mimeType:
+        type: string
+        required: true
+      text:
+        type: string
+        description: "Response body text"
+      encoding:
+        type: string
+        description: "Encoding (e.g., base64)"
+      comment:
+        type: string
+
+  HARCache:
+    description: "Cache information in HAR"
+    properties:
+      beforeRequest:
+        type: HARCacheEntry
+      afterRequest:
+        type: HARCacheEntry
+      comment:
+        type: string
+
+  HARCacheEntry:
+    description: "Cache state"
+    properties:
+      expires:
+        type: datetime
+      lastAccess:
+        type: datetime
+        required: true
+      eTag:
+        type: string
+        required: true
+      hitCount:
+        type: integer
+        required: true
+      comment:
+        type: string
+
+  HARTimings:
+    description: "Request/response timing breakdown (ms)"
+    properties:
+      blocked:
+        type: number
+        description: "Time waiting in queue"
+      dns:
+        type: number
+        description: "DNS resolution time"
+      connect:
+        type: number
+        description: "TCP connection time"
+      send:
+        type: number
+        required: true
+        description: "Time sending request"
+      wait:
+        type: number
+        required: true
+        description: "Time waiting for response"
+      receive:
+        type: number
+        required: true
+        description: "Time receiving response"
+      ssl:
+        type: number
+        description: "TLS/SSL handshake time"
+      comment:
+        type: string
+
+  # ============================================
+  # CHROME DEVTOOLS PROTOCOL
+  # Source: Chrome DevTools Protocol (CDP)
+  # ============================================
+
+  ChromeDevToolsCapture:
+    description: "Capture from Chrome DevTools Protocol"
+    properties:
+      id:
+        type: uuid
+        required: true
+      captureId:
+        type: uuid
+        references: TrafficCapture.id
+      sessions:
+        type: array
+        items: CDPSession
+        description: "CDP debug sessions"
+      networkEvents:
+        type: array
+        items: CDPNetworkEvent
+        description: "Network domain events"
+      targets:
+        type: array
+        items: CDPTarget
+        description: "Targets (pages, workers, etc.)"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  CDPSession:
+    description: "Chrome DevTools Protocol session"
+    properties:
+      sessionId:
+        type: string
+        required: true
+      targetId:
+        type: string
+        required: true
+      targetType:
+        type: enum
+        enum_ref: CDPTargetType
+      url:
+        type: string
+      startedAt:
+        type: datetime
+        required: true
+      endedAt:
+        type: datetime
+
+  CDPTarget:
+    description: "CDP debug target (page, worker, etc.)"
+    properties:
+      targetId:
+        type: string
+        required: true
+      type:
+        type: enum
+        enum_ref: CDPTargetType
+        required: true
+      title:
+        type: string
+      url:
+        type: string
+        required: true
+      attached:
+        type: boolean
+        default: false
+
+  CDPNetworkEvent:
+    description: "Network event from Chrome DevTools"
+    properties:
+      eventType:
+        type: enum
+        enum_ref: CDPNetworkEventType
+        required: true
+      requestId:
+        type: string
+        required: true
+      loaderId:
+        type: string
+      timestamp:
+        type: number
+        required: true
+        description: "Monotonic time in seconds"
+      wallTime:
+        type: number
+        description: "Wall clock time (Unix timestamp)"
+      request:
+        type: CDPRequest
+      response:
+        type: CDPResponse
+      initiator:
+        type: CDPInitiator
+        description: "What triggered this request"
+      redirectResponse:
+        type: CDPResponse
+      frameId:
+        type: string
+      type:
+        type: enum
+        enum_ref: CDPResourceType
+        description: "Resource type (Document, XHR, Fetch, etc.)"
+
+  CDPRequest:
+    description: "Request from Chrome DevTools Protocol"
+    properties:
+      url:
+        type: string
+        required: true
+      method:
+        type: string
+        required: true
+      headers:
+        type: object
+        required: true
+        description: "Request headers (flat key-value)"
+      postData:
+        type: string
+        description: "Request body"
+      hasPostData:
+        type: boolean
+      postDataEntries:
+        type: array
+        items: CDPPostDataEntry
+      mixedContentType:
+        type: string
+      initialPriority:
+        type: enum
+        enum_ref: CDPResourcePriority
+      referrerPolicy:
+        type: string
+      isLinkPreload:
+        type: boolean
+
+  CDPResponse:
+    description: "Response from Chrome DevTools Protocol"
+    properties:
+      url:
+        type: string
+        required: true
+      status:
+        type: integer
+        required: true
+      statusText:
+        type: string
+        required: true
+      headers:
+        type: object
+        required: true
+        description: "Response headers (flat key-value)"
+      headersText:
+        type: string
+        description: "Raw header text"
+      mimeType:
+        type: string
+        required: true
+      requestHeaders:
+        type: object
+        description: "Actual request headers sent"
+      requestHeadersText:
+        type: string
+      connectionReused:
+        type: boolean
+      connectionId:
+        type: number
+      remoteIPAddress:
+        type: string
+      remotePort:
+        type: integer
+      fromDiskCache:
+        type: boolean
+      fromServiceWorker:
+        type: boolean
+      fromPrefetchCache:
+        type: boolean
+      encodedDataLength:
+        type: number
+        description: "Total encoded response size"
+      timing:
+        type: CDPResourceTiming
+      protocol:
+        type: string
+        description: "HTTP protocol (http/1.1, h2, h3)"
+      securityState:
+        type: enum
+        enum_ref: CDPSecurityState
+
+  CDPResourceTiming:
+    description: "Resource timing from Chrome"
+    properties:
+      requestTime:
+        type: number
+        required: true
+      proxyStart:
+        type: number
+      proxyEnd:
+        type: number
+      dnsStart:
+        type: number
+      dnsEnd:
+        type: number
+      connectStart:
+        type: number
+      connectEnd:
+        type: number
+      sslStart:
+        type: number
+      sslEnd:
+        type: number
+      workerStart:
+        type: number
+      workerReady:
+        type: number
+      sendStart:
+        type: number
+        required: true
+      sendEnd:
+        type: number
+        required: true
+      pushStart:
+        type: number
+      pushEnd:
+        type: number
+      receiveHeadersEnd:
+        type: number
+        required: true
+
+  CDPPostDataEntry:
+    description: "POST data entry (multipart)"
+    properties:
+      bytes:
+        type: string
+        description: "Base64 encoded bytes"
+
+  CDPInitiator:
+    description: "What initiated the request"
+    properties:
+      type:
+        type: enum
+        enum_ref: CDPInitiatorType
+        required: true
+      stack:
+        type: object
+        description: "Call stack if script-initiated"
+      url:
+        type: string
+        description: "Initiator URL"
+      lineNumber:
+        type: number
+      columnNumber:
+        type: number
+
+  # ============================================
+  # ENHANCED COOKIE MODELING
+  # ============================================
+
+  Cookie:
+    description: "HTTP cookie with full attributes"
+    properties:
+      name:
+        type: string
+        required: true
+      value:
+        type: string
+        required: true
+      domain:
+        type: string
+        required: true
+      path:
+        type: string
+        default: "/"
+      expires:
+        type: datetime
+        description: "Expiration timestamp"
+      maxAge:
+        type: integer
+        description: "Max-Age in seconds"
+      secure:
+        type: boolean
+        default: false
+        description: "Only sent over HTTPS"
+      httpOnly:
+        type: boolean
+        default: false
+        description: "Not accessible via JavaScript"
+      sameSite:
+        type: enum
+        enum_ref: SameSitePolicy
+        description: "CSRF protection policy"
+      priority:
+        type: enum
+        enum_ref: CookiePriority
+      partitioned:
+        type: boolean
+        default: false
+        description: "Partitioned cookie (CHIPS)"
+      size:
+        type: integer
+        description: "Cookie size in bytes"
+      session:
+        type: boolean
+        description: "Session cookie (no expiry)"
+      firstParty:
+        type: boolean
+        description: "First-party vs third-party"
+      sourceScheme:
+        type: enum
+        enum_ref: CookieSourceScheme
+      sourcePort:
+        type: integer
+
+  CookieJar:
+    description: "Collection of cookies for a domain/session"
+    properties:
+      id:
+        type: uuid
+        required: true
+      domain:
+        type: string
+        required: true
+      cookies:
+        type: array
+        items: Cookie
+        required: true
+      capturedAt:
+        type: datetime
+        required: true
+      userAgent:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  # ============================================
+  # CONTENT TYPE MODELING
+  # ============================================
+
+  ContentType:
+    description: "Parsed Content-Type header"
+    properties:
+      mimeType:
+        type: string
+        required: true
+        description: "MIME type (e.g., application/json)"
+      charset:
+        type: string
+        description: "Character encoding (e.g., utf-8)"
+      boundary:
+        type: string
+        description: "Multipart boundary"
+      parameters:
+        type: object
+        description: "Additional parameters"
+      primaryType:
+        type: enum
+        enum_ref: ContentTypePrimary
+        description: "Primary type (application, text, etc.)"
+      subType:
+        type: string
+        description: "Subtype (json, xml, html, etc.)"
+
+  RequestPayload:
+    description: "Request body with metadata"
+    properties:
+      contentType:
+        type: ContentType
+        required: true
+      size:
+        type: integer
+        required: true
+        description: "Size in bytes"
+      encoding:
+        type: enum
+        enum_ref: ContentEncoding
+        description: "Content encoding (gzip, br, etc.)"
+      rawBytes:
+        type: string
+        description: "Raw bytes (base64)"
+      decodedText:
+        type: string
+        description: "Decoded text representation"
+      parsedBody:
+        type: any
+        description: "Parsed body (JSON, form data, etc.)"
+      bodyType:
+        type: enum
+        enum_ref: BodyType
+        required: true
+      formData:
+        type: array
+        items: FormField
+        description: "For form-encoded bodies"
+      multipartParts:
+        type: array
+        items: MultipartPart
+        description: "For multipart bodies"
+
+  ResponsePayload:
+    description: "Response body with metadata"
+    properties:
+      contentType:
+        type: ContentType
+        required: true
+      size:
+        type: integer
+        required: true
+      encoding:
+        type: enum
+        enum_ref: ContentEncoding
+      rawBytes:
+        type: string
+      decodedText:
+        type: string
+      parsedBody:
+        type: any
+      bodyType:
+        type: enum
+        enum_ref: BodyType
+        required: true
+      compressionRatio:
+        type: number
+        description: "Compression ratio if compressed"
+
+  FormField:
+    description: "Form field (application/x-www-form-urlencoded or multipart)"
+    properties:
+      name:
+        type: string
+        required: true
+      value:
+        type: string
+        description: "Field value (not for files)"
+      fileName:
+        type: string
+        description: "Original file name for uploads"
+      contentType:
+        type: string
+        description: "MIME type for files"
+      size:
+        type: integer
+        description: "File size in bytes"
+      isFile:
+        type: boolean
+        default: false
+
+  MultipartPart:
+    description: "Part of multipart/form-data"
+    properties:
+      headers:
+        type: object
+        required: true
+        description: "Part headers (Content-Disposition, etc.)"
+      name:
+        type: string
+        required: true
+      fileName:
+        type: string
+      contentType:
+        type: string
+      body:
+        type: string
+        required: true
+        description: "Part body (base64 for binary)"
+      size:
+        type: integer
+
+  # ============================================
+  # TRAFFIC ANALYSIS ENTITIES
+  # ============================================
+
+  TrafficCapture:
+    description: "A collection of captured HTTP traffic for analysis"
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique capture session ID"
+      name:
+        type: string
+        required: true
+        description: "Human-readable capture name"
+      source:
+        type: enum
+        enum_ref: CaptureSource
+        required: true
+        description: "How traffic was captured"
+      targetDomain:
+        type: string
+        description: "Target domain/host being analyzed"
+      capturedCalls:
+        type: array
+        items: CapturedCall
+        description: "All captured API calls"
+      discoveredAPIs:
+        type: array
+        items: DiscoveredAPI
+        description: "APIs discovered from traffic analysis"
+      sessions:
+        type: array
+        items: TrafficSession
+        description: "Identified user/auth sessions"
+      startedAt:
+        type: datetime
+        required: true
+      endedAt:
+        type: datetime
+      metadata:
+        type: object
+        description: "Custom capture metadata (user agent, proxy config, etc.)"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [targetDomain, startedAt]
+
+  CapturedCall:
+    description: "A single captured HTTP call with analysis metadata"
+    properties:
+      id:
+        type: uuid
+        required: true
+      captureId:
+        type: uuid
+        required: true
+        references: TrafficCapture.id
+      sessionId:
+        type: uuid
+        references: TrafficSession.id
+        description: "Associated session if identified"
+      request:
+        type: HTTPRequest
+        required: true
+        description: "Full request details (from api domain)"
+      response:
+        type: HTTPResponse
+        description: "Full response details (from api domain)"
+      capturedAt:
+        type: datetime
+        required: true
+        description: "When traffic was captured"
+      sequenceNumber:
+        type: integer
+        required: true
+        description: "Order in capture sequence"
+      clientIp:
+        type: string
+        description: "Client IP if available"
+      serverIp:
+        type: string
+        description: "Server IP if available"
+      tlsInfo:
+        type: TLSInfo
+        description: "TLS/SSL handshake details"
+      rawRequest:
+        type: string
+        description: "Raw HTTP request bytes (base64)"
+      rawResponse:
+        type: string
+        description: "Raw HTTP response bytes (base64)"
+      tags:
+        type: array
+        items: string
+        description: "User-defined tags for organization"
+      notes:
+        type: string
+        description: "Analysis notes"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [captureId, sequenceNumber]
+      - [sessionId]
+
+  TLSInfo:
+    description: "TLS/SSL connection information"
+    properties:
+      version:
+        type: string
+        description: "TLS version (1.0, 1.1, 1.2, 1.3)"
+      cipher:
+        type: string
+        description: "Cipher suite used (e.g., TLS_AES_256_GCM_SHA384)"
+      serverCertificateChain:
+        type: CertificateChain
+        description: "Server certificate chain"
+      clientCertificateChain:
+        type: CertificateChain
+        description: "Client certificate chain if mutual TLS"
+      sni:
+        type: string
+        description: "Server Name Indication (SNI)"
+      sessionResumed:
+        type: boolean
+        description: "Whether TLS session was resumed"
+      sessionId:
+        type: string
+        description: "TLS session ID (hex)"
+      negotiatedProtocol:
+        type: string
+        description: "ALPN negotiated protocol (h2, http/1.1, etc.)"
+      peerCertificateVerified:
+        type: boolean
+        description: "Whether peer certificate was verified"
+      verificationErrors:
+        type: array
+        items: string
+        description: "Certificate verification errors if any"
+
+  # ============================================
+  # X.509 CERTIFICATE MODELS (RFC 5280)
+  # Source: RFC 5280 (X.509 PKI), RFC 6818 (Updates)
+  # ============================================
+
+  X509Certificate:
+    description: "X.509 digital certificate (RFC 5280)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      version:
+        type: integer
+        required: true
+        description: "X.509 version (1, 2, or 3)"
+      serialNumber:
+        type: string
+        required: true
+        description: "Certificate serial number (hex)"
+      subject:
+        type: DistinguishedName
+        required: true
+        description: "Subject (certificate owner)"
+      issuer:
+        type: DistinguishedName
+        required: true
+        description: "Issuer (CA that signed cert)"
+      validity:
+        type: CertificateValidity
+        required: true
+        description: "Validity period"
+      publicKey:
+        type: PublicKeyInfo
+        required: true
+        description: "Subject's public key"
+      signatureAlgorithm:
+        type: string
+        required: true
+        description: "Signature algorithm (e.g., sha256WithRSAEncryption)"
+      signature:
+        type: string
+        required: true
+        description: "Digital signature (hex)"
+      extensions:
+        type: array
+        items: CertificateExtension
+        description: "X.509v3 extensions"
+      fingerprints:
+        type: CertificateFingerprints
+        required: true
+        description: "Certificate fingerprints"
+      pemEncoded:
+        type: string
+        description: "PEM-encoded certificate"
+      derEncoded:
+        type: string
+        description: "DER-encoded certificate (base64)"
+      selfSigned:
+        type: boolean
+        description: "Whether certificate is self-signed"
+      certificateAuthority:
+        type: uuid
+        description: "Reference to CA entity if known"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  DistinguishedName:
+    description: "X.500 Distinguished Name (DN)"
+    properties:
+      commonName:
+        type: string
+        description: "CN - Common Name"
+      organizationalUnit:
+        type: array
+        items: string
+        description: "OU - Organizational Unit(s)"
+      organization:
+        type: array
+        items: string
+        description: "O - Organization(s)"
+      locality:
+        type: string
+        description: "L - Locality/City"
+      stateOrProvince:
+        type: string
+        description: "ST - State or Province"
+      country:
+        type: string
+        description: "C - Country (2-letter code)"
+      emailAddress:
+        type: string
+        description: "Email address"
+      serialNumber:
+        type: string
+        description: "Serial number attribute"
+      dnQualifier:
+        type: string
+        description: "DN Qualifier"
+      rawDN:
+        type: string
+        required: true
+        description: "Raw DN string (e.g., 'CN=example.com,O=Company,C=US')"
+
+  CertificateValidity:
+    description: "Certificate validity period"
+    properties:
+      notBefore:
+        type: datetime
+        required: true
+        description: "Valid from (UTC)"
+      notAfter:
+        type: datetime
+        required: true
+        description: "Valid until (UTC)"
+      daysRemaining:
+        type: integer
+        description: "Days until expiration (negative if expired)"
+      expired:
+        type: boolean
+        required: true
+      notYetValid:
+        type: boolean
+        required: true
+
+  PublicKeyInfo:
+    description: "Public key information"
+    properties:
+      algorithm:
+        type: enum
+        enum_ref: PublicKeyAlgorithm
+        required: true
+      keySize:
+        type: integer
+        required: true
+        description: "Key size in bits"
+      modulus:
+        type: string
+        description: "RSA modulus (hex)"
+      exponent:
+        type: integer
+        description: "RSA public exponent"
+      curve:
+        type: string
+        description: "ECC curve name (e.g., prime256v1, secp384r1)"
+      publicKey:
+        type: string
+        required: true
+        description: "Public key bytes (hex or base64)"
+      keyId:
+        type: string
+        description: "Subject Key Identifier (hex)"
+
+  CertificateExtension:
+    description: "X.509v3 certificate extension"
+    properties:
+      oid:
+        type: string
+        required: true
+        description: "Extension OID (e.g., 2.5.29.17)"
+      name:
+        type: enum
+        enum_ref: X509ExtensionType
+        description: "Extension name if recognized"
+      critical:
+        type: boolean
+        required: true
+        description: "Whether extension is critical"
+      value:
+        type: any
+        required: true
+        description: "Extension value (parsed structure)"
+      rawValue:
+        type: string
+        description: "Raw extension value (hex)"
+
+  SubjectAlternativeName:
+    description: "Subject Alternative Name (SAN) extension"
+    properties:
+      dnsNames:
+        type: array
+        items: string
+        description: "DNS names (e.g., *.example.com)"
+      ipAddresses:
+        type: array
+        items: string
+        description: "IP addresses"
+      emailAddresses:
+        type: array
+        items: string
+        description: "Email addresses"
+      uris:
+        type: array
+        items: string
+        description: "URIs"
+      otherNames:
+        type: array
+        items: object
+        description: "Other name types"
+
+  KeyUsage:
+    description: "Key Usage extension"
+    properties:
+      digitalSignature:
+        type: boolean
+      nonRepudiation:
+        type: boolean
+      keyEncipherment:
+        type: boolean
+      dataEncipherment:
+        type: boolean
+      keyAgreement:
+        type: boolean
+      keyCertSign:
+        type: boolean
+      crlSign:
+        type: boolean
+      encipherOnly:
+        type: boolean
+      decipherOnly:
+        type: boolean
+
+  ExtendedKeyUsage:
+    description: "Extended Key Usage extension"
+    properties:
+      serverAuth:
+        type: boolean
+        description: "TLS Web Server Authentication"
+      clientAuth:
+        type: boolean
+        description: "TLS Web Client Authentication"
+      codeSigning:
+        type: boolean
+      emailProtection:
+        type: boolean
+      timeStamping:
+        type: boolean
+      ocspSigning:
+        type: boolean
+      purposes:
+        type: array
+        items: string
+        description: "OIDs of all purposes"
+
+  CertificateFingerprints:
+    description: "Certificate fingerprints (hashes)"
+    properties:
+      sha256:
+        type: string
+        required: true
+        description: "SHA-256 fingerprint (hex with colons)"
+      sha1:
+        type: string
+        required: true
+        description: "SHA-1 fingerprint (hex with colons)"
+      md5:
+        type: string
+        description: "MD5 fingerprint (hex with colons)"
+
+  CertificateChain:
+    description: "X.509 certificate chain"
+    properties:
+      id:
+        type: uuid
+        required: true
+      certificates:
+        type: array
+        items: X509Certificate
+        required: true
+        description: "Certificates ordered: leaf → intermediates → root"
+      leafCertificate:
+        type: X509Certificate
+        required: true
+        description: "End-entity certificate (first in chain)"
+      intermediateCertificates:
+        type: array
+        items: X509Certificate
+        description: "Intermediate CA certificates"
+      rootCertificate:
+        type: X509Certificate
+        description: "Root CA certificate"
+      chainValid:
+        type: boolean
+        description: "Whether chain is valid"
+      verification:
+        type: ChainVerification
+        description: "Verification results"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  ChainVerification:
+    description: "Certificate chain verification results"
+    properties:
+      verified:
+        type: boolean
+        required: true
+      errors:
+        type: array
+        items: VerificationError
+        description: "Verification errors"
+      warnings:
+        type: array
+        items: string
+        description: "Non-fatal warnings"
+      trustPath:
+        type: array
+        items: uuid
+        description: "Certificate IDs in trust path"
+      verifiedAt:
+        type: datetime
+        required: true
+
+  VerificationError:
+    description: "Certificate verification error"
+    properties:
+      errorType:
+        type: enum
+        enum_ref: CertificateErrorType
+        required: true
+      message:
+        type: string
+        required: true
+      certificateId:
+        type: uuid
+        description: "Certificate that caused error"
+      depth:
+        type: integer
+        description: "Chain depth where error occurred"
+
+  CertificateAuthority:
+    description: "Certificate Authority (CA)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        description: "CA name (e.g., 'Let's Encrypt', 'DigiCert')"
+      distinguishedName:
+        type: DistinguishedName
+        required: true
+        description: "CA's DN"
+      type:
+        type: enum
+        enum_ref: CAType
+        required: true
+      rootCertificate:
+        type: X509Certificate
+        description: "CA's root certificate"
+      intermediateCertificates:
+        type: array
+        items: X509Certificate
+        description: "CA's intermediate certificates"
+      trustStore:
+        type: enum
+        enum_ref: TrustStore
+        description: "Which trust stores include this CA"
+      crlUrls:
+        type: array
+        items: string
+        description: "Certificate Revocation List URLs"
+      ocspUrls:
+        type: array
+        items: string
+        description: "OCSP responder URLs"
+      website:
+        type: string
+        description: "CA website URL"
+      certificatePolicyOids:
+        type: array
+        items: string
+        description: "Certificate Policy OIDs"
+      evEnabled:
+        type: boolean
+        description: "Extended Validation (EV) certificates enabled"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  CertificateRevocation:
+    description: "Certificate revocation information"
+    properties:
+      id:
+        type: uuid
+        required: true
+      certificateId:
+        type: uuid
+        required: true
+        references: X509Certificate.id
+      revoked:
+        type: boolean
+        required: true
+      revokedAt:
+        type: datetime
+        description: "Revocation timestamp"
+      reason:
+        type: enum
+        enum_ref: RevocationReason
+        description: "Revocation reason"
+      crlChecked:
+        type: boolean
+        description: "Whether CRL was checked"
+      ocspChecked:
+        type: boolean
+        description: "Whether OCSP was checked"
+      ocspResponse:
+        type: OCSPResponse
+        description: "OCSP response if checked"
+      checkedAt:
+        type: datetime
+        required: true
+
+  OCSPResponse:
+    description: "OCSP (Online Certificate Status Protocol) response"
+    properties:
+      status:
+        type: enum
+        enum_ref: OCSPStatus
+        required: true
+      producedAt:
+        type: datetime
+        required: true
+      thisUpdate:
+        type: datetime
+        required: true
+      nextUpdate:
+        type: datetime
+      responderUrl:
+        type: string
+        description: "OCSP responder URL"
+      signatureValid:
+        type: boolean
+      responseBytes:
+        type: string
+        description: "Raw OCSP response (base64)"
+
+  CertificatePinning:
+    description: "Certificate/Public Key Pinning configuration"
+    properties:
+      id:
+        type: uuid
+        required: true
+      domain:
+        type: string
+        required: true
+      pinType:
+        type: enum
+        enum_ref: PinType
+        required: true
+      pins:
+        type: array
+        items: CertificatePin
+        required: true
+      includeSubdomains:
+        type: boolean
+        default: false
+      maxAge:
+        type: integer
+        description: "Pin validity in seconds"
+      reportUri:
+        type: string
+        description: "Violation report URI"
+      enforced:
+        type: boolean
+        default: true
+
+  CertificatePin:
+    description: "Individual certificate/public key pin"
+    properties:
+      algorithm:
+        type: string
+        required: true
+        description: "Hash algorithm (sha256)"
+      hash:
+        type: string
+        required: true
+        description: "Base64-encoded hash"
+      certificateId:
+        type: uuid
+        description: "Certificate this pin matches"
+      backup:
+        type: boolean
+        default: false
+        description: "Whether this is a backup pin"
+
+  TrafficSession:
+    description: "Identified session within captured traffic"
+    properties:
+      id:
+        type: uuid
+        required: true
+      captureId:
+        type: uuid
+        required: true
+        references: TrafficCapture.id
+      identifier:
+        type: string
+        required: true
+        description: "Session ID/token/cookie value"
+      identifierType:
+        type: enum
+        enum_ref: SessionIdentifierType
+        required: true
+      calls:
+        type: array
+        items: uuid
+        description: "CapturedCall IDs in this session"
+      authScheme:
+        type: AuthSchemeAnalysis
+        description: "Detected authentication scheme"
+      user:
+        type: string
+        description: "Identified user/username if available"
+      startedAt:
+        type: datetime
+        required: true
+      endedAt:
+        type: datetime
+      callCount:
+        type: integer
+        default: 0
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  AuthSchemeAnalysis:
+    description: "Analysis of authentication/authorization scheme from traffic"
+    properties:
+      id:
+        type: uuid
+        required: true
+      schemeType:
+        type: enum
+        enum_ref: AuthSchemeType
+        required: true
+      confidence:
+        type: enum
+        enum_ref: ConfidenceLevel
+        required: true
+        description: "Confidence in detected scheme"
+      evidence:
+        type: array
+        items: AuthEvidence
+        description: "Evidence supporting this auth scheme"
+      credentialLocation:
+        type: enum
+        enum_ref: ParameterLocation
+        description: "Where credentials are passed (header, cookie, query, body)"
+      credentialFormat:
+        type: string
+        description: "Format of credential (JWT structure, API key pattern, etc.)"
+      tokenPattern:
+        type: string
+        description: "Regex pattern for token format"
+      refreshMechanism:
+        type: object
+        description: "How tokens are refreshed (endpoint, flow)"
+      requiredScopes:
+        type: array
+        items: string
+        description: "Detected OAuth scopes or permissions"
+      expiryBehavior:
+        type: object
+        description: "How expiry is handled"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  AuthEvidence:
+    description: "Evidence supporting an authentication scheme hypothesis"
+    properties:
+      evidenceType:
+        type: enum
+        enum_ref: AuthEvidenceType
+        required: true
+      description:
+        type: string
+        required: true
+      callId:
+        type: uuid
+        description: "CapturedCall that provided this evidence"
+      headerName:
+        type: string
+        description: "Header name if relevant"
+      value:
+        type: string
+        description: "Example value (redacted if sensitive)"
+      confidence:
+        type: enum
+        enum_ref: ConfidenceLevel
+        required: true
+
+  DiscoveredAPI:
+    description: "API structure inferred from traffic analysis"
+    properties:
+      id:
+        type: uuid
+        required: true
+      captureId:
+        type: uuid
+        required: true
+        references: TrafficCapture.id
+      baseUrl:
+        type: string
+        required: true
+        description: "Inferred base URL"
+      name:
+        type: string
+        description: "Generated API name"
+      endpoints:
+        type: array
+        items: DiscoveredEndpoint
+        description: "Discovered endpoints"
+      authenticationSchemes:
+        type: array
+        items: AuthSchemeAnalysis
+        description: "Detected auth schemes"
+      commonHeaders:
+        type: array
+        items: HeaderPattern
+        description: "Headers present in most requests"
+      apiVersion:
+        type: string
+        description: "Detected API version from URLs/headers"
+      confidence:
+        type: enum
+        enum_ref: ConfidenceLevel
+        required: true
+        description: "Overall confidence in API structure"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  DiscoveredEndpoint:
+    description: "Endpoint inferred from traffic patterns"
+    properties:
+      id:
+        type: uuid
+        required: true
+      apiId:
+        type: uuid
+        required: true
+        references: DiscoveredAPI.id
+      pathPattern:
+        type: string
+        required: true
+        description: "Path with parameter placeholders (/users/{id})"
+      method:
+        type: enum
+        enum_ref: HttpMethod
+        required: true
+      sampleCalls:
+        type: array
+        items: uuid
+        description: "CapturedCall IDs demonstrating this endpoint"
+      parameters:
+        type: array
+        items: ParameterAnalysis
+        description: "Inferred parameters"
+      requestBodySchema:
+        type: ResponseSchema
+        description: "Inferred request body structure"
+      responseSchemas:
+        type: array
+        items: StatusCodeSchema
+        description: "Response schemas by status code"
+      authRequired:
+        type: boolean
+        description: "Whether auth appears required"
+      callCount:
+        type: integer
+        default: 1
+        description: "Number of calls matching this pattern"
+      confidence:
+        type: enum
+        enum_ref: ConfidenceLevel
+        required: true
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  ParameterAnalysis:
+    description: "Analysis of a parameter from traffic patterns"
+    properties:
+      name:
+        type: string
+        required: true
+      location:
+        type: enum
+        enum_ref: ParameterLocation
+        required: true
+      inferredType:
+        type: enum
+        enum_ref: ParameterType
+        required: true
+        description: "Type inferred from samples"
+      required:
+        type: boolean
+        description: "Appears in all samples"
+      sampleValues:
+        type: array
+        items: any
+        description: "Sample values observed"
+      valuePattern:
+        type: string
+        description: "Regex pattern for valid values"
+      possibleEnum:
+        type: array
+        items: string
+        description: "If appears to be enum, possible values"
+      confidence:
+        type: enum
+        enum_ref: ConfidenceLevel
+        required: true
+
+  ResponseSchema:
+    description: "Inferred JSON schema from response bodies"
+    properties:
+      id:
+        type: uuid
+        required: true
+      jsonSchema:
+        type: object
+        required: true
+        description: "JSON Schema representation"
+      sampleCount:
+        type: integer
+        required: true
+        description: "Number of samples used to infer schema"
+      samples:
+        type: array
+        items: object
+        description: "Sample response bodies"
+      confidence:
+        type: enum
+        enum_ref: ConfidenceLevel
+        required: true
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  StatusCodeSchema:
+    description: "Response schema for a specific status code"
+    properties:
+      statusCode:
+        type: integer
+        required: true
+      schema:
+        type: ResponseSchema
+        required: true
+      count:
+        type: integer
+        default: 1
+        description: "Times this status code observed"
+
+  HeaderPattern:
+    description: "Pattern detected in HTTP headers"
+    properties:
+      name:
+        type: string
+        required: true
+        description: "Header name"
+      purpose:
+        type: enum
+        enum_ref: HeaderPurpose
+        description: "Inferred purpose"
+      valuePattern:
+        type: string
+        description: "Pattern/format of value"
+      sampleValues:
+        type: array
+        items: string
+        description: "Example values"
+      frequency:
+        type: number
+        description: "Percentage of requests with this header (0-1)"
+      required:
+        type: boolean
+        description: "Present in all successful requests"
+
+  TrafficPattern:
+    description: "Detected pattern in traffic behavior"
+    properties:
+      id:
+        type: uuid
+        required: true
+      captureId:
+        type: uuid
+        required: true
+        references: TrafficCapture.id
+      patternType:
+        type: enum
+        enum_ref: PatternType
+        required: true
+      description:
+        type: string
+        required: true
+      matchingCalls:
+        type: array
+        items: uuid
+        description: "CapturedCall IDs matching pattern"
+      confidence:
+        type: enum
+        enum_ref: ConfidenceLevel
+        required: true
+      metadata:
+        type: object
+        description: "Pattern-specific details"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  RequestTemplate:
+    description: "Template extracted from similar requests"
+    properties:
+      id:
+        type: uuid
+        required: true
+      endpointId:
+        type: uuid
+        references: DiscoveredEndpoint.id
+      method:
+        type: enum
+        enum_ref: HttpMethod
+        required: true
+      pathTemplate:
+        type: string
+        required: true
+        description: "Path with {parameter} placeholders"
+      headerTemplate:
+        type: object
+        description: "Required and optional headers"
+      bodyTemplate:
+        type: object
+        description: "Request body template with placeholders"
+      parameterBindings:
+        type: array
+        items: ParameterBinding
+        description: "How to bind parameters to template"
+      exampleRequest:
+        type: HTTPRequest
+        description: "Working example request"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  ParameterBinding:
+    description: "How to bind a parameter value to template"
+    properties:
+      parameterName:
+        type: string
+        required: true
+      location:
+        type: enum
+        enum_ref: ParameterLocation
+        required: true
+      placeholderName:
+        type: string
+        required: true
+        description: "Name in template"
+      exampleValue:
+        type: any
+        description: "Example value"
+      required:
+        type: boolean
+        default: false
+
+enums:
+
+  CaptureSource:
+    description: "Source/method of traffic capture"
+    values:
+      - browser-extension: "Browser extension (e.g., Chrome DevTools export)"
+      - proxy: "HTTP proxy (e.g., mitmproxy, Charles, Burp)"
+      - pcap: "Packet capture (tcpdump, Wireshark)"
+      - har-file: "HTTP Archive (HAR) file import"
+      - browser-devtools: "Browser DevTools direct export"
+      - mobile-proxy: "Mobile device proxy"
+      - network-tap: "Network tap/mirror"
+      - api-gateway-logs: "API gateway access logs"
+      - manual-entry: "Manual entry/recreation"
+
+  SessionIdentifierType:
+    description: "Type of session identifier"
+    values:
+      - cookie: "HTTP cookie"
+      - bearer-token: "Bearer token in Authorization header"
+      - api-key: "API key"
+      - jwt: "JSON Web Token"
+      - oauth-token: "OAuth access token"
+      - custom-header: "Custom header value"
+      - query-parameter: "Query string parameter"
+
+  AuthSchemeType:
+    description: "Detected authentication scheme type"
+    values:
+      - bearer-jwt: "Bearer token (JWT format)"
+      - api-key-header: "API key in custom header"
+      - api-key-query: "API key in query string"
+      - basic-auth: "HTTP Basic authentication"
+      - oauth2-bearer: "OAuth 2.0 Bearer token"
+      - oauth2-pkce: "OAuth 2.0 with PKCE"
+      - session-cookie: "Session cookie based"
+      - custom-token: "Custom token scheme"
+      - mutual-tls: "Mutual TLS (client cert)"
+      - hmac-signature: "HMAC request signing"
+      - aws-sigv4: "AWS Signature Version 4"
+      - digest-auth: "HTTP Digest authentication"
+      - none: "No authentication detected"
+      - unknown: "Unknown scheme"
+
+  AuthEvidenceType:
+    description: "Type of authentication evidence"
+    values:
+      - authorization-header: "Authorization header present"
+      - custom-auth-header: "Custom authentication header"
+      - jwt-structure: "JWT structure detected in token"
+      - oauth-endpoint: "OAuth endpoints detected"
+      - session-cookie: "Session cookie pattern"
+      - token-refresh: "Token refresh pattern observed"
+      - signature-header: "Request signature header"
+      - timestamp-header: "Timestamp/nonce headers for replay protection"
+      - api-key-pattern: "API key pattern in header/query"
+      - unauthorized-response: "401/403 responses for missing auth"
+
+  ConfidenceLevel:
+    description: "Confidence level in inferred data"
+    values:
+      - high: "Strong evidence, consistent patterns (>90%)"
+      - medium: "Moderate evidence, some variation (70-90%)"
+      - low: "Weak evidence, inconsistent (50-70%)"
+      - very-low: "Speculation, minimal evidence (<50%)"
+
+  PatternType:
+    description: "Type of traffic pattern detected"
+    values:
+      - rate-limit: "Rate limiting behavior detected"
+      - retry-pattern: "Retry attempts with backoff"
+      - pagination: "Pagination pattern"
+      - polling: "Polling behavior"
+      - batch-requests: "Batch API calls"
+      - websocket-upgrade: "WebSocket upgrade sequence"
+      - preflight-cors: "CORS preflight OPTIONS requests"
+      - authentication-flow: "Auth flow sequence"
+      - token-refresh: "Token refresh pattern"
+      - heartbeat: "Periodic heartbeat/keepalive"
+      - webhook-registration: "Webhook setup sequence"
+
+  HeaderPurpose:
+    description: "Inferred purpose of HTTP header"
+    values:
+      - authentication: "Authentication/authorization"
+      - correlation: "Request correlation/tracing"
+      - rate-limiting: "Rate limit tracking"
+      - caching: "Cache control"
+      - content-negotiation: "Content type negotiation"
+      - security: "Security headers (CSP, CORS, etc.)"
+      - custom-metadata: "Custom application metadata"
+      - api-versioning: "API version specification"
+      - client-identification: "Client/user-agent identification"
+      - unknown: "Unknown purpose"
+
+relationships:
+  - type: one_to_many
+    from: TrafficCapture
+    to: CapturedCall
+    foreign_key: captureId
+    description: "A capture contains multiple calls"
+
+  - type: one_to_many
+    from: TrafficCapture
+    to: TrafficSession
+    foreign_key: captureId
+    description: "A capture may identify multiple sessions"
+
+  - type: one_to_many
+    from: TrafficCapture
+    to: DiscoveredAPI
+    foreign_key: captureId
+    description: "A capture discovers one or more APIs"
+
+  - type: one_to_many
+    from: TrafficSession
+    to: CapturedCall
+    foreign_key: sessionId
+    description: "A session contains multiple calls"
+
+  - type: one_to_many
+    from: DiscoveredAPI
+    to: DiscoveredEndpoint
+    foreign_key: apiId
+    description: "An API has multiple endpoints"
+
+  - type: one_to_many
+    from: DiscoveredEndpoint
+    to: RequestTemplate
+    foreign_key: endpointId
+    description: "An endpoint can have request templates"
+
+  - type: one_to_many
+    from: AuthSchemeAnalysis
+    to: AuthEvidence
+    description: "Auth scheme supported by evidence"
+
+  - type: many_to_many
+    from: DiscoveredEndpoint
+    to: CapturedCall
+    via: sampleCalls
+    description: "Endpoint demonstrated by sample calls"
+
+# ============================================
+# ADDITIONAL ENUMS (for new entities above)
+# ============================================
+
+  SameSitePolicy:
+    description: "Cookie SameSite attribute (RFC 6265bis)"
+    values:
+      - strict: "Only sent in first-party context"
+      - lax: "Sent with top-level navigations"
+      - none: "Sent in all contexts (requires Secure)"
+
+  CookiePriority:
+    description: "Cookie priority hint for eviction"
+    values:
+      - low: "Low priority (evict first)"
+      - medium: "Medium priority (default)"
+      - high: "High priority (evict last)"
+
+  CookieSourceScheme:
+    description: "Scheme of cookie origin"
+    values:
+      - unset: "Not set"
+      - non-secure: "HTTP"
+      - secure: "HTTPS"
+
+  ContentTypePrimary:
+    description: "Primary MIME type"
+    values:
+      - application: "Application data"
+      - text: "Text data"
+      - image: "Image data"
+      - audio: "Audio data"
+      - video: "Video data"
+      - multipart: "Multipart data"
+      - message: "Message data"
+      - font: "Font data"
+      - model: "3D model data"
+      - other: "Other type"
+
+  ContentEncoding:
+    description: "Content encoding method"
+    values:
+      - identity: "No encoding"
+      - gzip: "GZIP compression"
+      - compress: "COMPRESS"
+      - deflate: "DEFLATE compression"
+      - br: "Brotli compression"
+      - zstd: "Zstandard compression"
+
+  BodyType:
+    description: "Request/response body type"
+    values:
+      - empty: "No body"
+      - text: "Plain text"
+      - json: "JSON data"
+      - xml: "XML data"
+      - html: "HTML document"
+      - form-urlencoded: "Form URL encoded"
+      - form-multipart: "Multipart form data"
+      - binary: "Binary data"
+      - stream: "Stream/chunked data"
+
+  CDPTargetType:
+    description: "Chrome DevTools Protocol target type"
+    values:
+      - page: "Web page"
+      - iframe: "IFrame"
+      - worker: "Web Worker"
+      - shared_worker: "Shared Worker"
+      - service_worker: "Service Worker"
+      - browser: "Browser"
+      - webview: "WebView"
+      - other: "Other target"
+
+  CDPNetworkEventType:
+    description: "Chrome DevTools network event"
+    values:
+      - request-will-be-sent: "Request about to be sent"
+      - request-served-from-cache: "Request served from cache"
+      - response-received: "Response headers received"
+      - data-received: "Response data chunk received"
+      - loading-finished: "Loading completed"
+      - loading-failed: "Loading failed"
+      - websocket-created: "WebSocket created"
+      - websocket-will-send-handshake-request: "WS handshake request"
+      - websocket-handshake-response-received: "WS handshake response"
+      - websocket-frame-sent: "WS frame sent"
+      - websocket-frame-received: "WS frame received"
+      - websocket-frame-error: "WS frame error"
+      - websocket-closed: "WebSocket closed"
+
+  CDPResourceType:
+    description: "Resource type in Chrome DevTools"
+    values:
+      - Document: "HTML document"
+      - Stylesheet: "CSS stylesheet"
+      - Image: "Image"
+      - Media: "Audio/video"
+      - Font: "Font file"
+      - Script: "JavaScript"
+      - TextTrack: "Text track"
+      - XHR: "XMLHttpRequest"
+      - Fetch: "Fetch API"
+      - Prefetch: "Prefetch"
+      - EventSource: "Server-Sent Events"
+      - WebSocket: "WebSocket"
+      - Manifest: "Web App Manifest"
+      - SignedExchange: "Signed HTTP Exchange"
+      - Ping: "Ping request"
+      - CSPViolationReport: "CSP violation report"
+      - Preflight: "CORS preflight"
+      - Other: "Other resource"
+
+  CDPResourcePriority:
+    description: "Resource loading priority"
+    values:
+      - VeryLow: "Very low priority"
+      - Low: "Low priority"
+      - Medium: "Medium priority"
+      - High: "High priority"
+      - VeryHigh: "Very high priority"
+
+  CDPSecurityState:
+    description: "Security state of connection"
+    values:
+      - unknown: "Unknown state"
+      - neutral: "Neutral (HTTP)"
+      - insecure: "Insecure (broken HTTPS)"
+      - secure: "Secure (HTTPS)"
+      - info: "Info state"
+      - insecure-broken: "Insecure broken"
+
+  CDPInitiatorType:
+    description: "What initiated the request"
+    values:
+      - parser: "HTML parser"
+      - script: "JavaScript"
+      - preload: "Preload scanner"
+      - SignedExchange: "Signed exchange"
+      - preflight: "CORS preflight"
+      - other: "Other initiator"
+
+  # ============================================
+  # X.509 CERTIFICATE ENUMS
+  # ============================================
+
+  PublicKeyAlgorithm:
+    description: "Public key algorithm"
+    values:
+      - RSA: "RSA encryption"
+      - DSA: "Digital Signature Algorithm"
+      - ECDSA: "Elliptic Curve DSA"
+      - Ed25519: "Edwards-curve Digital Signature (25519)"
+      - Ed448: "Edwards-curve Digital Signature (448)"
+      - DH: "Diffie-Hellman"
+      - ECDH: "Elliptic Curve Diffie-Hellman"
+
+  X509ExtensionType:
+    description: "X.509v3 extension types"
+    values:
+      - subject-alternative-name: "2.5.29.17 - Subject Alternative Name"
+      - subject-key-identifier: "2.5.29.14 - Subject Key Identifier"
+      - authority-key-identifier: "2.5.29.35 - Authority Key Identifier"
+      - key-usage: "2.5.29.15 - Key Usage"
+      - extended-key-usage: "2.5.29.37 - Extended Key Usage"
+      - basic-constraints: "2.5.29.19 - Basic Constraints"
+      - certificate-policies: "2.5.29.32 - Certificate Policies"
+      - crl-distribution-points: "2.5.29.31 - CRL Distribution Points"
+      - authority-info-access: "1.3.6.1.5.5.7.1.1 - Authority Information Access"
+      - subject-directory-attributes: "2.5.29.9 - Subject Directory Attributes"
+      - name-constraints: "2.5.29.30 - Name Constraints"
+      - policy-constraints: "2.5.29.36 - Policy Constraints"
+      - policy-mappings: "2.5.29.33 - Policy Mappings"
+      - inhibit-any-policy: "2.5.29.54 - Inhibit anyPolicy"
+      - freshest-crl: "2.5.29.46 - Freshest CRL"
+      - ct-precertificate-scts: "1.3.6.1.4.1.11129.2.4.2 - CT Precertificate SCTs"
+      - other: "Other/unknown extension"
+
+  CertificateErrorType:
+    description: "Certificate verification error types"
+    values:
+      - expired: "Certificate has expired"
+      - not-yet-valid: "Certificate not yet valid"
+      - self-signed: "Self-signed certificate"
+      - untrusted-root: "Untrusted root certificate"
+      - hostname-mismatch: "Hostname does not match certificate"
+      - revoked: "Certificate has been revoked"
+      - invalid-purpose: "Certificate not valid for purpose"
+      - chain-broken: "Certificate chain is broken"
+      - weak-signature: "Weak signature algorithm"
+      - weak-key: "Weak public key"
+      - invalid-extension: "Invalid certificate extension"
+      - name-constraint-violation: "Name constraint violation"
+      - policy-violation: "Certificate policy violation"
+      - path-length-exceeded: "Path length constraint exceeded"
+      - unknown-critical-extension: "Unknown critical extension"
+      - invalid-ca: "Invalid CA certificate"
+      - other: "Other verification error"
+
+  CAType:
+    description: "Certificate Authority type"
+    values:
+      - root: "Root CA (self-signed)"
+      - intermediate: "Intermediate CA"
+      - sub-ca: "Subordinate CA"
+      - cross-signed: "Cross-signed CA"
+
+  TrustStore:
+    description: "System trust store"
+    values:
+      - mozilla-nss: "Mozilla NSS (Firefox, curl)"
+      - microsoft: "Microsoft Trusted Root Program (Windows)"
+      - apple: "Apple Root Certificate Program (macOS, iOS)"
+      - google-ct: "Google Certificate Transparency"
+      - oracle-java: "Oracle Java cacerts"
+      - android: "Android System Trust Store"
+      - chrome: "Chrome Root Store"
+      - custom: "Custom/private trust store"
+      - none: "Not in any standard trust store"
+
+  RevocationReason:
+    description: "Certificate revocation reason (RFC 5280)"
+    values:
+      - unspecified: "Unspecified reason"
+      - key-compromise: "Private key compromised"
+      - ca-compromise: "CA key compromised"
+      - affiliation-changed: "Affiliation changed"
+      - superseded: "Certificate superseded"
+      - cessation-of-operation: "CA ceased operation"
+      - certificate-hold: "Certificate on hold (temporary)"
+      - remove-from-crl: "Remove from CRL"
+      - privilege-withdrawn: "Privilege withdrawn"
+      - aa-compromise: "Attribute authority compromised"
+
+  OCSPStatus:
+    description: "OCSP response status"
+    values:
+      - good: "Certificate is valid"
+      - revoked: "Certificate is revoked"
+      - unknown: "Certificate status unknown"
+
+  PinType:
+    description: "Certificate/key pinning type"
+    values:
+      - certificate: "Pin full certificate"
+      - public-key: "Pin public key (HPKP)"
+      - spki: "Pin SubjectPublicKeyInfo hash"
+
+# ============================================
+# WEBSOCKET PROTOCOL (RFC 6455)
+# Source: https://datatracker.ietf.org/doc/html/rfc6455
+# ============================================
+
+  WebSocketConnection:
+    description: "WebSocket connection (RFC 6455)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      captureId:
+        type: uuid
+        references: TrafficCapture.id
+      connectionId:
+        type: string
+        required: true
+        description: "Unique connection identifier"
+      url:
+        type: string
+        required: true
+        description: "WebSocket URL (ws:// or wss://)"
+      handshake:
+        type: WebSocketHandshake
+        required: true
+      frames:
+        type: array
+        items: WebSocketFrame
+        description: "All frames sent/received"
+      subprotocol:
+        type: string
+        description: "Negotiated subprotocol"
+      extensions:
+        type: array
+        items: string
+        description: "Negotiated extensions"
+      state:
+        type: enum
+        enum_ref: WebSocketState
+        required: true
+      closeInfo:
+        type: WebSocketCloseInfo
+        description: "Close frame details if closed"
+      startedAt:
+        type: datetime
+        required: true
+      endedAt:
+        type: datetime
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  WebSocketHandshake:
+    description: "WebSocket opening handshake (HTTP Upgrade)"
+    properties:
+      request:
+        type: HTTPRequest
+        required: true
+        description: "Upgrade request (GET with Connection: Upgrade)"
+      response:
+        type: HTTPResponse
+        required: true
+        description: "101 Switching Protocols response"
+      key:
+        type: string
+        required: true
+        description: "Sec-WebSocket-Key (base64)"
+      accept:
+        type: string
+        required: true
+        description: "Sec-WebSocket-Accept (base64)"
+      version:
+        type: integer
+        default: 13
+        description: "WebSocket protocol version"
+      requestedSubprotocols:
+        type: array
+        items: string
+        description: "Sec-WebSocket-Protocol values requested"
+      acceptedSubprotocol:
+        type: string
+        description: "Negotiated subprotocol"
+      requestedExtensions:
+        type: array
+        items: string
+        description: "Sec-WebSocket-Extensions requested"
+      acceptedExtensions:
+        type: array
+        items: string
+        description: "Negotiated extensions"
+      origin:
+        type: string
+        description: "Origin header value"
+      success:
+        type: boolean
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+
+  WebSocketFrame:
+    description: "WebSocket frame (RFC 6455 Section 5.2)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      connectionId:
+        type: uuid
+        required: true
+        references: WebSocketConnection.id
+      direction:
+        type: enum
+        enum_ref: WebSocketDirection
+        required: true
+      fin:
+        type: boolean
+        required: true
+        description: "FIN bit (final fragment)"
+      rsv1:
+        type: boolean
+        default: false
+        description: "RSV1 bit (extension)"
+      rsv2:
+        type: boolean
+        default: false
+        description: "RSV2 bit (extension)"
+      rsv3:
+        type: boolean
+        default: false
+        description: "RSV3 bit (extension)"
+      opcode:
+        type: enum
+        enum_ref: WebSocketOpcode
+        required: true
+      masked:
+        type: boolean
+        required: true
+        description: "Mask bit (client frames must be masked)"
+      maskingKey:
+        type: string
+        description: "32-bit masking key (hex) if masked"
+      payloadLength:
+        type: integer
+        required: true
+        description: "Payload length in bytes"
+      payloadData:
+        type: string
+        required: true
+        description: "Frame payload (base64 for binary, text for text)"
+      decodedText:
+        type: string
+        description: "Decoded text for text frames"
+      timestamp:
+        type: datetime
+        required: true
+      sequenceNumber:
+        type: integer
+        required: true
+        description: "Frame sequence in connection"
+
+  WebSocketCloseInfo:
+    description: "WebSocket close frame details"
+    properties:
+      statusCode:
+        type: integer
+        required: true
+        description: "Close status code (1000-4999)"
+      reason:
+        type: string
+        description: "Close reason text"
+      initiatedBy:
+        type: enum
+        enum_ref: WebSocketDirection
+        required: true
+        description: "Who sent close frame"
+      timestamp:
+        type: datetime
+        required: true
+
+  WebSocketState:
+    description: "WebSocket connection state"
+    values:
+      - connecting: "Handshake in progress"
+      - open: "Connection established"
+      - closing: "Close frame sent/received"
+      - closed: "Connection closed"
+      - failed: "Handshake or connection failed"
+
+  WebSocketDirection:
+    description: "Frame direction"
+    values:
+      - client-to-server: "Outbound (client → server)"
+      - server-to-client: "Inbound (server → client)"
+
+  WebSocketOpcode:
+    description: "WebSocket frame opcode (RFC 6455)"
+    values:
+      - continuation: "0x0 - Continuation frame"
+      - text: "0x1 - Text frame (UTF-8)"
+      - binary: "0x2 - Binary frame"
+      - close: "0x8 - Close control frame"
+      - ping: "0x9 - Ping control frame"
+      - pong: "0xA - Pong control frame"
+      - reserved-3: "0x3 - Reserved (non-control)"
+      - reserved-4: "0x4 - Reserved (non-control)"
+      - reserved-5: "0x5 - Reserved (non-control)"
+      - reserved-6: "0x6 - Reserved (non-control)"
+      - reserved-7: "0x7 - Reserved (non-control)"
+      - reserved-B: "0xB - Reserved (control)"
+      - reserved-C: "0xC - Reserved (control)"
+      - reserved-D: "0xD - Reserved (control)"
+      - reserved-E: "0xE - Reserved (control)"
+      - reserved-F: "0xF - Reserved (control)"
+
+  WebSocketCloseCode:
+    description: "WebSocket close status codes (RFC 6455 Section 7.4)"
+    values:
+      - 1000: "Normal Closure"
+      - 1001: "Going Away (server/browser closing)"
+      - 1002: "Protocol Error"
+      - 1003: "Unsupported Data (e.g. text-only endpoint got binary)"
+      - 1004: "Reserved"
+      - 1005: "No Status Received (internal use only, not on wire)"
+      - 1006: "Abnormal Closure (internal use only, not on wire)"
+      - 1007: "Invalid frame payload data (e.g. malformed UTF-8)"
+      - 1008: "Policy Violation"
+      - 1009: "Message Too Big"
+      - 1010: "Mandatory Extension (client)"
+      - 1011: "Internal Server Error"
+      - 1012: "Service Restart"
+      - 1013: "Try Again Later"
+      - 1014: "Bad Gateway"
+      - 1015: "TLS Handshake (internal use only, not on wire)"
+      - 3000-3999: "Reserved for frameworks/libraries/apps"
+      - 4000-4999: "Reserved for private use"
+
+# ============================================
+# HTTP/2 AND HTTP/3 MODELS
+# Source: RFC 9113 (HTTP/2), RFC 9114 (HTTP/3)
+# ============================================
+
+  HTTP2Stream:
+    description: "HTTP/2 stream (RFC 9113)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      streamId:
+        type: integer
+        required: true
+        description: "Stream identifier (odd=client, even=server)"
+      captureId:
+        type: uuid
+        references: TrafficCapture.id
+      connectionId:
+        type: string
+        description: "HTTP/2 connection ID"
+      priority:
+        type: HTTP2Priority
+        description: "Stream priority"
+      frames:
+        type: array
+        items: HTTP2Frame
+        description: "HEADERS, DATA, etc."
+      request:
+        type: HTTPRequest
+        description: "Reconstructed request"
+      response:
+        type: HTTPResponse
+        description: "Reconstructed response"
+      state:
+        type: enum
+        enum_ref: HTTP2StreamState
+        required: true
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+  HTTP2Priority:
+    description: "HTTP/2 stream priority"
+    properties:
+      exclusive:
+        type: boolean
+        description: "Exclusive dependency"
+      streamDependency:
+        type: integer
+        description: "Stream ID this depends on"
+      weight:
+        type: integer
+        description: "Priority weight (1-256)"
+
+  HTTP2Frame:
+    description: "HTTP/2 frame"
+    properties:
+      id:
+        type: uuid
+        required: true
+      streamId:
+        type: integer
+        required: true
+      type:
+        type: enum
+        enum_ref: HTTP2FrameType
+        required: true
+      flags:
+        type: integer
+        required: true
+        description: "Frame flags byte"
+      payload:
+        type: string
+        required: true
+        description: "Frame payload (base64)"
+      timestamp:
+        type: datetime
+        required: true
+
+  HTTP2StreamState:
+    description: "HTTP/2 stream state"
+    values:
+      - idle: "Stream idle"
+      - reserved-local: "Reserved (local)"
+      - reserved-remote: "Reserved (remote)"
+      - open: "Stream open"
+      - half-closed-local: "Half-closed (local)"
+      - half-closed-remote: "Half-closed (remote)"
+      - closed: "Stream closed"
+
+  HTTP2FrameType:
+    description: "HTTP/2 frame types (RFC 9113)"
+    values:
+      - DATA: "0x0 - Data frame"
+      - HEADERS: "0x1 - Headers frame"
+      - PRIORITY: "0x2 - Priority frame"
+      - RST_STREAM: "0x3 - Reset stream"
+      - SETTINGS: "0x4 - Settings frame"
+      - PUSH_PROMISE: "0x5 - Server push promise"
+      - PING: "0x6 - Ping frame"
+      - GOAWAY: "0x7 - Go away frame"
+      - WINDOW_UPDATE: "0x8 - Window update"
+      - CONTINUATION: "0x9 - Continuation frame"

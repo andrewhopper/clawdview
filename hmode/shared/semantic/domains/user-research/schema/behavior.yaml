@@ -1,0 +1,88 @@
+# Behavior - Observable actions and emotional states
+
+entities:
+  Behavior:
+    description: An observable action or pattern
+    properties:
+      id:
+        type: string
+        required: true
+      action:
+        type: string
+        required: true
+        description: What the actor does
+      context:
+        type: string
+        description: When/where this behavior occurs
+      frequency:
+        type: Frequency
+      observable:
+        type: boolean
+        default: true
+        description: Can be directly observed vs. inferred
+
+  Emotion:
+    description: An emotional state in a specific context
+    properties:
+      id:
+        type: string
+        required: true
+      feeling:
+        type: string
+        required: true
+        description: The emotion experienced
+      valence:
+        type: Valence
+        required: true
+        description: Positive, negative, or neutral
+      intensity:
+        type: Intensity
+        default: moderate
+      trigger:
+        type: string
+        description: What causes this emotion
+      context:
+        type: string
+        description: Specific situation
+
+  # Empathy map quadrants
+  EmpathyQuadrant:
+    description: One quadrant of an empathy map
+    properties:
+      type:
+        type: QuadrantType
+        required: true
+      items:
+        type: array
+        items: string
+        required: true
+        min_items: 3
+
+  EmpathyMap:
+    description: Complete empathy map for an actor in a context
+    properties:
+      actor_id:
+        type: string
+        required: true
+      context:
+        type: string
+        required: true
+        description: Specific scenario being mapped
+      says:
+        type: EmpathyQuadrant
+        required: true
+      thinks:
+        type: EmpathyQuadrant
+        required: true
+      does:
+        type: EmpathyQuadrant
+        required: true
+      feels:
+        type: EmpathyQuadrant
+        required: true
+      pains:
+        type: array
+        items: Pain
+      gains:
+        type: array
+        items: Gain

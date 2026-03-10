@@ -1,0 +1,283 @@
+# TTS Domain Model
+# Multi-provider text-to-speech abstraction
+# Supports ElevenLabs, AWS Polly, OpenAI TTS, Google, Azure
+
+domain:
+  name: tts
+  version: "1.0.0"
+  description: Text-to-speech synthesis - multi-provider, streaming, conversations
+  dependencies: [core]
+  providers: [ElevenLabs, AWSPolly, OpenAI, GoogleTTS, Azure]
+  created_at: "2025-11-21"
+  updated_at: "2025-11-22"
+
+entities:
+
+  # ============================================
+  # CORE TTS ENTITIES
+  # ============================================
+
+  SynthesisRequest:
+    description: Request to synthesize text to speech audio
+    properties:
+      id: { type: string, required: true }
+      text: { type: string, required: true, description: "Max 5000 chars for ElevenLabs" }
+      voiceId: { type: string, required: true }
+      providerId: { type: string }
+      outputFormat: { type: AudioFormat, default: MP3 }
+      deliveryMode: { type: DeliveryMode, default: FileGeneration }
+      model: { type: ModelType }
+      voiceSettings: { type: VoiceSettings }
+      callbackUrl: { type: uri, description: "URL for async completion notification" }
+      requestedAt: { type: datetime, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  SynthesisResult:
+    description: Result of TTS synthesis containing audio data or URL
+    properties:
+      id: { type: string, required: true }
+      requestId: { type: string, required: true }
+      status: { type: SynthesisStatus, required: true }
+      audioFile: { type: AudioFile }
+      audioData: { type: string, description: "Base64 encoded audio bytes" }
+      errorMessage: { type: string }
+      processingTimeMs: { type: integer }
+      completedAt: { type: datetime }
+      usageMetrics: { type: UsageMetrics }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Voice:
+    description: Voice configuration for TTS synthesis
+    properties:
+      id: { type: string, required: true }
+      voiceId: { type: string, required: true, description: "Provider-specific ID" }
+      name: { type: string, required: true }
+      provider: { type: ProviderType, required: true }
+      language: { type: string, description: "ISO code (en, en-US, es, fr)" }
+      description: { type: string }
+      previewUrl: { type: uri }
+      isCloned: { type: boolean, default: false }
+      gender: { type: Gender }
+      ageGroup: { type: AgeGroup }
+      useCase: { type: VoiceUseCase }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Provider:
+    description: TTS provider (ElevenLabs, AWS Polly, OpenAI)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      providerType: { type: ProviderType, required: true }
+      apiEndpoint: { type: uri }
+      supportsStreaming: { type: boolean, default: false }
+      supportsVoiceCloning: { type: boolean, default: false }
+      supportedFormats: { type: array, items: AudioFormat }
+      supportedLanguages: { type: array, items: string }
+      rateLimit: { type: integer, description: "Requests per minute" }
+      costPerChar: { type: decimal, description: "USD per character" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AudioFile:
+    description: Generated audio file with format, duration, and storage location
+    properties:
+      id: { type: string, required: true }
+      format: { type: AudioFormat, required: true }
+      filePath: { type: string }
+      fileUrl: { type: uri }
+      presignedUrl: { type: uri, description: "Time-limited access URL" }
+      expiresAt: { type: datetime }
+      sizeBytes: { type: integer }
+      durationMs: { type: integer }
+      sampleRate: { type: integer, description: "Hz (22050, 44100, 48000)" }
+      bitrate: { type: integer, description: "kbps (128, 192, 320)" }
+      channels: { type: integer, description: "1=mono, 2=stereo" }
+      contentHash: { type: string, description: "SHA256 for deduplication" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  VoiceSettings:
+    description: Fine-tuned voice parameters
+    properties:
+      id: { type: string, required: true }
+      stability: { type: decimal, description: "0.0-1.0, higher=more consistent" }
+      similarityBoost: { type: decimal, description: "0.0-1.0, higher=clearer" }
+      style: { type: decimal, description: "0.0-1.0, higher=more expressive" }
+      useSpeakerBoost: { type: boolean, default: false }
+      speed: { type: decimal, description: "0.5-2.0, 1.0=normal" }
+      pitch: { type: decimal, description: "-20 to +20 semitones" }
+
+  UsageMetrics:
+    description: Character count, cost, and provider usage statistics
+    properties:
+      id: { type: string, required: true }
+      characterCount: { type: integer, required: true }
+      estimatedCostUSD: { type: decimal }
+      provider: { type: ProviderType }
+      model: { type: ModelType }
+      voiceId: { type: string }
+      createdAt: { type: datetime, required: true }
+
+  StreamChunk:
+    description: Audio data chunk for streaming playback
+    properties:
+      id: { type: string, required: true }
+      requestId: { type: string, required: true }
+      chunkData: { type: string, description: "Base64 encoded" }
+      chunkIndex: { type: integer, required: true }
+      isLastChunk: { type: boolean, default: false }
+
+  # ============================================
+  # CONVERSATION ENTITIES (V1.5 Diarization)
+  # ============================================
+
+  Conversation:
+    description: Multi-voice conversation with speaker assignments
+    properties:
+      id: { type: string, required: true }
+      title: { type: string }
+      speakers: { type: array, items: Speaker }
+      passages: { type: array, items: Passage }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Speaker:
+    description: Named speaker in a conversation with assigned voice
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      voiceId: { type: string, required: true }
+
+  Passage:
+    description: Single segment of text spoken by one speaker
+    properties:
+      id: { type: string, required: true }
+      conversationId: { type: string, required: true }
+      speakerId: { type: string, required: true }
+      text: { type: string, required: true }
+      order: { type: integer, required: true }
+
+enums:
+
+  ProviderType:
+    values:
+      - ElevenLabs     # High-quality, voice cloning, multilingual
+      - AWSPolly       # AWS-native, neural voices, SSML support
+      - OpenAI         # Fast, affordable, multiple voices
+      - GoogleTTS      # WaveNet voices, SSML multi-voice
+      - Azure          # Microsoft neural voices
+
+  AudioFormat:
+    values:
+      - MP3      # Compressed, widely compatible
+      - WAV      # Uncompressed PCM, high quality
+      - OGG      # Open format, good compression
+      - PCM      # Raw audio, low latency
+      - FLAC     # Lossless compression
+
+  SynthesisStatus:
+    values:
+      - Pending
+      - Processing
+      - Completed
+      - Failed
+      - Streaming
+
+  DeliveryMode:
+    values:
+      - FileGeneration    # Complete audio file (MP3/WAV)
+      - RealTimeStream    # Stream chunks for low-latency
+      - WebSocket         # Bidirectional streaming
+
+  ModelType:
+    values:
+      - MultilingualV2    # ElevenLabs highest quality
+      - TurboV2           # ElevenLabs fast English
+      - TurboV2_5         # ElevenLabs fast multilingual
+      - Neural            # AWS Polly Neural, Azure Neural
+      - Standard          # Standard/concatenative TTS
+
+  Gender:
+    values: [Male, Female, Neutral]
+
+  AgeGroup:
+    values: [Young, MiddleAged, Old]
+
+  VoiceUseCase:
+    values:
+      - Narration
+      - Conversational
+      - News
+      - Meditation
+      - VideoGame
+      - Audiobook
+      - Assistant
+
+actions:
+
+  SynthesizeSpeech:
+    description: Convert text to speech audio
+    parameters:
+      text: { type: string, required: true }
+      voiceId: { type: string, required: true }
+      outputFormat: { type: AudioFormat, default: MP3 }
+      deliveryMode: { type: DeliveryMode, default: FileGeneration }
+      model: { type: ModelType }
+      voiceSettings: { type: VoiceSettings }
+    result: SynthesisResult
+    permission: tts:synthesize
+    idempotent: false
+    errors: [INVALID_TEXT, INVALID_VOICE, RATE_LIMIT_EXCEEDED, PROVIDER_ERROR]
+
+  SynthesizeConversation:
+    description: Synthesize multi-voice conversation
+    parameters:
+      conversation: { type: Conversation, required: true }
+      outputFormat: { type: AudioFormat, default: MP3 }
+      model: { type: ModelType }
+    result: SynthesisResult
+    permission: tts:synthesize
+    idempotent: false
+    errors: [INVALID_CONVERSATION, MISSING_VOICE_ASSIGNMENT]
+
+  ListVoices:
+    description: Get available voices for a provider
+    parameters:
+      provider: { type: ProviderType }
+      language: { type: string }
+      gender: { type: Gender }
+    result: { type: array, items: Voice }
+    permission: tts:read
+    idempotent: true
+
+  GetVoice:
+    description: Get voice details by ID
+    parameters:
+      voiceId: { type: string, required: true }
+    result: Voice
+    permission: tts:read
+    idempotent: true
+
+  StreamSpeech:
+    description: Stream audio chunks for real-time playback
+    parameters:
+      text: { type: string, required: true }
+      voiceId: { type: string, required: true }
+      outputFormat: { type: AudioFormat, default: PCM }
+    result: { type: stream, items: StreamChunk }
+    permission: tts:synthesize
+    idempotent: false
+    errors: [STREAMING_NOT_SUPPORTED, CONNECTION_LOST]
+
+  GetUsage:
+    description: Get usage statistics for billing period
+    parameters:
+      startDate: { type: date, required: true }
+      endDate: { type: date, required: true }
+      provider: { type: ProviderType }
+    result: { type: array, items: UsageMetrics }
+    permission: tts:read
+    idempotent: true

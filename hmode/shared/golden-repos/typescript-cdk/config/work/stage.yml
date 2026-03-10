@@ -1,0 +1,58 @@
+# ===========================================
+# Staging Environment Configuration
+# ===========================================
+
+account: "123456789012"
+region: "us-east-1"
+
+projectName: "my-app"
+stackPrefix: "myapp"
+
+# ===========================================
+# Domain Configuration
+# ===========================================
+domain:
+  rootDomain: "stage.example.com"
+  subdomain: "api"
+
+# ===========================================
+# Notification Configuration
+# ===========================================
+notifications:
+  adminEmail: "admin@example.com"
+  supportEmail: "support@example.com"
+
+# ===========================================
+# Database Configuration
+# ===========================================
+database:
+  instanceClass: "t3.small"
+  allocatedStorage: 50
+  multiAz: false
+  deletionProtection: true
+  backupRetentionDays: 14
+
+# ===========================================
+# Compute Configuration
+# ===========================================
+compute:
+  lambdaMemory: 512
+  lambdaTimeout: 30
+  taskCpu: 512
+  taskMemory: 1024
+  desiredCount: 2
+  minCount: 1
+  maxCount: 4
+
+# ===========================================
+# Monitoring Configuration
+# ===========================================
+monitoring:
+  enableDashboards: true
+  enableTracing: true
+  logRetentionDays: 30
+  alarmEvaluationPeriods: 3
+
+tags:
+  Team: "Platform"
+  CostCenter: "Engineering"

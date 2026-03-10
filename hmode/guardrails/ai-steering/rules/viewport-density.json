@@ -1,0 +1,146 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-07",
+  "description": "Rules for viewport utility density - ensuring pages maximize functional content above the fold",
+  "rules": [
+    {
+      "uuid": "vd-001-a8c3-4e7f-9b2d-1f5e6a7c8d9e",
+      "id": "vud-page-type-classification",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "Every page-level asset MUST be classified as WEBAPP, DOCUMENTATION, PRODUCT, or MARKETING before layout begins",
+      "context": {
+        "when": ["creating page", "creating mockup", "designing layout", "creating landing page", "creating dashboard"],
+        "taskType": ["Asset Generation", "UI Design", "Mockup"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "page type classification",
+        "message": "Classify page type before layout: WEBAPP (task completion), DOCUMENTATION (find & understand), PRODUCT (evaluate & convert), MARKETING (inspire & convert). Each type has different VUD targets and hero allowances."
+      },
+      "rationale": "Page type determines viewport allocation strategy. WEBAPP and DOCUMENTATION must never waste viewport on hero images. PRODUCT and MARKETING have controlled allowances.",
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "vd-002-b9d4-5f8a-0c3e-2a6b7d8e9f0a",
+      "id": "vud-no-hero-webapp-docs",
+      "version": "1.0.0",
+      "level": "NEVER",
+      "category": "ux_design",
+      "description": "WEBAPP and DOCUMENTATION pages must NEVER have hero images or decorative full-width headers",
+      "context": {
+        "when": ["creating webapp", "creating dashboard", "creating documentation", "creating admin panel", "creating editor"],
+        "taskType": ["Asset Generation", "UI Design"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "hero images and decorative headers on webapp/docs pages",
+        "message": "WEBAPP and DOCUMENTATION pages must start with functional content immediately. No hero images, no decorative gradients, no oversized headings (max text-2xl for page title). Every pixel above the fold must serve a user task."
+      },
+      "rationale": "Hero images and decorative headers waste 40%+ of viewport on webapp/docs pages. Users come to these pages to DO something or FIND something, not to be inspired.",
+      "examples": [
+        {
+          "scenario": "Creating a dashboard page",
+          "correct": "56px header bar → 48px toolbar with filters → data table filling remaining viewport",
+          "incorrect": "400px hero with gradient and 72px 'Welcome to your Dashboard' heading"
+        },
+        {
+          "scenario": "Creating a docs page",
+          "correct": "48px header with search → TOC sidebar + content body starting at line 1",
+          "incorrect": "200px hero with product logo and tagline before any docs content"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "vd-003-c0e5-6a9b-1d4f-3b7c8e9f0a1b",
+      "id": "vud-minimum-score",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "Page layouts MUST meet minimum Viewport Utility Density (VUD) score for their page type",
+      "context": {
+        "when": ["creating page layout", "reviewing mockup", "designing page", "composing template"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "VUD score validation",
+        "message": "Calculate VUD: Σ(element_area × weight) / ATF_area. Targets: WEBAPP ≥ 0.70, DOCUMENTATION ≥ 0.75, PRODUCT ≥ 0.50, MARKETING ≥ 0.35. Weights: primary task UI = 1.0, navigation = 0.8, search = 0.9, decorative = 0.05, wasted = 0.0"
+      },
+      "rationale": "VUD ensures layouts maximize functional content. A score below target means too much viewport is consumed by decoration, whitespace, or non-functional elements.",
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "vd-004-d1f6-7b0c-2e5a-4c8d9e0f1a2b",
+      "id": "vud-marketing-hero-limit",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "Marketing page heroes MUST not exceed 60vh and MUST contain a visible CTA and value proposition",
+      "context": {
+        "when": ["creating landing page", "creating marketing page", "creating campaign page"],
+        "taskType": ["Asset Generation", "UI Design"]
+      },
+      "action": {
+        "directive": "constrain",
+        "target": "marketing hero sections",
+        "message": "Marketing heroes: max 60vh height, MUST include visible CTA button and clear value proposition. Product heroes: max 40vh, must include key features or specs. Hero without CTA or value prop is pure decoration (VUD weight 0.05)."
+      },
+      "rationale": "Even marketing pages should not waste entire viewport on decoration. The hero must communicate value and provide a clear action path, not just look pretty.",
+      "examples": [
+        {
+          "scenario": "Creating a SaaS landing page",
+          "correct": "Hero at 55vh with headline, 2-line value prop, CTA button, and a product screenshot showing the actual UI",
+          "incorrect": "Hero at 100vh with abstract gradient, company name in 96px font, and 'Learn More' link below the fold"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "vd-005-e2a7-8c1d-3f6b-5d9e0f1a2b3c",
+      "id": "vud-p1-above-fold",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "All P1 (primary priority) content MUST be fully visible above the fold without scrolling",
+      "context": {
+        "when": ["designing page layout", "composing page template", "creating page mockup"],
+        "taskType": ["Asset Generation", "UI Design"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "P1 content above fold",
+        "message": "P1 content (primary user tasks, key data, main navigation) must be fully visible within the initial viewport (above the fold). Use viewport height budget: webapp header 56px + toolbar 48px + primary content 600px+ on a 768px effective height."
+      },
+      "rationale": "Users should not need to scroll to find their primary tasks. The initial viewport is the most valuable real estate and must be reserved for highest-priority content.",
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    }
+  ]
+}

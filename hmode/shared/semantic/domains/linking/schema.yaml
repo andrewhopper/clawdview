@@ -1,0 +1,737 @@
+# Linking Domain Model
+# Deep links, product links, universal links, and URL management
+#
+# Use Cases:
+#   - Mobile app deep linking (iOS Universal Links, Android App Links)
+#   - Product/affiliate links for e-commerce
+#   - Short URL management
+#   - Link attribution and analytics
+#   - QR code generation
+#
+# Inspired by: Branch.io, Firebase Dynamic Links, Bitly, Product Hunt
+
+domain:
+  name: linking
+  version: "1.0.0"
+  description: Deep links, product links, universal links, short URLs, and link attribution
+  dependencies: [core]
+  use_case: Mobile deep linking, product links, affiliate tracking, QR codes, link analytics
+  sources:
+    - "iOS Universal Links (Apple)"
+    - "Android App Links (Google)"
+    - "Branch.io Deep Linking"
+    - "Firebase Dynamic Links"
+    - "Open Graph Protocol"
+  created_at: "2025-11-25"
+  updated_at: "2025-11-25"
+
+entities:
+
+  # ============================================
+  # BASE LINK TYPES
+  # ============================================
+
+  Link:
+    description: Base entity for all link types
+    properties:
+      id: { type: uuid, required: true }
+      type: { type: LinkType, required: true }
+      # URLs
+      originalUrl: { type: uri, required: true, description: "Target/destination URL" }
+      shortCode: { type: string, description: "Short URL code (e.g., 'abc123')" }
+      shortUrl: { type: uri, description: "Shortened URL" }
+      # Ownership
+      ownerId: { type: string, description: "FK to auth:User" }
+      workspaceId: { type: string }
+      # Metadata
+      title: { type: string, maxLength: 200 }
+      description: { type: string, maxLength: 500 }
+      # Status
+      status: { type: LinkStatus, required: true, default: active }
+      expiresAt: { type: datetime }
+      # Tracking
+      clickCount: { type: integer, default: 0 }
+      uniqueClickCount: { type: integer, default: 0 }
+      lastClickedAt: { type: datetime }
+      # Tags
+      tags: { type: array, items: string }
+      campaign: { type: string, description: "Campaign identifier" }
+      # Timestamps
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # DEEP LINKS (Mobile)
+  # ============================================
+
+  DeepLink:
+    description: Mobile app deep link with fallback behavior
+    extends: Link
+    properties:
+      # App routing
+      iosScheme: { type: string, description: "Custom URL scheme (myapp://)" }
+      iosUniversalLink: { type: uri, description: "iOS Universal Link domain" }
+      iosAppStoreId: { type: string, description: "App Store ID" }
+      iosAppStoreFallback: { type: uri, description: "App Store fallback URL" }
+      iosBundleId: { type: string }
+      iosMinVersion: { type: string }
+      # Android
+      androidScheme: { type: string }
+      androidAppLink: { type: uri, description: "Android App Link domain" }
+      androidPackageName: { type: string }
+      androidPlayStoreFallback: { type: uri }
+      androidMinVersion: { type: integer }
+      androidSha256CertFingerprints: { type: array, items: string }
+      # In-app routing
+      inAppPath: { type: string, required: true, description: "Path within app (e.g., /product/123)" }
+      inAppParams: { type: object, description: "Parameters to pass to app" }
+      # Fallback behavior
+      fallbackUrl: { type: uri, description: "Web fallback if app not installed" }
+      fallbackBehavior: { type: FallbackBehavior, default: web_fallback }
+      # Desktop
+      desktopUrl: { type: uri }
+      # Social preview
+      socialPreview: { type: SocialPreview }
+      # Analytics
+      attributionWindow: { type: integer, default: 7, description: "Days for attribution" }
+      deferredDeepLinking: { type: boolean, default: true, description: "Track through install" }
+
+  UniversalLink:
+    description: Apple Universal Link configuration
+    properties:
+      id: { type: uuid, required: true }
+      domain: { type: string, required: true, description: "Associated domain" }
+      bundleId: { type: string, required: true }
+      teamId: { type: string, required: true, description: "Apple Team ID" }
+      # Paths
+      paths: { type: array, items: string, description: "URL path patterns" }
+      excludePaths: { type: array, items: string }
+      # Verification
+      aasaUrl: { type: uri, description: "apple-app-site-association URL" }
+      isVerified: { type: boolean, default: false }
+      lastVerifiedAt: { type: datetime }
+      verificationError: { type: string }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AndroidAppLink:
+    description: Android App Links configuration
+    properties:
+      id: { type: uuid, required: true }
+      domain: { type: string, required: true }
+      packageName: { type: string, required: true }
+      # Paths
+      paths: { type: array, items: string }
+      excludePaths: { type: array, items: string }
+      # Verification
+      assetLinksUrl: { type: uri, description: "assetlinks.json URL" }
+      sha256CertFingerprints: { type: array, items: string }
+      isVerified: { type: boolean, default: false }
+      lastVerifiedAt: { type: datetime }
+      verificationError: { type: string }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # PRODUCT LINKS (E-commerce)
+  # ============================================
+
+  ProductLink:
+    description: E-commerce product link with affiliate/tracking
+    extends: Link
+    properties:
+      # Product info
+      productId: { type: string, required: true }
+      productTitle: { type: string, required: true }
+      productDescription: { type: string }
+      productBrand: { type: string }
+      productCategory: { type: string }
+      # Pricing
+      price: { type: Money, from: core }
+      originalPrice: { type: Money, from: core, description: "Before discount" }
+      currency: { type: string }
+      priceValidUntil: { type: datetime }
+      # Availability
+      availability: { type: ProductAvailability, default: in_stock }
+      availabilityQuantity: { type: integer }
+      # Retailer
+      retailer: { type: string, required: true }
+      retailerDomain: { type: string }
+      retailerLogoUrl: { type: uri }
+      # Identifiers
+      sku: { type: string }
+      upc: { type: string, description: "Universal Product Code" }
+      ean: { type: string, description: "European Article Number" }
+      asin: { type: string, description: "Amazon ASIN" }
+      gtin: { type: string, description: "Global Trade Item Number" }
+      mpn: { type: string, description: "Manufacturer Part Number" }
+      # Affiliate
+      affiliateNetwork: { type: string }
+      affiliateId: { type: string }
+      commissionRate: { type: decimal }
+      # Media
+      imageUrl: { type: uri }
+      thumbnailUrl: { type: uri }
+      additionalImages: { type: array, items: uri }
+      # Variants
+      selectedVariant: { type: ProductVariant }
+      availableVariants: { type: array, items: ProductVariant }
+      # Structured data
+      structuredData: { type: object, description: "Schema.org Product JSON-LD" }
+      # Price tracking
+      priceHistory: { type: array, items: PricePoint }
+      lowestPrice: { type: Money, from: core }
+      lowestPriceDate: { type: datetime }
+
+  ProductVariant:
+    description: Product variant (size, color, etc.)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string }
+      sku: { type: string }
+      attributes: { type: object, description: "Key-value variant attributes" }
+      price: { type: Money, from: core }
+      availability: { type: ProductAvailability }
+      imageUrl: { type: uri }
+
+  PricePoint:
+    description: Historical price data point
+    properties:
+      price: { type: Money, required: true, from: core }
+      timestamp: { type: datetime, required: true }
+      source: { type: string }
+
+  # ============================================
+  # SOCIAL PREVIEW (Open Graph)
+  # ============================================
+
+  SocialPreview:
+    description: Social media preview/Open Graph metadata
+    properties:
+      title: { type: string, maxLength: 70 }
+      description: { type: string, maxLength: 200 }
+      imageUrl: { type: uri }
+      imageWidth: { type: integer }
+      imageHeight: { type: integer }
+      # Platform-specific
+      twitterCard: { type: TwitterCardType, default: summary_large_image }
+      twitterSite: { type: string, description: "@username" }
+      twitterCreator: { type: string }
+      # Facebook
+      fbAppId: { type: string }
+      # Video
+      videoUrl: { type: uri }
+      videoDuration: { type: integer, description: "Seconds" }
+      # Audio
+      audioUrl: { type: uri }
+      # Type
+      ogType: { type: OpenGraphType, default: website }
+
+  # ============================================
+  # SHORT URLS
+  # ============================================
+
+  ShortUrl:
+    description: Shortened URL with custom alias
+    extends: Link
+    properties:
+      # Custom alias
+      alias: { type: string, description: "Custom short code" }
+      domain: { type: string, description: "Custom short domain" }
+      # Password protection
+      isPasswordProtected: { type: boolean, default: false }
+      passwordHash: { type: string }
+      # Expiration
+      expirationClicks: { type: integer, description: "Expire after N clicks" }
+      # Redirect type
+      redirectType: { type: RedirectType, default: temporary_302 }
+
+  # ============================================
+  # QR CODES
+  # ============================================
+
+  QRCode:
+    description: QR code linked to a URL
+    properties:
+      id: { type: uuid, required: true }
+      linkId: { type: uuid, required: true, description: "FK to Link" }
+      # Generation
+      format: { type: QRFormat, default: png }
+      size: { type: integer, default: 256, description: "Pixels" }
+      errorCorrection: { type: QRErrorCorrection, default: M }
+      # Styling
+      foregroundColor: { type: string, default: "#000000" }
+      backgroundColor: { type: string, default: "#FFFFFF" }
+      logoUrl: { type: uri, description: "Center logo" }
+      logoSize: { type: integer, description: "Logo size in pixels" }
+      cornerRadius: { type: integer, default: 0 }
+      style: { type: QRStyle, default: square }
+      # Generated
+      imageUrl: { type: uri }
+      svgData: { type: string }
+      # Analytics
+      scanCount: { type: integer, default: 0 }
+      lastScannedAt: { type: datetime }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # LINK BUNDLES
+  # ============================================
+
+  LinkBundle:
+    description: Collection of related links (e.g., linktree)
+    properties:
+      id: { type: uuid, required: true }
+      ownerId: { type: string, required: true }
+      name: { type: string, required: true }
+      slug: { type: string, required: true, description: "URL path" }
+      description: { type: string }
+      # Appearance
+      theme: { type: BundleTheme }
+      headerImageUrl: { type: uri }
+      avatarUrl: { type: uri }
+      # Links
+      links: { type: array, items: BundleLink }
+      # Settings
+      isPublic: { type: boolean, default: true }
+      seoTitle: { type: string }
+      seoDescription: { type: string }
+      # Analytics
+      viewCount: { type: integer, default: 0 }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  BundleLink:
+    description: Link within a bundle
+    properties:
+      id: { type: uuid, required: true }
+      bundleId: { type: uuid, required: true }
+      linkId: { type: uuid, required: true, description: "FK to Link" }
+      title: { type: string, required: true }
+      icon: { type: string, description: "Icon name or emoji" }
+      thumbnailUrl: { type: uri }
+      order: { type: integer, required: true }
+      isVisible: { type: boolean, default: true }
+      # Scheduling
+      visibleFrom: { type: datetime }
+      visibleUntil: { type: datetime }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  BundleTheme:
+    description: Visual theme for link bundle
+    properties:
+      backgroundColor: { type: string }
+      backgroundGradient: { type: string }
+      backgroundImageUrl: { type: uri }
+      textColor: { type: string }
+      buttonStyle: { type: ButtonStyle }
+      buttonColor: { type: string }
+      buttonTextColor: { type: string }
+      fontFamily: { type: string }
+
+  # ============================================
+  # ATTRIBUTION & ANALYTICS
+  # ============================================
+
+  LinkClick:
+    description: Individual click/visit event
+    properties:
+      id: { type: uuid, required: true }
+      linkId: { type: uuid, required: true }
+      # Session
+      sessionId: { type: string }
+      visitorId: { type: string, description: "Anonymous visitor fingerprint" }
+      userId: { type: string, description: "Authenticated user if known" }
+      # Device
+      deviceType: { type: DeviceType }
+      browser: { type: string }
+      browserVersion: { type: string }
+      os: { type: string }
+      osVersion: { type: string }
+      userAgent: { type: string }
+      # Location
+      ipAddress: { type: string }
+      country: { type: string }
+      region: { type: string }
+      city: { type: string }
+      latitude: { type: decimal }
+      longitude: { type: decimal }
+      timezone: { type: string }
+      # Source
+      referrer: { type: uri }
+      referrerDomain: { type: string }
+      # UTM parameters
+      utmSource: { type: string }
+      utmMedium: { type: string }
+      utmCampaign: { type: string }
+      utmTerm: { type: string }
+      utmContent: { type: string }
+      # App context
+      isAppOpen: { type: boolean, description: "Did link open in app?" }
+      appVersion: { type: string }
+      platform: { type: string, description: "ios, android, web" }
+      # Timing
+      timestamp: { type: datetime, required: true }
+      # Metadata
+      customParams: { type: object }
+
+  LinkAttribution:
+    description: Attribution tracking for conversions
+    properties:
+      id: { type: uuid, required: true }
+      linkId: { type: uuid, required: true }
+      clickId: { type: uuid, description: "FK to LinkClick" }
+      # Conversion
+      conversionType: { type: string, required: true }
+      conversionValue: { type: Money, from: core }
+      # Attribution model
+      attributionModel: { type: AttributionModel, default: last_click }
+      attributionWeight: { type: decimal, default: 1.0 }
+      # Touch point
+      touchpointOrder: { type: integer }
+      daysSinceFirstTouch: { type: integer }
+      daysSinceLastTouch: { type: integer }
+      # Timing
+      conversionTime: { type: datetime, required: true }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # URL VALIDATION & SAFETY
+  # ============================================
+
+  LinkValidation:
+    description: URL validation and safety check result
+    properties:
+      id: { type: uuid, required: true }
+      linkId: { type: uuid, required: true }
+      url: { type: uri, required: true }
+      # HTTP check
+      httpStatus: { type: integer }
+      redirectChain: { type: array, items: uri }
+      finalUrl: { type: uri }
+      responseTimeMs: { type: integer }
+      # Safety
+      isSafe: { type: boolean }
+      safetyScore: { type: decimal, description: "0-1 safety score" }
+      threats: { type: array, items: ThreatType }
+      # Content
+      contentType: { type: string }
+      contentLength: { type: integer }
+      # SSL
+      sslValid: { type: boolean }
+      sslExpiry: { type: datetime }
+      sslIssuer: { type: string }
+      # Domain
+      domainAge: { type: integer, description: "Days since registration" }
+      domainRegistrar: { type: string }
+      # Timing
+      checkedAt: { type: datetime, required: true }
+
+# ============================================
+# ENUMS
+# ============================================
+
+enums:
+
+  LinkType:
+    values:
+      - standard
+      - deep_link
+      - product_link
+      - short_url
+      - qr_code
+      - affiliate
+
+  LinkStatus:
+    values:
+      - active
+      - disabled
+      - expired
+      - flagged
+      - deleted
+
+  FallbackBehavior:
+    values:
+      - web_fallback           # Open web URL
+      - app_store              # Go to app store
+      - custom_page            # Show custom landing
+      - error                  # Show error
+
+  ProductAvailability:
+    values:
+      - in_stock
+      - out_of_stock
+      - pre_order
+      - back_order
+      - discontinued
+      - limited
+
+  TwitterCardType:
+    values:
+      - summary
+      - summary_large_image
+      - app
+      - player
+
+  OpenGraphType:
+    values:
+      - website
+      - article
+      - product
+      - video
+      - music
+      - book
+      - profile
+
+  RedirectType:
+    values:
+      - permanent_301
+      - temporary_302
+      - temporary_307
+      - permanent_308
+      - meta_refresh
+      - javascript
+
+  QRFormat:
+    values:
+      - png
+      - svg
+      - pdf
+      - eps
+
+  QRErrorCorrection:
+    values:
+      - L      # 7% recovery
+      - M      # 15% recovery
+      - Q      # 25% recovery
+      - H      # 30% recovery
+
+  QRStyle:
+    values:
+      - square
+      - rounded
+      - dots
+      - custom
+
+  ButtonStyle:
+    values:
+      - solid
+      - outline
+      - shadow
+      - gradient
+      - rounded
+      - pill
+
+  DeviceType:
+    values:
+      - desktop
+      - mobile
+      - tablet
+      - tv
+      - watch
+      - bot
+      - unknown
+
+  AttributionModel:
+    values:
+      - first_click
+      - last_click
+      - linear
+      - time_decay
+      - position_based
+      - data_driven
+
+  ThreatType:
+    values:
+      - malware
+      - phishing
+      - spam
+      - unwanted_software
+      - social_engineering
+      - deceptive
+
+# ============================================
+# ACTIONS
+# ============================================
+
+actions:
+
+  # Link CRUD
+  CreateLink:
+    description: Create a new link
+    parameters:
+      type: { type: LinkType, required: true }
+      originalUrl: { type: uri, required: true }
+      title: { type: string }
+      customAlias: { type: string }
+      tags: { type: array, items: string }
+    result: Link
+    permission: link:create
+
+  CreateDeepLink:
+    description: Create a mobile deep link
+    parameters:
+      originalUrl: { type: uri, required: true }
+      inAppPath: { type: string, required: true }
+      iosAppStoreId: { type: string }
+      androidPackageName: { type: string }
+      fallbackUrl: { type: uri }
+      socialPreview: { type: SocialPreview }
+    result: DeepLink
+    permission: link:create
+
+  CreateProductLink:
+    description: Create a product/affiliate link
+    parameters:
+      originalUrl: { type: uri, required: true }
+      productId: { type: string, required: true }
+      productTitle: { type: string, required: true }
+      retailer: { type: string, required: true }
+      price: { type: Money }
+      affiliateNetwork: { type: string }
+      affiliateId: { type: string }
+    result: ProductLink
+    permission: link:create
+
+  # Short URL
+  ShortenUrl:
+    description: Create a shortened URL
+    parameters:
+      url: { type: uri, required: true }
+      customAlias: { type: string }
+      domain: { type: string }
+      expiresAt: { type: datetime }
+    result: ShortUrl
+    permission: link:create
+    errors: [ALIAS_TAKEN, INVALID_URL]
+
+  ExpandUrl:
+    description: Expand a short URL to original
+    parameters:
+      shortUrl: { type: uri, required: true }
+    result: Link
+    permission: link:read
+
+  # QR Codes
+  GenerateQRCode:
+    description: Generate QR code for a link
+    parameters:
+      linkId: { type: uuid, required: true }
+      size: { type: integer, default: 256 }
+      format: { type: QRFormat, default: png }
+      foregroundColor: { type: string }
+      backgroundColor: { type: string }
+      logoUrl: { type: uri }
+    result: QRCode
+    permission: link:create
+
+  # Validation
+  ValidateLink:
+    description: Validate and safety-check a URL
+    parameters:
+      url: { type: uri, required: true }
+      checkSafety: { type: boolean, default: true }
+      followRedirects: { type: boolean, default: true }
+    result: LinkValidation
+    permission: link:read
+
+  # Analytics
+  RecordClick:
+    description: Record a link click event
+    parameters:
+      linkId: { type: uuid, required: true }
+      visitorId: { type: string }
+      deviceInfo: { type: object }
+      location: { type: object }
+      referrer: { type: uri }
+      utmParams: { type: object }
+    result: LinkClick
+    permission: link:track
+
+  GetLinkAnalytics:
+    description: Get analytics for a link
+    parameters:
+      linkId: { type: uuid, required: true }
+      startDate: { type: date }
+      endDate: { type: date }
+      groupBy: { type: string, description: "hour, day, week, month" }
+    result: { type: object, properties: { clicks: integer, uniqueClicks: integer, timeline: array } }
+    permission: link:read
+
+  # Bundles
+  CreateLinkBundle:
+    description: Create a link bundle (linktree-style)
+    parameters:
+      name: { type: string, required: true }
+      slug: { type: string, required: true }
+      links: { type: array, items: object }
+      theme: { type: BundleTheme }
+    result: LinkBundle
+    permission: link:create
+
+  # Deep link verification
+  VerifyUniversalLinks:
+    description: Verify iOS Universal Links setup
+    parameters:
+      domain: { type: string, required: true }
+      bundleId: { type: string, required: true }
+    result: UniversalLink
+    permission: link:admin
+
+  VerifyAndroidAppLinks:
+    description: Verify Android App Links setup
+    parameters:
+      domain: { type: string, required: true }
+      packageName: { type: string, required: true }
+    result: AndroidAppLink
+    permission: link:admin
+
+# ============================================
+# RELATIONSHIPS
+# ============================================
+
+relationships:
+
+  - type: one_to_many
+    from: Link
+    to: LinkClick
+    foreign_key: linkId
+    description: Link has many click events
+
+  - type: one_to_many
+    from: Link
+    to: QRCode
+    foreign_key: linkId
+    description: Link can have multiple QR codes
+
+  - type: one_to_many
+    from: Link
+    to: LinkValidation
+    foreign_key: linkId
+    description: Link has validation history
+
+  - type: one_to_many
+    from: LinkBundle
+    to: BundleLink
+    foreign_key: bundleId
+    description: Bundle contains many links
+
+  - type: one_to_one
+    from: BundleLink
+    to: Link
+    foreign_key: linkId
+    description: Bundle link references a link
+
+  - type: one_to_many
+    from: LinkClick
+    to: LinkAttribution
+    foreign_key: clickId
+    description: Click can have attribution events

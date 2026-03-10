@@ -1,0 +1,455 @@
+# Validation Plan Template
+# ESLint-inspired rule configuration with severity + preferences
+# Version: 1.0.0
+
+version: "1.0.0"
+domain: steering
+description: |
+  Validation rules following linter patterns (ESLint, Prettier, etc.)
+  - Severity: off (0), warn (1), error (2)
+  - Rules can have options/configuration
+  - Extends/overrides for composition
+  - Type-specific and context-specific overrides
+
+# =============================================================================
+# Severity Model (ESLint-style)
+# =============================================================================
+
+severity:
+  levels:
+    off: 0      # Disable rule
+    warn: 1     # Warning - doesn't fail build
+    error: 2   # Error - fails build/validation
+
+  aliases:
+    "0": off
+    "1": warn
+    "2": error
+    false: off
+    true: error
+
+# =============================================================================
+# Rule Configuration Model
+# =============================================================================
+
+ruleConfig:
+  description: |
+    Rules can be configured in multiple formats (like ESLint):
+    - "rule-name": "error"                    # Simple severity
+    - "rule-name": ["error", { options }]     # Severity + options
+    - "rule-name": { severity: "error", ... } # Full config object
+
+  schema:
+    severity:
+      type: "off" | "warn" | "error" | 0 | 1 | 2
+      required: true
+    options:
+      type: object
+      description: Rule-specific configuration
+    preference:
+      type: PreferenceSpec
+      description: Numeric preference with overrides
+
+# =============================================================================
+# Preference Overrides (Multi-dimensional)
+# =============================================================================
+
+preferenceOverrides:
+  description: |
+    Preferences can be overridden by multiple dimensions:
+    1. Context (poc, production, internal)
+    2. Artifact type (site, microsite, api, cli, etc.)
+    3. Language (typescript, python, etc.)
+    4. Custom tags
+
+  example:
+    framework-nextjs:
+      base: 70  # Default: prefer Next.js
+      overrides:
+        # Context overrides
+        byContext:
+          poc: 60
+          production: 85
+          internal: 70
+        # Artifact type overrides
+        byType:
+          site: 80        # Prefer for full sites
+          microsite: 40   # Avoid for microsites → use Vite
+          api: 30         # Avoid for pure APIs → use FastAPI
+          dashboard: 75
+        # Language overrides
+        byLanguage:
+          typescript: 80
+          python: 20      # Python projects → FastAPI, not Next.js
+
+    framework-vite:
+      base: 60
+      overrides:
+        byContext:
+          poc: 80         # Prefer for POC (fast iteration)
+          production: 50
+          internal: 70
+        byType:
+          site: 50
+          microsite: 90   # Strongly prefer for microsites
+          dashboard: 80   # Good for dashboards
+          api: 20         # Not for APIs
+
+    framework-fastapi:
+      base: 50
+      overrides:
+        byContext:
+          poc: 40
+          production: 70
+          internal: 60
+        byType:
+          site: 30        # Not for sites
+          microsite: 30
+          api: 95         # Strongly prefer for APIs
+          ml-service: 95  # ML/AI workloads
+        byLanguage:
+          python: 90
+          typescript: 10
+
+# =============================================================================
+# Validation Rules (Linter-style)
+# =============================================================================
+
+rules:
+  # ==========================================================================
+  # Type Safety Rules
+  # ==========================================================================
+
+  "type/no-any":
+    description: "Disallow 'any' type in TypeScript"
+    severity: error
+    preference:
+      base: 90
+      overrides:
+        byContext:
+          poc: 70         # Relaxed for POC
+          production: 100  # Strict for production
+    options:
+      allowExplicit: false
+      fixWith: "unknown"
+    fixable: true
+
+  "type/use-domain-models":
+    description: "Require types from shared/semantic/domains/"
+    severity: error
+    preference:
+      base: 85
+      overrides:
+        byContext:
+          poc: 60
+          production: 95
+    options:
+      registry: "shared/semantic/domains/"
+      allowLocal: false
+      checkImports: true
+
+  "type/pydantic-models":
+    description: "Require Pydantic BaseModel for Python models"
+    severity: error
+    preference:
+      base: 90
+    options:
+      baseClass: "BaseModel"
+      requireValidators: true
+      languageFilter: ["python"]
+
+  # ==========================================================================
+  # Component Rules
+  # ==========================================================================
+
+  "component/check-registry":
+    description: "Check shared registry before creating components"
+    severity: warn
+    preference:
+      base: 80
+      overrides:
+        byContext:
+          poc: 50         # Relaxed for POC
+          production: 95
+    options:
+      registries:
+        - "shared/ui-components/"
+        - "shared/semantic/domains/"
+      promptIfNotFound: true
+      requireApproval: true
+
+  "component/storybook-required":
+    description: "Shared components must have Storybook stories"
+    severity: error
+    preference:
+      base: 85
+      overrides:
+        byContext:
+          poc: 40         # Optional for POC
+          production: 95
+        byType:
+          microsite: 60
+          site: 90
+    options:
+      requiredStories: ["Default", "Variants"]
+      skipPattern: "*.internal.tsx"
+
+  "component/shadcn-base":
+    description: "Use shadcn/ui as base component library"
+    severity: warn
+    preference:
+      base: 75
+    options:
+      allowExtensions: true
+      customTheme: true
+
+  # ==========================================================================
+  # Security Rules
+  # ==========================================================================
+
+  "security/no-secrets-in-code":
+    description: "No hardcoded secrets in source code"
+    severity: error
+    preference:
+      base: 100  # Always enforced
+    options:
+      patterns:
+        - "password\\s*=\\s*['\"][^'\"]+['\"]"
+        - "api[_-]?key\\s*=\\s*['\"][^'\"]+['\"]"
+        - "secret\\s*=\\s*['\"][^'\"]+['\"]"
+      allowEnvReferences: true
+
+  "security/auth-required":
+    description: "Protected routes must have authentication"
+    severity: error
+    preference:
+      base: 90
+      overrides:
+        byContext:
+          poc: 50         # Relaxed for POC
+          production: 100
+    options:
+      protectedPaths: ["/api/*", "/admin/*", "/dashboard/*"]
+      publicPaths: ["/", "/login", "/public/*"]
+
+  # ==========================================================================
+  # Publishing Rules
+  # ==========================================================================
+
+  "publish/offer-s3":
+    description: "Offer S3 publishing for publishable assets"
+    severity: warn
+    preference:
+      base: 70
+      overrides:
+        byContext:
+          poc: 85         # Encourage for POC
+          production: 50  # Production uses CI/CD
+    options:
+      fileTypes: ["html", "pdf", "svg", "zip", "mp3", "mp4"]
+      promptMessage: "Publish to S3? [1] Public [2] Temp [3] Private [4] Skip"
+
+  # ==========================================================================
+  # Framework Rules
+  # ==========================================================================
+
+  "framework/selection":
+    description: "Framework selection based on needs"
+    severity: warn
+    preference:
+      base: 50  # Neutral - determined by needs
+    options:
+      askQuestions:
+        - "Need SSR/SEO?"
+        - "Need API endpoints?"
+        - "Complex ML/data processing?"
+      defaults:
+        site: "nextjs"
+        microsite: "vite"
+        api: "fastapi"
+        dashboard: "vite"
+
+  # ==========================================================================
+  # Testing Rules
+  # ==========================================================================
+
+  "testing/coverage-threshold":
+    description: "Minimum test coverage"
+    severity: warn
+    preference:
+      base: 60
+      overrides:
+        byContext:
+          poc: 0          # No coverage for POC
+          production: 80
+          internal: 50
+    options:
+      thresholds:
+        poc: 0
+        production: 80
+        internal: 50
+      types: ["unit", "integration"]
+
+  "testing/e2e-required":
+    description: "E2E tests required for UI applications"
+    severity: warn
+    preference:
+      base: 50
+      overrides:
+        byContext:
+          poc: 0
+          production: 90
+        byType:
+          site: 80
+          microsite: 50
+          api: 30
+    options:
+      framework: "playwright"
+      minScenarios: 5
+
+# =============================================================================
+# Rule Sets (extends/presets)
+# =============================================================================
+
+extends:
+  "steering:recommended":
+    description: "Recommended rules for most projects"
+    rules:
+      "type/no-any": error
+      "type/use-domain-models": error
+      "component/check-registry": warn
+      "security/no-secrets-in-code": error
+      "publish/offer-s3": warn
+
+  "steering:poc":
+    description: "Relaxed rules for POC/prototypes"
+    extends: "steering:recommended"
+    rules:
+      "type/no-any": warn
+      "type/use-domain-models": warn
+      "component/storybook-required": off
+      "testing/coverage-threshold": off
+      "testing/e2e-required": off
+
+  "steering:production":
+    description: "Strict rules for production"
+    extends: "steering:recommended"
+    rules:
+      "type/no-any": error
+      "type/use-domain-models": error
+      "component/storybook-required": error
+      "security/auth-required": error
+      "testing/coverage-threshold": error
+      "testing/e2e-required": error
+
+  "steering:internal":
+    description: "Moderate rules for internal tools"
+    extends: "steering:recommended"
+    rules:
+      "component/storybook-required": warn
+      "testing/coverage-threshold": warn
+      "testing/e2e-required": off
+
+# =============================================================================
+# Override Cascading (like ESLint overrides)
+# =============================================================================
+
+overrides:
+  description: |
+    Override rules for specific patterns/contexts.
+    Applied in order, later overrides win.
+
+  example:
+    - files: ["*.test.ts", "*.spec.ts"]
+      rules:
+        "type/no-any": off
+        "type/use-domain-models": warn
+
+    - files: ["prototypes/**"]
+      context: poc
+      rules:
+        "type/no-any": warn
+        "component/storybook-required": off
+
+    - artifactType: microsite
+      rules:
+        "framework/selection":
+          severity: warn
+          options:
+            default: "vite"  # Override: Vite for microsites
+
+    - artifactType: api
+      rules:
+        "framework/selection":
+          severity: warn
+          options:
+            default: "fastapi"
+
+# =============================================================================
+# Validation Output
+# =============================================================================
+
+output:
+  format: "stylish"  # Like ESLint output
+  options:
+    - "json"
+    - "stylish"
+    - "compact"
+    - "html"
+
+  schema:
+    filePath: string
+    messages:
+      - ruleId: string
+        severity: 0 | 1 | 2
+        message: string
+        line: number
+        column: number
+        fix: object | null
+    errorCount: number
+    warningCount: number
+    fixableErrorCount: number
+    fixableWarningCount: number
+
+# =============================================================================
+# Example Validation Run
+# =============================================================================
+
+example:
+  input:
+    context: "poc"
+    artifactType: "microsite"
+    files:
+      - "src/components/CatCard.tsx"
+      - "src/types/Cat.ts"
+
+  ruleResolution:
+    "framework/selection":
+      basePreference: 50
+      contextOverride: null  # POC doesn't change it
+      typeOverride: "vite"   # Microsite → Vite
+      finalChoice: "vite"
+
+    "type/no-any":
+      baseSeverity: error
+      contextOverride: warn  # POC → relaxed
+      finalSeverity: warn
+
+    "component/storybook-required":
+      baseSeverity: error
+      contextOverride: off   # POC → disabled
+      finalSeverity: off
+
+  output:
+    errorCount: 0
+    warningCount: 2
+    messages:
+      - ruleId: "type/use-domain-models"
+        severity: 1
+        message: "Cat type should be imported from shared/semantic/domains/"
+        file: "src/types/Cat.ts"
+        line: 5
+        fix:
+          action: "replace-import"
+          from: "interface Cat {"
+          to: "import { Cat } from '@domains/core'"

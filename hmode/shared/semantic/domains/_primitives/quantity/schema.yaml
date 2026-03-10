@@ -1,0 +1,289 @@
+# Primitive: Quantity
+# Measurable amounts - how much of something
+# Physics: Observable (measurable property of a system)
+# Philosophy: Quantity (Aristotelian category)
+# Biology: Fitness metrics (reproductive success)
+# Mathematics: Numbers, units, dimensions
+
+domain:
+  name: primitive-quantity
+  version: "1.0.0"
+  description: Quantities and measurements - how much of something
+  layer: primitive
+  dependencies: []
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  # ============================================
+  # QUANTITY FUNDAMENTALS
+  # ============================================
+
+  Quantity:
+    description: A measurable amount of something
+    properties:
+      value: { type: number, required: true }
+      unit: { type: Unit, required: true }
+      precision: { type: integer, description: "Decimal places of precision" }
+      uncertainty: { type: number, description: "Measurement uncertainty" }
+    meta:
+      physics: "Observable - measurable property"
+      philosophy: "Aristotelian quantity - how much"
+      mathematics: "Magnitude with dimension"
+
+  # ============================================
+  # UNITS
+  # ============================================
+
+  Unit:
+    description: Standard of measurement
+    properties:
+      symbol: { type: string, required: true }
+      name: { type: string, required: true }
+      dimension: { type: Dimension }
+      system: { type: UnitSystem }
+      baseUnit: { type: string, description: "Symbol of base SI unit" }
+      toBaseMultiplier: { type: number, description: "Multiply by this to get base unit" }
+    examples:
+      - "kg (kilogram) - mass"
+      - "m (meter) - length"
+      - "s (second) - time"
+
+  Dimension:
+    description: Physical dimension (what kind of quantity)
+    properties:
+      type: { type: DimensionType, required: true }
+      exponents: { type: DimensionExponents, description: "For derived dimensions" }
+    meta:
+      physics: "SI base dimensions: L, M, T, I, Θ, N, J"
+
+  DimensionExponents:
+    description: Exponents for each base dimension (for derived units)
+    properties:
+      length: { type: integer, default: 0 }      # L
+      mass: { type: integer, default: 0 }        # M
+      time: { type: integer, default: 0 }        # T
+      current: { type: integer, default: 0 }     # I
+      temperature: { type: integer, default: 0 } # Θ
+      amount: { type: integer, default: 0 }      # N
+      luminosity: { type: integer, default: 0 }  # J
+    examples:
+      - "Velocity: L^1 T^-1 (m/s)"
+      - "Force: M^1 L^1 T^-2 (Newton)"
+      - "Energy: M^1 L^2 T^-2 (Joule)"
+
+  # ============================================
+  # QUANTITY TYPES
+  # ============================================
+
+  ScalarQuantity:
+    extends: Quantity
+    description: Quantity with magnitude only
+    examples:
+      - "Temperature"
+      - "Mass"
+      - "Time duration"
+
+  VectorQuantity:
+    extends: Quantity
+    description: Quantity with magnitude and direction
+    properties:
+      direction: { type: Direction }
+      components: { type: array, items: number }
+    examples:
+      - "Velocity"
+      - "Force"
+      - "Position"
+
+  Direction:
+    description: Direction in space
+    properties:
+      type: { type: DirectionType }
+      angle: { type: number }
+      referenceFrame: { type: string }
+
+  # ============================================
+  # RATIOS AND COMPARISONS
+  # ============================================
+
+  Ratio:
+    description: Relationship between two quantities
+    properties:
+      numerator: { type: Quantity, required: true }
+      denominator: { type: Quantity, required: true }
+      dimensionless: { type: boolean, description: "True if units cancel" }
+    examples:
+      - "Speed: distance/time"
+      - "Efficiency: output/input"
+      - "Percentage: part/whole × 100"
+
+  Percentage:
+    extends: Ratio
+    description: Ratio expressed as parts per hundred
+    properties:
+      value: { type: number, required: true }
+    constraints:
+      - "Typically 0-100 but can exceed for growth rates"
+
+  Rate:
+    extends: Ratio
+    description: Quantity per unit time
+    properties:
+      quantity: { type: Quantity, required: true }
+      timePeriod: { type: string, required: true }
+    examples:
+      - "Revenue per month"
+      - "Requests per second"
+      - "Heart rate (beats per minute)"
+
+  # ============================================
+  # RANGES AND BOUNDS
+  # ============================================
+
+  Range:
+    description: Interval between two values
+    properties:
+      min: { type: number }
+      max: { type: number }
+      unit: { type: Unit }
+      inclusive: { type: RangeInclusive, default: both }
+    meta:
+      mathematics: "Interval [a, b] or (a, b)"
+
+  Bound:
+    description: Single limit on a quantity
+    properties:
+      value: { type: number, required: true }
+      type: { type: BoundType, required: true }
+      inclusive: { type: boolean, default: true }
+
+  Tolerance:
+    description: Acceptable deviation from target
+    properties:
+      target: { type: number, required: true }
+      plusTolerance: { type: number }
+      minusTolerance: { type: number }
+      unit: { type: Unit }
+
+  # ============================================
+  # AGGREGATIONS
+  # ============================================
+
+  Aggregate:
+    description: Summary statistic of multiple quantities
+    properties:
+      type: { type: AggregationType, required: true }
+      value: { type: number, required: true }
+      unit: { type: Unit }
+      sampleSize: { type: integer }
+      samplePeriod: { type: string }
+
+  Statistics:
+    description: Full statistical summary
+    properties:
+      count: { type: integer }
+      sum: { type: number }
+      mean: { type: number }
+      median: { type: number }
+      mode: { type: number }
+      min: { type: number }
+      max: { type: number }
+      stdDev: { type: number }
+      variance: { type: number }
+      percentiles: { type: object }
+
+  # ============================================
+  # CONVERSIONS
+  # ============================================
+
+  Conversion:
+    description: Rule for converting between units
+    properties:
+      fromUnit: { type: string, required: true }
+      toUnit: { type: string, required: true }
+      multiplier: { type: number, required: true }
+      offset: { type: number, default: 0, description: "For temperature conversions" }
+      formula: { type: string, description: "For complex conversions" }
+    examples:
+      - "km to miles: × 0.621371"
+      - "°C to °F: × 9/5 + 32"
+
+enums:
+
+  DimensionType:
+    description: SI base dimensions
+    values:
+      - length          # L (meter)
+      - mass            # M (kilogram)
+      - time            # T (second)
+      - electric_current # I (ampere)
+      - temperature     # Θ (kelvin)
+      - amount          # N (mole)
+      - luminosity      # J (candela)
+      - dimensionless   # Pure number
+
+  UnitSystem:
+    description: System of units
+    values:
+      - si              # International System
+      - imperial        # British Imperial
+      - us_customary    # US Customary
+      - cgs             # Centimeter-Gram-Second
+      - natural         # Natural units (physics)
+      - custom          # Domain-specific
+
+  DirectionType:
+    description: How direction is specified
+    values:
+      - angle           # Single angle
+      - vector          # Component vector
+      - compass         # N, NE, E, SE, etc.
+      - relative        # Left, right, up, down
+
+  RangeInclusive:
+    description: Which bounds are included
+    values:
+      - both            # [a, b] - closed interval
+      - neither         # (a, b) - open interval
+      - min_only        # [a, b) - half-open
+      - max_only        # (a, b] - half-open
+
+  BoundType:
+    description: Type of bound
+    values:
+      - upper           # Maximum allowed
+      - lower           # Minimum allowed
+
+  AggregationType:
+    description: Type of aggregation
+    values:
+      - sum
+      - count
+      - average
+      - min
+      - max
+      - median
+      - mode
+      - std_dev
+      - percentile
+      - first
+      - last
+
+meta:
+  theoretical_basis:
+    physics: "Measurement theory, dimensional analysis"
+    philosophy: "Aristotelian category of quantity"
+    mathematics: "Real numbers, measure theory"
+
+  patterns:
+    - "Unit of Measure pattern"
+    - "Value Object pattern (DDD)"
+    - "Dimensional analysis"
+
+  composition_role: "How much of something"
+
+  related_primitives:
+    - resource: "Resources have quantities"
+    - time: "Time is a quantity"
+    - space: "Space involves quantity"

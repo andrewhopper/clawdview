@@ -1,0 +1,347 @@
+@prefix health: <http://hopperlabs.ai/ontology/health#> .
+@prefix action: <http://hopperlabs.ai/ontology/action#> .
+@prefix schema: <http://schema.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# ============================================
+# Health Domain Ontology
+# Canonical model for health/fitness entities and actions
+# Use case: Generate consistent health apps across mobile, web, wearables
+# ============================================
+
+# ----------------
+# SEMANTIC LAYER: Entities (What Exists)
+# ----------------
+
+health:Workout a owl:Class ;
+    rdfs:label "Workout" ;
+    rdfs:comment "Physical exercise session" .
+
+health:HealthData a owl:Class ;
+    rdfs:label "Health Data" ;
+    rdfs:comment "General health measurement" .
+
+health:HeartRate a owl:Class ;
+    rdfs:subClassOf health:HealthData ;
+    rdfs:label "Heart Rate" ;
+    rdfs:comment "Heart rate measurement in beats per minute" .
+
+health:Activity a owl:Class ;
+    rdfs:label "Activity" ;
+    rdfs:comment "Type of physical activity" .
+
+health:ActivityType a owl:Class ;
+    rdfs:label "Activity Type" ;
+    owl:oneOf (health:Running health:Cycling health:Swimming health:Strength health:Yoga health:Walking) .
+
+health:Running a health:ActivityType ;
+    rdfs:label "Running" .
+
+health:Cycling a health:ActivityType ;
+    rdfs:label "Cycling" .
+
+health:Swimming a health:ActivityType ;
+    rdfs:label "Swimming" .
+
+health:Strength a health:ActivityType ;
+    rdfs:label "Strength Training" .
+
+health:Yoga a health:ActivityType ;
+    rdfs:label "Yoga" .
+
+health:Walking a health:ActivityType ;
+    rdfs:label "Walking" .
+
+# ----------------
+# Properties
+# ----------------
+
+health:activityType a owl:ObjectProperty ;
+    rdfs:domain health:Workout ;
+    rdfs:range health:ActivityType ;
+    rdfs:label "Activity Type" ;
+    rdfs:comment "Type of workout activity" .
+
+health:duration a owl:DatatypeProperty ;
+    rdfs:domain health:Workout ;
+    rdfs:range xsd:duration ;
+    rdfs:label "Duration" ;
+    rdfs:comment "Length of workout in ISO 8601 duration format" .
+
+health:caloriesBurned a owl:DatatypeProperty ;
+    rdfs:domain health:Workout ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Calories Burned" ;
+    rdfs:comment "Estimated calories burned during workout" .
+
+health:distance a owl:DatatypeProperty ;
+    rdfs:domain health:Workout ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Distance" ;
+    rdfs:comment "Distance covered in kilometers" .
+
+health:averageHeartRate a owl:DatatypeProperty ;
+    rdfs:domain health:Workout ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Average Heart Rate" ;
+    rdfs:comment "Average heart rate during workout in BPM" .
+
+health:maxHeartRate a owl:DatatypeProperty ;
+    rdfs:domain health:Workout ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Max Heart Rate" ;
+    rdfs:comment "Maximum heart rate during workout in BPM" .
+
+health:startedAt a owl:DatatypeProperty ;
+    rdfs:domain health:Workout ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Started At" ;
+    rdfs:comment "Timestamp when workout started" .
+
+health:completedAt a owl:DatatypeProperty ;
+    rdfs:domain health:Workout ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Completed At" ;
+    rdfs:comment "Timestamp when workout completed" .
+
+health:user a owl:ObjectProperty ;
+    rdfs:domain health:Workout ;
+    rdfs:range schema:Person ;
+    rdfs:label "User" ;
+    rdfs:comment "Person who performed the workout" .
+
+# ----------------
+# SHACL Constraints
+# ----------------
+
+health:WorkoutShape a sh:NodeShape ;
+    sh:targetClass health:Workout ;
+    sh:property [
+        sh:path health:activityType ;
+        sh:class health:ActivityType ;
+        sh:minCount 1 ;
+        sh:message "Activity type is required"
+    ] ;
+    sh:property [
+        sh:path health:duration ;
+        sh:datatype xsd:duration ;
+        sh:minInclusive "PT1M"^^xsd:duration ; # Minimum 1 minute
+        sh:message "Workout duration must be at least 1 minute"
+    ] ;
+    sh:property [
+        sh:path health:caloriesBurned ;
+        sh:datatype xsd:integer ;
+        sh:minInclusive 0 ;
+        sh:message "Calories burned must be non-negative"
+    ] ;
+    sh:property [
+        sh:path health:averageHeartRate ;
+        sh:datatype xsd:integer ;
+        sh:minInclusive 30 ;
+        sh:maxInclusive 250 ;
+        sh:message "Average heart rate must be between 30-250 BPM"
+    ] .
+
+# ----------------
+# KINETIC LAYER: Actions
+# ----------------
+
+health:LogWorkoutAction a action:CreateAction ;
+    rdfs:label "Log Workout" ;
+    rdfs:comment "Record a completed workout session" ;
+    action:operatesOn health:Workout ;
+    action:requiresPermission "health:write" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Creates workout record, updates user statistics, calculates recovery time" ;
+    action:errorConditions "INVALID_DURATION, INVALID_HEART_RATE, USER_NOT_FOUND" .
+
+health:LogWorkoutAction action:requires [
+    action:parameterName "activityType" ;
+    action:parameterType "ActivityType" ;
+    action:isRequired true ;
+    rdfs:comment "Type of workout (Running, Cycling, etc.)"
+] , [
+    action:parameterName "duration" ;
+    action:parameterType "Duration" ;
+    action:isRequired true ;
+    rdfs:comment "Length of workout (e.g., 'PT30M' for 30 minutes)"
+] , [
+    action:parameterName "caloriesBurned" ;
+    action:parameterType "number" ;
+    action:isRequired false ;
+    rdfs:comment "Estimated calories burned"
+] , [
+    action:parameterName "distance" ;
+    action:parameterType "number" ;
+    action:isRequired false ;
+    rdfs:comment "Distance in kilometers (for cardio activities)"
+] , [
+    action:parameterName "averageHeartRate" ;
+    action:parameterType "number" ;
+    action:isRequired false ;
+    rdfs:comment "Average heart rate in BPM"
+] .
+
+health:LogWorkoutAction action:produces [
+    action:resultType "Workout" ;
+    rdfs:comment "Created workout record with calculated metrics"
+] .
+
+# ----------------
+
+health:TrackHeartRateAction a action:CreateAction ;
+    rdfs:label "Track Heart Rate" ;
+    rdfs:comment "Record heart rate measurement" ;
+    action:operatesOn health:HeartRate ;
+    action:requiresPermission "health:write" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Creates heart rate data point, triggers alerts if abnormal" ;
+    action:errorConditions "INVALID_HEART_RATE, SENSOR_ERROR" .
+
+health:TrackHeartRateAction action:requires [
+    action:parameterName "bpm" ;
+    action:parameterType "number" ;
+    action:isRequired true ;
+    rdfs:comment "Heart rate in beats per minute"
+] , [
+    action:parameterName "timestamp" ;
+    action:parameterType "Date" ;
+    action:isRequired false ;
+    action:defaultValue "NOW()" ;
+    rdfs:comment "Measurement timestamp (defaults to current time)"
+] , [
+    action:parameterName "context" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "Context: resting, active, post-workout"
+] .
+
+health:TrackHeartRateAction action:produces [
+    action:resultType "HeartRate" ;
+    rdfs:comment "Created heart rate data point"
+] .
+
+# ----------------
+
+health:AnalyzeActivityAction a action:ReadAction ;
+    rdfs:label "Analyze Activity" ;
+    rdfs:comment "Analyze workout trends and provide insights" ;
+    action:operatesOn health:Workout ;
+    action:requiresPermission "health:read" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "None (read-only analysis)" ;
+    action:errorConditions "INSUFFICIENT_DATA, USER_NOT_FOUND" .
+
+health:AnalyzeActivityAction action:requires [
+    action:parameterName "userId" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "ID of user to analyze"
+] , [
+    action:parameterName "dateFrom" ;
+    action:parameterType "Date" ;
+    action:isRequired false ;
+    action:defaultValue "30_DAYS_AGO" ;
+    rdfs:comment "Start date for analysis period"
+] , [
+    action:parameterName "dateTo" ;
+    action:parameterType "Date" ;
+    action:isRequired false ;
+    action:defaultValue "TODAY" ;
+    rdfs:comment "End date for analysis period"
+] .
+
+health:AnalyzeActivityAction action:produces [
+    action:resultType "ActivityAnalysis" ;
+    rdfs:comment "Analysis report with trends, insights, recommendations"
+] .
+
+# ----------------
+
+health:CalculateRecoveryTimeAction a action:ReadAction ;
+    rdfs:label "Calculate Recovery Time" ;
+    rdfs:comment "Estimate recovery time needed based on workout intensity" ;
+    action:operatesOn health:Workout ;
+    action:requiresPermission "health:read" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "None (calculation only)" ;
+    action:errorConditions "INVALID_WORKOUT_DATA" .
+
+health:CalculateRecoveryTimeAction action:requires [
+    action:parameterName "workoutId" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "ID of completed workout"
+] .
+
+health:CalculateRecoveryTimeAction action:produces [
+    action:resultType "RecoveryEstimate" ;
+    rdfs:comment "Estimated recovery time in hours, next workout recommendation"
+] .
+
+# ----------------
+# Workflow: Post-Workout Processing
+# ----------------
+
+health:PostWorkoutWorkflow a action:ActionSequence ;
+    rdfs:label "Post-Workout Workflow" ;
+    rdfs:comment "Automated processing after workout completion" ;
+    action:hasStep health:LogWorkoutAction ,
+                   health:CalculateRecoveryTimeAction ,
+                   health:AnalyzeActivityAction ;
+    rdfs:comment "Log workout → Calculate recovery → Analyze trends → Provide insights" .
+
+# ----------------
+# Cross-Domain Integration Example
+# ----------------
+
+health:EmailWorkoutSummaryAction a action:CreateAction ;
+    rdfs:label "Email Workout Summary" ;
+    rdfs:comment "Send workout summary via email (integrates health + email domains)" ;
+    action:operatesOn health:Workout ;
+    action:requiresPermission "health:read, email:send" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Sends email with workout summary" ;
+    rdfs:comment """
+Example of cross-domain action:
+- Queries health:Workout entity
+- Formats as email content
+- Uses email:SendEmailAction to send
+
+This demonstrates how apps can integrate Email + Health domains seamlessly
+because both are defined in shared semantic layer.
+""" .
+
+# ----------------
+# LLM Agent Integration
+# ----------------
+
+health:HealthDomainCapability a action:AgentCapability ;
+    rdfs:label "Health Domain Capability" ;
+    action:naturalLanguageDescription """
+You can perform the following health/fitness operations:
+- Log workouts with activity type, duration, calories, distance, heart rate
+- Track heart rate measurements (resting, active, post-workout)
+- Analyze activity trends over time periods
+- Calculate recovery time after workouts
+- Generate insights and recommendations
+
+All operations require health data permissions (health:read, health:write).
+""" ;
+    action:exampleUsage """
+Example 1: Log a run
+Input: { activityType: "Running", duration: "PT45M", distance: 7.5, averageHeartRate: 145 }
+Output: { id: "workout-789", caloriesBurned: 520, recoveryTime: "18 hours" }
+
+Example 2: Analyze last month
+Input: { userId: "user-123", dateFrom: "2025-10-18", dateTo: "2025-11-18" }
+Output: { totalWorkouts: 24, avgDuration: "PT38M", trend: "improving", insight: "Consistency excellent" }
+
+Example 3: Calculate recovery
+Input: { workoutId: "workout-789" }
+Output: { recoveryTime: "PT18H", nextWorkoutRecommended: "2025-11-19T12:00:00Z", intensity: "light" }
+""" .

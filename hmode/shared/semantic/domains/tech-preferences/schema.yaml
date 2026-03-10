@@ -1,0 +1,474 @@
+# Tech Preferences Domain Model
+# Ranked technology choices with use cases and documentation
+# Version: 1.0.0
+# Last Updated: 2025-11-24
+
+version: "1.0.0"
+domain: tech-preferences
+description: |
+  Domain model for technology stack preferences - ranked choices with use cases,
+  documentation links, and rationale. Maps to .guardrails/tech-preferences/*.json
+
+# =============================================================================
+# Enums
+# =============================================================================
+
+enums:
+  TechCategory:
+    description: High-level technology categories
+    values:
+      - frontend           # Frontend frameworks, UI, styling
+      - backend            # Backend frameworks, databases, ORMs
+      - ai_ml              # AI/ML services (ASR, TTS, OCR, LLM, embeddings)
+      - testing            # Testing frameworks and tools
+      - infrastructure     # Deployment, monitoring, CI/CD, caching
+      - services           # Auth, email, payments, storage
+      - data_viz           # Data visualization and diagramming
+      - api_docs           # API documentation tools
+      - data_engineering   # Data transformation, ETL, warehouses
+      - documentation      # Documentation platforms and tools
+
+  FrontendSubcategory:
+    description: Frontend technology subcategories
+    values:
+      - frontend_frameworks
+      - ui_component_libraries
+      - real_time_collaboration
+      - styling
+
+  BackendSubcategory:
+    description: Backend technology subcategories
+    values:
+      - backend_frameworks
+      - databases
+      - orm_query_builders
+
+  AIMLSubcategory:
+    description: AI/ML technology subcategories
+    values:
+      - asr_speech_recognition
+      - tts_text_to_speech
+      - ocr_document_intelligence
+      - llm_inference
+      - image_generation
+      - vector_embeddings
+      - vector_databases
+      - llm_orchestration
+
+  InfraSubcategory:
+    description: Infrastructure technology subcategories
+    values:
+      - deployment_frontend
+      - deployment_backend
+      - monitoring
+      - ci_cd
+      - caching
+      - search
+      - task_queues
+      - infrastructure_as_code
+      - workflow_orchestration
+
+  ServicesSubcategory:
+    description: Services technology subcategories
+    values:
+      - authentication
+      - email_sending
+      - email_templating
+      - payments
+      - storage
+      - analytics
+
+  PreferenceRank:
+    description: Preference ranking (1 = most preferred)
+    type: integer
+    min: 1
+    max: 10
+
+  PresetType:
+    description: Predefined preference presets
+    values:
+      - preferred_defaults  # Standard defaults
+      - aws_centric         # AWS-first choices
+      - cost_optimized      # Low-cost choices
+      - performance_first   # High-performance choices
+
+# =============================================================================
+# Core Entities
+# =============================================================================
+
+entities:
+  TechPreference:
+    description: A ranked technology preference with metadata
+    fields:
+      rank:
+        type: PreferenceRank
+        required: true
+        description: Preference ranking (1 = most preferred)
+      name:
+        type: string
+        required: true
+        description: Technology name
+      version:
+        type: string
+        description: Recommended version (e.g., "15.x", "latest")
+      rationale:
+        type: string
+        required: true
+        description: Why this technology is preferred
+      useCases:
+        type: list[string]
+        required: true
+        description: Appropriate use cases
+      docsUrl:
+        type: string
+        format: uri
+        description: Official documentation URL
+      examplesUrl:
+        type: string
+        format: uri
+        description: Examples or tutorials URL
+      constraints:
+        type: list[string]
+        description: When NOT to use this technology
+      alternatives:
+        type: list[string]
+        description: Alternative technologies for comparison
+      tags:
+        type: list[string]
+        description: Searchable tags
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  TechCategory:
+    description: A category of technology preferences
+    fields:
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      preferences:
+        type: list[TechPreference]
+        required: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  TechPreferencesFile:
+    description: A tech preferences JSON file structure
+    fields:
+      schema:
+        type: string
+        format: uri
+        description: JSON schema reference
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      version:
+        type: SemVer
+        required: true
+      lastUpdated:
+        type: date
+        required: true
+      categories:
+        type: map[string, TechCategory]
+        required: true
+
+  TechPreferencesIndex:
+    description: Master index of all tech preference files
+    fields:
+      schema:
+        type: string
+        format: uri
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      version:
+        type: SemVer
+        required: true
+      lastUpdated:
+        type: date
+        required: true
+      groups:
+        type: map[TechCategory, TechGroupEntry]
+        required: true
+
+  TechGroupEntry:
+    description: Index entry for a tech preferences group
+    fields:
+      file:
+        type: string
+        required: true
+        description: JSON filename
+      description:
+        type: string
+        required: true
+      categories:
+        type: list[string]
+        required: true
+        description: Subcategories in this file
+
+  TechPreset:
+    description: Predefined preference preset
+    fields:
+      name:
+        type: PresetType
+        required: true
+      description:
+        type: string
+        required: true
+      overrides:
+        type: map[string, string]
+        description: Category to preferred technology mappings
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+# =============================================================================
+# Supporting Types
+# =============================================================================
+
+types:
+  VersionSpec:
+    description: Version specification with constraints
+    fields:
+      recommended:
+        type: string
+        required: true
+        description: Recommended version
+      minimum:
+        type: string
+        description: Minimum supported version
+      maximum:
+        type: string
+        description: Maximum supported version
+      notes:
+        type: string
+        description: Version-specific notes
+
+  UseCaseMatch:
+    description: Use case matching criteria
+    fields:
+      keywords:
+        type: list[string]
+        description: Keywords that trigger this preference
+      projectTypes:
+        type: list[string]
+        description: Project types this applies to
+      contexts:
+        type: list[string]
+        description: Contexts where this applies (poc, production, internal)
+
+  TechComparison:
+    description: Comparison between technologies
+    fields:
+      technologies:
+        type: list[string]
+        required: true
+      criteria:
+        type: list[ComparisonCriterion]
+        required: true
+      recommendation:
+        type: string
+        description: Summary recommendation
+
+  ComparisonCriterion:
+    description: Single comparison criterion
+    fields:
+      name:
+        type: string
+        required: true
+      scores:
+        type: map[string, integer]
+        required: true
+        description: Technology name to score (1-10)
+      weight:
+        type: float
+        default: 1.0
+        description: Weight for this criterion
+
+# =============================================================================
+# Actions
+# =============================================================================
+
+actions:
+  GetPreference:
+    description: Get preferred technology for a category
+    input:
+      category:
+        type: TechCategory
+        required: true
+      subcategory:
+        type: string
+      context:
+        type: string
+        description: poc, production, or internal
+      useCase:
+        type: string
+        description: Specific use case
+    output:
+      preference:
+        type: TechPreference
+      alternatives:
+        type: list[TechPreference]
+
+  CompareOptions:
+    description: Compare technology options for a category
+    input:
+      category:
+        type: TechCategory
+        required: true
+      options:
+        type: list[string]
+      criteria:
+        type: list[string]
+    output:
+      comparison:
+        type: TechComparison
+
+  ApplyPreset:
+    description: Apply a preference preset
+    input:
+      preset:
+        type: PresetType
+        required: true
+    output:
+      overrides:
+        type: map[string, TechPreference]
+
+  ValidateStack:
+    description: Validate a technology stack against preferences
+    input:
+      stack:
+        type: map[string, string]
+        description: Category to technology mappings
+    output:
+      valid:
+        type: boolean
+      violations:
+        type: list[StackViolation]
+      recommendations:
+        type: list[string]
+
+  StackViolation:
+    description: Stack validation violation
+    fields:
+      category:
+        type: string
+      chosen:
+        type: string
+      preferred:
+        type: string
+      severity:
+        type: string
+        enum: [warning, error]
+      reason:
+        type: string
+
+# =============================================================================
+# Relationships
+# =============================================================================
+
+relationships:
+  - TechPreference belongsToCategory TechCategory
+  - TechPreference supersedes TechPreference
+  - TechPreset overrides TechPreference
+  - TechCategory containsSubcategory string
+
+# =============================================================================
+# Category Definitions
+# =============================================================================
+
+category_definitions:
+  frontend:
+    description: Frontend frameworks, UI libraries, and styling
+    file: frontend.json
+    subcategories:
+      frontend_frameworks:
+        description: JavaScript/TypeScript frontend frameworks
+        examples: [Next.js, Vite + React, Expo]
+      ui_component_libraries:
+        description: Pre-built UI component systems
+        examples: [shadcn/ui, Radix UI, Chakra UI, AWS Cloudscape, MUI]
+      real_time_collaboration:
+        description: Real-time collaborative editing and synchronization
+        examples: [Yjs, Liveblocks, Automerge]
+      styling:
+        description: CSS and styling solutions
+        examples: [Tailwind CSS, CSS Modules, vanilla-extract]
+
+  backend:
+    description: Backend frameworks, databases, and ORMs
+    file: backend.json
+    subcategories:
+      backend_frameworks:
+        description: Server-side frameworks
+        examples: [FastAPI, Next.js API Routes, Express]
+      databases:
+        description: Database engines
+        examples: [PostgreSQL, DynamoDB, SQLite, Aurora]
+      orm_query_builders:
+        description: Database abstraction layers
+        examples: [Prisma, SQLAlchemy, Drizzle]
+
+  ai_ml:
+    description: AI/ML services
+    file: ai-ml.json
+    subcategories:
+      asr_speech_recognition:
+        description: Speech-to-text services
+        examples: [AWS Transcribe, Deepgram, OpenAI Whisper]
+      tts_text_to_speech:
+        description: Text-to-speech services
+        examples: [ElevenLabs, AWS Polly, OpenAI TTS]
+      llm_inference:
+        description: Large language model inference
+        examples: [Claude, GPT-4, AWS Bedrock]
+      vector_databases:
+        description: Vector similarity search
+        examples: [Pinecone, pgvector, Qdrant]
+
+  infrastructure:
+    description: Deployment, monitoring, CI/CD
+    file: infrastructure.json
+    subcategories:
+      deployment_frontend:
+        description: Frontend hosting
+        examples: [Vercel, AWS Amplify, CloudFront + S3]
+      deployment_backend:
+        description: Backend hosting
+        examples: [AWS Lambda, ECS, EC2]
+      infrastructure_as_code:
+        description: IaC tools
+        examples: [AWS CDK, Terraform, Pulumi]
+      ci_cd:
+        description: CI/CD platforms
+        examples: [GitHub Actions, AWS CodePipeline]
+
+  testing:
+    description: Testing frameworks and tools
+    file: testing.json
+    subcategories:
+      testing_e2e:
+        description: End-to-end testing
+        examples: [Playwright, Cypress]
+      testing_unit:
+        description: Unit testing
+        examples: [Vitest, Jest, pytest]

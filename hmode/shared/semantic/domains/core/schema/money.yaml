@@ -1,0 +1,29 @@
+# Money & Currency
+
+entities:
+
+  Money:
+    description: Monetary amount with currency
+    properties:
+      amount:
+        type: decimal
+        required: true
+      currency:
+        type: string
+        required: true
+        pattern: "^[A-Z]{3}$"
+        description: ISO 4217 code (USD, EUR, etc.)
+
+  Currency:
+    description: ISO 4217 currency definition
+    properties:
+      code:
+        type: string
+        required: true
+        pattern: "^[A-Z]{3}$"
+      symbol:
+        type: string
+        description: Display symbol ($, €, £)
+      minorUnits:
+        type: integer
+        description: Decimal places (2 for USD, 0 for JPY)

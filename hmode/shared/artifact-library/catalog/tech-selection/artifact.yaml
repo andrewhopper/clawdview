@@ -1,0 +1,255 @@
+# Technology Selection Approval Document
+# Category: decision
+# Complexity: moderate
+
+id: tech-selection
+name: Technology Selection Approval
+version: "1.0.0"
+description: Structured evaluation and approval of technology choices for projects
+category: decision
+complexity: moderate
+created_at: "2025-12-10"
+updated_at: "2025-12-10"
+
+# -----------------------------------------
+# SDLC GATE ASSOCIATION
+# -----------------------------------------
+sdlc_gate:
+  phase: 5  # Selection phase
+  gate_name: Technology Preferences Gate
+  purpose: Document and approve technology stack decisions before implementation
+  approval_required: true
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: executive-summary
+      name: Executive Summary
+      description: Brief overview of the technology decision and recommendation
+      required: true
+      format: prose
+      word_limit: 150
+
+    - id: context
+      name: Context & Problem Statement
+      description: What problem are we solving? Why do we need this technology?
+      required: true
+      format: prose
+      word_limit: 200
+
+    - id: requirements
+      name: Requirements
+      description: Technical and business requirements the technology must meet
+      required: true
+      format: bullets
+      subsections:
+        - id: functional-reqs
+          name: Functional Requirements
+          format: bullets
+        - id: nonfunctional-reqs
+          name: Non-Functional Requirements
+          format: bullets
+        - id: constraints
+          name: Constraints
+          format: bullets
+
+    - id: options-evaluated
+      name: Options Evaluated
+      description: Technologies considered with brief descriptions
+      required: true
+      format: table
+      columns:
+        - Technology
+        - Description
+        - License
+        - Maturity
+
+    - id: evaluation-criteria
+      name: Evaluation Criteria
+      description: Weighted criteria for comparison
+      required: true
+      format: table
+      columns:
+        - Criterion
+        - Weight
+        - Description
+
+    - id: comparison-matrix
+      name: Comparison Matrix
+      description: Score each option against criteria (1-5 scale)
+      required: true
+      format: table
+      columns:
+        - Criterion
+        - Weight
+        - Option A
+        - Option B
+        - Option C
+
+    - id: recommendation
+      name: Recommendation
+      description: Recommended technology with justification
+      required: true
+      format: prose
+      word_limit: 200
+
+    - id: risks-mitigations
+      name: Risks & Mitigations
+      description: Potential risks and how to address them
+      required: true
+      format: table
+      columns:
+        - Risk
+        - Probability
+        - Impact
+        - Mitigation
+
+    - id: implementation-notes
+      name: Implementation Notes
+      description: Key considerations for implementation
+      required: false
+      format: bullets
+
+    - id: approval
+      name: Approval
+      description: Sign-off section
+      required: true
+      format: table
+      columns:
+        - Role
+        - Name
+        - Date
+        - Decision
+
+  required_inputs:
+    - name: technology_category
+      type: string
+      description: Category (e.g., database, framework, cloud service)
+      required: true
+    - name: project_context
+      type: text
+      description: Project background and requirements
+      required: true
+    - name: options
+      type: array
+      description: Technologies to evaluate
+      required: true
+      min_items: 2
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a senior solutions architect who evaluates technology choices for enterprise projects.
+
+    Your evaluation approach:
+    - Objective, evidence-based analysis
+    - Consider total cost of ownership, not just features
+    - Evaluate ecosystem maturity (community, docs, support)
+    - Assess team capabilities and learning curve
+    - Factor in operational complexity
+
+    Writing style:
+    - Lead with recommendation (pyramid principle)
+    - Quantify where possible
+    - Be direct about trade-offs
+    - Avoid vendor marketing language
+
+  task: |
+    Generate a Technology Selection Approval document for selecting a {{TECHNOLOGY_CATEGORY}}.
+
+    Project context:
+    {{PROJECT_CONTEXT}}
+
+    Options to evaluate:
+    {{OPTIONS}}
+
+    Structure the document with:
+    1. **Executive Summary** - Recommendation in 2-3 sentences
+    2. **Context & Problem Statement** - Why we need this
+    3. **Requirements** - Functional, non-functional, constraints
+    4. **Options Evaluated** - Table of candidates
+    5. **Evaluation Criteria** - Weighted scoring criteria
+    6. **Comparison Matrix** - Scores (1-5) for each option
+    7. **Recommendation** - Justified choice
+    8. **Risks & Mitigations** - What could go wrong
+    9. **Implementation Notes** - Key considerations
+    10. **Approval** - Sign-off table
+
+    Total length: 1000-2500 words.
+
+  tone: professional
+  reading_level: technical
+  density: standard
+
+# -----------------------------------------
+# VALIDATORS: Quality Checks
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 1000
+      max: 2500
+    severity: error
+    message: "Tech selection document must be 1000-2500 words"
+
+  - id: section-presence
+    name: Required Sections
+    type: section_presence
+    rule:
+      required:
+        - executive-summary
+        - context
+        - requirements
+        - options-evaluated
+        - evaluation-criteria
+        - comparison-matrix
+        - recommendation
+        - risks-mitigations
+        - approval
+    severity: error
+    message: "Missing required section"
+
+  - id: min-options
+    name: Minimum Options
+    type: custom
+    rule: "options_evaluated >= 2"
+    severity: error
+    message: "Must evaluate at least 2 options"
+
+  - id: has-scores
+    name: Contains Scores
+    type: regex
+    rule:
+      pattern: "[1-5]/5|\\b[1-5]\\b.*\\b[1-5]\\b"
+      should_match: true
+    severity: warning
+    message: "Comparison matrix should include numeric scores"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 1000
+  max_words: 2500
+  reading_level: technical
+  density: standard
+  output_formats:
+    - markdown
+    - docx
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - technology
+  - selection
+  - approval
+  - decision
+  - architecture
+  - sdlc-gate

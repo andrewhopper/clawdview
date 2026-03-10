@@ -1,0 +1,771 @@
+# Design Domain Model
+# Visual design system primitives for UI/UX prototypes
+# Sources: Figma API, Material Design, Tailwind CSS, Design Tokens W3C
+
+domain:
+  name: design
+  version: "1.0.0"
+  description: Visual design primitives - mockups, color schemes, typography, style guides, mood boards
+  dependencies: [core]
+  created_at: "2025-11-25"
+  updated_at: "2025-11-25"
+
+# ============================================
+# ENTITIES
+# ============================================
+
+entities:
+
+  # -----------------------------------------
+  # DESIGN SYSTEM (Top-level container)
+  # -----------------------------------------
+
+  DesignSystem:
+    description: Complete design system containing all design assets
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      version: { type: string, required: true, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      styleGuide: { type: StyleGuide }
+      colorSchemes: { type: array, items: ColorScheme }
+      typography: { type: Typography }
+      spacing: { type: SpacingScale }
+      breakpoints: { type: array, items: Breakpoint }
+      components: { type: array, items: Component }
+      iconSets: { type: array, items: IconSet }
+      themes: { type: array, items: Theme }
+      tokens: { type: array, items: DesignToken }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  # -----------------------------------------
+  # STYLE GUIDE
+  # -----------------------------------------
+
+  StyleGuide:
+    description: Comprehensive style guide document with design principles
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      principles: { type: array, items: DesignPrinciple }
+      voiceAndTone: { type: VoiceAndTone }
+      brandGuidelines: { type: BrandGuidelines }
+      accessibilityGuidelines: { type: AccessibilityGuidelines }
+      documentUrl: { type: uri, description: "Link to full style guide PDF/doc" }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  DesignPrinciple:
+    description: Core design principle or value
+    properties:
+      name: { type: string, required: true }
+      description: { type: string, required: true }
+      examples: { type: array, items: string }
+      doList: { type: array, items: string, description: "What to do" }
+      dontList: { type: array, items: string, description: "What to avoid" }
+
+  VoiceAndTone:
+    description: Brand voice and tone guidelines
+    properties:
+      voiceAttributes: { type: array, items: string, description: "e.g., Friendly, Professional, Bold" }
+      toneVariations: { type: array, items: ToneVariation }
+      writingGuidelines: { type: array, items: string }
+
+  ToneVariation:
+    description: Tone variation for different contexts
+    properties:
+      context: { type: string, required: true, description: "e.g., Error messages, Success, Onboarding" }
+      tone: { type: string, required: true }
+      examples: { type: array, items: string }
+
+  BrandGuidelines:
+    description: Brand identity guidelines
+    properties:
+      logoUsage: { type: LogoUsage }
+      brandColors: { type: array, items: BrandColor }
+      clearSpace: { type: string, description: "Minimum clear space around logo" }
+      prohibitedUses: { type: array, items: string }
+
+  LogoUsage:
+    description: Logo usage specifications
+    properties:
+      primaryLogo: { type: uri }
+      secondaryLogo: { type: uri }
+      favicon: { type: uri }
+      minWidth: { type: integer, description: "Minimum width in pixels" }
+      variations: { type: array, items: LogoVariation }
+
+  LogoVariation:
+    description: Logo variation for different contexts
+    properties:
+      name: { type: string, required: true }
+      useCase: { type: string }
+      imageUrl: { type: uri }
+      format: { type: LogoFormat }
+
+  BrandColor:
+    description: Official brand color with usage context
+    properties:
+      name: { type: string, required: true }
+      hex: { type: string, required: true, pattern: "^#[0-9A-Fa-f]{6}$" }
+      usage: { type: string, description: "When to use this color" }
+      isPrimary: { type: boolean, default: false }
+
+  AccessibilityGuidelines:
+    description: Accessibility standards and requirements
+    properties:
+      wcagLevel: { type: WCAGLevel, required: true }
+      colorContrastRatio: { type: decimal, description: "Minimum contrast ratio" }
+      focusIndicators: { type: string }
+      altTextGuidelines: { type: string }
+      keyboardNavigation: { type: string }
+
+  # -----------------------------------------
+  # MOOD BOARD
+  # -----------------------------------------
+
+  MoodBoard:
+    description: Visual inspiration board for design direction
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      purpose: { type: string, description: "What this mood board is exploring" }
+      images: { type: array, items: MoodBoardImage }
+      colorPalette: { type: array, items: Color }
+      keywords: { type: array, items: string, description: "Mood/feeling keywords" }
+      references: { type: array, items: DesignReference }
+      notes: { type: string }
+      status: { type: MoodBoardStatus }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  MoodBoardImage:
+    description: Image on a mood board with context
+    properties:
+      url: { type: uri, required: true }
+      caption: { type: string }
+      source: { type: string, description: "Where the image came from" }
+      aspectRatio: { type: string }
+      tags: { type: array, items: string }
+
+  DesignReference:
+    description: External design reference or inspiration
+    properties:
+      title: { type: string, required: true }
+      url: { type: uri }
+      type: { type: ReferenceType }
+      notes: { type: string }
+
+  # -----------------------------------------
+  # COLOR SCHEME
+  # -----------------------------------------
+
+  ColorScheme:
+    description: Complete color palette for a design system
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      type: { type: ColorSchemeType }
+      primary: { type: ColorScale, required: true }
+      secondary: { type: ColorScale }
+      accent: { type: ColorScale }
+      neutral: { type: ColorScale }
+      semantic: { type: SemanticColors }
+      surface: { type: SurfaceColors }
+      customScales: { type: array, items: ColorScale }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Color:
+    description: Single color definition
+    properties:
+      name: { type: string }
+      hex: { type: string, required: true, pattern: "^#[0-9A-Fa-f]{6}$" }
+      rgb: { type: RGBColor }
+      hsl: { type: HSLColor }
+      opacity: { type: decimal, min: 0, max: 1, default: 1 }
+
+  RGBColor:
+    description: RGB color values
+    properties:
+      r: { type: integer, min: 0, max: 255, required: true }
+      g: { type: integer, min: 0, max: 255, required: true }
+      b: { type: integer, min: 0, max: 255, required: true }
+
+  HSLColor:
+    description: HSL color values
+    properties:
+      h: { type: integer, min: 0, max: 360, required: true }
+      s: { type: integer, min: 0, max: 100, required: true }
+      l: { type: integer, min: 0, max: 100, required: true }
+
+  ColorScale:
+    description: Color with multiple shades (50-900 scale)
+    properties:
+      name: { type: string, required: true }
+      baseColor: { type: Color, required: true }
+      shades:
+        type: object
+        properties:
+          "50": { type: Color }
+          "100": { type: Color }
+          "200": { type: Color }
+          "300": { type: Color }
+          "400": { type: Color }
+          "500": { type: Color }
+          "600": { type: Color }
+          "700": { type: Color }
+          "800": { type: Color }
+          "900": { type: Color }
+          "950": { type: Color }
+
+  SemanticColors:
+    description: Colors with semantic meaning
+    properties:
+      success: { type: Color }
+      warning: { type: Color }
+      error: { type: Color }
+      info: { type: Color }
+      disabled: { type: Color }
+
+  SurfaceColors:
+    description: Background and surface colors
+    properties:
+      background: { type: Color }
+      surface: { type: Color }
+      surfaceVariant: { type: Color }
+      overlay: { type: Color }
+      border: { type: Color }
+
+  # -----------------------------------------
+  # TYPOGRAPHY / FONT FAMILY
+  # -----------------------------------------
+
+  FontFamily:
+    description: Font family definition with variants
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      category: { type: FontCategory, required: true }
+      fallbacks: { type: array, items: string, description: "Fallback font stack" }
+      weights: { type: array, items: FontWeight }
+      source: { type: FontSource }
+      licenseType: { type: FontLicense }
+      variants: { type: array, items: FontVariant }
+
+  FontVariant:
+    description: Specific font variant (weight + style combination)
+    properties:
+      weight: { type: integer, required: true }
+      style: { type: FontStyle, required: true }
+      url: { type: uri, description: "Font file URL" }
+      format: { type: FontFormat }
+
+  Typography:
+    description: Typography system with font scales
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      baseSize: { type: integer, default: 16, description: "Base font size in pixels" }
+      scaleRatio: { type: decimal, default: 1.25, description: "Type scale ratio" }
+      primaryFont: { type: FontFamily, required: true }
+      secondaryFont: { type: FontFamily }
+      monoFont: { type: FontFamily }
+      headings: { type: array, items: TypeStyle }
+      body: { type: array, items: TypeStyle }
+      utility: { type: array, items: TypeStyle }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  TypeStyle:
+    description: Specific typography style definition
+    properties:
+      name: { type: string, required: true, description: "e.g., h1, body-large, caption" }
+      fontFamily: { type: string }
+      fontSize: { type: string, required: true, description: "e.g., 2rem, 16px" }
+      fontWeight: { type: integer }
+      lineHeight: { type: decimal }
+      letterSpacing: { type: string }
+      textTransform: { type: TextTransform }
+      cssVariable: { type: string, description: "--typography-h1" }
+
+  # -----------------------------------------
+  # DESIGN TOKENS
+  # -----------------------------------------
+
+  DesignToken:
+    description: Design token (atomic design value)
+    properties:
+      name: { type: string, required: true }
+      value: { type: string, required: true }
+      type: { type: TokenType, required: true }
+      category: { type: TokenCategory }
+      description: { type: string }
+      cssVariable: { type: string, description: "--token-name" }
+      deprecated: { type: boolean, default: false }
+      alias: { type: string, description: "Reference to another token" }
+
+  TokenSet:
+    description: Collection of related design tokens
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      tokens: { type: array, items: DesignToken }
+      format: { type: TokenFormat }
+
+  # -----------------------------------------
+  # SPACING
+  # -----------------------------------------
+
+  SpacingScale:
+    description: Spacing system definition
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      baseUnit: { type: integer, default: 4, description: "Base unit in pixels" }
+      scale:
+        type: object
+        description: "Named spacing values (xs, sm, md, lg, xl, 2xl, etc.)"
+        additionalProperties: { type: string }
+      values: { type: array, items: SpacingValue }
+
+  SpacingValue:
+    description: Individual spacing value
+    properties:
+      name: { type: string, required: true }
+      value: { type: string, required: true }
+      pixels: { type: integer }
+      rem: { type: decimal }
+      cssVariable: { type: string }
+
+  # -----------------------------------------
+  # BREAKPOINTS
+  # -----------------------------------------
+
+  Breakpoint:
+    description: Responsive breakpoint definition
+    properties:
+      name: { type: string, required: true, description: "e.g., sm, md, lg, xl" }
+      minWidth: { type: integer, description: "Min-width in pixels" }
+      maxWidth: { type: integer, description: "Max-width in pixels" }
+      columns: { type: integer, description: "Grid columns at this breakpoint" }
+      gutter: { type: string, description: "Grid gutter size" }
+      margin: { type: string, description: "Container margin" }
+
+  # -----------------------------------------
+  # COMPONENTS
+  # -----------------------------------------
+
+  Component:
+    description: UI component definition
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      category: { type: ComponentCategory }
+      variants: { type: array, items: ComponentVariant }
+      states: { type: array, items: ComponentState }
+      props: { type: array, items: ComponentProp }
+      slots: { type: array, items: ComponentSlot }
+      figmaUrl: { type: uri }
+      storybookUrl: { type: uri }
+      codeExample: { type: string }
+      doList: { type: array, items: string }
+      dontList: { type: array, items: string }
+      accessibility: { type: ComponentAccessibility }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  ComponentVariant:
+    description: Visual variant of a component
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      previewUrl: { type: uri }
+      isDefault: { type: boolean, default: false }
+
+  ComponentState:
+    description: Interactive state of a component
+    properties:
+      name: { type: string, required: true, description: "e.g., default, hover, focus, disabled" }
+      description: { type: string }
+      previewUrl: { type: uri }
+
+  ComponentProp:
+    description: Component property/API
+    properties:
+      name: { type: string, required: true }
+      type: { type: string, required: true }
+      required: { type: boolean, default: false }
+      default: { type: string }
+      description: { type: string }
+      options: { type: array, items: string }
+
+  ComponentSlot:
+    description: Named slot for component composition
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      required: { type: boolean, default: false }
+
+  ComponentAccessibility:
+    description: Accessibility requirements for component
+    properties:
+      role: { type: string, description: "ARIA role" }
+      keyboardInteraction: { type: array, items: KeyboardInteraction }
+      ariaAttributes: { type: array, items: string }
+      focusManagement: { type: string }
+
+  KeyboardInteraction:
+    description: Keyboard shortcut/interaction
+    properties:
+      key: { type: string, required: true }
+      action: { type: string, required: true }
+
+  # -----------------------------------------
+  # MOCKUP / WIREFRAME
+  # -----------------------------------------
+
+  Mockup:
+    description: UI mockup or high-fidelity design
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      type: { type: MockupType }
+      fidelity: { type: FidelityLevel }
+      screenType: { type: ScreenType }
+      imageUrl: { type: uri }
+      figmaUrl: { type: uri }
+      dimensions: { type: Dimensions }
+      annotations: { type: array, items: MockupAnnotation }
+      linkedComponents: { type: array, items: string, description: "Component IDs used" }
+      version: { type: string }
+      status: { type: MockupStatus }
+      feedback: { type: array, items: DesignFeedback }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Wireframe:
+    description: Low-fidelity wireframe or sketch
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      imageUrl: { type: uri }
+      purpose: { type: string }
+      userFlow: { type: string, description: "Which user flow this represents" }
+      annotations: { type: array, items: MockupAnnotation }
+      linkedMockups: { type: array, items: string, description: "High-fidelity mockup IDs" }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Dimensions:
+    description: Width and height dimensions
+    properties:
+      width: { type: integer, required: true }
+      height: { type: integer, required: true }
+      unit: { type: DimensionUnit, default: "px" }
+
+  MockupAnnotation:
+    description: Annotation/callout on a mockup
+    properties:
+      id: { type: string, required: true }
+      x: { type: integer, required: true }
+      y: { type: integer, required: true }
+      content: { type: string, required: true }
+      type: { type: AnnotationType }
+      author: { type: string }
+      resolved: { type: boolean, default: false }
+
+  DesignFeedback:
+    description: Feedback on a design artifact
+    properties:
+      id: { type: string, required: true }
+      content: { type: string, required: true }
+      author: { type: string }
+      type: { type: FeedbackType }
+      priority: { type: FeedbackPriority }
+      status: { type: FeedbackStatus }
+      created_at: { type: datetime, required: true }
+
+  # -----------------------------------------
+  # ICONS
+  # -----------------------------------------
+
+  IconSet:
+    description: Collection of icons
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      style: { type: IconStyle }
+      sizes: { type: array, items: integer, description: "Available sizes in pixels" }
+      icons: { type: array, items: Icon }
+      license: { type: string }
+      source: { type: string }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Icon:
+    description: Individual icon definition
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      tags: { type: array, items: string }
+      category: { type: string }
+      svgPath: { type: string, description: "SVG path data" }
+      unicodeCodepoint: { type: string }
+      variants: { type: array, items: IconVariantType }
+
+  # -----------------------------------------
+  # THEME
+  # -----------------------------------------
+
+  Theme:
+    description: Theme configuration (light/dark mode)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ThemeType, required: true }
+      colorScheme: { type: ColorScheme }
+      overrides: { type: array, items: DesignToken }
+      isDefault: { type: boolean, default: false }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+# ============================================
+# ENUMS
+# ============================================
+
+enums:
+
+  # Style Guide
+  WCAGLevel:
+    values: [A, AA, AAA]
+
+  LogoFormat:
+    values: [svg, png, jpg, webp, eps, ai]
+
+  # Mood Board
+  MoodBoardStatus:
+    values: [draft, in_review, approved, archived]
+
+  ReferenceType:
+    values: [website, app, dribbble, behance, pinterest, book, article, other]
+
+  # Color
+  ColorSchemeType:
+    values: [light, dark, high_contrast, monochromatic, complementary, analogous, triadic]
+
+  # Typography
+  FontCategory:
+    values: [serif, sans_serif, monospace, display, handwriting, system]
+
+  FontWeight:
+    values: [100, 200, 300, 400, 500, 600, 700, 800, 900]
+
+  FontStyle:
+    values: [normal, italic, oblique]
+
+  FontFormat:
+    values: [woff2, woff, ttf, otf, eot]
+
+  FontSource:
+    values: [google_fonts, adobe_fonts, custom, system]
+
+  FontLicense:
+    values: [open_source, commercial, custom]
+
+  TextTransform:
+    values: [none, uppercase, lowercase, capitalize]
+
+  # Tokens
+  TokenType:
+    values: [color, dimension, font_family, font_weight, font_size, line_height, letter_spacing, border_radius, border_width, shadow, duration, cubic_bezier, number, string]
+
+  TokenCategory:
+    values: [color, typography, spacing, border, shadow, motion, opacity, z_index]
+
+  TokenFormat:
+    values: [css, scss, json, js, figma_tokens]
+
+  # Components
+  ComponentCategory:
+    values: [layout, navigation, form, feedback, data_display, overlay, media, typography, utility]
+
+  # Mockup
+  MockupType:
+    values: [screen, component, flow, prototype, animation]
+
+  FidelityLevel:
+    values: [low, medium, high]
+
+  ScreenType:
+    values: [mobile, tablet, desktop, responsive, watch, tv]
+
+  MockupStatus:
+    values: [draft, in_review, approved, implemented, deprecated]
+
+  DimensionUnit:
+    values: [px, rem, em, percent, vw, vh]
+
+  AnnotationType:
+    values: [comment, question, issue, suggestion, approved]
+
+  FeedbackType:
+    values: [general, visual, ux, accessibility, technical]
+
+  FeedbackPriority:
+    values: [low, medium, high, critical]
+
+  FeedbackStatus:
+    values: [open, in_progress, resolved, wont_fix]
+
+  # Icons
+  IconStyle:
+    values: [outline, filled, duotone, colored, animated]
+
+  IconVariantType:
+    values: [outline, filled, round, sharp, two_tone]
+
+  # Theme
+  ThemeType:
+    values: [light, dark, high_contrast, custom]
+
+# ============================================
+# ACTIONS
+# ============================================
+
+actions:
+
+  CreateDesignSystem:
+    description: Initialize a new design system
+    operates_on: DesignSystem
+    requires_permission: design:create
+    idempotent: false
+
+  CreateMockup:
+    description: Create a new mockup
+    operates_on: Mockup
+    inputs:
+      - name
+      - type
+      - fidelity
+      - dimensions
+    outputs:
+      - mockup_id
+      - preview_url
+    requires_permission: design:create
+
+  CreateColorScheme:
+    description: Generate a color scheme
+    operates_on: ColorScheme
+    inputs:
+      - primary_color
+      - scheme_type
+    outputs:
+      - color_scheme
+    requires_permission: design:create
+
+  ExportDesignTokens:
+    description: Export design tokens to various formats
+    operates_on: TokenSet
+    inputs:
+      - token_set_id
+      - format
+    outputs:
+      - exported_content
+      - file_url
+    idempotent: true
+
+  GenerateMoodBoard:
+    description: Create mood board from keywords or images
+    operates_on: MoodBoard
+    inputs:
+      - keywords
+      - reference_images
+    outputs:
+      - mood_board
+    requires_permission: design:create
+
+  ValidateAccessibility:
+    description: Check design for accessibility compliance
+    operates_on: [Mockup, ColorScheme, Component]
+    inputs:
+      - artifact_id
+      - wcag_level
+    outputs:
+      - violations
+      - suggestions
+      - score
+    idempotent: true
+
+  SyncToFigma:
+    description: Sync design tokens/components to Figma
+    operates_on: DesignSystem
+    inputs:
+      - figma_file_id
+      - sync_type
+    outputs:
+      - sync_status
+      - changes
+    requires_permission: design:sync
+
+  GenerateThemeVariant:
+    description: Generate a theme variant (e.g., dark mode from light)
+    operates_on: Theme
+    inputs:
+      - source_theme_id
+      - target_type
+    outputs:
+      - theme
+    requires_permission: design:create
+
+# ============================================
+# RELATIONSHIPS
+# ============================================
+
+relationships:
+  - type: one_to_many
+    from: DesignSystem
+    to: ColorScheme
+    foreign_key: design_system_id
+
+  - type: one_to_many
+    from: DesignSystem
+    to: Component
+    foreign_key: design_system_id
+
+  - type: one_to_many
+    from: DesignSystem
+    to: Theme
+    foreign_key: design_system_id
+
+  - type: one_to_one
+    from: DesignSystem
+    to: Typography
+
+  - type: one_to_one
+    from: DesignSystem
+    to: SpacingScale
+
+  - type: many_to_many
+    from: Mockup
+    to: Component
+    through: mockup_components
+
+  - type: one_to_many
+    from: Wireframe
+    to: Mockup
+    foreign_key: wireframe_id
+
+  - type: one_to_many
+    from: ColorScheme
+    to: Theme
+    foreign_key: color_scheme_id

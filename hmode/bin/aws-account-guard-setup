@@ -1,0 +1,157 @@
+#!/bin/bash
+#
+# AWS Account Guard Setup
+# Interactive configuration for AWS account restrictions
+#
+
+set -e
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+GUARD_CONFIG="${HOME}/.aws-account-guard.conf"
+GUARD_SCRIPT="${HOME}/dev/lab/bin/aws-account-guard"
+
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}🛡️  AWS Account Guard Setup${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+# Detect computer type
+echo -e "${YELLOW}Step 1: Computer Type${NC}"
+echo ""
+echo "What type of computer is this?"
+echo "[1] Work computer (only work AWS accounts)"
+echo "[2] Personal computer (only personal AWS accounts)"
+echo ""
+read -p "Selection [1/2]: " computer_choice
+
+case $computer_choice in
+    1)
+        COMPUTER_TYPE="work"
+        echo -e "${GREEN}✓ Configured as: WORK computer${NC}"
+        ;;
+    2)
+        COMPUTER_TYPE="personal"
+        echo -e "${GREEN}✓ Configured as: PERSONAL computer${NC}"
+        ;;
+    *)
+        echo -e "${RED}Invalid selection${NC}"
+        exit 1
+        ;;
+esac
+
+echo ""
+echo -e "${YELLOW}Step 2: Allowed AWS Account IDs${NC}"
+echo ""
+echo "Enter the AWS account ID(s) allowed on this computer."
+echo "You can enter multiple IDs separated by spaces."
+echo ""
+
+# Try to get current account
+current_account=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "")
+if [[ -n "$current_account" ]]; then
+    echo -e "${BLUE}Current AWS Account: ${current_account}${NC}"
+    read -p "Use this account? [Y/n]: " use_current
+    if [[ "$use_current" != "n" && "$use_current" != "N" ]]; then
+        ALLOWED_ACCOUNTS="$current_account"
+    fi
+fi
+
+if [[ -z "$ALLOWED_ACCOUNTS" ]]; then
+    read -p "Allowed Account ID(s): " ALLOWED_ACCOUNTS
+fi
+
+# Convert to array format
+ALLOWED_ACCOUNTS_ARRAY="(${ALLOWED_ACCOUNTS})"
+
+echo ""
+echo -e "${YELLOW}Step 3: Additional Options${NC}"
+echo ""
+read -p "Show guard status on shell startup? [y/N]: " show_startup
+if [[ "$show_startup" == "y" || "$show_startup" == "Y" ]]; then
+    SHOW_ON_STARTUP="true"
+else
+    SHOW_ON_STARTUP="false"
+fi
+
+# Write configuration
+echo ""
+echo -e "${YELLOW}Writing configuration...${NC}"
+cat > "$GUARD_CONFIG" <<EOF
+# AWS Account Guard Configuration
+# Generated: $(date)
+# Computer: $(hostname)
+
+# Computer type: work or personal
+COMPUTER_TYPE="${COMPUTER_TYPE}"
+
+# Allowed AWS account IDs (space-separated)
+ALLOWED_AWS_ACCOUNTS=${ALLOWED_ACCOUNTS_ARRAY}
+
+# Show guard status on shell startup
+SHOW_GUARD_ON_STARTUP="${SHOW_ON_STARTUP}"
+EOF
+
+echo -e "${GREEN}✓ Configuration saved to: ${GUARD_CONFIG}${NC}"
+
+# Update shell configuration
+echo ""
+echo -e "${YELLOW}Step 4: Shell Integration${NC}"
+echo ""
+echo "The guard needs to be loaded in your shell startup file."
+echo ""
+
+# Detect shell
+if [[ -n "$ZSH_VERSION" ]]; then
+    SHELL_RC="${HOME}/.zshrc"
+    SHELL_NAME="zsh"
+elif [[ -n "$BASH_VERSION" ]]; then
+    SHELL_RC="${HOME}/.bashrc"
+    SHELL_NAME="bash"
+else
+    echo -e "${YELLOW}⚠️  Unknown shell. Please manually add to your shell config:${NC}"
+    echo -e "   source $GUARD_SCRIPT"
+    exit 0
+fi
+
+# Check if already added
+if grep -q "aws-account-guard" "$SHELL_RC" 2>/dev/null; then
+    echo -e "${BLUE}Guard already configured in ${SHELL_RC}${NC}"
+else
+    read -p "Add guard to ${SHELL_RC}? [Y/n]: " add_to_rc
+    if [[ "$add_to_rc" != "n" && "$add_to_rc" != "N" ]]; then
+        echo "" >> "$SHELL_RC"
+        echo "# AWS Account Guard" >> "$SHELL_RC"
+        echo "if [[ -f \"$GUARD_SCRIPT\" ]]; then" >> "$SHELL_RC"
+        echo "    source \"$GUARD_SCRIPT\"" >> "$SHELL_RC"
+        echo "fi" >> "$SHELL_RC"
+        echo -e "${GREEN}✓ Added to ${SHELL_RC}${NC}"
+    fi
+fi
+
+# Summary
+echo ""
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}✓ AWS Account Guard Setup Complete${NC}"
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "${BLUE}Configuration:${NC}"
+echo -e "  Computer Type:    ${COMPUTER_TYPE}"
+echo -e "  Allowed Accounts: ${ALLOWED_ACCOUNTS}"
+echo -e "  Config File:      ${GUARD_CONFIG}"
+echo ""
+echo -e "${YELLOW}Next Steps:${NC}"
+echo -e "  1. Reload your shell: ${BLUE}exec $SHELL_NAME${NC}"
+echo -e "  2. Check status:      ${BLUE}aws-guard-status${NC}"
+echo -e "  3. Test with:         ${BLUE}aws sts get-caller-identity${NC}"
+echo ""
+echo -e "${BLUE}Note: The guard wraps these commands:${NC}"
+echo -e "  • aws"
+echo -e "  • cdk"
+echo -e "  • terraform"
+echo -e "  • sam"
+echo ""

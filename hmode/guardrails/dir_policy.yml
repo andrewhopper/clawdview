@@ -1,0 +1,195 @@
+# Root Directory Policy
+# Defines permitted directories and files at the monorepo root level
+# Last updated: 2025-11-22
+
+version: "1.0.0"
+
+directories:
+  # === CORE (Always permitted) ===
+  archive:
+    status: permitted
+    purpose: Old/deprecated files and directories
+
+  artifacts:
+    status: permitted
+    purpose: Generated artifacts (PDFs, HTML, MP3, presentations)
+    subdirs:
+      - reports
+      - research
+      - presentations
+      - diagrams
+      - email-drafts
+      - delivery
+      - templates
+
+  benchmarks:
+    status: permitted
+    purpose: SWE benchmarks and performance tests
+
+  bin:
+    status: permitted
+    purpose: Runnable utilities and executables
+
+  bookmarks:
+    status: permitted
+    purpose: Bookmark links to generated assets uploaded to S3
+
+  docs:
+    status: permitted
+    purpose: Architecture docs, guides, diagrams
+    notes: May need consolidation review
+
+  git-forks:
+    status: permitted
+    purpose: Git submodules and external repo forks
+
+  hlmethod:
+    status: permitted
+    purpose: Protoflow SDLC methodology
+    subdirs:
+      - strategy
+
+  inbox:
+    status: permitted
+    purpose: Drop location for incoming files
+
+  pointers:
+    status: permitted
+    purpose: Links and references to other resources
+
+  problems:
+    status: permitted
+    purpose: Problem definitions and Value Proposition Canvas
+
+  project-management:
+    status: permitted
+    purpose: Project management (ideas phases 1-6)
+    subdirs:
+      - ideas
+
+  project-portfolio:
+    status: permitted
+    purpose: Project index and portfolio overview
+
+  projects:
+    status: permitted
+    purpose: Active projects (production-grade)
+
+  prototypes:
+    status: permitted
+    purpose: Prototypes (phases 7-9)
+
+  recipes:
+    status: permitted
+    purpose: Workflow patterns and reusable recipes
+
+  shared:
+    status: permitted
+    purpose: Shared data models, utilities, scripts, tools
+    subdirs:
+      - scripts
+      - tools
+      - domain-models
+      - semantic
+      - standards
+      - templates
+
+  # === NEEDS REVIEW ===
+  data:
+    status: needs_review
+    purpose: Data storage (has logs subfolder)
+    notes: May duplicate logs/, consider consolidation
+
+  examples:
+    status: needs_review
+    purpose: Example prompts, integrations, tool configs
+    notes: Consider moving to docs/ or shared/
+
+  ideas:
+    status: needs_review
+    purpose: Proto ideas (duplicates project-management/ideas?)
+    notes: Should merge into project-management/ideas/
+
+  logs:
+    status: needs_review
+    purpose: Log files and analysis
+    notes: May duplicate data/logs/, consider consolidation
+
+  notes:
+    status: permitted
+    purpose: Random notes and scratchpad
+
+files:
+  # === CORE (Always permitted) ===
+  CLAUDE.md:
+    status: permitted
+    purpose: AI steering and orchestration file
+
+  README.md:
+    status: permitted
+    purpose: Main repository readme
+
+  project-manifest.json:
+    status: permitted
+    purpose: Project manifest for tracking all prototypes/ideas
+
+  requirements.txt:
+    status: permitted
+    purpose: Python dependencies
+
+  CHANGELOG.md:
+    status: permitted
+    purpose: Repository changelog
+
+  SECURITY.md:
+    status: permitted
+    purpose: Security policy and guidelines
+
+  SETUP.md:
+    status: permitted
+    purpose: Setup instructions
+
+  README-WORK-PERSONAL-SEPARATION.md:
+    status: permitted
+    purpose: Work/personal separation documentation
+
+  # === UTILITIES ===
+  claude_code_wrapper.py:
+    status: permitted
+    purpose: Claude Code wrapper utility
+
+  # === LEGACY (To archive eventually) ===
+  CLAUDE.md.pre-optimization:
+    status: deprecated
+    purpose: Backup of pre-optimization CLAUDE.md
+    notes: Archive when no longer needed
+
+  DOTAI_AUDIT.md:
+    status: deprecated
+    purpose: Old audit file
+    notes: Archive when no longer needed
+
+# Hidden directories (always permitted)
+hidden_directories:
+  - .claude
+  - .guardrails
+  - .git
+  - .github
+  - .vscode
+  - .system
+  - .obsidian
+  - .sessions
+  - .claude-logs
+  - .claude-md-archive
+
+# Rules
+rules:
+  - New directories at root require approval
+  - New files at root should be minimal (prefer subdirectories)
+  - Generated artifacts go in artifacts/
+  - Reports go in artifacts/reports/
+  - Research goes in artifacts/research/
+  - Ideas go in project-management/ideas/
+  - Prototypes go in prototypes/
+  - Shared utilities go in shared/
+  - Old/deprecated items go in archive/

@@ -1,0 +1,51 @@
+# Cloudflare Workers Configuration
+# Copy to project root as wrangler.toml
+
+name = "my-worker"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Account ID (optional, uses default if logged in)
+# account_id = "your-account-id"
+
+# Workers routes (custom domains)
+# routes = [
+#   { pattern = "api.example.com/*", zone_name = "example.com" }
+# ]
+
+# Environment variables (non-secret)
+[vars]
+ENVIRONMENT = "production"
+
+# KV Namespace bindings
+# [[kv_namespaces]]
+# binding = "MY_KV"
+# id = "your-namespace-id"
+
+# D1 Database bindings
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "my-database"
+# database_id = "your-database-id"
+
+# R2 Bucket bindings
+# [[r2_buckets]]
+# binding = "MY_BUCKET"
+# bucket_name = "my-bucket"
+
+# Durable Objects
+# [[durable_objects.bindings]]
+# name = "MY_DURABLE_OBJECT"
+# class_name = "MyDurableObject"
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Build settings (if using custom build)
+# [build]
+# command = "npm run build"
+# [build.upload]
+# format = "modules"
+# main = "./dist/index.js"

@@ -1,0 +1,186 @@
+# =============================================================================
+# Process Net - Level 2: Workflow Patterns
+# BPMN-aligned control flow patterns as Petri net structures
+# =============================================================================
+# Reference: Workflow Patterns (van der Aalst et al.)
+# http://www.workflowpatterns.com/patterns/control/
+# =============================================================================
+
+schema_version: "1.0.0"
+layer: patterns
+imports:
+  - ./primitives.yaml
+
+patterns:
+
+  # ---------------------------------------------------------------------------
+  # BASIC CONTROL FLOW
+  # ---------------------------------------------------------------------------
+
+  Sequence:
+    description: |
+      Activity followed by another activity.
+      Simplest pattern: Place -> Transition -> Place
+    structure:
+      places: [before, after]
+      transitions: [activity]
+      arcs:
+        - { source: before, target: activity }
+        - { source: activity, target: after }
+
+  # ---------------------------------------------------------------------------
+  # SPLIT PATTERNS
+  # ---------------------------------------------------------------------------
+
+  ExclusiveChoice:
+    description: |
+      XOR-split: one token in, one token out on exactly one path.
+      Guards ensure mutual exclusion.
+      BPMN: Exclusive Gateway (X)
+    structure:
+      places: [input]
+      transitions: [choice_a, choice_b]
+      arcs:
+        - { source: input, target: choice_a }
+        - { source: input, target: choice_b }
+      guards:
+        - { transition: choice_a, expression: "condition_a == true" }
+        - { transition: choice_b, expression: "condition_a == false" }
+    invariant: "exactly one guard evaluates true"
+
+  ParallelSplit:
+    description: |
+      AND-split: one token in, tokens produced on ALL paths.
+      Single transition with multiple output places.
+      BPMN: Parallel Gateway (+)
+    structure:
+      places: [input, output_a, output_b]
+      transitions: [split]
+      arcs:
+        - { source: input, target: split }
+        - { source: split, target: output_a }
+        - { source: split, target: output_b }
+
+  MultiChoice:
+    description: |
+      OR-split: one token in, tokens on ONE OR MORE paths.
+      Multiple transitions from same place, non-exclusive guards.
+      BPMN: Inclusive Gateway (O)
+    structure:
+      places: [input, output_a, output_b]
+      transitions: [path_a, path_b]
+      arcs:
+        - { source: input, target: path_a }
+        - { source: input, target: path_b }
+        - { source: path_a, target: output_a }
+        - { source: path_b, target: output_b }
+      guards:
+        - { transition: path_a, expression: "condition_a" }
+        - { transition: path_b, expression: "condition_b" }
+    invariant: "at least one guard evaluates true"
+
+  # ---------------------------------------------------------------------------
+  # JOIN PATTERNS
+  # ---------------------------------------------------------------------------
+
+  SimpleMerge:
+    description: |
+      XOR-join: first token through wins, no synchronization.
+      Multiple transitions into one place.
+      BPMN: Exclusive Gateway merge
+    structure:
+      places: [input_a, input_b, output]
+      transitions: [merge_a, merge_b]
+      arcs:
+        - { source: input_a, target: merge_a }
+        - { source: merge_a, target: output }
+        - { source: input_b, target: merge_b }
+        - { source: merge_b, target: output }
+
+  Synchronization:
+    description: |
+      AND-join: waits for ALL inputs before proceeding.
+      Single transition with multiple input places.
+      BPMN: Parallel Gateway join
+    structure:
+      places: [input_a, input_b, output]
+      transitions: [sync]
+      arcs:
+        - { source: input_a, target: sync }
+        - { source: input_b, target: sync }
+        - { source: sync, target: output }
+
+  StructuredDiscriminator:
+    description: |
+      First-of-N: fires when first input arrives, ignores rest.
+      Requires inhibitor arcs or special handling.
+    structure:
+      places: [input_a, input_b, triggered, output]
+      transitions: [first_a, first_b, complete]
+      arcs:
+        - { source: input_a, target: first_a }
+        - { source: first_a, target: triggered }
+        - { source: input_b, target: first_b }
+        - { source: first_b, target: triggered }
+        - { source: triggered, target: complete }
+        - { source: complete, target: output }
+      inhibitors:
+        - { place: triggered, transition: first_a }
+        - { place: triggered, transition: first_b }
+
+  # ---------------------------------------------------------------------------
+  # ITERATION PATTERNS
+  # ---------------------------------------------------------------------------
+
+  ArbitraryLoop:
+    description: |
+      Loop back to earlier point based on condition.
+      Arc from later place back to earlier transition.
+    structure:
+      places: [start, working, check, done]
+      transitions: [begin, do_work, evaluate, loop_back, exit]
+      arcs:
+        - { source: start, target: begin }
+        - { source: begin, target: working }
+        - { source: working, target: do_work }
+        - { source: do_work, target: check }
+        - { source: check, target: loop_back }
+        - { source: loop_back, target: working }
+        - { source: check, target: exit }
+        - { source: exit, target: done }
+      guards:
+        - { transition: loop_back, expression: "needs_retry == true" }
+        - { transition: exit, expression: "needs_retry == false" }
+
+  # ---------------------------------------------------------------------------
+  # STATE PATTERNS
+  # ---------------------------------------------------------------------------
+
+  DeferredChoice:
+    description: |
+      Wait for external event to determine path.
+      Multiple transitions enabled, first event to arrive wins.
+      BPMN: Event-based Gateway
+    structure:
+      places: [waiting, path_a_taken, path_b_taken]
+      transitions: [event_a, event_b]
+      arcs:
+        - { source: waiting, target: event_a }
+        - { source: waiting, target: event_b }
+        - { source: event_a, target: path_a_taken }
+        - { source: event_b, target: path_b_taken }
+    note: "Transitions are event-triggered, not guard-triggered"
+
+  MilestonePattern:
+    description: |
+      Activity only enabled while in a certain state.
+      Uses inhibitor to block when milestone not active.
+    structure:
+      places: [ready, milestone_active, done]
+      transitions: [do_activity]
+      arcs:
+        - { source: ready, target: do_activity }
+        - { source: do_activity, target: done }
+      inhibitors:
+        - { place: milestone_active, transition: do_activity, threshold: 0 }
+    note: "Activity blocked if milestone_active has 0 tokens"

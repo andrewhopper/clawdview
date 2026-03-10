@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Test Accounts Configuration",
+  "description": "Standard test accounts for E2E and integration testing",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-14",
+  "accounts": {
+    "aws": {
+      "description": "AWS test accounts and IAM roles for testing",
+      "sandbox": {
+        "account_id_env": "AWS_SANDBOX_ACCOUNT_ID",
+        "region": "us-east-1",
+        "purpose": "Non-production testing and development",
+        "roles": {
+          "e2e_tester": {
+            "role_name": "HopperLabsE2ETester",
+            "permissions": [
+              "cloudwatch:GetMetricData",
+              "cloudwatch:DescribeAlarms",
+              "logs:GetLogEvents",
+              "logs:FilterLogEvents",
+              "xray:GetTraceSummaries",
+              "xray:BatchGetTraces",
+              "xray:GetServiceGraph"
+            ]
+          },
+          "readonly": {
+            "role_name": "HopperLabsReadOnly",
+            "permissions": [
+              "cloudwatch:Describe*",
+              "cloudwatch:Get*",
+              "cloudwatch:List*",
+              "logs:Describe*",
+              "logs:Get*",
+              "xray:Get*",
+              "xray:BatchGet*"
+            ]
+          }
+        }
+      }
+    },
+    "application": {
+      "description": "Application-level test accounts for E2E testing",
+      "users": {
+        "admin": {
+          "username_env": "TEST_ADMIN_USERNAME",
+          "password_env": "TEST_ADMIN_PASSWORD",
+          "role": "admin",
+          "purpose": "Full access for admin flow testing"
+        },
+        "standard_user": {
+          "username_env": "TEST_USER_USERNAME",
+          "password_env": "TEST_USER_PASSWORD",
+          "role": "user",
+          "purpose": "Standard user flow testing"
+        },
+        "readonly_user": {
+          "username_env": "TEST_READONLY_USERNAME",
+          "password_env": "TEST_READONLY_PASSWORD",
+          "role": "readonly",
+          "purpose": "Read-only access testing"
+        }
+      }
+    }
+  },
+  "environments": {
+    "local": {
+      "base_url_env": "TEST_LOCAL_BASE_URL",
+      "default": "http://localhost:3000",
+      "aws_endpoint": "http://localhost:4566"
+    },
+    "dev": {
+      "base_url_env": "TEST_DEV_BASE_URL",
+      "aws_region": "us-east-1"
+    },
+    "staging": {
+      "base_url_env": "TEST_STAGING_BASE_URL",
+      "aws_region": "us-east-1"
+    }
+  },
+  "observability_endpoints": {
+    "cloudwatch": {
+      "console_url": "https://console.aws.amazon.com/cloudwatch/home",
+      "logs_insights_endpoint": "https://logs.{region}.amazonaws.com",
+      "metrics_endpoint": "https://monitoring.{region}.amazonaws.com"
+    },
+    "xray": {
+      "console_url": "https://console.aws.amazon.com/xray/home",
+      "api_endpoint": "https://xray.{region}.amazonaws.com"
+    }
+  }
+}

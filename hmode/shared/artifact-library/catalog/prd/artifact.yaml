@@ -1,0 +1,260 @@
+# Product Requirements Document
+# Category: requirements
+# Complexity: complex
+
+id: prd
+name: Product Requirements Document
+version: "1.0.0"
+description: Comprehensive product requirements with user stories, acceptance criteria, and success metrics
+category: requirements
+complexity: complex
+created_at: "2025-12-10"
+updated_at: "2025-12-10"
+
+# -----------------------------------------
+# SDLC GATE ASSOCIATION
+# -----------------------------------------
+sdlc_gate:
+  phase: 5.5  # PRD phase (production projects)
+  gate_name: Requirements Gate
+  purpose: Define complete product requirements before design phase
+  approval_required: true
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: overview
+      name: Overview
+      description: Product vision and high-level summary
+      required: true
+      format: prose
+      word_limit: 200
+
+    - id: problem-statement
+      name: Problem Statement
+      description: What problem are we solving? Who has this problem?
+      required: true
+      format: prose
+      word_limit: 300
+
+    - id: target-users
+      name: Target Users
+      description: Primary and secondary user personas
+      required: true
+      format: mixed
+      subsections:
+        - id: primary-persona
+          name: Primary Persona
+          format: prose
+        - id: secondary-personas
+          name: Secondary Personas
+          format: bullets
+
+    - id: user-stories
+      name: User Stories
+      description: As a [user], I want to [action], so that [benefit]
+      required: true
+      format: bullets
+      min_items: 5
+
+    - id: functional-requirements
+      name: Functional Requirements
+      description: What the product must do
+      required: true
+      format: numbered
+      subsections:
+        - id: core-features
+          name: Core Features (MVP)
+          format: numbered
+        - id: nice-to-have
+          name: Nice-to-Have Features
+          format: numbered
+
+    - id: nonfunctional-requirements
+      name: Non-Functional Requirements
+      description: Quality attributes (performance, security, scalability)
+      required: true
+      format: table
+      columns:
+        - Category
+        - Requirement
+        - Target
+        - Priority
+
+    - id: acceptance-criteria
+      name: Acceptance Criteria
+      description: How we know requirements are met
+      required: true
+      format: bullets
+
+    - id: success-metrics
+      name: Success Metrics
+      description: KPIs to measure product success
+      required: true
+      format: table
+      columns:
+        - Metric
+        - Current
+        - Target
+        - Measurement Method
+
+    - id: constraints
+      name: Constraints & Assumptions
+      description: Technical, business, or resource constraints
+      required: true
+      format: bullets
+
+    - id: dependencies
+      name: Dependencies
+      description: External systems, teams, or deliverables we depend on
+      required: false
+      format: bullets
+
+    - id: out-of-scope
+      name: Out of Scope
+      description: What this product will NOT do
+      required: true
+      format: bullets
+
+    - id: risks
+      name: Risks
+      description: Product and project risks
+      required: false
+      format: table
+      columns:
+        - Risk
+        - Probability
+        - Impact
+        - Mitigation
+
+  required_inputs:
+    - name: product_name
+      type: string
+      description: Name of the product or feature
+      required: true
+    - name: context
+      type: text
+      description: Background, problem space, and user research
+      required: true
+    - name: objectives
+      type: array
+      description: Business objectives this product serves
+      required: true
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a senior product manager who writes clear, actionable PRDs.
+
+    Your approach:
+    - Start with the user, not the technology
+    - Be specific about what "done" looks like
+    - Distinguish must-haves from nice-to-haves
+    - Include measurable success criteria
+    - Anticipate edge cases and constraints
+
+    Writing style:
+    - Clear, unambiguous requirements
+    - Testable acceptance criteria
+    - Quantified success metrics
+    - No implementation details (that's for design phase)
+
+  task: |
+    Generate a Product Requirements Document for {{PRODUCT_NAME}}.
+
+    Context:
+    {{CONTEXT}}
+
+    Objectives:
+    {{OBJECTIVES}}
+
+    Structure the document with:
+    1. **Overview** - Vision and summary
+    2. **Problem Statement** - User problem and impact
+    3. **Target Users** - Primary and secondary personas
+    4. **User Stories** - At least 5 user stories
+    5. **Functional Requirements** - Core and nice-to-have features
+    6. **Non-Functional Requirements** - Performance, security, etc.
+    7. **Acceptance Criteria** - How we know it's done
+    8. **Success Metrics** - Measurable KPIs
+    9. **Constraints & Assumptions** - Limitations
+    10. **Out of Scope** - What we won't build
+    11. **Risks** - Product risks
+
+    Total length: 2000-5000 words.
+
+  tone: professional
+  reading_level: technical
+  density: standard
+
+# -----------------------------------------
+# VALIDATORS
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 2000
+      max: 5000
+    severity: error
+    message: "PRD must be 2000-5000 words"
+
+  - id: section-presence
+    name: Required Sections
+    type: section_presence
+    rule:
+      required:
+        - overview
+        - problem-statement
+        - target-users
+        - user-stories
+        - functional-requirements
+        - nonfunctional-requirements
+        - acceptance-criteria
+        - success-metrics
+        - out-of-scope
+    severity: error
+    message: "Missing required section"
+
+  - id: min-user-stories
+    name: Minimum User Stories
+    type: custom
+    rule: "user_stories.count >= 5"
+    severity: warning
+    message: "Include at least 5 user stories"
+
+  - id: measurable-metrics
+    name: Measurable Metrics
+    type: regex
+    rule:
+      pattern: "\\d+%|\\d+ms|\\d+ (users|requests|seconds)"
+      should_match: true
+    severity: warning
+    message: "Success metrics should be quantified"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 2000
+  max_words: 5000
+  reading_level: technical
+  density: standard
+  output_formats:
+    - markdown
+    - docx
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - prd
+  - requirements
+  - product
+  - user-stories
+  - sdlc-gate

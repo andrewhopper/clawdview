@@ -1,0 +1,206 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Documentation",
+  "description": "Documentation tools and platforms",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "categories": {
+    "documentation_platforms": {
+      "description": "Documentation hosting and generation platforms",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Astro (Starlight)",
+          "version": "4.x + Starlight 0.x",
+          "rationale": "Developer-first, MDX support, fast builds, component islands, Git-based, self-hosted or Vercel/Netlify",
+          "useCases": [
+            "technical documentation",
+            "developer portals",
+            "open source docs",
+            "component-based docs"
+          ],
+          "docsUrl": "https://docs.astro.build/",
+          "examplesUrl": "https://starlight.astro.build/getting-started/"
+        },
+        {
+          "rank": 2,
+          "name": "Mintlify",
+          "version": "latest",
+          "rationale": "Beautiful out-of-box, API references, Git-based, auto-OpenAPI, hosted, interactive playground",
+          "useCases": [
+            "API documentation",
+            "startup docs",
+            "developer portals",
+            "SaaS product docs"
+          ],
+          "docsUrl": "https://mintlify.com/docs",
+          "examplesUrl": "https://mintlify.com/showcase"
+        },
+        {
+          "rank": 3,
+          "name": "Docusaurus",
+          "version": "3.x",
+          "rationale": "Meta/React ecosystem, MDX, versioning, i18n, large community, free hosting",
+          "useCases": [
+            "React projects",
+            "open source docs",
+            "multi-version docs",
+            "community-driven docs"
+          ],
+          "docsUrl": "https://docusaurus.io/docs",
+          "examplesUrl": "https://docusaurus.io/showcase"
+        },
+        {
+          "rank": 4,
+          "name": "ReadMe",
+          "version": "platform",
+          "rationale": "Hosted, interactive API explorer, metrics, support integration, enterprise features",
+          "useCases": [
+            "API-first products",
+            "enterprise docs",
+            "customer-facing docs",
+            "metrics & analytics"
+          ],
+          "docsUrl": "https://docs.readme.com/",
+          "examplesUrl": "https://readme.com/examples"
+        },
+        {
+          "rank": 5,
+          "name": "GitBook",
+          "version": "platform",
+          "rationale": "Beautiful UI, Git sync, collaboration, spaces, search, hosted",
+          "useCases": [
+            "product documentation",
+            "knowledge bases",
+            "team wikis",
+            "customer docs"
+          ],
+          "docsUrl": "https://docs.gitbook.com/",
+          "examplesUrl": "https://www.gitbook.com/explore"
+        }
+      ]
+    },
+    "internal_documentation": {
+      "description": "Internal wiki and knowledge management",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Notion",
+          "version": "platform",
+          "rationale": "All-in-one workspace, databases, wikis, collaboration, integrations, AI features",
+          "useCases": [
+            "team wikis",
+            "project management",
+            "internal knowledge base",
+            "meeting notes"
+          ],
+          "docsUrl": "https://www.notion.so/help",
+          "examplesUrl": "https://www.notion.so/templates"
+        },
+        {
+          "rank": 2,
+          "name": "Nuclino",
+          "version": "platform",
+          "rationale": "Lightweight wiki, fast, real-time collaboration, visual graph, search",
+          "useCases": [
+            "team knowledge base",
+            "lightweight wikis",
+            "fast documentation",
+            "small teams"
+          ],
+          "docsUrl": "https://help.nuclino.com/",
+          "examplesUrl": "https://www.nuclino.com/solutions"
+        },
+        {
+          "rank": 3,
+          "name": "Confluence",
+          "version": "platform",
+          "rationale": "Enterprise wiki, Atlassian integration, templates, permissions, Jira integration",
+          "useCases": [
+            "enterprise teams",
+            "Atlassian ecosystem",
+            "complex permissions",
+            "large organizations"
+          ],
+          "docsUrl": "https://support.atlassian.com/confluence-cloud/",
+          "examplesUrl": "https://www.atlassian.com/software/confluence/templates"
+        },
+        {
+          "rank": 4,
+          "name": "Obsidian",
+          "version": "latest",
+          "rationale": "Local-first, Markdown, graph view, plugins, privacy, offline-capable",
+          "useCases": [
+            "personal knowledge management",
+            "privacy-focused",
+            "local storage",
+            "research notes"
+          ],
+          "docsUrl": "https://help.obsidian.md/",
+          "examplesUrl": "https://obsidian.md/community"
+        }
+      ]
+    },
+    "static_site_generators": {
+      "description": "Documentation static site generators",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Astro",
+          "version": "4.x",
+          "rationale": "Fast, component islands, MDX, framework-agnostic, excellent DX",
+          "useCases": [
+            "content-heavy sites",
+            "technical blogs",
+            "documentation",
+            "marketing sites"
+          ],
+          "docsUrl": "https://docs.astro.build/",
+          "examplesUrl": "https://astro.build/themes/"
+        },
+        {
+          "rank": 2,
+          "name": "VitePress",
+          "version": "1.x",
+          "rationale": "Vue-powered, fast, simple, Markdown-focused, Vue components",
+          "useCases": [
+            "Vue projects",
+            "simple docs",
+            "technical docs",
+            "fast builds"
+          ],
+          "docsUrl": "https://vitepress.dev/",
+          "examplesUrl": "https://vitepress.dev/guide/what-is-vitepress"
+        },
+        {
+          "rank": 3,
+          "name": "MkDocs (Material)",
+          "version": "1.5+",
+          "rationale": "Python, Material theme, simple setup, instant preview, extensible",
+          "useCases": [
+            "Python projects",
+            "simple docs",
+            "GitHub Pages",
+            "technical docs"
+          ],
+          "docsUrl": "https://www.mkdocs.org/",
+          "examplesUrl": "https://squidfunk.github.io/mkdocs-material/"
+        },
+        {
+          "rank": 4,
+          "name": "Nextra",
+          "version": "2.x",
+          "rationale": "Next.js-based, MDX, search, i18n, React components",
+          "useCases": [
+            "Next.js projects",
+            "React docs",
+            "component libraries",
+            "modern docs"
+          ],
+          "docsUrl": "https://nextra.site/",
+          "examplesUrl": "https://nextra.site/showcase"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://protoflow.ai/schemas/domain-version.schema.json",
+  "domain": "DOMAIN_NAME",
+  "current_version": "0.1.0",
+  "description": "DOMAIN_DESCRIPTION",
+  "languages": ["typescript", "python"],
+  "dependencies": {
+    "core": "^1.0.0"
+  },
+  "versions": {
+    "0.1.0": {
+      "released_at": "YYYY-MM-DD",
+      "status": "development",
+      "changes": "Initial development version"
+    }
+  },
+  "entities": [
+    "Entity1"
+  ],
+  "actions": [
+    "Entity1Action"
+  ],
+  "enums": [],
+  "w3c_standards": ["RDF", "OWL", "SHACL"]
+}

@@ -1,0 +1,346 @@
+# Domain: Speaker Diarization
+# Who spoke when - identifying and tracking speakers in audio
+# Use cases: Kids loudness tracker, meeting transcription, call analytics
+
+domain:
+  name: speaker-diarization
+  version: "1.0.0"
+  description: Speaker identification and segmentation in audio streams
+  layer: domain
+  dependencies:
+    - primitive-actor      # Speaker extends Actor
+    - primitive-event      # SpeakerSegment extends Event
+    - primitive-audio      # Audio measurements
+    - primitive-quantity   # Confidence scores
+  created_at: "2025-12-04"
+  updated_at: "2025-12-04"
+
+entities:
+
+  # ============================================
+  # SPEAKER IDENTITY
+  # ============================================
+
+  Speaker:
+    extends: Actor  # From primitive-actor
+    description: Identified voice in audio stream
+    properties:
+      id:
+        type: uuid
+        required: true
+      voiceSignatureId:
+        type: string
+        description: Unique voice embedding/fingerprint ID
+      displayName:
+        type: string
+        description: Human-readable name for this speaker
+      role:
+        type: SpeakerRole
+        description: Role in context (child, host, etc.)
+      enrolledAt:
+        type: datetime
+        description: When voice was first enrolled
+      lastHeardAt:
+        type: datetime
+        description: Most recent detection
+      metadata:
+        type: object
+        description: Additional speaker properties
+
+  VoiceSignature:
+    description: Acoustic fingerprint of a speaker's voice
+    properties:
+      id:
+        type: string
+        required: true
+      embedding:
+        type: array
+        items: number
+        description: Voice embedding vector
+      embeddingModel:
+        type: string
+        description: Model used to generate embedding
+      embeddingVersion:
+        type: string
+      sampleCount:
+        type: integer
+        description: Number of samples used to build signature
+      quality:
+        type: SignatureQuality
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+
+  SpeakerProfile:
+    description: Extended profile with voice characteristics
+    properties:
+      speakerId:
+        type: uuid
+        required: true
+      typicalPitch:
+        type: FrequencyRange  # From primitive-audio
+        description: Typical pitch range for this speaker
+      typicalLoudness:
+        type: object
+        properties:
+          mean: { type: Loudness }  # From primitive-audio
+          stdDev: { type: number }
+      typicalSpeechRate:
+        type: SpeechRate  # From primitive-audio
+      language:
+        type: string
+        description: Primary language (ISO 639-1)
+      accent:
+        type: string
+        description: Regional accent if detected
+
+  # ============================================
+  # SPEAKER SEGMENTS
+  # ============================================
+
+  SpeakerSegment:
+    extends: Event  # From primitive-event
+    description: Contiguous segment of audio attributed to one speaker
+    properties:
+      id:
+        type: uuid
+        required: true
+      speakerId:
+        type: uuid
+        required: true
+        description: Identified speaker
+      timeRange:
+        type: TimeRange  # From primitive-audio
+        required: true
+        description: Start and end time of segment
+      confidence:
+        type: Confidence
+        required: true
+        description: Diarization confidence
+      metrics:
+        type: AudioMetrics  # From primitive-audio
+        description: Audio measurements for this segment
+      transcript:
+        type: string
+        description: Transcribed text (if available)
+      isFinal:
+        type: boolean
+        default: false
+        description: Whether transcript is finalized
+
+  Confidence:
+    description: ML model confidence score
+    properties:
+      value:
+        type: number
+        required: true
+        minimum: 0
+        maximum: 1
+        description: Confidence as 0-1 probability
+      valuePercent:
+        type: integer
+        minimum: 0
+        maximum: 100
+        description: Confidence as 0-100 percentage
+    computed:
+      valuePercent:
+        formula: "round(value * 100)"
+
+  # ============================================
+  # DIARIZATION SESSION
+  # ============================================
+
+  DiarizationSession:
+    description: Active diarization context
+    properties:
+      id:
+        type: uuid
+        required: true
+      startedAt:
+        type: datetime
+        required: true
+      endedAt:
+        type: datetime
+      status:
+        type: SessionStatus
+        default: active
+      knownSpeakers:
+        type: array
+        items: uuid
+        description: Pre-enrolled speaker IDs
+      detectedSpeakers:
+        type: array
+        items: uuid
+        description: Speakers detected during session
+      config:
+        type: DiarizationConfig
+
+  DiarizationConfig:
+    description: Configuration for diarization engine
+    properties:
+      maxSpeakers:
+        type: integer
+        default: 10
+        description: Maximum speakers to detect
+      minSegmentDuration:
+        type: AudioDuration  # From primitive-audio
+        description: Minimum segment length
+      silenceThreshold:
+        type: Loudness  # From primitive-audio
+        description: Level below which is considered silence
+      overlapHandling:
+        type: OverlapHandling
+        default: split
+      language:
+        type: string
+        description: Expected language (for improved accuracy)
+
+  # ============================================
+  # SPEAKER EVENTS
+  # ============================================
+
+  SpeakerEvent:
+    extends: Event  # From primitive-event
+    description: Speaker-related occurrence
+    properties:
+      sessionId:
+        type: uuid
+        required: true
+      speakerId:
+        type: uuid
+        required: true
+      eventType:
+        type: SpeakerEventType
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+      metrics:
+        type: AudioMetrics  # From primitive-audio
+        description: Audio metrics at time of event
+
+  LoudnessAlert:
+    extends: SpeakerEvent
+    description: Alert when speaker exceeds loudness threshold
+    properties:
+      threshold:
+        type: Loudness  # From primitive-audio
+        required: true
+      actual:
+        type: Loudness  # From primitive-audio
+        required: true
+      duration:
+        type: AudioDuration  # From primitive-audio
+        description: How long threshold was exceeded
+
+  # ============================================
+  # SPEAKER RELATIONSHIPS
+  # ============================================
+
+  SpeakerGroup:
+    description: Named group of speakers (e.g., family, team)
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      members:
+        type: array
+        items: uuid
+        description: Speaker IDs in this group
+      groupType:
+        type: SpeakerGroupType
+
+  SpeakerAlias:
+    description: Alternative identifier for a speaker
+    properties:
+      speakerId:
+        type: uuid
+        required: true
+      alias:
+        type: string
+        required: true
+        description: Alternative name or ID
+      source:
+        type: string
+        description: Where this alias came from
+
+enums:
+
+  SpeakerRole:
+    description: Role of speaker in context
+    values:
+      - child           # Minor/child speaker
+      - adult           # Adult speaker
+      - host            # Meeting/event host
+      - participant     # Regular participant
+      - interviewer     # Interviewer role
+      - interviewee     # Interviewee role
+      - agent           # Customer service agent
+      - customer        # Customer/caller
+      - unknown         # Role not determined
+
+  SignatureQuality:
+    description: Quality of voice signature
+    values:
+      - excellent       # High-quality enrollment
+      - good            # Sufficient for reliable ID
+      - fair            # May have occasional misses
+      - poor            # Needs re-enrollment
+
+  SessionStatus:
+    description: Diarization session status
+    values:
+      - active          # Currently processing
+      - paused          # Temporarily paused
+      - completed       # Finished normally
+      - error           # Ended with error
+
+  OverlapHandling:
+    description: How to handle overlapping speech
+    values:
+      - split           # Split into separate segments
+      - longest         # Attribute to longest speaker
+      - first           # Attribute to first speaker
+      - mixed           # Mark as multi-speaker
+
+  SpeakerEventType:
+    description: Types of speaker events
+    values:
+      - started_speaking
+      - stopped_speaking
+      - loudness_exceeded
+      - new_speaker_detected
+      - speaker_identified
+      - speaker_lost
+
+  SpeakerGroupType:
+    description: Type of speaker group
+    values:
+      - family
+      - team
+      - meeting
+      - household
+      - custom
+
+meta:
+  use_cases:
+    - "Kids loudness tracker - monitor which child is being loud"
+    - "Meeting transcription - attribute speech to participants"
+    - "Call center analytics - separate agent and customer"
+    - "Podcast editing - identify speakers for editing"
+
+  integrations:
+    - "AWS Transcribe (speaker diarization)"
+    - "Google Speech-to-Text (speaker diarization)"
+    - "Azure Speech Services"
+    - "pyannote.audio"
+
+  related_domains:
+    - meeting: "Meetings have speakers"
+    - transcript: "Transcripts are attributed to speakers"
+    - audio: "Audio contains speaker segments"

@@ -1,0 +1,256 @@
+# Auth Domain Model
+# Authentication, authorization, and session management
+
+domain:
+  name: auth
+  version: "1.0.0"
+  description: Authentication, authorization, roles, permissions, and session management
+  dependencies: [core]
+  created_at: "2025-11-21"
+  updated_at: "2025-11-22"
+
+entities:
+
+  Principal:
+    description: Any authenticated entity that can be granted permissions
+    properties:
+      id: { type: string, required: true }
+      username: { type: string, required: true }
+      displayName: { type: string }
+      isActive: { type: boolean, default: true }
+      roles: { type: array, items: Role }
+      directPermissions: { type: array, items: Permission }
+      lastLoginAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  User:
+    extends: Principal
+    description: Human user identity
+    properties:
+      email: { type: string, required: true }
+      emailVerified: { type: boolean, default: false }
+      credentials: { type: array, items: Credential }
+
+  ServiceAccount:
+    extends: Principal
+    description: Non-human identity for service-to-service auth
+    properties:
+      ownerId: { type: string, description: "User who owns this service account" }
+      apiKeyHash: { type: string }
+
+  Role:
+    description: Named collection of permissions
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      permissions: { type: array, items: Permission }
+      parentRoleId: { type: string, description: "For role hierarchy" }
+      isSystemRole: { type: boolean, default: false }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Permission:
+    description: Granular access right
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true, description: "Format: resource:action" }
+      description: { type: string }
+      scope: { type: PermissionScope, default: Global }
+
+  Resource:
+    description: Protected entity requiring authorization
+    properties:
+      id: { type: string, required: true }
+      type: { type: string, required: true }
+      ownerId: { type: string }
+
+  Session:
+    description: Authenticated session
+    properties:
+      id: { type: string, required: true }
+      principalId: { type: string, required: true }
+      accessToken: { type: string }
+      refreshToken: { type: string }
+      status: { type: SessionStatus, required: true }
+      expiresAt: { type: datetime, required: true }
+      ipAddress: { type: string }
+      userAgent: { type: string }
+      createdByCredentialId: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Credential:
+    description: Authentication mechanism
+    properties:
+      id: { type: string, required: true }
+      principalId: { type: string, required: true }
+      type: { type: AuthMethod, required: true }
+      isActive: { type: boolean, default: true }
+      lastUsedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PasswordCredential:
+    extends: Credential
+    description: Username/password auth
+    properties:
+      passwordHash: { type: string, required: true }
+      passwordChangedAt: { type: datetime }
+
+  OAuthCredential:
+    extends: Credential
+    description: OAuth/OIDC auth
+    properties:
+      provider: { type: string, required: true, description: "google, github, okta" }
+      providerSubject: { type: string, required: true }
+      providerEmail: { type: string }
+
+  MFACredential:
+    extends: Credential
+    description: Multi-factor auth
+    properties:
+      mfaType: { type: MFAType, required: true }
+      secret: { type: string }
+      isVerified: { type: boolean, default: false }
+
+  Policy:
+    description: Access control policy (ABAC)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      effect: { type: PolicyEffect, required: true }
+      conditions: { type: array, items: PolicyCondition }
+      resourcePattern: { type: string }
+      actions: { type: array, items: string }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PolicyCondition:
+    properties:
+      field: { type: string, required: true }
+      operator: { type: string, required: true }
+      value: { type: string, required: true }
+
+enums:
+
+  PermissionScope:
+    values:
+      - Global      # System-wide
+      - Org         # Organization level
+      - Project     # Project level
+      - Resource    # Specific resource
+
+  SessionStatus:
+    values:
+      - Active
+      - Expired
+      - Revoked
+      - Suspended
+
+  AuthMethod:
+    values:
+      - Password
+      - OAuth
+      - SAML
+      - APIKey
+      - Certificate
+      - MFA
+
+  MFAType:
+    values:
+      - TOTP        # Time-based OTP (Google Authenticator)
+      - SMS         # SMS code
+      - Email       # Email code
+      - WebAuthn    # Hardware key (FIDO2)
+      - Push        # Push notification
+
+  PolicyEffect:
+    values: [Allow, Deny]
+
+actions:
+
+  Authenticate:
+    description: Verify credentials and create session
+    parameters:
+      username: { type: string, required: true }
+      credential: { type: string, required: true }
+      authMethod: { type: AuthMethod, default: Password }
+      mfaCode: { type: string }
+    result: Session
+    errors: [INVALID_CREDENTIALS, ACCOUNT_LOCKED, ACCOUNT_DISABLED, MFA_REQUIRED]
+
+  RefreshSession:
+    description: Exchange refresh token for new access token
+    parameters:
+      refreshToken: { type: string, required: true }
+    result: Session
+    errors: [INVALID_REFRESH_TOKEN, SESSION_REVOKED, SESSION_EXPIRED]
+
+  RevokeSession:
+    description: Logout / invalidate session
+    parameters:
+      sessionId: { type: string, required: true }
+    result: { type: void }
+    idempotent: true
+
+  RevokeAllSessions:
+    description: Force logout from all devices
+    parameters:
+      principalId: { type: string, required: true }
+    result: { type: integer, description: "Count of revoked sessions" }
+
+  Authorize:
+    description: Check if principal has permission
+    parameters:
+      principalId: { type: string, required: true }
+      permission: { type: string, required: true }
+      resourceId: { type: string }
+    result: { type: boolean }
+    idempotent: true
+
+  AssignRole:
+    description: Grant role to principal
+    parameters:
+      principalId: { type: string, required: true }
+      roleName: { type: string, required: true }
+    result: Principal
+    idempotent: true
+
+  RevokeRole:
+    description: Remove role from principal
+    parameters:
+      principalId: { type: string, required: true }
+      roleName: { type: string, required: true }
+    result: Principal
+    idempotent: true
+
+  CreateUser:
+    description: Register new user
+    parameters:
+      email: { type: string, required: true }
+      username: { type: string }
+      password: { type: string, required: true }
+      displayName: { type: string }
+      roles: { type: array, items: string }
+    result: User
+    errors: [USERNAME_TAKEN, EMAIL_TAKEN, WEAK_PASSWORD]
+
+  DisableUser:
+    description: Disable user account
+    parameters:
+      userId: { type: string, required: true }
+      reason: { type: string }
+    result: User
+    idempotent: true
+
+  ResetPassword:
+    description: Change user password
+    parameters:
+      userId: { type: string, required: true }
+      currentPassword: { type: string }
+      newPassword: { type: string, required: true }
+    result: { type: void }
+    errors: [INVALID_CURRENT_PASSWORD, WEAK_PASSWORD]

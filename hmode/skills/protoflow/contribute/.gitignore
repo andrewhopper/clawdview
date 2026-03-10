@@ -1,0 +1,22 @@
+# Protect user-specific configuration
+contribute-config.local.yaml
+.env
+*.token
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Testing
+.pytest_cache/
+test-sandboxes/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

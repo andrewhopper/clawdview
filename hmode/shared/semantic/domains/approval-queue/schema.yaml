@@ -1,0 +1,1966 @@
+# Approval Queue Domain
+# Extension of human-task for priority-based human approval workflows
+# Version: 1.0.0
+
+domain:
+  name: approval-queue
+  version: "1.0.0"
+  status: production
+  description: Priority queue for human-in-the-loop approvals with AI confidence, auto-approval rules, and batch operations
+  owner: platform
+  extends: human-task
+  dependencies:
+    - human-task  # Base task, decision, feedback patterns
+    - core        # Base types
+    - notification # For alerts
+  use_case: Data model review, code review, RLHF feedback, email drafts, document approvals
+  created_at: "2025-12-08"
+  updated_at: "2025-12-08"
+
+# ============================================
+# ENTITIES
+# ============================================
+
+entities:
+
+  # Core approval item (extends human-task.Task)
+  ApprovalItem:
+    description: Universal unit of work requiring human judgment
+    extends: human-task.Task
+    properties:
+      id:
+        type: UUID
+        required: true
+        description: Unique identifier
+      item_type:
+        type: ItemType
+        required: true
+        description: Type of item being reviewed
+      parent_id:
+        type: UUID
+        required: false
+        description: Parent item (e.g., model → field, PR → file)
+      content:
+        type: ItemContent
+        required: true
+        description: Type-specific payload
+      confidence:
+        type: Confidence
+        required: true
+        description: AI confidence assessment
+      priority:
+        type: Priority
+        required: true
+        description: Computed queue position
+      status:
+        type: ItemStatus
+        required: true
+        default: pending
+      source:
+        type: Source
+        required: true
+        description: Origin system/context
+      created_at:
+        type: DateTime
+        required: true
+      updated_at:
+        type: DateTime
+        required: true
+      decided_at:
+        type: DateTime
+        required: false
+
+  # AI confidence assessment
+  Confidence:
+    description: AI assessment of the item with alternatives
+    properties:
+      level:
+        type: ConfidenceLevel
+        required: true
+        description: Categorical level (high, medium, low)
+      score:
+        type: Float
+        required: true
+        constraints:
+          min: 0.0
+          max: 1.0
+        description: Numeric confidence score
+      recommendation:
+        type: Action
+        required: false
+        description: Suggested action (approve, reject, review)
+      reasoning:
+        type: String
+        required: false
+        description: Why AI thinks this
+      alternatives:
+        type: Alternative[]
+        required: false
+        description: Other options considered
+
+  # Suggested alternative
+  Alternative:
+    description: AI-suggested alternative value
+    properties:
+      value:
+        type: String
+        required: true
+        description: The alternative value
+      confidence:
+        type: Float
+        required: false
+        constraints:
+          min: 0.0
+          max: 1.0
+        description: Confidence in this alternative
+      source:
+        type: String
+        required: false
+        description: Where suggestion came from
+
+  # Computed queue position
+  Priority:
+    description: Computed queue position for an item
+    properties:
+      score:
+        type: Float
+        required: true
+        constraints:
+          min: 0.0
+          max: 1.0
+        description: Priority score (higher = more urgent)
+      factors:
+        type: PriorityFactor[]
+        required: true
+        description: Components that contributed to score
+      computed_at:
+        type: DateTime
+        required: true
+        description: When calculated
+
+  # Priority calculation factor
+  PriorityFactor:
+    description: Single factor in priority calculation
+    properties:
+      name:
+        type: String
+        required: true
+        description: Factor name (urgency, age, confidence_inverse, blocking, deadline)
+      weight:
+        type: Float
+        required: true
+        description: Factor weight in calculation
+      value:
+        type: Float
+        required: true
+        description: Factor value
+      contribution:
+        type: Float
+        required: true
+        computed: true
+        formula: weight * value
+        description: Contribution to final score
+
+  # Decision outcome (extends human-task.TaskDecision)
+  Decision:
+    description: Outcome of human judgment
+    extends: human-task.TaskDecision
+    properties:
+      id:
+        type: UUID
+        required: true
+      item_id:
+        type: UUID
+        required: true
+        description: FK to ApprovalItem
+      action:
+        type: Action
+        required: true
+        description: The decision taken
+      feedback:
+        type: FeedbackSignal[]
+        required: false
+        description: Detailed feedback signals
+      note:
+        type: String
+        required: false
+        description: Free-form text note
+      followed_ai:
+        type: Boolean
+        required: false
+        description: Did human agree with AI recommendation?
+      latency_ms:
+        type: Integer
+        required: false
+        description: Time to decide in milliseconds
+      created_at:
+        type: DateTime
+        required: true
+
+  # Structured feedback (extends human-task.FeedbackSignal)
+  FeedbackSignal:
+    description: Structured feedback on rejection
+    properties:
+      type:
+        type: FeedbackType
+        required: true
+        description: Category of feedback
+      value:
+        type: String
+        required: false
+        description: Additional detail (for "other")
+      source_modality:
+        type: Modality
+        required: true
+        description: How captured (tap, voice, swipe)
+
+  # Auto-approval rule
+  ApprovalRule:
+    description: Configuration for automatic approvals
+    properties:
+      id:
+        type: String
+        required: true
+        description: Unique identifier
+      name:
+        type: String
+        required: true
+        description: Display name
+      item_type:
+        type: ItemType
+        required: false
+        description: Apply to specific type (null = all)
+      condition:
+        type: RuleCondition
+        required: true
+        description: When to apply this rule
+      action:
+        type: Action
+        required: true
+        description: What to do (auto_approve, auto_reject, flag)
+      is_active:
+        type: Boolean
+        required: true
+        default: true
+
+  # Rule condition
+  RuleCondition:
+    description: Condition for rule matching
+    properties:
+      field:
+        type: String
+        required: true
+        description: Field path to check (e.g., "confidence.level", "field_name")
+      operator:
+        type: ConditionOperator
+        required: true
+        description: Comparison operator
+      value:
+        type: Any
+        required: true
+        description: Value to compare against
+      and:
+        type: RuleCondition[]
+        required: false
+        description: AND conditions
+      or:
+        type: RuleCondition[]
+        required: false
+        description: OR conditions
+
+  # Batch grouping
+  BatchGroup:
+    description: Items that can be batch-approved together
+    properties:
+      id:
+        type: UUID
+        required: true
+      name:
+        type: String
+        required: true
+        description: Display name
+      items:
+        type: UUID[]
+        required: true
+        description: Item IDs in batch
+      criteria:
+        type: BatchCriteria
+        required: true
+        description: Why items are grouped
+      suggested_action:
+        type: Action
+        required: false
+        description: Recommended batch action
+
+  # Source origin
+  Source:
+    description: Where the item came from
+    properties:
+      system:
+        type: String
+        required: true
+        description: Origin system (e.g., "claude-code", "pr-review", "email-assistant")
+      context:
+        type: String
+        required: false
+        description: Additional context
+      url:
+        type: String
+        required: false
+        description: Link to source
+      created_by:
+        type: String
+        required: false
+        description: Creator identifier
+
+# ============================================
+# ITEM TYPE CONTENT SCHEMAS
+# ============================================
+
+item_content_schemas:
+
+  DataModelField:
+    description: Data model field for review
+    properties:
+      model_name:
+        type: String
+        required: true
+      field_name:
+        type: String
+        required: true
+      field_type:
+        type: String
+        required: true
+      is_required:
+        type: Boolean
+        required: true
+      is_nullable:
+        type: Boolean
+        required: false
+      constraints:
+        type: Constraint[]
+        required: false
+
+  CodeChange:
+    description: Code change for review
+    properties:
+      file_path:
+        type: String
+        required: true
+      change_type:
+        type: String
+        required: true
+        enum: [add, modify, delete]
+      diff:
+        type: String
+        required: true
+      pr_id:
+        type: String
+        required: false
+      author:
+        type: String
+        required: false
+
+  EmailDraft:
+    description: Email draft for approval
+    properties:
+      to:
+        type: String[]
+        required: true
+      subject:
+        type: String
+        required: true
+      body:
+        type: String
+        required: true
+      reply_to:
+        type: String
+        required: false
+      tone:
+        type: String
+        required: false
+
+  AIGeneration:
+    description: AI-generated content for RLHF
+    properties:
+      prompt:
+        type: String
+        required: true
+      response:
+        type: String
+        required: true
+      model:
+        type: String
+        required: true
+      variation_of:
+        type: UUID
+        required: false
+      generation_params:
+        type: JSON
+        required: false
+
+# ============================================
+# ENUMS
+# ============================================
+
+enums:
+
+  ItemType:
+    values:
+      - data_model_field
+      - data_model      # Parent model
+      - code_change
+      - email_draft
+      - document
+      - ai_generation
+
+  ItemStatus:
+    values:
+      - pending
+      - approved
+      - rejected
+      - deferred
+      - discarded
+      - auto_approved
+
+  ConfidenceLevel:
+    values:
+      - high      # Score >= 0.8
+      - medium    # Score 0.5-0.79
+      - low       # Score < 0.5
+
+  Action:
+    values:
+      - approve
+      - reject
+      - defer
+      - discard
+      - regenerate
+      - request_changes
+      - auto_approve
+      - auto_reject
+      - flag_for_review
+
+  FeedbackType:
+    values:
+      - decompose       # Field should be split
+      - change_type     # Wrong data type
+      - rename          # Bad naming
+      - make_optional   # Should be optional
+      - make_required   # Should be required
+      - other           # Free-form feedback
+
+  Modality:
+    values:
+      - visual_touch    # Touch screen tap
+      - visual_click    # Mouse click
+      - voice           # Voice command
+      - swipe           # Swipe gesture
+      - haptic          # Haptic feedback
+
+  ConditionOperator:
+    values:
+      - eq              # Equals
+      - neq             # Not equals
+      - gt              # Greater than
+      - gte             # Greater than or equal
+      - lt              # Less than
+      - lte             # Less than or equal
+      - in              # In list
+      - not_in          # Not in list
+      - contains        # String contains
+      - matches         # Regex match
+
+  BatchCriteria:
+    values:
+      - same_parent     # All fields in same model
+      - same_confidence # All same confidence level
+      - same_type       # All same item type
+      - custom          # Custom grouping
+
+# ============================================
+# ACTIONS
+# ============================================
+
+actions:
+
+  GetPriorityQueue:
+    description: Get items sorted by priority
+    input:
+      item_type:
+        type: ItemType
+        required: false
+      status:
+        type: ItemStatus
+        required: false
+        default: pending
+      limit:
+        type: Integer
+        required: false
+        default: 20
+    output:
+      type: ApprovalItem[]
+      sorted_by: priority.score DESC
+
+  SubmitDecision:
+    description: Submit a decision on an item
+    input:
+      item_id:
+        type: UUID
+        required: true
+      action:
+        type: Action
+        required: true
+      feedback:
+        type: FeedbackSignal[]
+        required: false
+      note:
+        type: String
+        required: false
+    output:
+      type: Decision
+
+  BatchApprove:
+    description: Approve multiple items at once
+    input:
+      item_ids:
+        type: UUID[]
+        required: true
+      action:
+        type: Action
+        required: true
+        default: approve
+    output:
+      type: Decision[]
+
+  BatchByCriteria:
+    description: Batch approve by criteria match
+    input:
+      criteria:
+        type: RuleCondition
+        required: true
+      action:
+        type: Action
+        required: true
+    output:
+      matched_count:
+        type: Integer
+      decisions:
+        type: Decision[]
+
+  EvaluateAutoApproval:
+    description: Check if item matches any auto-approval rules
+    input:
+      item:
+        type: ApprovalItem
+        required: true
+    output:
+      matched_rule:
+        type: ApprovalRule
+        required: false
+      auto_action:
+        type: Action
+        required: false
+
+# ============================================
+# PRIORITY CALCULATION
+# ============================================
+
+priority_calculation:
+  description: How priority scores are computed
+  formula: Σ(factor.weight * factor.value)
+  factors:
+    urgency:
+      weight: 0.30
+      description: Explicit urgency flag (0 or 1)
+    age:
+      weight: 0.20
+      formula: min(hours_old / 24, 1.0)
+      description: Hours old, capped at 24h
+    confidence_inverse:
+      weight: 0.25
+      formula: 1 - confidence.score
+      description: LOW confidence = HIGH priority
+    blocking:
+      weight: 0.15
+      description: 1.0 if blocking others, else 0
+    deadline:
+      weight: 0.10
+      formula: max(1 - (hours_until_deadline / 24), 0)
+      description: Urgency from deadline proximity
+
+# ============================================
+# REVIEW TYPES
+# Different interaction patterns for human judgment
+# ============================================
+
+review_types:
+
+  # 1. BINARY - Simple yes/no decision
+  Binary:
+    description: Simple approve/reject or yes/no decision
+    use_cases:
+      - Document approval
+      - Content moderation (safe/unsafe)
+      - Feature flags
+      - Email send approval
+    properties:
+      positive_label:
+        type: String
+        required: false
+        default: "Approve"
+        description: Label for positive action
+      negative_label:
+        type: String
+        required: false
+        default: "Reject"
+        description: Label for negative action
+      allow_skip:
+        type: Boolean
+        required: false
+        default: false
+        description: Allow skipping without decision
+      require_confirmation:
+        type: Boolean
+        required: false
+        default: false
+        description: Require confirmation for negative action
+    decision_schema:
+      choice:
+        type: BinaryChoice
+        required: true
+      skipped:
+        type: Boolean
+        required: false
+    gestures:
+      swipe_right: positive
+      swipe_left: negative
+      swipe_up: skip
+      tap_check: positive
+      tap_x: negative
+
+  # 2. CLASSIFICATION - Select from predefined categories
+  Classification:
+    description: Assign item to one category from a predefined set
+    use_cases:
+      - Image labeling
+      - Content categorization
+      - Sentiment analysis
+      - Support ticket routing
+      - Content moderation (spam/nsfw/safe/etc)
+    properties:
+      categories:
+        type: Category[]
+        required: true
+        description: Available categories to choose from
+      allow_new_category:
+        type: Boolean
+        required: false
+        default: false
+        description: Allow creating new categories on-the-fly
+      show_confidence:
+        type: Boolean
+        required: false
+        default: true
+        description: Show AI confidence per category
+      allow_skip:
+        type: Boolean
+        required: false
+        default: false
+    decision_schema:
+      selected_category:
+        type: String
+        required: true
+      new_category:
+        type: String
+        required: false
+        description: If allow_new_category and user created one
+      confidence_override:
+        type: Float
+        required: false
+        description: Human confidence in classification
+    gestures:
+      tap: select_category
+      long_press: category_details
+      swipe_up: skip
+
+  # 3. RATING - Numeric or discrete scale
+  Rating:
+    description: Rate item on a scale (stars, thumbs, numeric)
+    use_cases:
+      - Content quality scoring
+      - RLHF preference strength
+      - Product reviews
+      - Performance evaluation
+      - Difficulty assessment
+    properties:
+      scale_type:
+        type: RatingScaleType
+        required: true
+        description: Type of rating scale
+      min_value:
+        type: Float
+        required: true
+        description: Minimum value (e.g., 1, -5, 0)
+      max_value:
+        type: Float
+        required: true
+        description: Maximum value (e.g., 5, +5, 10)
+      step:
+        type: Float
+        required: false
+        default: 1
+        description: Step increment (1 for integers, 0.5 for half-stars)
+      labels:
+        type: ScaleLabel[]
+        required: false
+        description: Labels for specific values (e.g., 1="Poor", 5="Excellent")
+      neutral_value:
+        type: Float
+        required: false
+        description: Neutral/middle value (for bipolar scales)
+      allow_skip:
+        type: Boolean
+        required: false
+        default: false
+    decision_schema:
+      rating:
+        type: Float
+        required: true
+      normalized_rating:
+        type: Float
+        computed: true
+        formula: (rating - min_value) / (max_value - min_value)
+        description: 0.0-1.0 normalized score
+    gestures:
+      swipe_horizontal: adjust_rating
+      tap_star: set_rating
+      long_press: confirm_and_next
+
+  # 4. COMPARISON - A/B preference selection
+  Comparison:
+    description: Choose preferred option from two or more alternatives
+    use_cases:
+      - RLHF pairwise preference
+      - A/B testing
+      - Design comparison
+      - Response quality comparison
+      - Translation preference
+    properties:
+      comparison_type:
+        type: ComparisonType
+        required: true
+        description: Pairwise, best-of-N, or tournament
+      options:
+        type: ComparisonOption[]
+        required: true
+        min_length: 2
+        description: Options to compare
+      allow_tie:
+        type: Boolean
+        required: false
+        default: false
+        description: Allow declaring items equal
+      allow_both_bad:
+        type: Boolean
+        required: false
+        default: false
+        description: Allow rejecting all options
+      show_source:
+        type: Boolean
+        required: false
+        default: false
+        description: Show which model/source generated each
+    decision_schema:
+      winner_id:
+        type: UUID
+        required: false
+        description: ID of winning option (null if tie/both_bad)
+      is_tie:
+        type: Boolean
+        required: false
+      both_bad:
+        type: Boolean
+        required: false
+      preference_strength:
+        type: PreferenceStrength
+        required: false
+        description: How strong the preference is
+      reasoning:
+        type: String
+        required: false
+    gestures:
+      tap_left: select_left
+      tap_right: select_right
+      swipe_up: tie
+      swipe_down: both_bad
+      long_press: add_reasoning
+
+  # 5. RANKING - Order multiple items by preference
+  Ranking:
+    description: Order items from best to worst (or by another criterion)
+    use_cases:
+      - Search result relevance
+      - Priority ordering
+      - Multi-response RLHF
+      - Feature prioritization
+      - Candidate ranking
+    properties:
+      items:
+        type: RankableItem[]
+        required: true
+        min_length: 2
+        description: Items to rank
+      ranking_criterion:
+        type: String
+        required: false
+        default: "preference"
+        description: What criterion to rank by
+      allow_ties:
+        type: Boolean
+        required: false
+        default: false
+        description: Allow items to share same rank
+      allow_partial:
+        type: Boolean
+        required: false
+        default: false
+        description: Allow ranking subset of items
+      max_items_to_rank:
+        type: Integer
+        required: false
+        description: Only rank top N (e.g., top 3)
+    decision_schema:
+      rankings:
+        type: ItemRank[]
+        required: true
+        description: Ordered list of items with ranks
+      is_partial:
+        type: Boolean
+        required: false
+      unranked_items:
+        type: UUID[]
+        required: false
+    gestures:
+      drag: reorder
+      tap_number: set_rank
+      swipe_right: move_up
+      swipe_left: move_down
+
+  # 6. FREEFORM - Text input for corrections or annotations
+  Freeform:
+    description: Open-ended text response for corrections, edits, or annotations
+    use_cases:
+      - Text correction/editing
+      - Translation correction
+      - Caption editing
+      - Note-taking
+      - Detailed feedback
+    properties:
+      input_type:
+        type: FreeformInputType
+        required: true
+        description: Type of text input expected
+      placeholder:
+        type: String
+        required: false
+        description: Placeholder text
+      original_text:
+        type: String
+        required: false
+        description: Original text (for correction mode)
+      min_length:
+        type: Integer
+        required: false
+        description: Minimum character count
+      max_length:
+        type: Integer
+        required: false
+        description: Maximum character count
+      show_diff:
+        type: Boolean
+        required: false
+        default: true
+        description: Show diff between original and edited
+      voice_enabled:
+        type: Boolean
+        required: false
+        default: true
+        description: Allow voice dictation
+    decision_schema:
+      text:
+        type: String
+        required: true
+      is_correction:
+        type: Boolean
+        required: false
+        description: Whether this corrects original
+      diff:
+        type: TextDiff
+        required: false
+        description: Changes from original
+      dictated:
+        type: Boolean
+        required: false
+        description: Was input via voice
+    gestures:
+      tap: focus_input
+      voice: dictate
+      swipe_up: submit
+      swipe_down: cancel
+
+  # 7. MULTI-LABEL - Select multiple tags/categories
+  MultiLabel:
+    description: Assign multiple labels or tags to an item
+    use_cases:
+      - Image tagging
+      - Content tagging
+      - Feature flagging
+      - Multi-class classification
+      - Attribute selection
+    properties:
+      available_labels:
+        type: Label[]
+        required: true
+        description: Available labels to choose from
+      min_selections:
+        type: Integer
+        required: false
+        default: 1
+        description: Minimum labels required
+      max_selections:
+        type: Integer
+        required: false
+        description: Maximum labels allowed
+      allow_new_labels:
+        type: Boolean
+        required: false
+        default: false
+        description: Allow creating new labels
+      grouped:
+        type: Boolean
+        required: false
+        default: false
+        description: Labels organized in groups
+      label_groups:
+        type: LabelGroup[]
+        required: false
+        description: Groups of labels (if grouped=true)
+      mutually_exclusive_groups:
+        type: String[][]
+        required: false
+        description: Groups where only one label can be selected
+    decision_schema:
+      selected_labels:
+        type: String[]
+        required: true
+      new_labels:
+        type: String[]
+        required: false
+      confidence_per_label:
+        type: LabelConfidence[]
+        required: false
+    gestures:
+      tap: toggle_label
+      long_press: label_details
+      swipe_up: submit
+      double_tap: add_new_label
+
+# ============================================
+# REVIEW TYPE SUPPORTING ENTITIES
+# ============================================
+
+review_entities:
+
+  Category:
+    description: A classification category
+    properties:
+      id:
+        type: String
+        required: true
+      name:
+        type: String
+        required: true
+      description:
+        type: String
+        required: false
+      color:
+        type: String
+        required: false
+      icon:
+        type: String
+        required: false
+      ai_confidence:
+        type: Float
+        required: false
+        description: AI's confidence this is the right category
+      parent_id:
+        type: String
+        required: false
+        description: For hierarchical categories
+
+  ScaleLabel:
+    description: Label for a specific rating value
+    properties:
+      value:
+        type: Float
+        required: true
+      label:
+        type: String
+        required: true
+      color:
+        type: String
+        required: false
+
+  ComparisonOption:
+    description: An option in a comparison
+    properties:
+      id:
+        type: UUID
+        required: true
+      content:
+        type: Any
+        required: true
+        description: The content being compared
+      source:
+        type: String
+        required: false
+        description: Model or source that generated this
+      metadata:
+        type: JSON
+        required: false
+
+  RankableItem:
+    description: An item that can be ranked
+    properties:
+      id:
+        type: UUID
+        required: true
+      content:
+        type: Any
+        required: true
+      current_rank:
+        type: Integer
+        required: false
+        description: Pre-assigned rank (for re-ranking)
+
+  ItemRank:
+    description: A ranking assignment
+    properties:
+      item_id:
+        type: UUID
+        required: true
+      rank:
+        type: Integer
+        required: true
+        description: 1 = best
+      tied_with:
+        type: UUID[]
+        required: false
+        description: Items sharing same rank
+
+  Label:
+    description: A tag/label for multi-label classification
+    properties:
+      id:
+        type: String
+        required: true
+      name:
+        type: String
+        required: true
+      description:
+        type: String
+        required: false
+      color:
+        type: String
+        required: false
+      icon:
+        type: String
+        required: false
+      group:
+        type: String
+        required: false
+      ai_suggested:
+        type: Boolean
+        required: false
+
+  LabelGroup:
+    description: A group of related labels
+    properties:
+      id:
+        type: String
+        required: true
+      name:
+        type: String
+        required: true
+      labels:
+        type: String[]
+        required: true
+      mutually_exclusive:
+        type: Boolean
+        required: false
+        default: false
+
+  LabelConfidence:
+    description: Confidence for a selected label
+    properties:
+      label_id:
+        type: String
+        required: true
+      confidence:
+        type: Float
+        required: true
+        constraints:
+          min: 0.0
+          max: 1.0
+
+  TextDiff:
+    description: Difference between original and edited text
+    properties:
+      additions:
+        type: DiffSegment[]
+        required: false
+      deletions:
+        type: DiffSegment[]
+        required: false
+      unchanged_ratio:
+        type: Float
+        required: false
+        description: Percentage of text unchanged
+
+  DiffSegment:
+    description: A segment of text that was added or deleted
+    properties:
+      start:
+        type: Integer
+        required: true
+      end:
+        type: Integer
+        required: true
+      text:
+        type: String
+        required: true
+
+# ============================================
+# REVIEW TYPE ENUMS
+# ============================================
+
+review_enums:
+
+  BinaryChoice:
+    values:
+      - positive    # Yes/Approve/Accept
+      - negative    # No/Reject/Decline
+      - skipped     # Skipped without decision
+
+  RatingScaleType:
+    values:
+      - stars           # 1-5 stars
+      - stars_half      # 1-5 with half stars
+      - thumbs          # Thumbs up/down (binary with strength)
+      - numeric         # Numeric scale (1-10, 1-100)
+      - bipolar         # -5 to +5 (with neutral middle)
+      - likert          # Strongly disagree to strongly agree
+      - slider          # Continuous slider
+
+  ComparisonType:
+    values:
+      - pairwise        # Compare exactly 2 options
+      - best_of_n       # Pick best from N options
+      - tournament      # Bracket-style elimination
+      - full_ranking    # Rank all options (combines with Ranking)
+
+  PreferenceStrength:
+    values:
+      - slightly_better   # Marginal preference
+      - better            # Clear preference
+      - much_better       # Strong preference
+      - overwhelmingly    # Decisive preference
+
+  FreeformInputType:
+    values:
+      - correction      # Edit/fix existing text
+      - annotation      # Add notes to existing content
+      - replacement     # Provide alternative text
+      - transcription   # Transcribe audio/image
+      - description     # Describe content
+      - feedback        # General feedback text
+
+# ============================================
+# REVIEW CONFIG - Ties review type to item
+# ============================================
+
+entities:
+
+  ReviewConfig:
+    description: Configuration for how an item should be reviewed
+    properties:
+      id:
+        type: UUID
+        required: true
+      item_type:
+        type: ItemType
+        required: true
+        description: Type of item this config applies to
+      review_type:
+        type: ReviewTypeName
+        required: true
+        description: Which review type to use
+      config:
+        type: JSON
+        required: true
+        description: Type-specific configuration
+      ui_hints:
+        type: UIHints
+        required: false
+        description: UI presentation hints
+
+  UIHints:
+    description: Hints for UI rendering
+    properties:
+      layout:
+        type: String
+        required: false
+        enum: [card, fullscreen, split, inline]
+      show_progress:
+        type: Boolean
+        required: false
+        default: true
+      show_queue_position:
+        type: Boolean
+        required: false
+        default: true
+      auto_advance:
+        type: Boolean
+        required: false
+        default: true
+        description: Auto-advance to next item after decision
+      haptic_feedback:
+        type: Boolean
+        required: false
+        default: true
+      voice_enabled:
+        type: Boolean
+        required: false
+        default: false
+      gesture_tutorial:
+        type: Boolean
+        required: false
+        default: false
+        description: Show gesture hints for new users
+
+enums:
+
+  ReviewTypeName:
+    values:
+      - binary
+      - classification
+      - rating
+      - comparison
+      - ranking
+      - freeform
+      - multi_label
+
+# ============================================
+# EXAMPLE AUTO-APPROVAL RULES
+# ============================================
+
+example_rules:
+  - id: auto_approve_timestamps
+    name: Auto-approve timestamp fields
+    item_type: data_model_field
+    condition:
+      field: content.field_name
+      operator: in
+      value: [created_at, updated_at, createdAt, updatedAt]
+    action: auto_approve
+
+  - id: auto_approve_high_confidence
+    name: Auto-approve high confidence items
+    condition:
+      and:
+        - field: confidence.level
+          operator: eq
+          value: high
+        - field: confidence.score
+          operator: gte
+          value: 0.95
+    action: auto_approve
+
+  - id: flag_low_confidence
+    name: Flag low confidence for review
+    condition:
+      field: confidence.level
+      operator: eq
+      value: low
+    action: flag_for_review
+
+# ============================================
+# DELEGATED AUTHORITY (ATC Pattern)
+# AI autonomy with human-defined boundaries
+# ============================================
+
+authority:
+
+  description: |
+    Air Traffic Control pattern for AI autonomy.
+    Human grants AI a "clearance" to operate within defined boundaries.
+    AI can act autonomously within bounds, must check-in when exceeding.
+
+  concepts:
+    clearance: "Permission to operate within boundaries"
+    flight_plan: "Approved sequence of actions/decisions"
+    deviation_tolerance: "How much variance before escalation"
+    check_in_trigger: "Conditions requiring human approval"
+    autonomy_level: "Context-aware leash length"
+
+authority_entities:
+
+  # The grant of authority from human to AI
+  Clearance:
+    description: Permission for AI to operate autonomously within boundaries
+    properties:
+      id:
+        type: UUID
+        required: true
+      name:
+        type: String
+        required: true
+        description: Human-readable clearance name
+      domain:
+        type: String
+        required: true
+        description: Area of authority (email, code, scheduling, data_model)
+      flight_plan:
+        type: FlightPlan
+        required: true
+        description: Approved path of actions
+      deviation_tolerance:
+        type: DeviationTolerance
+        required: true
+        description: How much AI can deviate before check-in
+      check_in_triggers:
+        type: CheckInTrigger[]
+        required: true
+        description: Conditions that require human approval
+      autonomy_schedule:
+        type: AutonomySchedule
+        required: false
+        description: Time/context-based autonomy levels
+      status:
+        type: ClearanceStatus
+        required: true
+        default: active
+      granted_by:
+        type: String
+        required: true
+        description: Human who granted clearance
+      granted_at:
+        type: DateTime
+        required: true
+      expires_at:
+        type: DateTime
+        required: false
+      revoked_at:
+        type: DateTime
+        required: false
+      revocation_reason:
+        type: String
+        required: false
+      created_at:
+        type: DateTime
+        required: true
+      updated_at:
+        type: DateTime
+        required: true
+
+  # The approved path/sequence of actions
+  FlightPlan:
+    description: Approved sequence of actions AI can take
+    properties:
+      legs:
+        type: FlightLeg[]
+        required: true
+        description: Ordered sequence of action types
+      allowed_actions:
+        type: AllowedAction[]
+        required: true
+        description: Actions AI can perform autonomously
+      forbidden_actions:
+        type: String[]
+        required: false
+        description: Actions always requiring human approval
+      scope:
+        type: Scope
+        required: true
+        description: Boundaries of authority
+
+  # Individual leg/waypoint in the plan
+  FlightLeg:
+    description: A checkpoint or action segment in the plan
+    properties:
+      id:
+        type: String
+        required: true
+      name:
+        type: String
+        required: true
+      action_type:
+        type: String
+        required: true
+        description: Type of action (approve, modify, create, delete)
+      constraints:
+        type: LegConstraint[]
+        required: false
+        description: Constraints for this leg
+      requires_check_in:
+        type: Boolean
+        required: false
+        default: false
+        description: Whether this leg requires check-in before proceeding
+      order:
+        type: Integer
+        required: true
+
+  # Constraint on a flight leg
+  LegConstraint:
+    description: Boundary condition for a flight leg
+    properties:
+      field:
+        type: String
+        required: true
+        description: Field to constrain
+      operator:
+        type: ConditionOperator
+        required: true
+      value:
+        type: Any
+        required: true
+      description:
+        type: String
+        required: false
+
+  # What AI is allowed to do
+  AllowedAction:
+    description: An action AI can perform autonomously
+    properties:
+      action:
+        type: String
+        required: true
+        description: Action type (approve, reject, modify, create, send, etc.)
+      conditions:
+        type: RuleCondition[]
+        required: false
+        description: Conditions that must be true
+      max_per_session:
+        type: Integer
+        required: false
+        description: Rate limit per session
+      max_per_day:
+        type: Integer
+        required: false
+        description: Rate limit per day
+      cumulative_limit:
+        type: CumulativeLimit
+        required: false
+        description: Cumulative impact limits
+
+  # Cumulative limits (e.g., max $1000/day in approvals)
+  CumulativeLimit:
+    description: Cumulative impact limits for actions
+    properties:
+      metric:
+        type: String
+        required: true
+        description: What to measure (amount, count, time)
+      max_value:
+        type: Float
+        required: true
+      period:
+        type: String
+        required: true
+        description: Time period (session, day, week)
+      current_value:
+        type: Float
+        required: false
+        description: Current accumulated value
+
+  # Scope/boundaries of authority
+  Scope:
+    description: Boundaries of the clearance
+    properties:
+      item_types:
+        type: ItemType[]
+        required: false
+        description: Which item types (null = all)
+      sources:
+        type: String[]
+        required: false
+        description: Which sources (null = all)
+      tags:
+        type: String[]
+        required: false
+        description: Items with these tags
+      exclude_tags:
+        type: String[]
+        required: false
+        description: Items NOT with these tags
+      confidence_floor:
+        type: Float
+        required: false
+        description: Minimum AI confidence to act
+      priority_ceiling:
+        type: Float
+        required: false
+        description: Maximum priority AI can handle alone
+
+  # How much deviation is allowed
+  DeviationTolerance:
+    description: How much AI can deviate from plan before escalation
+    properties:
+      confidence_band:
+        type: Float
+        required: false
+        default: 0.1
+        description: Confidence can drop by this much (e.g., 0.1 = 10%)
+      priority_band:
+        type: Float
+        required: false
+        default: 0.1
+        description: Priority can exceed by this much
+      count_tolerance:
+        type: Integer
+        required: false
+        description: Can exceed count limits by this many
+      value_tolerance_percent:
+        type: Float
+        required: false
+        description: Can exceed value limits by this percent
+      allow_adjacent_categories:
+        type: Boolean
+        required: false
+        default: false
+        description: For classification, allow nearby categories
+
+  # What triggers mandatory check-in
+  CheckInTrigger:
+    description: Condition that requires human approval
+    properties:
+      id:
+        type: String
+        required: true
+      name:
+        type: String
+        required: true
+      trigger_type:
+        type: TriggerType
+        required: true
+      condition:
+        type: RuleCondition
+        required: false
+        description: Specific condition (for conditional triggers)
+      severity:
+        type: Severity
+        required: true
+        default: medium
+      message_template:
+        type: String
+        required: false
+        description: Message to show human when triggered
+
+  # Context-aware autonomy levels
+  AutonomySchedule:
+    description: Schedule for varying autonomy levels
+    properties:
+      default_level:
+        type: AutonomyLevel
+        required: true
+        default: supervised
+      time_rules:
+        type: TimeRule[]
+        required: false
+        description: Time-based autonomy rules
+      context_rules:
+        type: ContextRule[]
+        required: false
+        description: Context-based autonomy rules
+      current_level:
+        type: AutonomyLevel
+        computed: true
+        description: Currently active level
+
+  # Time-based autonomy rule
+  TimeRule:
+    description: Time-based autonomy adjustment
+    properties:
+      name:
+        type: String
+        required: true
+      level:
+        type: AutonomyLevel
+        required: true
+      days:
+        type: DayOfWeek[]
+        required: false
+        description: Days this applies (null = all)
+      start_time:
+        type: Time
+        required: true
+        description: Start time (HH:MM)
+      end_time:
+        type: Time
+        required: true
+        description: End time (HH:MM)
+      timezone:
+        type: String
+        required: false
+        default: "local"
+
+  # Context-based autonomy rule
+  ContextRule:
+    description: Context-based autonomy adjustment
+    properties:
+      name:
+        type: String
+        required: true
+      level:
+        type: AutonomyLevel
+        required: true
+      context_type:
+        type: ContextType
+        required: true
+      condition:
+        type: RuleCondition
+        required: false
+      priority:
+        type: Integer
+        required: false
+        default: 0
+        description: Higher priority rules override lower
+
+  # Record of AI actions under clearance
+  ActionLog:
+    description: Log of AI actions taken under a clearance
+    properties:
+      id:
+        type: UUID
+        required: true
+      clearance_id:
+        type: UUID
+        required: true
+      action:
+        type: String
+        required: true
+      item_id:
+        type: UUID
+        required: false
+      autonomy_level:
+        type: AutonomyLevel
+        required: true
+      was_within_bounds:
+        type: Boolean
+        required: true
+      deviation_details:
+        type: String
+        required: false
+        description: If out of bounds, what deviated
+      check_in_triggered:
+        type: Boolean
+        required: false
+      check_in_result:
+        type: CheckInResult
+        required: false
+      timestamp:
+        type: DateTime
+        required: true
+
+  # Result of a check-in
+  CheckInResult:
+    description: Human response to AI check-in
+    properties:
+      approved:
+        type: Boolean
+        required: true
+      response_time_ms:
+        type: Integer
+        required: false
+      human_note:
+        type: String
+        required: false
+      adjusted_clearance:
+        type: Boolean
+        required: false
+        description: Did human modify the clearance?
+      new_tolerance:
+        type: DeviationTolerance
+        required: false
+        description: If adjusted, new tolerance
+
+# Authority enums
+authority_enums:
+
+  ClearanceStatus:
+    values:
+      - draft         # Not yet active
+      - active        # Currently in effect
+      - paused        # Temporarily suspended
+      - expired       # Past expiration
+      - revoked       # Manually revoked
+
+  AutonomyLevel:
+    description: How much leash AI has
+    values:
+      - full_auto       # AI acts without check-in (sleeping/unavailable)
+      - high_autonomy   # AI acts, notifies after (busy)
+      - supervised      # AI acts, human can intervene (available)
+      - assisted        # AI suggests, human decides (focused review)
+      - manual          # Human does everything, AI only observes
+
+  TriggerType:
+    values:
+      - threshold       # Numeric threshold exceeded
+      - pattern         # Pattern detected (e.g., repeated rejections)
+      - cumulative      # Cumulative limit reached
+      - time_elapsed    # Too long since last check-in
+      - confidence_drop # AI confidence dropped significantly
+      - anomaly         # Unusual item detected
+      - vip             # VIP/high-priority item
+      - sensitive       # Sensitive content detected
+      - first_of_type   # First item of a new type
+      - uncertainty     # AI uncertain between options
+      - chain_length    # Too many consecutive auto-actions
+      - always          # Always check in for this action
+
+  ContextType:
+    values:
+      - calendar        # Based on calendar status (busy/free)
+      - location        # Based on user location
+      - device          # Based on device (phone = less available)
+      - focus_mode      # Based on OS focus mode
+      - time_of_day     # Based on time
+      - explicit        # User explicitly set level
+      - inferred        # AI inferred from behavior
+
+  Severity:
+    values:
+      - low         # Informational
+      - medium      # Should check but can proceed
+      - high        # Must check before proceeding
+      - critical    # Block and escalate immediately
+
+  DayOfWeek:
+    values:
+      - monday
+      - tuesday
+      - wednesday
+      - thursday
+      - friday
+      - saturday
+      - sunday
+
+# Authority actions
+authority_actions:
+
+  GrantClearance:
+    description: Human grants AI authority to operate
+    input:
+      name:
+        type: String
+        required: true
+      domain:
+        type: String
+        required: true
+      flight_plan:
+        type: FlightPlan
+        required: true
+      deviation_tolerance:
+        type: DeviationTolerance
+        required: true
+      check_in_triggers:
+        type: CheckInTrigger[]
+        required: true
+      autonomy_schedule:
+        type: AutonomySchedule
+        required: false
+      expires_at:
+        type: DateTime
+        required: false
+    output:
+      type: Clearance
+
+  RevokeClearance:
+    description: Human revokes AI authority
+    input:
+      clearance_id:
+        type: UUID
+        required: true
+      reason:
+        type: String
+        required: false
+    output:
+      success:
+        type: Boolean
+
+  AdjustAutonomy:
+    description: Temporarily adjust autonomy level
+    input:
+      clearance_id:
+        type: UUID
+        required: true
+      new_level:
+        type: AutonomyLevel
+        required: true
+      duration_minutes:
+        type: Integer
+        required: false
+        description: How long adjustment lasts (null = until changed)
+      reason:
+        type: String
+        required: false
+    output:
+      previous_level:
+        type: AutonomyLevel
+      expires_at:
+        type: DateTime
+
+  CheckInRequest:
+    description: AI requests human approval
+    input:
+      clearance_id:
+        type: UUID
+        required: true
+      trigger_id:
+        type: String
+        required: true
+      item_id:
+        type: UUID
+        required: false
+      proposed_action:
+        type: String
+        required: true
+      reason:
+        type: String
+        required: true
+      urgency:
+        type: Severity
+        required: true
+    output:
+      type: CheckInResult
+
+  EvaluateAction:
+    description: Check if AI action is within clearance bounds
+    input:
+      clearance_id:
+        type: UUID
+        required: true
+      action:
+        type: String
+        required: true
+      item:
+        type: ApprovalItem
+        required: true
+    output:
+      within_bounds:
+        type: Boolean
+      triggered_check_ins:
+        type: CheckInTrigger[]
+      deviation_details:
+        type: String
+      recommendation:
+        type: String
+        enum: [proceed, check_in, block]
+
+# Example clearances
+example_clearances:
+
+  - name: "Sleep Mode - Email Triage"
+    description: "While sleeping, AI can handle routine emails"
+    domain: email
+    flight_plan:
+      allowed_actions:
+        - action: archive
+          conditions:
+            - field: sender_domain
+              operator: in
+              value: [marketing.com, newsletter.com]
+        - action: reply
+          conditions:
+            - field: is_routine
+              operator: eq
+              value: true
+            - field: sender_importance
+              operator: lt
+              value: high
+          max_per_session: 10
+      forbidden_actions: [delete, forward_external, reply_all]
+      scope:
+        exclude_tags: [vip, legal, financial]
+        confidence_floor: 0.8
+    deviation_tolerance:
+      confidence_band: 0.05
+      count_tolerance: 2
+    check_in_triggers:
+      - id: vip_sender
+        name: VIP sender detected
+        trigger_type: vip
+        severity: high
+      - id: money_mentioned
+        name: Financial content
+        trigger_type: sensitive
+        condition:
+          field: content
+          operator: contains
+          value: ["$", "invoice", "payment", "wire"]
+        severity: critical
+    autonomy_schedule:
+      default_level: supervised
+      time_rules:
+        - name: Sleep hours
+          level: full_auto
+          start_time: "23:00"
+          end_time: "07:00"
+        - name: Work hours
+          level: assisted
+          start_time: "09:00"
+          end_time: "17:00"
+          days: [monday, tuesday, wednesday, thursday, friday]
+
+  - name: "Data Model Review - High Confidence"
+    description: "Auto-approve high confidence, flag low"
+    domain: data_model
+    flight_plan:
+      allowed_actions:
+        - action: approve
+          conditions:
+            - field: confidence.level
+              operator: eq
+              value: high
+        - action: flag_for_review
+          conditions:
+            - field: confidence.level
+              operator: eq
+              value: low
+      forbidden_actions: [discard, modify]
+      scope:
+        item_types: [data_model_field]
+        confidence_floor: 0.7
+    deviation_tolerance:
+      confidence_band: 0.1
+    check_in_triggers:
+      - id: medium_confidence
+        name: Medium confidence items
+        trigger_type: uncertainty
+        condition:
+          field: confidence.level
+          operator: eq
+          value: medium
+        severity: medium
+      - id: chain_too_long
+        name: Too many auto-approvals
+        trigger_type: chain_length
+        condition:
+          field: consecutive_auto_approvals
+          operator: gte
+          value: 10
+        severity: low
+        message_template: "Auto-approved {{count}} items. Continue?"

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Steering Rules - Interactive Workflow Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #f8fafc;
+            background-image:
+                radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            cursor: grab;
+        }
+        #canvas-container:active { cursor: grabbing; }
+
+        #canvas {
+            position: absolute;
+            transform-origin: 0 0;
+        }
+
+        .state-node {
+            position: absolute;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 180px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            user-select: none;
+        }
+        .state-node:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        .state-node.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        .state-node.has-rules { border-left: 4px solid #10b981; }
+
+        .state-title { font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 4px; }
+        .state-desc { font-size: 11px; color: #64748b; }
+        .state-rules-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #3b82f6;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .connector {
+            position: absolute;
+            pointer-events: none;
+        }
+        .connector-line {
+            stroke: #94a3b8;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+        .connector-label {
+            font-size: 10px;
+            fill: #64748b;
+            background: white;
+        }
+
+        #sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+        #sidebar.open { transform: translateX(0); }
+
+        #toolbar {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #f1f5f9;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .toolbar-btn:hover { background: #e2e8f0; }
+        .toolbar-btn.active { background: #3b82f6; color: white; }
+
+        #artifact-selector {
+            position: fixed;
+            top: 20px;
+            left: 80px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+        }
+
+        .artifact-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            margin: 4px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .artifact-btn:hover { border-color: #3b82f6; }
+        .artifact-btn.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .rule-card {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            background: #f8fafc;
+            border-left: 4px solid #e2e8f0;
+        }
+        .rule-card.level-MUST { border-left-color: #ef4444; }
+        .rule-card.level-SHOULD { border-left-color: #f59e0b; }
+        .rule-card.level-ALWAYS { border-left-color: #10b981; }
+        .rule-card.level-NEVER { border-left-color: #7c3aed; }
+
+        .zoom-display {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .inherited-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-size: 11px;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- SVG Defs for Arrows -->
+    <svg style="position:absolute;width:0;height:0">
+        <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+            </marker>
+        </defs>
+    </svg>
+
+    <!-- Toolbar -->
+    <div id="toolbar">
+        <button class="toolbar-btn" onclick="zoomIn()" title="Zoom In">+</button>
+        <button class="toolbar-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+        <button class="toolbar-btn" onclick="resetView()" title="Reset View">⌂</button>
+        <button class="toolbar-btn" onclick="fitToScreen()" title="Fit to Screen">⊡</button>
+    </div>
+
+    <!-- Artifact Selector -->
+    <div id="artifact-selector">
+        <div style="font-weight: 600; margin-bottom: 8px; font-size: 14px;">Select Artifact Type:</div>
+        <div style="display: flex; flex-wrap: wrap; max-width: 400px;">
+            <button class="artifact-btn" onclick="selectArtifact('Microsite')" data-artifact="Microsite">🌐 Microsite</button>
+            <button class="artifact-btn" onclick="selectArtifact('Website')" data-artifact="Website">📄 Website</button>
+            <button class="artifact-btn" onclick="selectArtifact('Dashboard')" data-artifact="Dashboard">📊 Dashboard</button>
+            <button class="artifact-btn" onclick="selectArtifact('API')" data-artifact="API">⚡ API</button>
+            <button class="artifact-btn" onclick="selectArtifact('PDF')" data-artifact="PDF">📑 PDF</button>
+            <button class="artifact-btn" onclick="selectArtifact('Document')" data-artifact="Document">📝 Document</button>
+        </div>
+        <div id="inherited-display" style="margin-top: 12px; display: none;">
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Inherits from:</div>
+            <div id="inherited-list"></div>
+        </div>
+    </div>
+
+    <!-- Canvas Container -->
+    <div id="canvas-container">
+        <div id="canvas">
+            <svg id="connectors" style="position:absolute; top:0; left:0; width:2000px; height:1500px; pointer-events:none;"></svg>
+            <div id="nodes"></div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 18px;">State Details</h2>
+                <button onclick="closeSidebar()" style="border: none; background: none; font-size: 24px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+        </div>
+        <div id="sidebar-content" style="padding: 20px;">
+            <p style="color: #64748b;">Click a state node to view details</p>
+        </div>
+    </div>
+
+    <!-- Zoom Display -->
+    <div class="zoom-display">
+        Zoom: <span id="zoom-level">100</span>%
+    </div>
+
+    <script>
+        // State definitions with positions
+        const states = [
+            { id: 'IDLE', x: 100, y: 100, title: 'IDLE', desc: 'No active workflow', rules: [] },
+            { id: 'INTENT_DETECTED', x: 350, y: 100, title: 'Intent Detected', desc: 'Classify artifact type', rules: [] },
+            { id: 'ARTIFACT_INITIALIZED', x: 600, y: 100, title: 'Initialized', desc: 'Project structure created', rules: ['microsite-use-vite-react', 'microsite-use-fastapi-backend'] },
+            { id: 'NEEDS_DEFINED', x: 850, y: 100, title: 'Needs Defined', desc: 'Requirements listed', rules: [] },
+            { id: 'UI_REGISTRY_CHECKED', x: 600, y: 280, title: 'UI Registry Check', desc: 'Audit shared components', rules: ['react-use-design-system-repository', 'design-system-component-audit', 'microsite-use-shadcn-components'] },
+            { id: 'DATA_REGISTRY_CHECKED', x: 850, y: 280, title: 'Data Registry Check', desc: 'Audit domain models', rules: ['app-use-semantic-layer-registry', 'microsite-use-existing-domain-models'] },
+            { id: 'NEW_RESOURCE_PROPOSED', x: 725, y: 450, title: 'New Resource', desc: 'Propose new component/model', rules: ['new-component-human-approval', 'microsite-prompt-extend-domain-models'] },
+            { id: 'HUMAN_APPROVAL_PENDING', x: 500, y: 550, title: 'Awaiting Approval', desc: 'Human decision required', rules: ['new-component-human-approval'] },
+            { id: 'RESOURCE_ADDED_TO_REGISTRY', x: 300, y: 450, title: 'Added to Registry', desc: 'Resource in shared library', rules: ['microsite-react-components-storybook', 'microsite-storybook-required-stories'] },
+            { id: 'EXISTING_RESOURCES_IMPORTED', x: 100, y: 350, title: 'Resources Imported', desc: 'Dependencies configured', rules: [] },
+            { id: 'IMPLEMENTATION_IN_PROGRESS', x: 100, y: 500, title: 'Implementation', desc: 'Building artifact', rules: ['microsite-pydantic-models'] },
+            { id: 'IMPLEMENTATION_COMPLETE', x: 100, y: 650, title: 'Build Complete', desc: 'Tests passed', rules: [] },
+            { id: 'PUBLISH_PROMPT', x: 350, y: 750, title: 'Publish Prompt', desc: 'S3 deployment options', rules: ['microsite-prompt-s3-publish'] },
+            { id: 'PUBLISHED', x: 600, y: 750, title: 'Published', desc: 'Deployed to S3', rules: [] },
+            { id: 'COMPLETE', x: 850, y: 750, title: 'Complete', desc: 'Workflow finished', rules: [] }
+        ];
+
+        // Transitions
+        const transitions = [
+            { from: 'IDLE', to: 'INTENT_DETECTED', label: 'user_request' },
+            { from: 'INTENT_DETECTED', to: 'ARTIFACT_INITIALIZED', label: 'type_confirmed' },
+            { from: 'ARTIFACT_INITIALIZED', to: 'NEEDS_DEFINED', label: 'structure_created' },
+            { from: 'NEEDS_DEFINED', to: 'UI_REGISTRY_CHECKED', label: 'has_ui' },
+            { from: 'NEEDS_DEFINED', to: 'DATA_REGISTRY_CHECKED', label: 'no_ui' },
+            { from: 'UI_REGISTRY_CHECKED', to: 'DATA_REGISTRY_CHECKED', label: 'ui_done' },
+            { from: 'UI_REGISTRY_CHECKED', to: 'NEW_RESOURCE_PROPOSED', label: 'missing' },
+            { from: 'DATA_REGISTRY_CHECKED', to: 'EXISTING_RESOURCES_IMPORTED', label: 'all_found' },
+            { from: 'DATA_REGISTRY_CHECKED', to: 'NEW_RESOURCE_PROPOSED', label: 'missing' },
+            { from: 'NEW_RESOURCE_PROPOSED', to: 'HUMAN_APPROVAL_PENDING', label: 'propose' },
+            { from: 'HUMAN_APPROVAL_PENDING', to: 'RESOURCE_ADDED_TO_REGISTRY', label: 'approved' },
+            { from: 'HUMAN_APPROVAL_PENDING', to: 'EXISTING_RESOURCES_IMPORTED', label: 'local_only' },
+            { from: 'RESOURCE_ADDED_TO_REGISTRY', to: 'EXISTING_RESOURCES_IMPORTED', label: 'done' },
+            { from: 'EXISTING_RESOURCES_IMPORTED', to: 'IMPLEMENTATION_IN_PROGRESS', label: 'start' },
+            { from: 'IMPLEMENTATION_IN_PROGRESS', to: 'IMPLEMENTATION_COMPLETE', label: 'build_ok' },
+            { from: 'IMPLEMENTATION_COMPLETE', to: 'PUBLISH_PROMPT', label: 'publishable' },
+            { from: 'IMPLEMENTATION_COMPLETE', to: 'COMPLETE', label: 'not_pub' },
+            { from: 'PUBLISH_PROMPT', to: 'PUBLISHED', label: 'confirm' },
+            { from: 'PUBLISH_PROMPT', to: 'COMPLETE', label: 'skip' },
+            { from: 'PUBLISHED', to: 'COMPLETE', label: 'done' }
+        ];
+
+        // Artifact types and inheritance
+        const artifactTypes = {
+            Microsite: { inherits: ['Publishable', 'UIApplication', 'DataApplication', 'BackendApplication'] },
+            Website: { inherits: ['Publishable', 'UIApplication'] },
+            Dashboard: { inherits: ['Publishable', 'UIApplication', 'DataApplication'] },
+            API: { inherits: ['DataApplication', 'BackendApplication'] },
+            PDF: { inherits: ['Publishable'] },
+            Document: { inherits: ['Publishable'] }
+        };
+
+        // Rule definitions
+        const rules = {
+            'microsite-use-vite-react': { level: 'SHOULD', description: 'Use Vite + React for frontend', message: 'Vite 6.x + React 19.x', baseType: 'UIApplication' },
+            'microsite-use-fastapi-backend': { level: 'SHOULD', description: 'Use FastAPI for backend APIs', message: 'FastAPI with OpenAPI docs', baseType: 'BackendApplication' },
+            'react-use-design-system-repository': { level: 'MUST', description: 'Use shared design system', message: 'shared/ui-components/', baseType: 'UIApplication' },
+            'design-system-component-audit': { level: 'SHOULD', description: 'Audit before creating components', message: 'Check existing first', baseType: 'UIApplication' },
+            'microsite-use-shadcn-components': { level: 'SHOULD', description: 'Use shadcn/ui components', message: 'Radix + Tailwind', baseType: 'UIApplication' },
+            'app-use-semantic-layer-registry': { level: 'MUST', description: 'Use semantic layer registry', message: 'shared/semantic/domains/', baseType: 'DataApplication' },
+            'microsite-use-existing-domain-models': { level: 'MUST', description: 'Use existing domain models', message: 'registry.yaml', baseType: 'DataApplication' },
+            'microsite-prompt-extend-domain-models': { level: 'MUST', description: 'Prompt to extend shared models', message: '[1] New [2] Existing [3] Local', baseType: 'DataApplication' },
+            'new-component-human-approval': { level: 'MUST', description: 'Human approval for new items', message: '[y/n/local-only]', baseType: null },
+            'microsite-react-components-storybook': { level: 'MUST', description: 'Storybook for shared components', message: 'Create stories.tsx', baseType: 'UIApplication' },
+            'microsite-storybook-required-stories': { level: 'SHOULD', description: 'Comprehensive story coverage', message: 'Default, Variants, States', baseType: 'UIApplication' },
+            'microsite-pydantic-models': { level: 'MUST', description: 'Pydantic for FastAPI validation', message: 'BaseModel for all contracts', baseType: 'BackendApplication' },
+            'microsite-prompt-s3-publish': { level: 'MUST', description: 'Prompt S3 publishing', message: '[1] Public [2] Temp [3] Private', baseType: 'Publishable' }
+        };
+
+        let selectedArtifact = 'Microsite';
+        let selectedState = null;
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX, startY;
+
+        // Initialize
+        function init() {
+            renderNodes();
+            renderConnectors();
+            setupPanZoom();
+            selectArtifact('Microsite');
+        }
+
+        function renderNodes() {
+            const container = document.getElementById('nodes');
+            container.innerHTML = '';
+
+            states.forEach(state => {
+                const rulesForState = getApplicableRules(state.id);
+                const node = document.createElement('div');
+                node.className = `state-node ${rulesForState.length > 0 ? 'has-rules' : ''}`;
+                node.style.left = state.x + 'px';
+                node.style.top = state.y + 'px';
+                node.onclick = () => selectState(state.id);
+
+                node.innerHTML = `
+                    <div class="state-title">${state.title}</div>
+                    <div class="state-desc">${state.desc}</div>
+                    ${rulesForState.length > 0 ? `<div class="state-rules-count">${rulesForState.length}</div>` : ''}
+                `;
+                container.appendChild(node);
+            });
+        }
+
+        function renderConnectors() {
+            const svg = document.getElementById('connectors');
+            let paths = '';
+
+            transitions.forEach(t => {
+                const from = states.find(s => s.id === t.from);
+                const to = states.find(s => s.id === t.to);
+                if (!from || !to) return;
+
+                const x1 = from.x + 90;
+                const y1 = from.y + 40;
+                const x2 = to.x + 90;
+                const y2 = to.y + 40;
+
+                // Calculate control points for curved lines
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const offset = Math.min(Math.abs(dx), Math.abs(dy)) * 0.3;
+
+                let path;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    path = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+                } else {
+                    path = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+                }
+
+                paths += `<path class="connector-line" d="${path}"/>`;
+
+                // Label
+                const labelX = midX - 20;
+                const labelY = midY - 5;
+                paths += `<text x="${labelX}" y="${labelY}" class="connector-label">${t.label}</text>`;
+            });
+
+            svg.innerHTML = `
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                ${paths}
+            `;
+        }
+
+        function getApplicableRules(stateId) {
+            const state = states.find(s => s.id === stateId);
+            if (!state) return [];
+
+            const inherited = artifactTypes[selectedArtifact]?.inherits || [];
+            const applicableRules = [];
+
+            state.rules.forEach(ruleId => {
+                const rule = rules[ruleId];
+                if (!rule) return;
+
+                // Check if rule applies to selected artifact via inheritance
+                if (rule.baseType === null || inherited.includes(rule.baseType)) {
+                    applicableRules.push({ id: ruleId, ...rule });
+                }
+            });
+
+            return applicableRules;
+        }
+
+        function selectArtifact(type) {
+            selectedArtifact = type;
+
+            document.querySelectorAll('.artifact-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.artifact === type);
+            });
+
+            // Show inherited types
+            const inheritedDisplay = document.getElementById('inherited-display');
+            const inheritedList = document.getElementById('inherited-list');
+            inheritedDisplay.style.display = 'block';
+            inheritedList.innerHTML = artifactTypes[type].inherits
+                .map(t => `<span class="inherited-badge">${t}</span>`)
+                .join('');
+
+            // Re-render nodes with updated rule counts
+            renderNodes();
+
+            // Update sidebar if state is selected
+            if (selectedState) {
+                showStateDetails(selectedState);
+            }
+        }
+
+        function selectState(stateId) {
+            selectedState = stateId;
+
+            document.querySelectorAll('.state-node').forEach((node, i) => {
+                node.classList.toggle('selected', states[i].id === stateId);
+            });
+
+            showStateDetails(stateId);
+            document.getElementById('sidebar').classList.add('open');
+        }
+
+        function showStateDetails(stateId) {
+            const state = states.find(s => s.id === stateId);
+            const applicableRules = getApplicableRules(stateId);
+            const content = document.getElementById('sidebar-content');
+
+            let rulesHtml = '';
+            if (applicableRules.length === 0) {
+                rulesHtml = '<p style="color: #64748b; font-style: italic;">No specific rules apply at this state for ' + selectedArtifact + '</p>';
+            } else {
+                rulesHtml = applicableRules.map(rule => `
+                    <div class="rule-card level-${rule.level}">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <code style="font-size: 11px; color: #64748b;">${rule.id}</code>
+                            <span style="font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: ${getLevelBg(rule.level)}; color: ${getLevelColor(rule.level)};">${rule.level}</span>
+                        </div>
+                        <div style="font-weight: 500; margin-bottom: 4px;">${rule.description}</div>
+                        <div style="font-size: 12px; color: #64748b; font-family: monospace; background: white; padding: 8px; border-radius: 4px;">${rule.message}</div>
+                        ${rule.baseType ? `<div style="font-size: 10px; color: #94a3b8; margin-top: 8px;">From: ${rule.baseType}</div>` : ''}
+                    </div>
+                `).join('');
+            }
+
+            // Get outgoing transitions
+            const outgoing = transitions.filter(t => t.from === stateId);
+            let transitionsHtml = '';
+            if (outgoing.length > 0) {
+                transitionsHtml = `
+                    <div style="margin-top: 24px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Transitions</h3>
+                        ${outgoing.map(t => {
+                            const toState = states.find(s => s.id === t.to);
+                            return `
+                                <div style="display: flex; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px; cursor: pointer;" onclick="selectState('${t.to}')">
+                                    <span style="color: #3b82f6; font-size: 12px; margin-right: 8px;">→</span>
+                                    <span style="font-weight: 500;">${toState?.title || t.to}</span>
+                                    <span style="margin-left: auto; font-size: 11px; color: #64748b;">${t.label}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 4px;">${state.title}</h3>
+                    <p style="color: #64748b; font-size: 14px;">${state.desc}</p>
+                </div>
+                <div>
+                    <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">
+                        Rules Applied
+                        <span style="font-weight: normal; color: #64748b;">(${applicableRules.length})</span>
+                    </h3>
+                    ${rulesHtml}
+                </div>
+                ${transitionsHtml}
+            `;
+        }
+
+        function getLevelBg(level) {
+            return { MUST: '#fef2f2', SHOULD: '#fffbeb', ALWAYS: '#f0fdf4', NEVER: '#f5f3ff' }[level] || '#f8fafc';
+        }
+
+        function getLevelColor(level) {
+            return { MUST: '#dc2626', SHOULD: '#d97706', ALWAYS: '#16a34a', NEVER: '#7c3aed' }[level] || '#64748b';
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.querySelectorAll('.state-node').forEach(node => node.classList.remove('selected'));
+            selectedState = null;
+        }
+
+        // Pan and zoom
+        function setupPanZoom() {
+            const container = document.getElementById('canvas-container');
+            const canvas = document.getElementById('canvas');
+
+            container.addEventListener('mousedown', (e) => {
+                if (e.target === container || e.target === canvas || e.target.tagName === 'svg') {
+                    isDragging = true;
+                    startX = e.clientX - translateX;
+                    startY = e.clientY - translateY;
+                }
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    translateX = e.clientX - startX;
+                    translateY = e.clientY - startY;
+                    updateTransform();
+                }
+            });
+
+            container.addEventListener('mouseup', () => isDragging = false);
+            container.addEventListener('mouseleave', () => isDragging = false);
+
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                const newScale = Math.min(Math.max(scale * delta, 0.3), 2);
+
+                // Zoom toward mouse position
+                const rect = container.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                translateX = mouseX - (mouseX - translateX) * (newScale / scale);
+                translateY = mouseY - (mouseY - translateY) * (newScale / scale);
+
+                scale = newScale;
+                updateTransform();
+            });
+        }
+
+        function updateTransform() {
+            const canvas = document.getElementById('canvas');
+            canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            document.getElementById('zoom-level').textContent = Math.round(scale * 100);
+        }
+
+        function zoomIn() {
+            scale = Math.min(scale * 1.2, 2);
+            updateTransform();
+        }
+
+        function zoomOut() {
+            scale = Math.max(scale * 0.8, 0.3);
+            updateTransform();
+        }
+
+        function resetView() {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+        }
+
+        function fitToScreen() {
+            const container = document.getElementById('canvas-container');
+            const maxX = Math.max(...states.map(s => s.x + 200));
+            const maxY = Math.max(...states.map(s => s.y + 100));
+
+            const scaleX = container.clientWidth / (maxX + 100);
+            const scaleY = container.clientHeight / (maxY + 100);
+            scale = Math.min(scaleX, scaleY, 1);
+
+            translateX = 50;
+            translateY = 50;
+            updateTransform();
+        }
+
+        init();
+    </script>
+</body>
+</html>

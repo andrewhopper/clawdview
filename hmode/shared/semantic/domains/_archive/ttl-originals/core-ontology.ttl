@@ -1,0 +1,687 @@
+@prefix core: <http://hopperlabs.ai/ontology/core#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <http://schema.org/> .
+
+# ============================================
+# Core Primitives Ontology
+# Foundation layer for all domain models
+# Reusable entities, time, money, address, etc.
+# Created: 2025-11-21
+# ============================================
+
+# ================================================================================
+# 1. BASE ENTITIES
+# ================================================================================
+
+core:Entity a owl:Class ;
+    rdfs:label "Entity" ;
+    rdfs:comment "Base class for all identifiable things in the system" .
+
+core:id a owl:DatatypeProperty ;
+    rdfs:domain core:Entity ;
+    rdfs:range xsd:string ;
+    rdfs:label "ID" ;
+    rdfs:comment "Unique identifier" .
+
+core:name a owl:DatatypeProperty ;
+    rdfs:domain core:Entity ;
+    rdfs:range xsd:string ;
+    rdfs:label "Name" ;
+    rdfs:comment "Human-readable name" .
+
+core:description a owl:DatatypeProperty ;
+    rdfs:domain core:Entity ;
+    rdfs:range xsd:string ;
+    rdfs:label "Description" ;
+    rdfs:comment "Detailed description" .
+
+# ----------------
+# Audit Trail (applies to all entities)
+# ----------------
+
+core:AuditInfo a owl:Class ;
+    rdfs:label "Audit Info" ;
+    rdfs:comment "Tracking information for entity lifecycle" .
+
+core:createdAt a owl:DatatypeProperty ;
+    rdfs:domain core:AuditInfo ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Created At" .
+
+core:updatedAt a owl:DatatypeProperty ;
+    rdfs:domain core:AuditInfo ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Updated At" .
+
+core:createdBy a owl:DatatypeProperty ;
+    rdfs:domain core:AuditInfo ;
+    rdfs:range xsd:string ;
+    rdfs:label "Created By" ;
+    rdfs:comment "ID of creator (user or system)" .
+
+core:updatedBy a owl:DatatypeProperty ;
+    rdfs:domain core:AuditInfo ;
+    rdfs:range xsd:string ;
+    rdfs:label "Updated By" .
+
+core:version a owl:DatatypeProperty ;
+    rdfs:domain core:AuditInfo ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Version" ;
+    rdfs:comment "Optimistic locking version number" .
+
+core:hasAuditInfo a owl:ObjectProperty ;
+    rdfs:domain core:Entity ;
+    rdfs:range core:AuditInfo ;
+    rdfs:label "Has Audit Info" .
+
+# ================================================================================
+# 2. INDIVIDUAL / PERSON / ORGANIZATION
+# ================================================================================
+
+core:Individual a owl:Class ;
+    rdfs:subClassOf core:Entity ;
+    rdfs:label "Individual" ;
+    rdfs:comment "A single identifiable agent (person, organization, or system)" .
+
+core:Person a owl:Class ;
+    rdfs:subClassOf core:Individual ;
+    rdfs:subClassOf schema:Person ;
+    rdfs:label "Person" ;
+    rdfs:comment "A human individual" .
+
+core:firstName a owl:DatatypeProperty ;
+    rdfs:domain core:Person ;
+    rdfs:range xsd:string ;
+    rdfs:label "First Name" .
+
+core:lastName a owl:DatatypeProperty ;
+    rdfs:domain core:Person ;
+    rdfs:range xsd:string ;
+    rdfs:label "Last Name" .
+
+core:fullName a owl:DatatypeProperty ;
+    rdfs:domain core:Person ;
+    rdfs:range xsd:string ;
+    rdfs:label "Full Name" ;
+    rdfs:comment "Complete display name" .
+
+core:dateOfBirth a owl:DatatypeProperty ;
+    rdfs:domain core:Person ;
+    rdfs:range xsd:date ;
+    rdfs:label "Date of Birth" .
+
+core:Organization a owl:Class ;
+    rdfs:subClassOf core:Individual ;
+    rdfs:subClassOf schema:Organization ;
+    rdfs:label "Organization" ;
+    rdfs:comment "A company, institution, or group" .
+
+core:legalName a owl:DatatypeProperty ;
+    rdfs:domain core:Organization ;
+    rdfs:range xsd:string ;
+    rdfs:label "Legal Name" .
+
+core:tradingName a owl:DatatypeProperty ;
+    rdfs:domain core:Organization ;
+    rdfs:range xsd:string ;
+    rdfs:label "Trading Name" ;
+    rdfs:comment "DBA or brand name" .
+
+core:taxId a owl:DatatypeProperty ;
+    rdfs:domain core:Organization ;
+    rdfs:range xsd:string ;
+    rdfs:label "Tax ID" ;
+    rdfs:comment "EIN, VAT number, etc." .
+
+# ================================================================================
+# 3. TIME PRIMITIVES
+# ================================================================================
+
+core:TimePoint a owl:Class ;
+    rdfs:label "Time Point" ;
+    rdfs:comment "Specific moment in time with optional timezone" .
+
+core:timestamp a owl:DatatypeProperty ;
+    rdfs:domain core:TimePoint ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Timestamp" .
+
+core:timezone a owl:DatatypeProperty ;
+    rdfs:domain core:TimePoint ;
+    rdfs:range xsd:string ;
+    rdfs:label "Timezone" ;
+    rdfs:comment "IANA timezone (e.g., 'America/New_York', 'UTC')" .
+
+# ----------------
+
+core:Duration a owl:Class ;
+    rdfs:label "Duration" ;
+    rdfs:comment "Length of time (ISO 8601 duration format)" .
+
+core:isoDuration a owl:DatatypeProperty ;
+    rdfs:domain core:Duration ;
+    rdfs:range xsd:duration ;
+    rdfs:label "ISO Duration" ;
+    rdfs:comment "Duration in ISO 8601 format (e.g., 'PT1H30M', 'P1D')" .
+
+core:milliseconds a owl:DatatypeProperty ;
+    rdfs:domain core:Duration ;
+    rdfs:range xsd:long ;
+    rdfs:label "Milliseconds" ;
+    rdfs:comment "Duration in milliseconds for computation" .
+
+# ----------------
+
+core:DateRange a owl:Class ;
+    rdfs:label "Date Range" ;
+    rdfs:comment "Time period with start and end" .
+
+core:startTime a owl:ObjectProperty ;
+    rdfs:domain core:DateRange ;
+    rdfs:range core:TimePoint ;
+    rdfs:label "Start Time" .
+
+core:endTime a owl:ObjectProperty ;
+    rdfs:domain core:DateRange ;
+    rdfs:range core:TimePoint ;
+    rdfs:label "End Time" .
+
+core:duration a owl:ObjectProperty ;
+    rdfs:domain core:DateRange ;
+    rdfs:range core:Duration ;
+    rdfs:label "Duration" ;
+    rdfs:comment "Computed duration between start and end" .
+
+# ----------------
+
+core:Recurrence a owl:Class ;
+    rdfs:label "Recurrence" ;
+    rdfs:comment "Repeating time pattern" .
+
+core:recurrenceRule a owl:DatatypeProperty ;
+    rdfs:domain core:Recurrence ;
+    rdfs:range xsd:string ;
+    rdfs:label "Recurrence Rule" ;
+    rdfs:comment "RRULE format (RFC 5545)" .
+
+core:RecurrenceFrequency a owl:Class ;
+    rdfs:label "Recurrence Frequency" ;
+    owl:oneOf (core:Daily core:Weekly core:Monthly core:Yearly core:Hourly) .
+
+core:Daily a core:RecurrenceFrequency ;
+    rdfs:label "Daily" .
+
+core:Weekly a core:RecurrenceFrequency ;
+    rdfs:label "Weekly" .
+
+core:Monthly a core:RecurrenceFrequency ;
+    rdfs:label "Monthly" .
+
+core:Yearly a core:RecurrenceFrequency ;
+    rdfs:label "Yearly" .
+
+core:Hourly a core:RecurrenceFrequency ;
+    rdfs:label "Hourly" .
+
+# ----------------
+
+core:TimeOfDay a owl:Class ;
+    rdfs:label "Time of Day" ;
+    owl:oneOf (core:Morning core:Afternoon core:Evening core:Night) .
+
+core:Morning a core:TimeOfDay ;
+    rdfs:label "Morning" ;
+    rdfs:comment "6:00 - 12:00" .
+
+core:Afternoon a core:TimeOfDay ;
+    rdfs:label "Afternoon" ;
+    rdfs:comment "12:00 - 18:00" .
+
+core:Evening a core:TimeOfDay ;
+    rdfs:label "Evening" ;
+    rdfs:comment "18:00 - 21:00" .
+
+core:Night a core:TimeOfDay ;
+    rdfs:label "Night" ;
+    rdfs:comment "21:00 - 6:00" .
+
+# ----------------
+
+core:Season a owl:Class ;
+    rdfs:label "Season" ;
+    owl:oneOf (core:Spring core:Summer core:Fall core:Winter) .
+
+core:Spring a core:Season ;
+    rdfs:label "Spring" .
+
+core:Summer a core:Season ;
+    rdfs:label "Summer" .
+
+core:Fall a core:Season ;
+    rdfs:label "Fall" .
+
+core:Winter a core:Season ;
+    rdfs:label "Winter" .
+
+# ----------------
+
+core:LifeStage a owl:Class ;
+    rdfs:label "Life Stage" ;
+    rdfs:comment "Stage in human/entity lifecycle" ;
+    owl:oneOf (core:Infant core:Child core:Adolescent core:YoungAdult core:Adult core:MiddleAge core:Senior) .
+
+core:Infant a core:LifeStage ;
+    rdfs:label "Infant" ;
+    rdfs:comment "0-2 years" .
+
+core:Child a core:LifeStage ;
+    rdfs:label "Child" ;
+    rdfs:comment "2-12 years" .
+
+core:Adolescent a core:LifeStage ;
+    rdfs:label "Adolescent" ;
+    rdfs:comment "12-18 years" .
+
+core:YoungAdult a core:LifeStage ;
+    rdfs:label "Young Adult" ;
+    rdfs:comment "18-35 years" .
+
+core:Adult a core:LifeStage ;
+    rdfs:label "Adult" ;
+    rdfs:comment "35-55 years" .
+
+core:MiddleAge a core:LifeStage ;
+    rdfs:label "Middle Age" ;
+    rdfs:comment "55-70 years" .
+
+core:Senior a core:LifeStage ;
+    rdfs:label "Senior" ;
+    rdfs:comment "70+ years" .
+
+# ================================================================================
+# 4. MONEY / CURRENCY
+# ================================================================================
+
+core:Money a owl:Class ;
+    rdfs:label "Money" ;
+    rdfs:comment "Monetary amount with currency" .
+
+core:amount a owl:DatatypeProperty ;
+    rdfs:domain core:Money ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Amount" ;
+    rdfs:comment "Numeric value (use minor units for precision)" .
+
+core:currency a owl:DatatypeProperty ;
+    rdfs:domain core:Money ;
+    rdfs:range xsd:string ;
+    rdfs:label "Currency" ;
+    rdfs:comment "ISO 4217 currency code (USD, EUR, GBP, etc.)" .
+
+core:Currency a owl:Class ;
+    rdfs:label "Currency" ;
+    rdfs:comment "ISO 4217 currency definition" .
+
+core:currencyCode a owl:DatatypeProperty ;
+    rdfs:domain core:Currency ;
+    rdfs:range xsd:string ;
+    rdfs:label "Currency Code" ;
+    rdfs:comment "3-letter ISO 4217 code" .
+
+core:currencySymbol a owl:DatatypeProperty ;
+    rdfs:domain core:Currency ;
+    rdfs:range xsd:string ;
+    rdfs:label "Currency Symbol" ;
+    rdfs:comment "Display symbol ($, €, £, etc.)" .
+
+core:minorUnits a owl:DatatypeProperty ;
+    rdfs:domain core:Currency ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Minor Units" ;
+    rdfs:comment "Decimal places (2 for USD, 0 for JPY)" .
+
+# ================================================================================
+# 5. ADDRESS / LOCATION
+# ================================================================================
+
+core:Address a owl:Class ;
+    rdfs:subClassOf schema:PostalAddress ;
+    rdfs:label "Address" ;
+    rdfs:comment "Physical or mailing address" .
+
+core:addressLine1 a owl:DatatypeProperty ;
+    rdfs:domain core:Address ;
+    rdfs:range xsd:string ;
+    rdfs:label "Address Line 1" ;
+    rdfs:comment "Street address, P.O. box, etc." .
+
+core:addressLine2 a owl:DatatypeProperty ;
+    rdfs:domain core:Address ;
+    rdfs:range xsd:string ;
+    rdfs:label "Address Line 2" ;
+    rdfs:comment "Apartment, suite, unit, building, floor" .
+
+core:city a owl:DatatypeProperty ;
+    rdfs:domain core:Address ;
+    rdfs:range xsd:string ;
+    rdfs:label "City" .
+
+core:stateProvince a owl:DatatypeProperty ;
+    rdfs:domain core:Address ;
+    rdfs:range xsd:string ;
+    rdfs:label "State/Province" .
+
+core:postalCode a owl:DatatypeProperty ;
+    rdfs:domain core:Address ;
+    rdfs:range xsd:string ;
+    rdfs:label "Postal Code" ;
+    rdfs:comment "ZIP code, postcode, etc." .
+
+core:country a owl:DatatypeProperty ;
+    rdfs:domain core:Address ;
+    rdfs:range xsd:string ;
+    rdfs:label "Country" ;
+    rdfs:comment "ISO 3166-1 alpha-2 country code" .
+
+core:AddressType a owl:Class ;
+    rdfs:label "Address Type" ;
+    owl:oneOf (core:Home core:Work core:Billing core:Shipping core:Mailing) .
+
+core:Home a core:AddressType ;
+    rdfs:label "Home" .
+
+core:Work a core:AddressType ;
+    rdfs:label "Work" .
+
+core:Billing a core:AddressType ;
+    rdfs:label "Billing" .
+
+core:Shipping a core:AddressType ;
+    rdfs:label "Shipping" .
+
+core:Mailing a core:AddressType ;
+    rdfs:label "Mailing" .
+
+# ----------------
+
+core:GeoLocation a owl:Class ;
+    rdfs:label "Geographic Location" ;
+    rdfs:comment "Coordinates on Earth" .
+
+core:latitude a owl:DatatypeProperty ;
+    rdfs:domain core:GeoLocation ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Latitude" ;
+    rdfs:comment "Decimal degrees (-90 to 90)" .
+
+core:longitude a owl:DatatypeProperty ;
+    rdfs:domain core:GeoLocation ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Longitude" ;
+    rdfs:comment "Decimal degrees (-180 to 180)" .
+
+core:altitude a owl:DatatypeProperty ;
+    rdfs:domain core:GeoLocation ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Altitude" ;
+    rdfs:comment "Meters above sea level" .
+
+core:accuracy a owl:DatatypeProperty ;
+    rdfs:domain core:GeoLocation ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Accuracy" ;
+    rdfs:comment "Accuracy radius in meters" .
+
+core:hasGeoLocation a owl:ObjectProperty ;
+    rdfs:domain core:Address ;
+    rdfs:range core:GeoLocation ;
+    rdfs:label "Has Geo Location" .
+
+# ================================================================================
+# 6. CONTACT INFORMATION
+# ================================================================================
+
+core:ContactInfo a owl:Class ;
+    rdfs:label "Contact Information" ;
+    rdfs:comment "Ways to reach an individual or organization" .
+
+core:email a owl:DatatypeProperty ;
+    rdfs:domain core:ContactInfo ;
+    rdfs:range xsd:string ;
+    rdfs:label "Email" .
+
+core:phone a owl:DatatypeProperty ;
+    rdfs:domain core:ContactInfo ;
+    rdfs:range xsd:string ;
+    rdfs:label "Phone" ;
+    rdfs:comment "E.164 format recommended" .
+
+core:website a owl:DatatypeProperty ;
+    rdfs:domain core:ContactInfo ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "Website" .
+
+core:PhoneType a owl:Class ;
+    rdfs:label "Phone Type" ;
+    owl:oneOf (core:Mobile core:Landline core:Fax core:Toll-Free) .
+
+core:Mobile a core:PhoneType ;
+    rdfs:label "Mobile" .
+
+core:Landline a core:PhoneType ;
+    rdfs:label "Landline" .
+
+core:Fax a core:PhoneType ;
+    rdfs:label "Fax" .
+
+core:Toll-Free a core:PhoneType ;
+    rdfs:label "Toll-Free" .
+
+core:hasContactInfo a owl:ObjectProperty ;
+    rdfs:domain core:Individual ;
+    rdfs:range core:ContactInfo ;
+    rdfs:label "Has Contact Info" .
+
+core:hasAddress a owl:ObjectProperty ;
+    rdfs:domain core:Individual ;
+    rdfs:range core:Address ;
+    rdfs:label "Has Address" .
+
+# ================================================================================
+# 7. MEASUREMENT / QUANTITY
+# ================================================================================
+
+core:Quantity a owl:Class ;
+    rdfs:label "Quantity" ;
+    rdfs:comment "Numeric value with unit of measure" .
+
+core:value a owl:DatatypeProperty ;
+    rdfs:domain core:Quantity ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Value" .
+
+core:unit a owl:DatatypeProperty ;
+    rdfs:domain core:Quantity ;
+    rdfs:range xsd:string ;
+    rdfs:label "Unit" ;
+    rdfs:comment "Unit symbol (kg, m, L, etc.)" .
+
+core:UnitSystem a owl:Class ;
+    rdfs:label "Unit System" ;
+    owl:oneOf (core:Metric core:Imperial core:USCustomary) .
+
+core:Metric a core:UnitSystem ;
+    rdfs:label "Metric" .
+
+core:Imperial a core:UnitSystem ;
+    rdfs:label "Imperial" .
+
+core:USCustomary a core:UnitSystem ;
+    rdfs:label "US Customary" .
+
+# Common quantity types
+core:Weight a owl:Class ;
+    rdfs:subClassOf core:Quantity ;
+    rdfs:label "Weight" .
+
+core:Length a owl:Class ;
+    rdfs:subClassOf core:Quantity ;
+    rdfs:label "Length" .
+
+core:Volume a owl:Class ;
+    rdfs:subClassOf core:Quantity ;
+    rdfs:label "Volume" .
+
+core:Temperature a owl:Class ;
+    rdfs:subClassOf core:Quantity ;
+    rdfs:label "Temperature" .
+
+core:Percentage a owl:Class ;
+    rdfs:subClassOf core:Quantity ;
+    rdfs:label "Percentage" ;
+    rdfs:comment "Value between 0 and 100" .
+
+# ================================================================================
+# 8. MEDIA / ATTACHMENTS
+# ================================================================================
+
+core:MediaObject a owl:Class ;
+    rdfs:subClassOf schema:MediaObject ;
+    rdfs:label "Media Object" ;
+    rdfs:comment "Digital media file or reference" .
+
+core:url a owl:DatatypeProperty ;
+    rdfs:domain core:MediaObject ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "URL" .
+
+core:mimeType a owl:DatatypeProperty ;
+    rdfs:domain core:MediaObject ;
+    rdfs:range xsd:string ;
+    rdfs:label "MIME Type" ;
+    rdfs:comment "Media type (image/png, application/pdf, etc.)" .
+
+core:fileSize a owl:DatatypeProperty ;
+    rdfs:domain core:MediaObject ;
+    rdfs:range xsd:long ;
+    rdfs:label "File Size" ;
+    rdfs:comment "Size in bytes" .
+
+core:fileName a owl:DatatypeProperty ;
+    rdfs:domain core:MediaObject ;
+    rdfs:range xsd:string ;
+    rdfs:label "File Name" .
+
+core:Image a owl:Class ;
+    rdfs:subClassOf core:MediaObject ;
+    rdfs:label "Image" .
+
+core:width a owl:DatatypeProperty ;
+    rdfs:domain core:Image ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Width" ;
+    rdfs:comment "Width in pixels" .
+
+core:height a owl:DatatypeProperty ;
+    rdfs:domain core:Image ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Height" ;
+    rdfs:comment "Height in pixels" .
+
+core:Document a owl:Class ;
+    rdfs:subClassOf core:MediaObject ;
+    rdfs:label "Document" .
+
+core:pageCount a owl:DatatypeProperty ;
+    rdfs:domain core:Document ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Page Count" .
+
+core:Video a owl:Class ;
+    rdfs:subClassOf core:MediaObject ;
+    rdfs:label "Video" .
+
+core:videoDuration a owl:ObjectProperty ;
+    rdfs:domain core:Video ;
+    rdfs:range core:Duration ;
+    rdfs:label "Video Duration" .
+
+core:Audio a owl:Class ;
+    rdfs:subClassOf core:MediaObject ;
+    rdfs:label "Audio" .
+
+core:audioDuration a owl:ObjectProperty ;
+    rdfs:domain core:Audio ;
+    rdfs:range core:Duration ;
+    rdfs:label "Audio Duration" .
+
+# ================================================================================
+# 9. STATUS / STATE
+# ================================================================================
+
+core:Status a owl:Class ;
+    rdfs:label "Status" ;
+    rdfs:comment "Generic status indicator" .
+
+core:statusCode a owl:DatatypeProperty ;
+    rdfs:domain core:Status ;
+    rdfs:range xsd:string ;
+    rdfs:label "Status Code" .
+
+core:statusLabel a owl:DatatypeProperty ;
+    rdfs:domain core:Status ;
+    rdfs:range xsd:string ;
+    rdfs:label "Status Label" .
+
+core:GenericStatus a owl:Class ;
+    rdfs:label "Generic Status" ;
+    owl:oneOf (core:Active core:Inactive core:Pending core:Archived core:Deleted) .
+
+core:Active a core:GenericStatus ;
+    rdfs:label "Active" .
+
+core:Inactive a core:GenericStatus ;
+    rdfs:label "Inactive" .
+
+core:Pending a core:GenericStatus ;
+    rdfs:label "Pending" .
+
+core:Archived a core:GenericStatus ;
+    rdfs:label "Archived" .
+
+core:Deleted a core:GenericStatus ;
+    rdfs:label "Deleted" .
+
+# ================================================================================
+# 10. IDENTIFIERS
+# ================================================================================
+
+core:Identifier a owl:Class ;
+    rdfs:label "Identifier" ;
+    rdfs:comment "External identifier from another system" .
+
+core:identifierValue a owl:DatatypeProperty ;
+    rdfs:domain core:Identifier ;
+    rdfs:range xsd:string ;
+    rdfs:label "Identifier Value" .
+
+core:identifierType a owl:DatatypeProperty ;
+    rdfs:domain core:Identifier ;
+    rdfs:range xsd:string ;
+    rdfs:label "Identifier Type" ;
+    rdfs:comment "Type of identifier (UUID, SKU, ISBN, SSN, etc.)" .
+
+core:identifierSource a owl:DatatypeProperty ;
+    rdfs:domain core:Identifier ;
+    rdfs:range xsd:string ;
+    rdfs:label "Identifier Source" ;
+    rdfs:comment "System that issued the identifier" .
+
+core:hasIdentifier a owl:ObjectProperty ;
+    rdfs:domain core:Entity ;
+    rdfs:range core:Identifier ;
+    rdfs:label "Has Identifier" .

@@ -1,0 +1,19 @@
+{
+  "domain": "tech-advisory",
+  "version": "1.0.0",
+  "description": "Technology consulting engagements, assessments, and recommendations",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - Engagement, Assessment, Recommendation entities"
+  },
+  "entities": [
+    "Engagement",
+    "Assessment",
+    "Recommendation",
+    "Capability",
+    "Risk",
+    "Stakeholder",
+    "DecisionCriteria"
+  ],
+  "w3c_standards": ["RDF", "OWL"]
+}

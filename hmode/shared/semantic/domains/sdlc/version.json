@@ -1,0 +1,27 @@
+{
+  "domain": "sdlc",
+  "version": "1.0.0",
+  "description": "Software development lifecycle phases, artifacts, and transitions",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - 9-phase SDLC with artifacts and transitions"
+  },
+  "entities": [
+    "Phase",
+    "Artifact",
+    "Transition",
+    "Deliverable"
+  ],
+  "phases": [
+    "SEED",
+    "RESEARCH",
+    "EXPANSION",
+    "ANALYSIS",
+    "SELECTION",
+    "DESIGN",
+    "TEST_DESIGN",
+    "IMPLEMENTATION",
+    "REFINEMENT"
+  ],
+  "w3c_standards": ["RDF", "OWL"]
+}

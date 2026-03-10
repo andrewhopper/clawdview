@@ -1,0 +1,1732 @@
+# Vehicle Domain
+# Motorized vehicles - automobiles, watercraft, aircraft, recreational vehicles
+# Version: 1.0.0
+
+domain:
+  name: vehicle
+  version: "1.0.0"
+  status: production
+  description: Vehicles - automobiles, watercraft (boats), aircraft, motorcycles, RVs
+  dependencies: [core]
+  use_case: Dealerships, fleet management, rentals, marinas, registrations
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  # ============================================
+  # BASE VEHICLE
+  # ============================================
+
+  Vehicle:
+    description: Base vehicle entity - any motorized conveyance
+    properties:
+      id:
+        type: uuid
+        required: true
+      vehicle_category:
+        type: VehicleCategory
+        required: true
+
+      # Identification
+      vin:
+        type: string
+        description: Vehicle Identification Number (17 chars for auto)
+      hin:
+        type: string
+        description: Hull Identification Number (12 chars for boats)
+      serial_number:
+        type: string
+        description: Manufacturer serial number
+      registration_number:
+        type: string
+        description: State/country registration
+      registration_state:
+        type: string
+      registration_expiry:
+        type: date
+
+      # Make/Model
+      make:
+        type: string
+        required: true
+        description: Manufacturer (Yamaha, Sea Ray, Ford)
+      model:
+        type: string
+        required: true
+      model_year:
+        type: integer
+        required: true
+      trim:
+        type: string
+        description: Trim level or package
+      series:
+        type: string
+        description: Model series/family
+
+      # Condition
+      condition:
+        type: VehicleCondition
+        required: true
+        default: used
+      mileage:
+        type: integer
+        description: Odometer reading (miles or km)
+      hours:
+        type: integer
+        description: Engine hours (boats, aircraft, heavy equipment)
+      mileage_unit:
+        type: DistanceUnit
+        default: miles
+
+      # Colors
+      exterior_color:
+        type: string
+      interior_color:
+        type: string
+
+      # Weight/Dimensions
+      length:
+        type: Length
+      width:
+        type: Length
+      height:
+        type: Length
+      weight_dry:
+        type: Weight
+        description: Dry weight without fluids
+      weight_gross:
+        type: Weight
+        description: Gross vehicle weight
+
+      # Pricing
+      msrp:
+        type: Money
+        description: Manufacturer suggested retail price
+      asking_price:
+        type: Money
+      invoice_price:
+        type: Money
+        description: Dealer invoice cost
+
+      # Status
+      status:
+        type: VehicleStatus
+        required: true
+        default: available
+
+      # Ownership
+      owner_id:
+        type: string
+        description: FK to current owner
+      title_status:
+        type: TitleStatus
+        default: clean
+      lien_holder:
+        type: string
+        description: Bank/finance company if financed
+
+      # Location
+      location_id:
+        type: string
+        description: FK to inventory location
+
+      # Media
+      photos:
+        type: array
+        items: MediaObject
+      video_url:
+        type: string
+      virtual_tour_url:
+        type: string
+
+      # Features & Options
+      features:
+        type: array
+        items: string
+      options:
+        type: array
+        items: VehicleOption
+
+      # Documents
+      documents:
+        type: array
+        items: VehicleDocument
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ============================================
+  # GENERIC TRAITS / ATTRIBUTES SYSTEM
+  # Flexible key-value with typing for cross-vehicle attributes
+  # ============================================
+
+  VehicleAttribute:
+    description: Generic attribute with typed value (capacity, doors, engines, etc.)
+    properties:
+      id:
+        type: uuid
+        required: true
+      vehicle_id:
+        type: uuid
+        required: true
+
+      # Definition
+      attribute_key:
+        type: string
+        required: true
+        description: Machine-readable key (passenger_capacity, num_doors)
+      display_name:
+        type: string
+        required: true
+        description: Human-readable label (Passenger Capacity, Doors)
+      description:
+        type: string
+
+      # Categorization
+      category:
+        type: AttributeCategory
+        required: true
+      subcategory:
+        type: string
+
+      # Value (polymorphic)
+      value_type:
+        type: AttributeValueType
+        required: true
+      value_string:
+        type: string
+      value_number:
+        type: decimal
+      value_integer:
+        type: integer
+      value_boolean:
+        type: boolean
+      value_array:
+        type: array
+        items: string
+
+      # Units (for numeric values)
+      unit:
+        type: string
+        description: "feet, gallons, hp, lbs, etc."
+      unit_system:
+        type: UnitSystem
+
+      # Display
+      display_order:
+        type: integer
+        default: 0
+      show_in_summary:
+        type: boolean
+        default: false
+        description: Show in listing cards
+      show_in_filters:
+        type: boolean
+        default: false
+        description: Make filterable in search
+      icon:
+        type: string
+        description: Icon name for UI
+
+      # Validation
+      min_value:
+        type: decimal
+      max_value:
+        type: decimal
+      allowed_values:
+        type: array
+        items: string
+        description: Enum-like constraints
+
+  AttributeDefinition:
+    description: Template/schema for an attribute type
+    properties:
+      id:
+        type: uuid
+        required: true
+      attribute_key:
+        type: string
+        required: true
+      display_name:
+        type: string
+        required: true
+      description:
+        type: string
+
+      # Applicability
+      applies_to:
+        type: array
+        items: VehicleCategory
+        description: Which vehicle types this applies to
+      required_for:
+        type: array
+        items: VehicleCategory
+        description: Required for these vehicle types
+
+      # Type & Constraints
+      value_type:
+        type: AttributeValueType
+        required: true
+      default_value:
+        type: string
+      unit:
+        type: string
+      unit_options:
+        type: array
+        items: string
+        description: Alternative units (feet/meters)
+      min_value:
+        type: decimal
+      max_value:
+        type: decimal
+      allowed_values:
+        type: array
+        items: string
+
+      # Display
+      category:
+        type: AttributeCategory
+        required: true
+      display_order:
+        type: integer
+      show_in_summary:
+        type: boolean
+        default: false
+      show_in_filters:
+        type: boolean
+        default: false
+      filter_type:
+        type: FilterType
+        description: How to render in search filters
+      icon:
+        type: string
+
+  VehicleTrait:
+    description: Boolean feature/trait (like a tag) - has or doesn't have
+    properties:
+      id:
+        type: uuid
+        required: true
+      vehicle_id:
+        type: uuid
+        required: true
+      trait_key:
+        type: string
+        required: true
+        description: Machine-readable (has_gps, has_trailer, is_certified)
+      display_name:
+        type: string
+        required: true
+      category:
+        type: TraitCategory
+        required: true
+      present:
+        type: boolean
+        required: true
+        default: true
+      notes:
+        type: string
+      icon:
+        type: string
+
+  TraitDefinition:
+    description: Template for a vehicle trait
+    properties:
+      id:
+        type: uuid
+        required: true
+      trait_key:
+        type: string
+        required: true
+      display_name:
+        type: string
+        required: true
+      description:
+        type: string
+      category:
+        type: TraitCategory
+        required: true
+      applies_to:
+        type: array
+        items: VehicleCategory
+      icon:
+        type: string
+      show_in_filters:
+        type: boolean
+        default: false
+
+  VehicleOption:
+    description: Factory or dealer-installed option
+    properties:
+      code:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      category:
+        type: OptionCategory
+      price:
+        type: Money
+      factory_installed:
+        type: boolean
+        default: true
+
+  VehicleDocument:
+    description: Document associated with vehicle
+    properties:
+      id:
+        type: uuid
+        required: true
+      document_type:
+        type: VehicleDocumentType
+        required: true
+      name:
+        type: string
+        required: true
+      url:
+        type: string
+      expiry_date:
+        type: date
+      issued_date:
+        type: date
+      notes:
+        type: string
+
+  # ============================================
+  # WATERCRAFT (BOATS)
+  # ============================================
+
+  Watercraft:
+    extends: Vehicle
+    description: Boat, yacht, personal watercraft, or other marine vessel
+    properties:
+      watercraft_type:
+        type: WatercraftType
+        required: true
+      hull_type:
+        type: HullType
+        required: true
+      hull_material:
+        type: HullMaterial
+        required: true
+
+      # Dimensions (marine-specific)
+      loa:
+        type: Length
+        required: true
+        description: Length Overall
+      beam:
+        type: Length
+        required: true
+        description: Width at widest point
+      draft:
+        type: Length
+        description: Depth below waterline
+      bridge_clearance:
+        type: Length
+        description: Height above waterline
+      freeboard:
+        type: Length
+        description: Height from waterline to deck
+
+      # Capacity
+      max_capacity_persons:
+        type: integer
+        description: Maximum number of passengers
+      max_capacity_weight:
+        type: Weight
+        description: Maximum load capacity
+      sleeping_capacity:
+        type: integer
+        description: Number of berths
+
+      # Fuel
+      fuel_type:
+        type: FuelType
+        required: true
+      fuel_capacity:
+        type: Volume
+      water_capacity:
+        type: Volume
+        description: Fresh water tank
+      holding_tank_capacity:
+        type: Volume
+        description: Waste holding tank
+
+      # Propulsion
+      propulsion_type:
+        type: PropulsionType
+        required: true
+      num_engines:
+        type: integer
+        default: 1
+      engines:
+        type: array
+        items: Engine
+      max_speed:
+        type: integer
+        description: Max speed in knots or mph
+      cruising_speed:
+        type: integer
+
+      # Electronics & Navigation
+      electronics:
+        type: array
+        items: MarineElectronic
+
+      # Trailer
+      trailer_included:
+        type: boolean
+        default: false
+      trailer:
+        type: Trailer
+
+      # Certifications
+      ce_certified:
+        type: boolean
+        description: CE certification for Europe
+      ce_category:
+        type: CECategory
+        description: CE design category (A, B, C, D)
+      nmma_certified:
+        type: boolean
+        description: National Marine Manufacturers Association
+      uscg_capacity_label:
+        type: boolean
+        description: Has USCG capacity plate
+
+  Engine:
+    description: Propulsion engine for watercraft or vehicle
+    properties:
+      id:
+        type: uuid
+        required: true
+      position:
+        type: EnginePosition
+        description: Port, starboard, center, etc.
+
+      # Make/Model
+      make:
+        type: string
+        required: true
+      model:
+        type: string
+        required: true
+      year:
+        type: integer
+      serial_number:
+        type: string
+
+      # Specs
+      engine_type:
+        type: EngineType
+        required: true
+      horsepower:
+        type: integer
+        required: true
+      displacement:
+        type: Volume
+        description: Engine displacement (liters or cc)
+      cylinders:
+        type: integer
+      fuel_type:
+        type: FuelType
+      fuel_injection:
+        type: FuelInjectionType
+
+      # Hours
+      hours:
+        type: integer
+        description: Engine hours
+
+      # Condition
+      condition:
+        type: VehicleCondition
+      last_service_date:
+        type: date
+      last_service_hours:
+        type: integer
+
+      # Warranty
+      warranty_expiry:
+        type: date
+      warranty_hours:
+        type: integer
+        description: Warranty valid until hours
+
+  MarineElectronic:
+    description: Marine electronics equipment
+    properties:
+      id:
+        type: uuid
+        required: true
+      electronic_type:
+        type: MarineElectronicType
+        required: true
+      make:
+        type: string
+      model:
+        type: string
+      description:
+        type: string
+      included:
+        type: boolean
+        default: true
+
+  Trailer:
+    description: Boat trailer
+    properties:
+      id:
+        type: uuid
+        required: true
+      make:
+        type: string
+      model:
+        type: string
+      year:
+        type: integer
+
+      # Identification
+      vin:
+        type: string
+      registration_number:
+        type: string
+      registration_state:
+        type: string
+      registration_expiry:
+        type: date
+
+      # Specs
+      trailer_type:
+        type: TrailerType
+        required: true
+      axles:
+        type: integer
+        default: 1
+      brakes:
+        type: TrailerBrakeType
+      capacity:
+        type: Weight
+        description: Max load capacity
+      length:
+        type: Length
+
+      # Condition
+      condition:
+        type: VehicleCondition
+
+      # Pricing
+      value:
+        type: Money
+
+  # ============================================
+  # AUTOMOBILE
+  # ============================================
+
+  Automobile:
+    extends: Vehicle
+    description: Car, truck, SUV, or other road vehicle
+    properties:
+      body_style:
+        type: BodyStyle
+        required: true
+      drivetrain:
+        type: Drivetrain
+        required: true
+      transmission:
+        type: TransmissionType
+        required: true
+
+      # Engine
+      engine:
+        type: Engine
+      fuel_type:
+        type: FuelType
+        required: true
+      fuel_economy_city:
+        type: decimal
+        description: MPG city
+      fuel_economy_highway:
+        type: decimal
+        description: MPG highway
+
+      # Electric/Hybrid
+      battery_capacity:
+        type: decimal
+        description: kWh for EVs
+      electric_range:
+        type: integer
+        description: Miles on electric only
+
+      # Capacity
+      seating_capacity:
+        type: integer
+      doors:
+        type: integer
+      cargo_volume:
+        type: Volume
+      towing_capacity:
+        type: Weight
+
+      # Bed (trucks)
+      bed_length:
+        type: Length
+      cab_type:
+        type: CabType
+
+      # Safety
+      safety_rating:
+        type: string
+        description: NHTSA or IIHS rating
+      airbags:
+        type: integer
+
+  # ============================================
+  # VEHICLE HISTORY & SERVICE
+  # ============================================
+
+  VehicleHistory:
+    description: History report for a vehicle
+    properties:
+      id:
+        type: uuid
+        required: true
+      vehicle_id:
+        type: uuid
+        required: true
+      report_date:
+        type: date
+        required: true
+      report_provider:
+        type: string
+        description: Carfax, AutoCheck, etc.
+
+      # Ownership
+      num_owners:
+        type: integer
+      ownership_history:
+        type: array
+        items: OwnershipRecord
+
+      # Accidents
+      accident_count:
+        type: integer
+        default: 0
+      accidents:
+        type: array
+        items: AccidentRecord
+
+      # Title
+      title_issues:
+        type: array
+        items: TitleIssue
+      branded_title:
+        type: boolean
+        default: false
+
+      # Service
+      service_records:
+        type: array
+        items: ServiceRecord
+
+      # Recalls
+      open_recalls:
+        type: array
+        items: RecallRecord
+
+  OwnershipRecord:
+    description: Period of ownership
+    properties:
+      owner_number:
+        type: integer
+        required: true
+      owner_type:
+        type: OwnerType
+      state:
+        type: string
+      purchase_date:
+        type: date
+      sale_date:
+        type: date
+      mileage_start:
+        type: integer
+      mileage_end:
+        type: integer
+
+  AccidentRecord:
+    description: Accident or damage record
+    properties:
+      date:
+        type: date
+        required: true
+      severity:
+        type: AccidentSeverity
+        required: true
+      description:
+        type: string
+      location:
+        type: string
+      airbags_deployed:
+        type: boolean
+      structural_damage:
+        type: boolean
+      repair_cost:
+        type: Money
+
+  TitleIssue:
+    description: Title brand or issue
+    properties:
+      issue_type:
+        type: TitleIssueType
+        required: true
+      date:
+        type: date
+      state:
+        type: string
+      description:
+        type: string
+
+  ServiceRecord:
+    description: Service or maintenance record
+    properties:
+      id:
+        type: uuid
+        required: true
+      date:
+        type: date
+        required: true
+      mileage:
+        type: integer
+      hours:
+        type: integer
+      service_type:
+        type: ServiceType
+        required: true
+      description:
+        type: string
+        required: true
+      provider:
+        type: string
+      cost:
+        type: Money
+      parts_replaced:
+        type: array
+        items: string
+
+  RecallRecord:
+    description: Manufacturer recall
+    properties:
+      recall_id:
+        type: string
+        required: true
+      campaign_number:
+        type: string
+      date_issued:
+        type: date
+        required: true
+      description:
+        type: string
+        required: true
+      component:
+        type: string
+      remedy:
+        type: string
+      status:
+        type: RecallStatus
+        required: true
+
+  # ============================================
+  # DEALER INVENTORY
+  # ============================================
+
+  DealerInventory:
+    description: Dealer's inventory record for a vehicle
+    properties:
+      id:
+        type: uuid
+        required: true
+      vehicle_id:
+        type: uuid
+        required: true
+      dealer_id:
+        type: string
+        required: true
+
+      # Acquisition
+      acquisition_date:
+        type: date
+        required: true
+      acquisition_type:
+        type: AcquisitionType
+        required: true
+      acquisition_source:
+        type: string
+        description: Auction, trade-in, consignment source
+      acquisition_cost:
+        type: Money
+        required: true
+
+      # Reconditioning
+      reconditioning_cost:
+        type: Money
+      reconditioning_complete:
+        type: boolean
+        default: false
+      reconditioning_notes:
+        type: string
+
+      # Total investment
+      total_investment:
+        type: Money
+        description: Acquisition + reconditioning + transport
+
+      # Pricing
+      asking_price:
+        type: Money
+        required: true
+      floor_price:
+        type: Money
+        description: Minimum acceptable (internal)
+      internet_price:
+        type: Money
+        description: Online advertised price
+
+      # Financing
+      flooring_line_id:
+        type: string
+        description: Floor plan financing reference
+      flooring_cost_daily:
+        type: Money
+
+      # Status
+      status:
+        type: InventoryStatus
+        required: true
+        default: in_stock
+      days_in_inventory:
+        type: integer
+
+      # Location
+      lot_location:
+        type: string
+        description: Physical location on lot
+      slip_number:
+        type: string
+        description: Marina slip for boats
+
+      # Listings
+      listings:
+        type: array
+        items: PlatformListing
+        description: Where this vehicle is listed
+      featured:
+        type: boolean
+        default: false
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  PlatformListing:
+    description: A listing on an external platform
+    properties:
+      id:
+        type: uuid
+        required: true
+      platform_id:
+        type: string
+        required: true
+        description: FK to ListingPlatform
+      platform_listing_id:
+        type: string
+        description: ID on the external platform
+      listing_url:
+        type: string
+        description: Direct URL to listing
+      listed_date:
+        type: date
+        required: true
+      expires_date:
+        type: date
+      status:
+        type: PlatformListingStatus
+        required: true
+        default: active
+      price:
+        type: Money
+        description: Price on this platform (may differ)
+      featured:
+        type: boolean
+        default: false
+      views:
+        type: integer
+        default: 0
+      leads:
+        type: integer
+        default: 0
+      last_sync:
+        type: datetime
+
+  ListingPlatform:
+    description: External listing platform/marketplace
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        description: Display name (Boat Trader, Cars.com)
+      code:
+        type: string
+        required: true
+        description: Machine key (boat_trader, cars_com)
+      platform_type:
+        type: PlatformType
+        required: true
+      website:
+        type: string
+      logo_url:
+        type: string
+
+      # Vehicle types supported
+      vehicle_categories:
+        type: array
+        items: VehicleCategory
+        description: Which vehicles can be listed
+
+      # Integration
+      api_endpoint:
+        type: string
+      api_key_required:
+        type: boolean
+        default: true
+      supports_sync:
+        type: boolean
+        default: false
+      sync_frequency:
+        type: string
+        description: Cron expression for sync
+
+      # Costs
+      listing_fee:
+        type: Money
+      featured_fee:
+        type: Money
+      commission_percent:
+        type: decimal
+
+      # Status
+      status:
+        type: GenericStatus
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+enums:
+
+  VehicleCategory:
+    values:
+      - automobile
+      - watercraft
+      - motorcycle
+      - rv
+      - atv_utv
+      - snowmobile
+      - aircraft
+      - trailer
+      - heavy_equipment
+
+  VehicleCondition:
+    values:
+      - new
+      - certified_preowned
+      - used
+      - salvage
+      - rebuilt
+      - parts_only
+
+  VehicleStatus:
+    values:
+      - available
+      - pending_sale
+      - sold
+      - in_transit
+      - in_service
+      - hold
+      - consignment
+      - wholesale
+
+  TitleStatus:
+    values:
+      - clean
+      - salvage
+      - rebuilt
+      - flood
+      - lemon
+      - bonded
+      - export_only
+
+  DistanceUnit:
+    values:
+      - miles
+      - kilometers
+      - nautical_miles
+
+  OptionCategory:
+    values:
+      - safety
+      - convenience
+      - entertainment
+      - performance
+      - appearance
+      - towing
+      - navigation
+      - comfort
+
+  VehicleDocumentType:
+    values:
+      - title
+      - registration
+      - bill_of_sale
+      - inspection
+      - warranty
+      - service_record
+      - insurance
+      - lien_release
+      - uscg_documentation
+      - ce_certificate
+      - survey
+
+  # ============================================
+  # WATERCRAFT ENUMS
+  # ============================================
+
+  WatercraftType:
+    values:
+      # Powerboats
+      - center_console
+      - bowrider
+      - deck_boat
+      - pontoon
+      - tritoon
+      - cuddy_cabin
+      - cruiser
+      - express_cruiser
+      - motor_yacht
+      - trawler
+      - sport_fishing
+      - bass_boat
+      - flats_boat
+      - bay_boat
+      - walkaround
+      - dual_console
+      - ski_boat
+      - wakeboard_boat
+      - runabout
+      - jet_boat
+      - inflatable
+      - rib
+      - dinghy
+      - cabin_cruiser
+      - houseboat
+      - airboat
+      - aluminum_fishing
+      - jon_boat
+      - catamaran_power
+
+      # Sailboats
+      - sloop
+      - cutter
+      - ketch
+      - yawl
+      - schooner
+      - catamaran_sail
+      - trimaran
+      - daysailer
+      - cruiser_racer
+      - racer
+
+      # PWC
+      - personal_watercraft
+      - jet_ski
+
+      # Commercial/Other
+      - commercial
+      - workboat
+      - tugboat
+      - barge
+
+  HullType:
+    values:
+      - monohull
+      - catamaran
+      - trimaran
+      - pontoon
+      - v_hull
+      - deep_v
+      - modified_v
+      - flat_bottom
+      - semi_v
+      - displacement
+      - semi_displacement
+      - planing
+      - inflatable
+
+  HullMaterial:
+    values:
+      - fiberglass
+      - aluminum
+      - steel
+      - wood
+      - composite
+      - carbon_fiber
+      - hypalon
+      - pvc
+      - polyethylene
+      - kevlar
+      - ferro_cement
+
+  PropulsionType:
+    values:
+      - outboard
+      - inboard
+      - sterndrive          # I/O
+      - inboard_outboard
+      - jet_drive
+      - pod_drive
+      - sail
+      - sail_auxiliary      # Sail with engine
+      - electric
+      - hybrid
+      - oar_paddle
+
+  EnginePosition:
+    values:
+      - single
+      - port
+      - starboard
+      - center
+      - port_outer
+      - port_inner
+      - starboard_outer
+      - starboard_inner
+
+  EngineType:
+    values:
+      - outboard
+      - inboard_gas
+      - inboard_diesel
+      - sterndrive_gas
+      - sterndrive_diesel
+      - jet
+      - electric
+      - hybrid
+
+  FuelType:
+    values:
+      - gasoline
+      - diesel
+      - electric
+      - hybrid
+      - propane
+      - natural_gas
+      - flex_fuel
+      - hydrogen
+
+  FuelInjectionType:
+    values:
+      - carbureted
+      - efi
+      - direct_injection
+      - tbi
+
+  MarineElectronicType:
+    values:
+      - gps_chartplotter
+      - fishfinder
+      - depth_sounder
+      - radar
+      - vhf_radio
+      - ais
+      - autopilot
+      - compass
+      - stereo
+      - satellite_tv
+      - satellite_phone
+      - wifi
+      - windlass
+      - trim_tabs
+      - bow_thruster
+      - stern_thruster
+      - generator
+      - inverter
+      - shore_power
+      - solar_panels
+      - watermaker
+      - air_conditioning
+      - refrigeration
+
+  TrailerType:
+    values:
+      - bunk
+      - roller
+      - float_on
+      - hydraulic
+      - aluminum
+      - galvanized
+
+  TrailerBrakeType:
+    values:
+      - none
+      - surge
+      - electric
+      - hydraulic
+      - disc
+
+  CECategory:
+    description: CE design categories for seaworthiness
+    values:
+      - A   # Ocean - wind force > 8, wave height > 4m
+      - B   # Offshore - wind force <= 8, wave height <= 4m
+      - C   # Inshore - wind force <= 6, wave height <= 2m
+      - D   # Sheltered waters - wind force <= 4, wave height <= 0.3m
+
+  # ============================================
+  # AUTOMOBILE ENUMS
+  # ============================================
+
+  BodyStyle:
+    values:
+      - sedan
+      - coupe
+      - convertible
+      - hatchback
+      - wagon
+      - suv
+      - crossover
+      - truck
+      - van
+      - minivan
+      - sports_car
+      - roadster
+      - muscle_car
+      - luxury
+      - compact
+      - subcompact
+      - full_size
+
+  Drivetrain:
+    values:
+      - fwd           # Front wheel drive
+      - rwd           # Rear wheel drive
+      - awd           # All wheel drive
+      - four_wd       # 4x4
+      - four_wd_part_time
+
+  TransmissionType:
+    values:
+      - automatic
+      - manual
+      - cvt
+      - dual_clutch
+      - automated_manual
+      - single_speed    # EV
+
+  CabType:
+    values:
+      - regular
+      - extended
+      - crew
+      - quad
+
+  # ============================================
+  # HISTORY & SERVICE ENUMS
+  # ============================================
+
+  OwnerType:
+    values:
+      - personal
+      - lease
+      - rental
+      - fleet
+      - commercial
+      - government
+      - taxi
+
+  AccidentSeverity:
+    values:
+      - minor
+      - moderate
+      - severe
+      - total_loss
+
+  TitleIssueType:
+    values:
+      - salvage
+      - flood
+      - fire
+      - hail
+      - lemon
+      - rebuilt
+      - odometer_rollback
+      - theft_recovery
+      - junk
+      - manufacturer_buyback
+      - gray_market
+
+  ServiceType:
+    values:
+      - oil_change
+      - tune_up
+      - brake_service
+      - tire_rotation
+      - transmission_service
+      - coolant_flush
+      - scheduled_maintenance
+      - repair
+      - recall_repair
+      - winterization
+      - summerization
+      - bottom_paint
+      - haul_out
+      - survey
+      - sea_trial
+
+  RecallStatus:
+    values:
+      - open
+      - completed
+      - parts_pending
+      - not_applicable
+
+  # ============================================
+  # DEALER ENUMS
+  # ============================================
+
+  AcquisitionType:
+    values:
+      - purchase
+      - trade_in
+      - consignment
+      - auction
+      - lease_return
+      - manufacturer
+      - transfer
+
+  InventoryStatus:
+    values:
+      - in_stock
+      - in_transit
+      - pending_inspection
+      - reconditioning
+      - pending_sale
+      - sold
+      - wholesale
+      - returned
+
+  # ============================================
+  # ATTRIBUTE / TRAIT ENUMS
+  # ============================================
+
+  AttributeCategory:
+    description: Category for vehicle attributes
+    values:
+      - dimensions           # Length, width, height, weight
+      - capacity             # Passengers, cargo, fuel, water
+      - performance          # Speed, horsepower, range
+      - engine               # Engine specs
+      - interior             # Cabins, berths, heads
+      - exterior             # Hull, deck, colors
+      - electronics          # Nav, comms, entertainment
+      - safety               # Safety equipment
+      - comfort              # Climate, amenities
+      - identification       # VIN, HIN, registration
+      - economy              # Fuel efficiency
+      - warranty             # Coverage details
+
+  AttributeValueType:
+    description: Data type for attribute values
+    values:
+      - string
+      - integer
+      - decimal
+      - boolean
+      - date
+      - enum
+      - array
+
+  FilterType:
+    description: How to render attribute in search filters
+    values:
+      - range               # Numeric range slider
+      - checkbox            # Boolean toggle
+      - select              # Dropdown
+      - multi_select        # Multiple checkboxes
+      - text                # Free text search
+
+  TraitCategory:
+    description: Category for boolean traits
+    values:
+      - feature             # Has GPS, Has Trailer
+      - certification       # NMMA Certified, CE Marked
+      - condition           # No Accidents, One Owner
+      - amenity             # Has AC, Has Generator
+      - equipment           # Has Anchor, Has Bimini
+
+  # ============================================
+  # PLATFORM / LISTING ENUMS
+  # ============================================
+
+  PlatformType:
+    description: Type of listing platform
+    values:
+      - marketplace         # Boat Trader, Cars.com
+      - classifieds         # Craigslist, Facebook Marketplace
+      - auction             # Bring a Trailer, eBay Motors
+      - dealer_network      # Manufacturer dealer network
+      - aggregator          # Aggregates from multiple sources
+      - social              # Social media
+
+  PlatformListingStatus:
+    description: Status of listing on external platform
+    values:
+      - draft
+      - pending_approval
+      - active
+      - paused
+      - expired
+      - sold
+      - removed
+      - error
+
+examples:
+
+  center_console_boat:
+    vehicle_category: watercraft
+    hin: "SPTC1234A525"
+    make: "Boston Whaler"
+    model: "280 Outrage"
+    model_year: 2024
+    condition: new
+    hours: 0
+    watercraft_type: center_console
+    hull_type: deep_v
+    hull_material: fiberglass
+    loa: { value: 28, unit: "feet" }
+    beam: { value: 9.5, unit: "feet" }
+    draft: { value: 1.75, unit: "feet" }
+    max_capacity_persons: 10
+    fuel_type: gasoline
+    fuel_capacity: { value: 227, unit: "gallons" }
+    propulsion_type: outboard
+    num_engines: 2
+    engines:
+      - make: "Mercury"
+        model: "V8 300hp FourStroke"
+        horsepower: 300
+        engine_type: outboard
+        fuel_type: gasoline
+      - make: "Mercury"
+        model: "V8 300hp FourStroke"
+        horsepower: 300
+        engine_type: outboard
+        fuel_type: gasoline
+    max_speed: 55
+    cruising_speed: 30
+    asking_price: { amount: 289000, currency: "USD" }
+    trailer_included: true
+    status: available
+
+  pontoon_boat:
+    vehicle_category: watercraft
+    hin: "BEN12345B424"
+    make: "Bennington"
+    model: "23 LXSR"
+    model_year: 2024
+    condition: new
+    hours: 0
+    watercraft_type: pontoon
+    hull_type: pontoon
+    hull_material: aluminum
+    loa: { value: 23, unit: "feet" }
+    beam: { value: 8.5, unit: "feet" }
+    max_capacity_persons: 12
+    fuel_type: gasoline
+    fuel_capacity: { value: 50, unit: "gallons" }
+    propulsion_type: outboard
+    num_engines: 1
+    engines:
+      - make: "Yamaha"
+        model: "F150"
+        horsepower: 150
+        engine_type: outboard
+    asking_price: { amount: 75000, currency: "USD" }
+    status: available
+
+  used_wakeboard_boat:
+    vehicle_category: watercraft
+    hin: "MBC00123D221"
+    make: "Malibu"
+    model: "Wakesetter 23 LSV"
+    model_year: 2021
+    condition: used
+    hours: 350
+    watercraft_type: wakeboard_boat
+    hull_type: v_hull
+    hull_material: fiberglass
+    loa: { value: 23, unit: "feet" }
+    beam: { value: 8.5, unit: "feet" }
+    max_capacity_persons: 16
+    fuel_type: gasoline
+    fuel_capacity: { value: 65, unit: "gallons" }
+    propulsion_type: inboard
+    num_engines: 1
+    engines:
+      - make: "Malibu Monsoon"
+        model: "M6Di"
+        horsepower: 450
+        engine_type: inboard_gas
+        hours: 350
+    asking_price: { amount: 89000, currency: "USD" }
+    title_status: clean
+    status: available
+
+  dealer_inventory_entry:
+    vehicle_id: "uuid-here"
+    dealer_id: "dealer-001"
+    acquisition_date: "2024-11-15"
+    acquisition_type: trade_in
+    acquisition_cost: { amount: 65000, currency: "USD" }
+    reconditioning_cost: { amount: 2500, currency: "USD" }
+    total_investment: { amount: 67500, currency: "USD" }
+    asking_price: { amount: 89000, currency: "USD" }
+    floor_price: { amount: 75000, currency: "USD" }
+    internet_price: { amount: 87500, currency: "USD" }
+    status: in_stock
+    days_in_inventory: 12
+    lot_location: "Dock B, Slip 14"
+    listings:
+      - platform_id: "boat_trader"
+        platform_listing_id: "BT-12345"
+        listing_url: "https://www.boattrader.com/boat/12345"
+        listed_date: "2024-11-16"
+        status: active
+        featured: true
+        views: 245
+        leads: 8
+      - platform_id: "boats_com"
+        platform_listing_id: "BC-67890"
+        listing_url: "https://www.boats.com/boats/67890"
+        listed_date: "2024-11-16"
+        status: active
+        views: 189
+        leads: 5
+    featured: true
+
+  # Listing platform examples
+  listing_platform_boat_trader:
+    name: "Boat Trader"
+    code: "boat_trader"
+    platform_type: marketplace
+    website: "https://www.boattrader.com"
+    vehicle_categories: [watercraft]
+    supports_sync: true
+    listing_fee: { amount: 49, currency: "USD" }
+    featured_fee: { amount: 99, currency: "USD" }
+    status: active
+
+  listing_platform_cars_com:
+    name: "Cars.com"
+    code: "cars_com"
+    platform_type: marketplace
+    website: "https://www.cars.com"
+    vehicle_categories: [automobile, motorcycle]
+    supports_sync: true
+    listing_fee: { amount: 0, currency: "USD" }
+    commission_percent: 0.02
+    status: active
+
+  # Attribute definition examples
+  attribute_def_passenger_capacity:
+    attribute_key: "passenger_capacity"
+    display_name: "Passenger Capacity"
+    description: "Maximum number of passengers"
+    applies_to: [watercraft, automobile, rv]
+    value_type: integer
+    min_value: 1
+    max_value: 50
+    category: capacity
+    show_in_summary: true
+    show_in_filters: true
+    filter_type: range
+    icon: "users"
+
+  attribute_def_num_engines:
+    attribute_key: "num_engines"
+    display_name: "Engines"
+    description: "Number of engines"
+    applies_to: [watercraft]
+    value_type: integer
+    min_value: 1
+    max_value: 6
+    category: engine
+    show_in_summary: true
+    show_in_filters: true
+    filter_type: select
+    icon: "engine"
+
+  # Vehicle attribute instances
+  attribute_passenger_capacity:
+    vehicle_id: "boat-uuid-123"
+    attribute_key: "passenger_capacity"
+    display_name: "Passenger Capacity"
+    category: capacity
+    value_type: integer
+    value_integer: 12
+    show_in_summary: true
+    icon: "users"
+
+  # Trait examples
+  trait_def_has_trailer:
+    trait_key: "has_trailer"
+    display_name: "Includes Trailer"
+    description: "Trailer included with purchase"
+    category: equipment
+    applies_to: [watercraft]
+    show_in_filters: true
+    icon: "trailer"
+
+  trait_has_gps:
+    vehicle_id: "boat-uuid-123"
+    trait_key: "has_gps"
+    display_name: "GPS/Chartplotter"
+    category: equipment
+    present: true
+    icon: "map-pin"
+
+sources:
+  - "NMMA (National Marine Manufacturers Assoc) Standards"
+  - "USCG Boat Manufacturing Standards 33 CFR 183"
+  - "ISO 10087 - Hull Identification Coding"
+  - "ABYC Standards"
+  - "SAE J2534"
+  - "ISO 3779 - VIN Standard"
+  - "NADA Guides"
+  - "CE Recreational Craft Directive 2013/53/EU"

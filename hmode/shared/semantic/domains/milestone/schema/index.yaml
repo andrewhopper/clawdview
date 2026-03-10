@@ -1,0 +1,19 @@
+# Milestone Domain Index
+# Business and personal milestones, plus mission/vision/values
+# Version: 1.0.0
+
+domain: milestone
+version: "1.0.0"
+description: |
+  Domain model for tracking business and personal milestones, goals, and
+  organizational identity (mission, vision, values). Supports both corporate
+  governance events (board presentations, funding) and personal life planning.
+namespace: http://protoflow.ai/ontology/milestone#
+dependencies: [core]
+
+imports:
+  - enums.yaml
+  - entities.yaml
+  - governance.yaml
+  - personal.yaml
+  - actions.yaml

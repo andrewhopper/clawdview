@@ -1,0 +1,641 @@
+# Push Notification Domain Model
+# Inspired by Twilio Notify and Firebase Cloud Messaging (FCM)
+# https://www.twilio.com/docs/notify/api
+
+entities:
+
+  Notification:
+    description: Push notification sent to a device or user
+    extends: Entity
+    properties:
+      sid:
+        type: string
+        required: true
+        description: Unique notification identifier
+      accountSid:
+        type: string
+        required: true
+      serviceSid:
+        type: string
+        required: true
+        description: Notification service that sent this
+      identities:
+        type: array
+        items: string
+        description: User identities to notify
+      tags:
+        type: array
+        items: string
+        description: Tags to select bindings
+      segments:
+        type: array
+        items: string
+        description: User segments to notify
+      priority:
+        type: NotificationPriority
+        description: Delivery priority
+      ttl:
+        type: integer
+        description: Time-to-live in seconds
+      title:
+        type: string
+        description: Notification title
+      body:
+        type: string
+        description: Notification body text
+      sound:
+        type: string
+        description: Sound to play (default, custom, or none)
+      action:
+        type: string
+        description: Action on tap (URL or deep link)
+      data:
+        type: object
+        description: Custom key-value payload
+      apn:
+        type: ApnPayload
+        description: Apple Push Notification overrides
+      gcm:
+        type: GcmPayload
+        description: FCM/GCM overrides
+      fcm:
+        type: FcmPayload
+        description: Firebase Cloud Messaging v1 overrides
+      sms:
+        type: SmsPayload
+        description: SMS fallback configuration
+      alexa:
+        type: AlexaPayload
+        description: Alexa skill notification
+      facebookMessenger:
+        type: MessengerPayload
+        description: Facebook Messenger payload
+      status:
+        type: NotificationStatus
+        required: true
+      deliveryAttempts:
+        type: integer
+        description: Number of delivery attempts
+      deliveredCount:
+        type: integer
+        description: Successfully delivered count
+      failedCount:
+        type: integer
+        description: Failed delivery count
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+      sentAt:
+        type: datetime
+        description: When notification was sent
+
+  NotificationService:
+    description: Configuration for sending notifications
+    properties:
+      sid:
+        type: string
+        required: true
+      accountSid:
+        type: string
+        required: true
+      friendlyName:
+        type: string
+        required: true
+      apnCredentialSid:
+        type: string
+        description: Apple Push credentials
+      gcmCredentialSid:
+        type: string
+        description: FCM/GCM credentials
+      fcmCredentialSid:
+        type: string
+        description: Firebase v1 credentials
+      messagingServiceSid:
+        type: string
+        description: SMS fallback messaging service
+      alexaSkillId:
+        type: string
+        description: Alexa skill ID
+      facebookMessengerPageId:
+        type: string
+      defaultApnNotificationProtocolVersion:
+        type: string
+        description: "3" for HTTP/2
+      defaultGcmNotificationProtocolVersion:
+        type: string
+      logEnabled:
+        type: boolean
+        description: Enable delivery logging
+      deliveryCallbackUrl:
+        type: uri
+        description: Webhook for delivery events
+      deliveryCallbackEnabled:
+        type: boolean
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  ApnPayload:
+    description: Apple Push Notification Service payload
+    properties:
+      aps:
+        type: ApsAlert
+        description: Standard APS dictionary
+      customKeys:
+        type: object
+        description: Custom data keys
+      collapseId:
+        type: string
+        description: Collapse key for grouping
+      pushType:
+        type: ApnPushType
+        description: alert, background, voip, etc.
+      category:
+        type: string
+        description: Notification category
+      threadId:
+        type: string
+        description: Thread ID for grouping
+      targetContentId:
+        type: string
+        description: Content ID for Notification Content Extension
+      interruptionLevel:
+        type: ApnInterruptionLevel
+        description: iOS 15+ interruption level
+
+  ApsAlert:
+    description: Standard Apple APS alert dictionary
+    properties:
+      alert:
+        type: string
+        description: Alert text (or object for localized)
+      badge:
+        type: integer
+        description: Badge number
+      sound:
+        type: string
+        description: Sound file name
+      contentAvailable:
+        type: integer
+        description: 1 for background update
+      mutableContent:
+        type: integer
+        description: 1 to enable Notification Service Extension
+
+  GcmPayload:
+    description: Google Cloud Messaging / Legacy FCM payload
+    properties:
+      notification:
+        type: GcmNotification
+      data:
+        type: object
+        description: Custom data payload
+      collapseKey:
+        type: string
+      priority:
+        type: string
+        description: high or normal
+      restrictedPackageName:
+        type: string
+      timeToLive:
+        type: integer
+        description: TTL in seconds
+
+  GcmNotification:
+    description: GCM notification object
+    properties:
+      title:
+        type: string
+      body:
+        type: string
+      icon:
+        type: string
+      color:
+        type: string
+        description: Notification color (#RRGGBB)
+      sound:
+        type: string
+      tag:
+        type: string
+        description: Collapse key for display
+      clickAction:
+        type: string
+        description: Activity to launch
+
+  FcmPayload:
+    description: Firebase Cloud Messaging v1 HTTP API payload
+    properties:
+      message:
+        type: FcmMessage
+        required: true
+
+  FcmMessage:
+    description: FCM v1 message structure
+    properties:
+      name:
+        type: string
+        description: Output only message name
+      data:
+        type: object
+        description: Key-value data payload
+      notification:
+        type: FcmNotification
+      android:
+        type: AndroidConfig
+      webpush:
+        type: WebpushConfig
+      apns:
+        type: ApnsConfig
+      fcmOptions:
+        type: FcmOptions
+
+  FcmNotification:
+    description: FCM notification payload
+    properties:
+      title:
+        type: string
+      body:
+        type: string
+      image:
+        type: uri
+        description: Image URL to display
+
+  AndroidConfig:
+    description: Android-specific FCM options
+    properties:
+      collapseKey:
+        type: string
+      priority:
+        type: AndroidPriority
+      ttl:
+        type: string
+        description: Duration format (e.g., "3.5s")
+      restrictedPackageName:
+        type: string
+      directBootOk:
+        type: boolean
+      notification:
+        type: AndroidNotification
+
+  AndroidNotification:
+    description: Android notification options
+    properties:
+      title:
+        type: string
+      body:
+        type: string
+      icon:
+        type: string
+      color:
+        type: string
+      sound:
+        type: string
+      tag:
+        type: string
+      clickAction:
+        type: string
+      channelId:
+        type: string
+        description: Android O+ notification channel
+      imageUrl:
+        type: uri
+      notificationPriority:
+        type: AndroidNotificationPriority
+      visibility:
+        type: AndroidVisibility
+
+  WebpushConfig:
+    description: Web push configuration
+    properties:
+      headers:
+        type: object
+        description: HTTP headers
+      data:
+        type: object
+      notification:
+        type: WebpushNotification
+      fcmOptions:
+        type: WebpushFcmOptions
+
+  WebpushNotification:
+    description: Web push notification display options
+    properties:
+      title:
+        type: string
+      body:
+        type: string
+      icon:
+        type: uri
+      badge:
+        type: uri
+      image:
+        type: uri
+      actions:
+        type: array
+        items: WebpushAction
+      tag:
+        type: string
+      requireInteraction:
+        type: boolean
+      renotify:
+        type: boolean
+      silent:
+        type: boolean
+      vibrate:
+        type: array
+        items: integer
+
+  WebpushAction:
+    description: Web push notification action button
+    properties:
+      action:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      icon:
+        type: uri
+
+  WebpushFcmOptions:
+    description: Web push FCM options
+    properties:
+      link:
+        type: uri
+        description: URL to open on click
+      analyticsLabel:
+        type: string
+
+  ApnsConfig:
+    description: Apple-specific FCM options
+    properties:
+      headers:
+        type: object
+        description: APNs headers
+      payload:
+        type: object
+        description: APNs payload
+      fcmOptions:
+        type: ApnsFcmOptions
+
+  ApnsFcmOptions:
+    description: APNs FCM options
+    properties:
+      analyticsLabel:
+        type: string
+      image:
+        type: uri
+
+  FcmOptions:
+    description: Cross-platform FCM options
+    properties:
+      analyticsLabel:
+        type: string
+        description: Analytics label for tracking
+
+  SmsPayload:
+    description: SMS fallback configuration
+    properties:
+      from:
+        type: string
+        description: SMS sender number
+      body:
+        type: string
+        description: SMS message body
+      mediaUrl:
+        type: array
+        items: uri
+        description: MMS media URLs
+      statusCallback:
+        type: uri
+
+  AlexaPayload:
+    description: Alexa skill notification payload
+    properties:
+      title:
+        type: string
+      body:
+        type: string
+
+  MessengerPayload:
+    description: Facebook Messenger notification
+    properties:
+      text:
+        type: string
+        description: Message text
+      attachmentType:
+        type: string
+        description: image, audio, video, file
+      attachmentUrl:
+        type: uri
+        description: Media URL
+
+  NotificationDeliveryEvent:
+    description: Delivery status event for a notification
+    properties:
+      sid:
+        type: string
+        required: true
+      notificationSid:
+        type: string
+        required: true
+      bindingSid:
+        type: string
+        required: true
+      identity:
+        type: string
+        required: true
+        description: User identity
+      bindingType:
+        type: BindingType
+        required: true
+      messageStatus:
+        type: DeliveryStatus
+        required: true
+      errorCode:
+        type: string
+      errorMessage:
+        type: string
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+enums:
+
+  NotificationPriority:
+    description: Notification delivery priority
+    values:
+      - high   # Immediate delivery, wakes device
+      - normal # Standard delivery, batched
+      - low    # Low priority, may be throttled
+
+  NotificationStatus:
+    values:
+      - queued     # Queued for delivery
+      - processing # Being processed
+      - sent       # Sent to push services
+      - delivered  # Confirmed delivered
+      - failed     # Delivery failed
+      - canceled   # Notification canceled
+
+  ApnPushType:
+    description: APNs push type header
+    values:
+      - alert       # Standard notification
+      - background  # Silent background update
+      - voip        # VoIP push
+      - complication # watchOS complication
+      - fileprovider # File provider
+      - mdm         # Mobile device management
+      - location    # Location update
+
+  ApnInterruptionLevel:
+    description: iOS 15+ interruption levels
+    values:
+      - passive         # No sound, no wake
+      - active          # Default behavior
+      - time-sensitive  # Breaks through Focus
+      - critical        # Ignores mute/Focus
+
+  AndroidPriority:
+    description: FCM Android priority
+    values:
+      - normal # Default, may be batched
+      - high   # Immediate delivery
+
+  AndroidNotificationPriority:
+    description: Android notification importance
+    values:
+      - PRIORITY_MIN
+      - PRIORITY_LOW
+      - PRIORITY_DEFAULT
+      - PRIORITY_HIGH
+      - PRIORITY_MAX
+
+  AndroidVisibility:
+    description: Notification visibility on lock screen
+    values:
+      - VISIBILITY_PRIVATE # Show on locked, hide content
+      - VISIBILITY_PUBLIC  # Show full content
+      - VISIBILITY_SECRET  # Hide entirely
+
+  BindingType:
+    description: Type of notification binding
+    values:
+      - apn           # Apple Push Notification
+      - gcm           # Google Cloud Messaging (legacy)
+      - fcm           # Firebase Cloud Messaging
+      - sms           # SMS fallback
+      - facebook-messenger
+      - alexa
+
+  DeliveryStatus:
+    description: Delivery status for a specific binding
+    values:
+      - queued
+      - sent
+      - delivered
+      - confirmed    # User interaction confirmed
+      - undelivered
+      - failed
+
+actions:
+
+  SendNotificationAction:
+    description: Send a push notification
+    parameters:
+      serviceSid:
+        type: string
+        required: true
+      identity:
+        type: string
+        description: Single user identity
+      identities:
+        type: array
+        items: string
+        description: Multiple user identities
+      tag:
+        type: string
+        description: Tag expression for binding selection
+      segment:
+        type: string
+        description: User segment
+      title:
+        type: string
+      body:
+        type: string
+        required: true
+      sound:
+        type: string
+      action:
+        type: string
+        description: Deep link or URL
+      data:
+        type: object
+        description: Custom payload
+      priority:
+        type: NotificationPriority
+      ttl:
+        type: integer
+        description: Time-to-live in seconds
+      apn:
+        type: ApnPayload
+      fcm:
+        type: FcmPayload
+    result:
+      type: Notification
+
+  FetchNotificationAction:
+    description: Get notification details
+    parameters:
+      serviceSid:
+        type: string
+        required: true
+      sid:
+        type: string
+        required: true
+    result:
+      type: Notification
+
+  CreateNotificationServiceAction:
+    description: Create a notification service
+    parameters:
+      friendlyName:
+        type: string
+        required: true
+      apnCredentialSid:
+        type: string
+      fcmCredentialSid:
+        type: string
+      messagingServiceSid:
+        type: string
+      deliveryCallbackUrl:
+        type: uri
+    result:
+      type: NotificationService
+
+  UpdateNotificationServiceAction:
+    description: Update a notification service
+    parameters:
+      sid:
+        type: string
+        required: true
+      friendlyName:
+        type: string
+      apnCredentialSid:
+        type: string
+      fcmCredentialSid:
+        type: string
+      deliveryCallbackEnabled:
+        type: boolean
+    result:
+      type: NotificationService

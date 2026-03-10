@@ -1,0 +1,221 @@
+# Primitive: State
+# The condition of an entity at a point in time
+# Physics: Configuration (arrangement of matter)
+# Philosophy: Accident/Mode (how substance appears)
+# Biology: Phenotype (observable characteristics)
+
+domain:
+  name: primitive-state
+  version: "1.0.0"
+  description: State and state machines - conditions and transitions
+  layer: primitive
+  dependencies: [primitive-entity]
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  # ============================================
+  # STATE FUNDAMENTALS
+  # ============================================
+
+  State:
+    description: A named condition an entity can be in
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      isInitial: { type: boolean, default: false }
+      isFinal: { type: boolean, default: false }
+      entryActions: { type: array, items: string, description: "Actions on entering state" }
+      exitActions: { type: array, items: string, description: "Actions on leaving state" }
+      invariants: { type: array, items: string, description: "Conditions always true in state" }
+    meta:
+      physics: "System configuration - arrangement of particles"
+      philosophy: "Mode (Spinoza) - way substance exists"
+      biology: "Phenotypic state - awake, dormant, etc."
+
+  StateValue:
+    description: Current state of an entity instance
+    properties:
+      stateName: { type: string, required: true }
+      enteredAt: { type: datetime, required: true }
+      enteredFrom: { type: string, description: "Previous state" }
+      metadata: { type: object }
+
+  # ============================================
+  # STATE MACHINES
+  # ============================================
+
+  StateMachine:
+    description: Definition of all possible states and transitions
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      entityType: { type: string, required: true, description: "Type of entity this applies to" }
+      states: { type: array, items: State, required: true }
+      transitions: { type: array, items: Transition, required: true }
+      initialState: { type: string, required: true }
+      finalStates: { type: array, items: string }
+    meta:
+      mathematics: "Finite automaton"
+      physics: "Phase diagram"
+
+  Transition:
+    description: Movement from one state to another
+    properties:
+      name: { type: string }
+      from: { type: string, required: true }
+      to: { type: string, required: true }
+      trigger: { type: Trigger, description: "What causes the transition" }
+      guard: { type: Guard, description: "Condition that must be true" }
+      effect: { type: Effect, description: "What happens during transition" }
+    meta:
+      physics: "Phase transition - solid to liquid"
+      biology: "Metamorphosis - caterpillar to butterfly"
+
+  Trigger:
+    description: What initiates a state transition
+    properties:
+      type: { type: TriggerType, required: true }
+      name: { type: string, required: true }
+      parameters: { type: array, items: string }
+
+  Guard:
+    description: Condition that must be true for transition
+    properties:
+      expression: { type: string, required: true }
+      description: { type: string }
+
+  Effect:
+    description: Action performed during transition
+    properties:
+      type: { type: EffectType, required: true }
+      action: { type: string, required: true }
+      parameters: { type: object }
+
+  # ============================================
+  # STATE HISTORY
+  # ============================================
+
+  StateHistory:
+    description: Record of all state changes for an entity
+    properties:
+      entityId: { type: string, required: true }
+      entries: { type: array, items: StateHistoryEntry }
+
+  StateHistoryEntry:
+    description: Single state change record
+    properties:
+      fromState: { type: string }
+      toState: { type: string, required: true }
+      transition: { type: string }
+      triggeredBy: { type: string }
+      occurredAt: { type: datetime, required: true }
+      metadata: { type: object }
+
+  # ============================================
+  # HIERARCHICAL STATES
+  # ============================================
+
+  CompositeState:
+    extends: State
+    description: State containing nested states (Harel statechart)
+    properties:
+      substates: { type: array, items: State }
+      initialSubstate: { type: string }
+      historyType: { type: HistoryType }
+    meta:
+      source: "Harel statecharts"
+
+  ParallelState:
+    extends: State
+    description: State with concurrent regions
+    properties:
+      regions: { type: array, items: Region }
+    meta:
+      concurrency: "Orthogonal regions executing simultaneously"
+
+  Region:
+    description: Independent region within a parallel state
+    properties:
+      name: { type: string, required: true }
+      states: { type: array, items: State }
+      initialState: { type: string }
+
+  # ============================================
+  # PROPERTY-BASED STATE
+  # ============================================
+
+  PropertyState:
+    description: State derived from property values (not explicit FSM)
+    properties:
+      name: { type: string, required: true }
+      derivedFrom: { type: array, items: PropertyCondition }
+    examples:
+      - "InStock: quantity > 0"
+      - "Overdue: dueDate < now"
+
+  PropertyCondition:
+    description: Condition on entity property
+    properties:
+      property: { type: string, required: true }
+      operator: { type: ComparisonOperator, required: true }
+      value: { type: any }
+
+enums:
+
+  TriggerType:
+    description: What can initiate a transition
+    values:
+      - event         # External event received
+      - signal        # Internal signal
+      - timeout       # Time elapsed
+      - condition     # Boolean becomes true (completion)
+      - call          # Synchronous call
+
+  EffectType:
+    description: Type of transition effect
+    values:
+      - action        # Execute an action
+      - send          # Send event/signal
+      - assign        # Set variable
+      - raise         # Raise internal event
+      - log           # Log transition
+
+  HistoryType:
+    description: How history is remembered for composite states
+    values:
+      - none          # No history (start at initial)
+      - shallow       # Remember direct substate only
+      - deep          # Remember nested substates
+
+  ComparisonOperator:
+    description: Operators for property conditions
+    values:
+      - eq            # Equal
+      - ne            # Not equal
+      - gt            # Greater than
+      - gte           # Greater than or equal
+      - lt            # Less than
+      - lte           # Less than or equal
+      - in            # In set
+      - contains      # Contains value
+      - matches       # Regex match
+
+meta:
+  theoretical_basis:
+    physics: "System configuration, phase space"
+    philosophy: "Aristotelian accidents - how substance manifests"
+    computer_science: "Finite state machines, Turing machines"
+
+  patterns:
+    - "State pattern (GoF)"
+    - "Harel statecharts"
+    - "Event sourcing (derive state from events)"
+
+  composition_role: "Links entity (what) to event (change)"
+
+  related_primitives:
+    - entity: "States belong to entities"
+    - event: "Events trigger transitions"
+    - time: "States have temporal extent"

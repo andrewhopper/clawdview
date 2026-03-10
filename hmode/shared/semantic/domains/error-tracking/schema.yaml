@@ -1,0 +1,351 @@
+# Error Tracking Domain Model
+# Bug tracking, issue management, and error resolution workflows
+
+domain:
+  name: error-tracking
+  version: "1.0.0"
+  description: Bug tracking, error reporting, and issue resolution system
+  dependencies: [core, work-item, notification]
+  extends: work-item
+  use_case: Track bugs, errors, and issues from discovery through resolution
+  created_at: "2025-11-25"
+  updated_at: "2025-11-25"
+
+entities:
+
+  # ============================================
+  # CORE ERROR ENTITIES
+  # ============================================
+
+  Error:
+    description: A bug, defect, or issue requiring investigation and resolution
+    extends: work-item:WorkItem
+    properties:
+      uuid: { type: uuid, required: true }
+      id: { type: string, required: true, description: "Human-readable ID (ERR-YYYYMMDD-NNNN)" }
+      date: { type: datetime, required: true, description: "When error was discovered" }
+      error: { type: string, required: true, maxLength: 500, description: "Brief error description" }
+      errorType: { type: string, required: true, description: "Classification of error" }
+      category: { type: array, items: ErrorCategory, required: true }
+      severity: { type: ErrorSeverity, required: true }
+      priority: { type: ErrorPriority, required: true }
+      status: { type: ErrorStatus, required: true }
+      context: { type: string, description: "Detailed context about the error" }
+      rootCause: { type: string, description: "Analysis of underlying cause" }
+      reproduction: { type: ReproductionSteps }
+      environment: { type: Environment }
+      impact: { type: Impact }
+      assignedTo: { type: string, description: "Person assigned to fix" }
+      reportedBy: { type: string, description: "Person who reported" }
+      artifactUrls: { type: array, items: string, description: "Links to related artifacts" }
+      priorMessages: { type: array, items: Message, description: "Conversation history" }
+      notes: { type: array, items: Note }
+      resolution: { type: Resolution }
+      relatedErrors: { type: array, items: ErrorLink }
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+      resolvedAt: { type: datetime }
+      closedAt: { type: datetime }
+
+  ReproductionSteps:
+    description: Steps to reproduce the error
+    properties:
+      steps: { type: array, items: string, required: true }
+      expectedBehavior: { type: string, required: true }
+      actualBehavior: { type: string, required: true }
+      isReproducible: { type: boolean, required: true }
+      reproducibilityRate: { type: string, description: "always, sometimes, rarely" }
+      prerequisites: { type: array, items: string }
+
+  Environment:
+    description: Environment where error occurred
+    properties:
+      platform: { type: string, description: "OS, browser, device" }
+      version: { type: string, description: "Software version" }
+      configuration: { type: object, description: "Relevant config" }
+      dependencies: { type: array, items: Dependency }
+      dataState: { type: string, description: "State of data when error occurred" }
+
+  Dependency:
+    properties:
+      name: { type: string, required: true }
+      version: { type: string }
+      type: { type: string, description: "library, service, API" }
+
+  Impact:
+    description: Impact assessment of the error
+    properties:
+      scope: { type: ImpactScope, required: true }
+      affectedUsers: { type: integer, description: "Number of users affected" }
+      affectedFeatures: { type: array, items: string }
+      businessImpact: { type: string }
+      customerImpact: { type: string }
+      workaround: { type: string, description: "Temporary workaround if available" }
+      hasWorkaround: { type: boolean, required: true }
+
+  Note:
+    description: A note or comment on an error
+    properties:
+      timestamp: { type: datetime, required: true }
+      author: { type: string }
+      note: { type: string, required: true }
+      noteType: { type: NoteType, required: true }
+      visibility: { type: NoteVisibility, default: "internal" }
+
+  Message:
+    description: A message from conversation history
+    properties:
+      role: { type: MessageRole, required: true }
+      content: { type: string, required: true }
+      timestamp: { type: datetime }
+
+  Resolution:
+    description: How the error was resolved
+    properties:
+      solution: { type: string, required: true }
+      fixCommit: { type: string, description: "Git commit SHA" }
+      fixPR: { type: string, description: "Pull request reference" }
+      fixVersion: { type: string, description: "Version where fixed" }
+      verifiedBy: { type: string }
+      verifiedAt: { type: datetime }
+      releaseNotes: { type: string }
+
+  ErrorLink:
+    description: Relationship to another error
+    properties:
+      errorId: { type: string, required: true }
+      linkType: { type: ErrorLinkType, required: true }
+      description: { type: string }
+
+  # ============================================
+  # CONFIGURATION ENTITIES
+  # ============================================
+
+  ErrorType:
+    description: Defines a category of errors
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      defaultSeverity: { type: ErrorSeverity }
+      defaultPriority: { type: ErrorPriority }
+      requiresReproduction: { type: boolean, default: false }
+      isActive: { type: boolean, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ErrorTemplate:
+    description: Template for common error types
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      errorType: { type: string, required: true }
+      descriptionTemplate: { type: string, required: true }
+      categoryDefaults: { type: array, items: ErrorCategory }
+      contextQuestions: { type: array, items: string }
+      reproductionTemplate: { type: array, items: string }
+
+  ErrorMetrics:
+    description: Metrics about error tracking
+    properties:
+      id: { type: uuid, required: true }
+      period: { type: string, required: true, description: "day, week, month" }
+      startDate: { type: datetime, required: true }
+      endDate: { type: datetime, required: true }
+      totalErrors: { type: integer, required: true }
+      newErrors: { type: integer, required: true }
+      resolvedErrors: { type: integer, required: true }
+      bySeverity: { type: object, required: true }
+      byCategory: { type: object, required: true }
+      byStatus: { type: object, required: true }
+      meanTimeToResolution: { type: integer, description: "Hours" }
+      meanTimeToAssignment: { type: integer, description: "Hours" }
+      createdAt: { type: datetime, required: true }
+
+enums:
+
+  ErrorStatus:
+    values:
+      - new              # Just reported
+      - triaged          # Reviewed and categorized
+      - assigned         # Assigned to someone
+      - in_progress      # Being worked on
+      - blocked          # Waiting on dependency
+      - needs_info       # Need more information
+      - fixed            # Fix implemented
+      - verified         # Fix verified
+      - deployed         # Fix in production
+      - closed           # Issue closed
+      - wont_fix         # Decision not to fix
+      - duplicate        # Duplicate of another error
+
+  ErrorSeverity:
+    values:
+      - critical         # System down, data loss
+      - high             # Major functionality broken
+      - medium           # Feature impaired
+      - low              # Minor issue
+      - trivial          # Cosmetic
+
+  ErrorPriority:
+    values:
+      - urgent           # Drop everything
+      - high             # Next sprint
+      - medium           # Backlog
+      - low              # Nice to have
+      - deferred         # Maybe someday
+
+  ErrorCategory:
+    values:
+      - file-structure
+      - critical-rules
+      - documentation
+      - brevity
+      - semantic-search
+      - indexing
+      - accuracy
+      - organization
+      - naming-convention
+      - data-integrity
+      - performance
+      - security
+      - usability
+      - compatibility
+      - regression
+      - other
+
+  ImpactScope:
+    values:
+      - all_users        # Everyone affected
+      - some_users       # Subset of users
+      - single_user      # One user
+      - internal         # Internal only
+      - none             # No user impact
+
+  NoteType:
+    values:
+      - comment          # General comment
+      - investigation    # Investigation finding
+      - workaround       # Temporary workaround
+      - decision         # Decision made
+      - question         # Question raised
+      - update           # Status update
+
+  NoteVisibility:
+    values:
+      - internal         # Team only
+      - public           # Visible to all
+      - customer         # Customer-facing
+
+  MessageRole:
+    values:
+      - user
+      - system
+      - assistant
+      - error
+
+  ErrorLinkType:
+    values:
+      - duplicate_of     # This is duplicate of other
+      - duplicates       # This duplicates other
+      - blocks           # This blocks other
+      - blocked_by       # This blocked by other
+      - related_to       # Related to other
+      - caused_by        # This caused by other
+      - causes           # This causes other
+      - parent_of        # This is parent of other
+      - child_of         # This is child of other
+
+actions:
+
+  CreateError:
+    description: Report a new error
+    parameters:
+      error: { type: string, required: true }
+      errorType: { type: string, required: true }
+      category: { type: array, items: ErrorCategory, required: true }
+      context: { type: string }
+      rootCause: { type: string }
+      severity: { type: ErrorSeverity }
+      priority: { type: ErrorPriority }
+      reproduction: { type: ReproductionSteps }
+      environment: { type: Environment }
+      artifactUrls: { type: array, items: string }
+      priorMessages: { type: array, items: Message }
+    result: Error
+    permission: error:create
+    idempotent: false
+
+  UpdateError:
+    description: Update error details
+    parameters:
+      uuid: { type: uuid, required: true }
+      status: { type: ErrorStatus }
+      severity: { type: ErrorSeverity }
+      priority: { type: ErrorPriority }
+      assignedTo: { type: string }
+      context: { type: string }
+      rootCause: { type: string }
+    result: Error
+    permission: error:update
+    idempotent: true
+
+  AddNote:
+    description: Add note to error
+    parameters:
+      errorUuid: { type: uuid, required: true }
+      note: { type: string, required: true }
+      noteType: { type: NoteType, required: true }
+      visibility: { type: NoteVisibility, default: "internal" }
+    result: Note
+    permission: error:comment
+    idempotent: false
+
+  ResolveError:
+    description: Mark error as resolved
+    parameters:
+      uuid: { type: uuid, required: true }
+      resolution: { type: Resolution, required: true }
+    result: Error
+    permission: error:resolve
+    idempotent: false
+
+  LinkErrors:
+    description: Link two errors together
+    parameters:
+      sourceUuid: { type: uuid, required: true }
+      targetUuid: { type: uuid, required: true }
+      linkType: { type: ErrorLinkType, required: true }
+      description: { type: string }
+    result: ErrorLink
+    permission: error:link
+    idempotent: true
+
+  SearchErrors:
+    description: Search errors by criteria
+    parameters:
+      query: { type: string }
+      status: { type: array, items: ErrorStatus }
+      severity: { type: array, items: ErrorSeverity }
+      category: { type: array, items: ErrorCategory }
+      assignedTo: { type: string }
+      reportedBy: { type: string }
+      dateFrom: { type: datetime }
+      dateTo: { type: datetime }
+      limit: { type: integer, default: 50 }
+      offset: { type: integer, default: 0 }
+    result: { type: object, description: "List of errors with pagination" }
+    permission: error:read
+    idempotent: true
+
+  GetErrorMetrics:
+    description: Get error tracking metrics
+    parameters:
+      period: { type: string, required: true, description: "day, week, month" }
+      startDate: { type: datetime, required: true }
+      endDate: { type: datetime, required: true }
+      groupBy: { type: array, items: string, description: "severity, category, status" }
+    result: ErrorMetrics
+    permission: error:metrics
+    idempotent: true

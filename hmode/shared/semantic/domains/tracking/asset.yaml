@@ -1,0 +1,809 @@
+# Tracking Domain: Trackable Assets
+# Things that can be tracked - vehicles, packages, people, devices
+# Version: 1.0.0
+
+domain: tracking-asset
+version: "1.0.0"
+status: production
+description: Trackable entities - vehicles, cargo, devices, people
+dependencies:
+  - geo-point
+  - tracking-position
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Trackable Asset (abstract base)
+  # ---------------------------------------------------------------------------
+
+  TrackedAsset:
+    description: Abstract base for anything that can be tracked
+    fields:
+      id:
+        type: string
+        required: true
+        description: Unique identifier
+      name:
+        type: string
+        required: false
+        description: Human-readable name
+      asset_type:
+        type: AssetType
+        required: true
+      status:
+        type: AssetStatus
+        required: false
+        default: ACTIVE
+      last_position:
+        type: Position
+        required: false
+        description: Most recent known position
+      tracker:
+        type: Tracker
+        required: false
+        description: Tracking device attached
+      owner_id:
+        type: string
+        required: false
+      organization_id:
+        type: string
+        required: false
+      tags:
+        type: array
+        items:
+          type: string
+        required: false
+      metadata:
+        type: object
+        required: false
+      created_at:
+        type: datetime
+        required: false
+      updated_at:
+        type: datetime
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Tracker Device
+  # ---------------------------------------------------------------------------
+
+  Tracker:
+    description: Physical tracking device
+    fields:
+      id:
+        type: string
+        required: true
+      device_type:
+        type: TrackerType
+        required: true
+      manufacturer:
+        type: string
+        required: false
+      model:
+        type: string
+        required: false
+      serial_number:
+        type: string
+        required: false
+      imei:
+        type: string
+        required: false
+        description: IMEI for cellular trackers
+      iccid:
+        type: string
+        required: false
+        description: SIM card identifier
+      firmware_version:
+        type: string
+        required: false
+      battery_level:
+        type: float
+        required: false
+        constraints:
+          min: 0
+          max: 100
+      battery_voltage:
+        type: float
+        required: false
+      power_source:
+        type: PowerSource
+        required: false
+      status:
+        type: TrackerStatus
+        required: false
+      last_communication:
+        type: datetime
+        required: false
+      report_interval_seconds:
+        type: integer
+        required: false
+        description: How often tracker reports
+      capabilities:
+        type: array
+        items:
+          type: TrackerCapability
+        required: false
+      assigned_asset_id:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Vehicle
+  # ---------------------------------------------------------------------------
+
+  Vehicle:
+    description: Trackable vehicle
+    extends: TrackedAsset
+    fields:
+      vehicle_type:
+        type: VehicleType
+        required: true
+      make:
+        type: string
+        required: false
+      model:
+        type: string
+        required: false
+      year:
+        type: integer
+        required: false
+      color:
+        type: string
+        required: false
+      vin:
+        type: string
+        required: false
+        description: Vehicle Identification Number
+      license_plate:
+        type: string
+        required: false
+      license_state:
+        type: string
+        required: false
+      fuel_type:
+        type: FuelType
+        required: false
+      fuel_capacity_liters:
+        type: float
+        required: false
+      current_fuel_level:
+        type: float
+        required: false
+        description: Current fuel level (0-100%)
+      odometer_km:
+        type: float
+        required: false
+      engine_hours:
+        type: float
+        required: false
+      dimensions:
+        type: VehicleDimensions
+        required: false
+      weight_capacity_kg:
+        type: float
+        required: false
+      assigned_driver_id:
+        type: string
+        required: false
+      telematics:
+        type: TelematicsData
+        required: false
+
+  VehicleDimensions:
+    description: Physical dimensions of vehicle
+    fields:
+      length_meters:
+        type: float
+        required: false
+      width_meters:
+        type: float
+        required: false
+      height_meters:
+        type: float
+        required: false
+      wheelbase_meters:
+        type: float
+        required: false
+
+  TelematicsData:
+    description: Vehicle telematics/OBD data
+    fields:
+      engine_on:
+        type: boolean
+        required: false
+      engine_rpm:
+        type: float
+        required: false
+      coolant_temp_c:
+        type: float
+        required: false
+      oil_pressure:
+        type: float
+        required: false
+      battery_voltage:
+        type: float
+        required: false
+      dtc_codes:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Diagnostic Trouble Codes
+      timestamp:
+        type: datetime
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Vessel (Marine)
+  # ---------------------------------------------------------------------------
+
+  Vessel:
+    description: Marine vessel (boat, ship)
+    extends: TrackedAsset
+    fields:
+      vessel_type:
+        type: VesselType
+        required: true
+      mmsi:
+        type: string
+        required: false
+        description: Maritime Mobile Service Identity
+      imo_number:
+        type: string
+        required: false
+        description: IMO ship identification
+      call_sign:
+        type: string
+        required: false
+      flag_country:
+        type: string
+        required: false
+        description: Flag state (ISO country code)
+      length_meters:
+        type: float
+        required: false
+      beam_meters:
+        type: float
+        required: false
+        description: Width at widest point
+      draft_meters:
+        type: float
+        required: false
+        description: Depth below waterline
+      air_draft_meters:
+        type: float
+        required: false
+        description: Height above waterline
+      gross_tonnage:
+        type: float
+        required: false
+      deadweight_tonnage:
+        type: float
+        required: false
+      ais_type:
+        type: AISShipType
+        required: false
+      navigation_status:
+        type: AISNavigationStatus
+        required: false
+      destination:
+        type: string
+        required: false
+      eta:
+        type: datetime
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Aircraft
+  # ---------------------------------------------------------------------------
+
+  Aircraft:
+    description: Trackable aircraft
+    extends: TrackedAsset
+    fields:
+      aircraft_type:
+        type: AircraftType
+        required: true
+      registration:
+        type: string
+        required: false
+        description: Tail number (N-number)
+      icao_hex:
+        type: string
+        required: false
+        description: ICAO 24-bit address (hex)
+      flight_number:
+        type: string
+        required: false
+      airline:
+        type: string
+        required: false
+      origin:
+        type: string
+        required: false
+        description: Departure airport (ICAO/IATA)
+      destination:
+        type: string
+        required: false
+        description: Arrival airport
+      altitude_ft:
+        type: float
+        required: false
+      ground_speed_knots:
+        type: float
+        required: false
+      vertical_rate_fpm:
+        type: float
+        required: false
+        description: Feet per minute (+ = climbing)
+      squawk:
+        type: string
+        required: false
+        description: Transponder code
+
+  # ---------------------------------------------------------------------------
+  # Cargo/Package
+  # ---------------------------------------------------------------------------
+
+  Cargo:
+    description: Trackable cargo, package, or shipment
+    extends: TrackedAsset
+    fields:
+      cargo_type:
+        type: CargoType
+        required: true
+      tracking_number:
+        type: string
+        required: false
+      description:
+        type: string
+        required: false
+      weight_kg:
+        type: float
+        required: false
+      dimensions:
+        type: CargoDimensions
+        required: false
+      value:
+        type: Money
+        required: false
+      contents:
+        type: array
+        items:
+          type: CargoItem
+        required: false
+      handling_requirements:
+        type: array
+        items:
+          type: HandlingRequirement
+        required: false
+      temperature_range:
+        type: TemperatureRange
+        required: false
+        description: Required temperature (cold chain)
+      current_temperature:
+        type: float
+        required: false
+      humidity:
+        type: float
+        required: false
+      shock_detected:
+        type: boolean
+        required: false
+      chain_of_custody:
+        type: array
+        items:
+          type: CustodyEvent
+        required: false
+
+  CargoDimensions:
+    description: Cargo physical dimensions
+    fields:
+      length_cm:
+        type: float
+        required: false
+      width_cm:
+        type: float
+        required: false
+      height_cm:
+        type: float
+        required: false
+      volume_cubic_cm:
+        type: float
+        required: false
+
+  CargoItem:
+    description: Item within cargo
+    fields:
+      sku:
+        type: string
+        required: false
+      description:
+        type: string
+        required: true
+      quantity:
+        type: integer
+        required: true
+      unit_value:
+        type: Money
+        required: false
+
+  TemperatureRange:
+    description: Required temperature range
+    fields:
+      min_celsius:
+        type: float
+        required: true
+      max_celsius:
+        type: float
+        required: true
+      alert_threshold_celsius:
+        type: float
+        required: false
+        description: Alert if deviation exceeds this
+
+  CustodyEvent:
+    description: Chain of custody event
+    fields:
+      timestamp:
+        type: datetime
+        required: true
+      event_type:
+        type: CustodyEventType
+        required: true
+      location:
+        type: Point
+        required: false
+      facility:
+        type: string
+        required: false
+      handler:
+        type: string
+        required: false
+      signature:
+        type: string
+        required: false
+      notes:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Person/Individual
+  # ---------------------------------------------------------------------------
+
+  TrackedPerson:
+    description: Trackable individual (with consent)
+    extends: TrackedAsset
+    fields:
+      person_type:
+        type: TrackedPersonType
+        required: true
+      first_name:
+        type: string
+        required: false
+      last_name:
+        type: string
+        required: false
+      employee_id:
+        type: string
+        required: false
+      phone:
+        type: string
+        required: false
+      emergency_contact:
+        type: string
+        required: false
+      certifications:
+        type: array
+        items:
+          type: string
+        required: false
+      consent_given:
+        type: boolean
+        required: true
+        description: Must have explicit consent
+      consent_date:
+        type: datetime
+        required: false
+      tracking_purpose:
+        type: string
+        required: false
+        description: Why tracking is needed
+
+  # ---------------------------------------------------------------------------
+  # Asset Group
+  # ---------------------------------------------------------------------------
+
+  AssetGroup:
+    description: Group of tracked assets
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+        required: false
+      asset_ids:
+        type: array
+        items:
+          type: string
+        required: true
+      group_type:
+        type: AssetGroupType
+        required: false
+      bounds:
+        type: BoundingBox
+        required: false
+        description: Current bounding box of all assets
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  AssetType:
+    description: High-level asset type
+    values:
+      - VEHICLE
+      - VESSEL
+      - AIRCRAFT
+      - CARGO
+      - PACKAGE
+      - PERSON
+      - ANIMAL
+      - DEVICE
+      - EQUIPMENT
+      - CONTAINER
+      - OTHER
+
+  AssetStatus:
+    description: Status of tracked asset
+    values:
+      - ACTIVE          # Currently tracked
+      - INACTIVE        # Not currently tracked
+      - MAINTENANCE     # Under maintenance
+      - DECOMMISSIONED  # No longer in use
+      - LOST            # Cannot locate
+      - STOLEN          # Reported stolen
+
+  TrackerType:
+    description: Type of tracking device
+    values:
+      - GPS_CELLULAR    # GPS + cellular modem
+      - GPS_SATELLITE   # GPS + satellite (Iridium, etc.)
+      - GPS_WIFI        # GPS + WiFi
+      - BLUETOOTH_TAG   # Bluetooth beacon/tag
+      - UWB_TAG         # Ultra-wideband tag
+      - RFID_ACTIVE     # Active RFID
+      - RFID_PASSIVE    # Passive RFID
+      - AIS             # Marine AIS transponder
+      - ADS_B           # Aircraft transponder
+      - OBD             # Vehicle OBD-II device
+      - SMARTPHONE      # Phone app
+      - WEARABLE        # Smartwatch/fitness tracker
+      - LORAWAN         # LoRaWAN tracker
+      - SIGFOX          # Sigfox tracker
+
+  TrackerStatus:
+    description: Status of tracking device
+    values:
+      - ONLINE          # Reporting normally
+      - OFFLINE         # Not communicating
+      - LOW_BATTERY     # Battery low
+      - SLEEPING        # In power-save mode
+      - MOVING          # Motion detected
+      - STATIONARY      # Not moving
+      - ERROR           # Device error
+
+  TrackerCapability:
+    description: Capabilities of tracking device
+    values:
+      - GPS
+      - GLONASS
+      - GALILEO
+      - CELLULAR
+      - WIFI
+      - BLUETOOTH
+      - ACCELEROMETER
+      - GYROSCOPE
+      - TEMPERATURE
+      - HUMIDITY
+      - LIGHT
+      - SHOCK
+      - DOOR_SENSOR
+      - IGNITION
+      - FUEL_LEVEL
+      - OBD
+      - CAMERA
+      - AUDIO
+      - TWO_WAY_AUDIO
+
+  PowerSource:
+    description: Tracker power source
+    values:
+      - INTERNAL_BATTERY  # Built-in battery
+      - EXTERNAL_BATTERY  # External battery pack
+      - VEHICLE_POWER     # Connected to vehicle
+      - SOLAR             # Solar powered
+      - POE               # Power over Ethernet
+      - WIRED             # Hardwired
+
+  VehicleType:
+    description: Type of vehicle
+    values:
+      - CAR
+      - TRUCK
+      - VAN
+      - SUV
+      - MOTORCYCLE
+      - BUS
+      - SEMI_TRUCK
+      - TRAILER
+      - RV
+      - ATV
+      - SNOWMOBILE
+      - GOLF_CART
+      - FORKLIFT
+      - CONSTRUCTION
+      - AGRICULTURAL
+      - EMERGENCY
+
+  VesselType:
+    description: Type of marine vessel
+    values:
+      - SAILBOAT
+      - MOTORBOAT
+      - YACHT
+      - FISHING
+      - TUG
+      - CARGO
+      - TANKER
+      - CONTAINER
+      - BULK_CARRIER
+      - FERRY
+      - CRUISE
+      - MILITARY
+      - COAST_GUARD
+      - RESEARCH
+      - PLEASURE_CRAFT
+      - JET_SKI
+      - KAYAK
+
+  AISShipType:
+    description: AIS ship type codes
+    values:
+      - NOT_AVAILABLE
+      - FISHING
+      - TUG
+      - DREDGER
+      - DIVE_VESSEL
+      - MILITARY
+      - SAILING
+      - PLEASURE_CRAFT
+      - HSC             # High-speed craft
+      - PILOT_VESSEL
+      - SAR             # Search and rescue
+      - TUG
+      - PORT_TENDER
+      - ANTI_POLLUTION
+      - LAW_ENFORCEMENT
+      - MEDICAL_TRANSPORT
+      - PASSENGER
+      - CARGO
+      - TANKER
+
+  AISNavigationStatus:
+    description: AIS navigation status
+    values:
+      - UNDER_WAY_USING_ENGINE
+      - AT_ANCHOR
+      - NOT_UNDER_COMMAND
+      - RESTRICTED_MANEUVERABILITY
+      - CONSTRAINED_BY_DRAUGHT
+      - MOORED
+      - AGROUND
+      - ENGAGED_IN_FISHING
+      - UNDER_WAY_SAILING
+
+  AircraftType:
+    description: Type of aircraft
+    values:
+      - FIXED_WING
+      - HELICOPTER
+      - GLIDER
+      - BALLOON
+      - DRONE
+      - ULTRALIGHT
+      - JET
+      - TURBOPROP
+      - SEAPLANE
+
+  CargoType:
+    description: Type of cargo
+    values:
+      - PACKAGE         # Single package
+      - PALLET          # Palletized goods
+      - CONTAINER       # Shipping container
+      - BULK            # Bulk cargo
+      - LIQUID          # Liquid cargo
+      - REFRIGERATED    # Temperature-controlled
+      - HAZMAT          # Hazardous materials
+      - LIVESTOCK       # Live animals
+      - PHARMACEUTICAL  # Medicines
+      - HIGH_VALUE      # Valuable goods
+      - PERISHABLE      # Time-sensitive
+      - FRAGILE         # Delicate items
+
+  HandlingRequirement:
+    description: Special handling requirements
+    values:
+      - FRAGILE
+      - KEEP_UPRIGHT
+      - KEEP_DRY
+      - TEMPERATURE_CONTROLLED
+      - HAZMAT
+      - HIGH_SECURITY
+      - SIGNATURE_REQUIRED
+      - PHOTO_REQUIRED
+      - NO_STACKING
+      - FORKLIFT_REQUIRED
+      - TWO_PERSON_LIFT
+
+  CustodyEventType:
+    description: Type of custody event
+    values:
+      - CREATED
+      - PICKED_UP
+      - IN_TRANSIT
+      - ARRIVED_FACILITY
+      - DEPARTED_FACILITY
+      - OUT_FOR_DELIVERY
+      - DELIVERED
+      - RETURNED
+      - HELD
+      - EXCEPTION
+      - CUSTOMS_CLEARED
+
+  TrackedPersonType:
+    description: Type of tracked person
+    values:
+      - EMPLOYEE
+      - DRIVER
+      - FIELD_WORKER
+      - SECURITY
+      - DELIVERY
+      - PATIENT
+      - CHILD
+      - ELDERLY
+      - ATHLETE
+      - HIKER
+      - RESEARCHER
+
+  AssetGroupType:
+    description: Type of asset group
+    values:
+      - FLEET           # Vehicle fleet
+      - CONVOY          # Moving together
+      - DEPARTMENT      # Organizational unit
+      - PROJECT         # Project-based
+      - ROUTE           # Assigned route
+      - GEOFENCE        # In same area
+      - CUSTOM
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "AIS: https://www.imo.org/en/OurWork/Safety/Pages/AIS.aspx"
+  - "ADS-B: https://www.faa.gov/air_traffic/technology/adsb"
+  - "OBD-II: SAE J1979"
+  - "MMSI: https://www.itu.int/en/ITU-R/terrestrial/mmss/Pages/default.aspx"

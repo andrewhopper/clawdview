@@ -1,0 +1,761 @@
+# =============================================================================
+# Domain: coding-session
+# Version: 1.0.0
+# Status: production
+# Dependencies: core@^1.0.0, auth@^1.0.0, infrastructure@^1.0.0
+# Created: 2025-12-19
+# Updated: 2025-12-19
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# =============================================================================
+
+domain:
+  name: coding-session
+  version: "1.0.0"
+  description: "Interactive coding sessions with ephemeral compute, terminals, and AI assistants"
+  namespace: "https://protoflow.ai/ontology/coding-session#"
+  created_at: "2025-12-19"
+  updated_at: "2025-12-19"
+  dependencies:
+    core: "^1.0.0"
+    auth: "^1.0.0"
+    infrastructure: "^1.0.0"
+
+  changelog:
+    "1.0.0": "Initial production version for GoCoder CLI"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  CodingSession:
+    description: "An interactive coding session with compute, environment, and terminals"
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Unique session identifier"
+      userId:
+        type: string
+        required: true
+        description: "Owner user ID (from auth domain)"
+      name:
+        type: string
+        required: true
+        maxLength: 255
+        description: "Human-readable session name"
+      status:
+        type: CodingSessionStatus
+        required: true
+        description: "Current session state"
+      computeConfig:
+        type: ComputeConfig
+        required: true
+        description: "Compute resource configuration"
+      environmentConfig:
+        type: EnvironmentConfig
+        required: true
+        description: "Development environment setup"
+      aiAssistant:
+        type: AIAssistantConfig
+        description: "AI coding assistant configuration (optional)"
+      terminals:
+        type: array
+        items: Terminal
+        description: "Active terminals in this session"
+      duration:
+        type: integer
+        description: "Session timeout in seconds (null = unlimited)"
+      expiresAt:
+        type: datetime
+        description: "When session will auto-terminate"
+      lastActivityAt:
+        type: datetime
+        description: "Last user interaction timestamp"
+      computeResourceId:
+        type: string
+        description: "Reference to infrastructure.Container or infrastructure.Server"
+      shareLinks:
+        type: array
+        items: ShareLink
+        description: "Active collaboration share links"
+      metadata:
+        type: object
+        description: "Additional session metadata (tags, notes, etc.)"
+      createdAt:
+        type: datetime
+        required: true
+        description: "Session creation timestamp"
+      updatedAt:
+        type: datetime
+        required: true
+        description: "Last update timestamp"
+      terminatedAt:
+        type: datetime
+        description: "Session termination timestamp"
+
+  ComputeConfig:
+    description: "Compute resource configuration for a coding session"
+    properties:
+      type:
+        type: ComputeType
+        required: true
+        description: "Compute backend type"
+      size:
+        type: ComputeSize
+        required: true
+        description: "Resource allocation tier"
+      cpu:
+        type: integer
+        description: "vCPU count or CPU units"
+      memory:
+        type: integer
+        description: "Memory in MB"
+      storage:
+        type: integer
+        description: "Ephemeral storage in GB"
+      gpu:
+        type: boolean
+        default: false
+        description: "GPU acceleration enabled"
+      gpuType:
+        type: string
+        description: "GPU type (if gpu=true)"
+      region:
+        type: string
+        description: "Compute region (us-east-1, etc.)"
+
+  EnvironmentConfig:
+    description: "Development environment configuration"
+    properties:
+      baseImage:
+        type: string
+        required: true
+        description: "Container image or VM template"
+      imageTag:
+        type: string
+        default: "latest"
+        description: "Image version tag"
+      envVars:
+        type: object
+        description: "Environment variables (key-value pairs)"
+      secretRefs:
+        type: array
+        items: string
+        description: "References to secrets in AWS Secrets Manager"
+      gitRepo:
+        type: GitRepoConfig
+        description: "Git repository to clone on startup"
+      workspaceMount:
+        type: string
+        description: "Workspace mount point (for persistent storage)"
+      packages:
+        type: array
+        items: string
+        description: "Additional packages to install"
+      startupScript:
+        type: string
+        description: "Startup script to run on session creation"
+
+  GitRepoConfig:
+    description: "Git repository configuration for environment setup"
+    properties:
+      url:
+        type: string
+        required: true
+        format: uri
+        description: "Git repository URL (https or ssh)"
+      branch:
+        type: string
+        default: "main"
+        description: "Branch to checkout"
+      commit:
+        type: string
+        description: "Specific commit hash (optional)"
+      path:
+        type: string
+        default: "/workspace"
+        description: "Clone destination path"
+      sshKeyId:
+        type: string
+        description: "SSH key ID for private repos"
+
+  AIAssistantConfig:
+    description: "AI coding assistant configuration"
+    properties:
+      provider:
+        type: AIAssistantProvider
+        required: true
+        description: "AI assistant provider"
+      model:
+        type: string
+        description: "Specific model to use (claude-3-5-sonnet, gpt-4, etc.)"
+      enabled:
+        type: boolean
+        default: true
+        description: "Assistant enabled flag"
+      apiKeySecretId:
+        type: string
+        description: "Secret ID for API key (AWS Secrets Manager)"
+      customConfig:
+        type: object
+        description: "Provider-specific configuration"
+
+  Terminal:
+    description: "A terminal session within a coding session"
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Unique terminal identifier"
+      sessionId:
+        type: string
+        required: true
+        description: "Parent coding session ID"
+      name:
+        type: string
+        description: "Terminal name/label"
+      status:
+        type: TerminalStatus
+        required: true
+        description: "Terminal state"
+      shell:
+        type: string
+        default: "/bin/bash"
+        description: "Shell executable path"
+      cwd:
+        type: string
+        description: "Current working directory"
+      rows:
+        type: integer
+        default: 24
+        description: "Terminal rows"
+      cols:
+        type: integer
+        default: 80
+        description: "Terminal columns"
+      connectionProtocol:
+        type: string
+        enum: [websocket, mqtt, ssh]
+        description: "Connection protocol"
+      connectionId:
+        type: string
+        description: "Active connection ID (WebSocket/MQTT topic)"
+      lastActivityAt:
+        type: datetime
+        description: "Last input/output timestamp"
+      createdAt:
+        type: datetime
+        required: true
+        description: "Terminal creation timestamp"
+      updatedAt:
+        type: datetime
+        required: true
+        description: "Last update timestamp"
+
+  SSHKey:
+    description: "User SSH key for git authentication"
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Unique key identifier"
+      userId:
+        type: string
+        required: true
+        description: "Owner user ID"
+      name:
+        type: string
+        required: true
+        maxLength: 255
+        description: "Key name/label"
+      publicKey:
+        type: string
+        required: true
+        description: "Public key content (OpenSSH format)"
+      fingerprint:
+        type: string
+        required: true
+        description: "Key fingerprint (SHA256)"
+      privateKeySecretId:
+        type: string
+        description: "Private key secret ID (AWS Secrets Manager)"
+      createdAt:
+        type: datetime
+        required: true
+        description: "Key creation timestamp"
+      lastUsedAt:
+        type: datetime
+        description: "Last usage timestamp"
+      expiresAt:
+        type: datetime
+        description: "Key expiration timestamp (optional)"
+
+  APIKey:
+    description: "API key for programmatic access (CI/CD, automation)"
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Unique key identifier"
+      userId:
+        type: string
+        required: true
+        description: "Owner user ID"
+      name:
+        type: string
+        required: true
+        maxLength: 255
+        description: "Key name/label"
+      keyPrefix:
+        type: string
+        required: true
+        maxLength: 8
+        description: "Visible key prefix (first 8 chars)"
+      keyHash:
+        type: string
+        required: true
+        description: "Hashed key value (bcrypt/argon2)"
+      permissions:
+        type: array
+        items: string
+        description: "Scoped permissions (session:create, session:read, etc.)"
+      createdAt:
+        type: datetime
+        required: true
+        description: "Key creation timestamp"
+      lastUsedAt:
+        type: datetime
+        description: "Last usage timestamp"
+      expiresAt:
+        type: datetime
+        description: "Key expiration timestamp (optional)"
+      revokedAt:
+        type: datetime
+        description: "Key revocation timestamp"
+
+  ShareLink:
+    description: "Shareable collaboration link for a coding session"
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Unique link identifier"
+      sessionId:
+        type: string
+        required: true
+        description: "Associated coding session ID"
+      code:
+        type: string
+        required: true
+        minLength: 8
+        maxLength: 16
+        description: "Shareable code (unique, URL-safe)"
+      permissions:
+        type: SharePermissions
+        required: true
+        description: "Access permissions granted to link users"
+      maxUses:
+        type: integer
+        description: "Maximum number of uses (null = unlimited)"
+      usedCount:
+        type: integer
+        default: 0
+        description: "Current use count"
+      expiresAt:
+        type: datetime
+        description: "Link expiration timestamp"
+      createdBy:
+        type: string
+        required: true
+        description: "User ID who created the link"
+      createdAt:
+        type: datetime
+        required: true
+        description: "Link creation timestamp"
+      revokedAt:
+        type: datetime
+        description: "Link revocation timestamp"
+
+  SessionUsageMetrics:
+    description: "Usage metrics for billing and analytics"
+    properties:
+      sessionId:
+        type: string
+        required: true
+        description: "Associated coding session ID"
+      userId:
+        type: string
+        required: true
+        description: "User ID"
+      computeMinutes:
+        type: integer
+        description: "Total compute minutes"
+      cpuUnits:
+        type: integer
+        description: "Total CPU units consumed"
+      memoryMb:
+        type: integer
+        description: "Total memory MB consumed"
+      storageGb:
+        type: integer
+        description: "Total storage GB used"
+      networkIngressMb:
+        type: integer
+        description: "Network ingress in MB"
+      networkEgressMb:
+        type: integer
+        description: "Network egress in MB"
+      aiTokensUsed:
+        type: integer
+        description: "AI assistant tokens consumed"
+      cost:
+        type: number
+        description: "Total cost in USD"
+      billingPeriodStart:
+        type: datetime
+        required: true
+        description: "Billing period start"
+      billingPeriodEnd:
+        type: datetime
+        required: true
+        description: "Billing period end"
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  CodingSessionStatus:
+    description: "Coding session lifecycle state"
+    values:
+      - Pending: "Session creation in progress"
+      - Starting: "Compute resources being provisioned"
+      - Active: "Session running and ready"
+      - Idle: "Session active but no recent activity"
+      - Stopping: "Session termination in progress"
+      - Stopped: "Session terminated, resources released"
+      - Failed: "Session creation or runtime failure"
+      - Expired: "Session exceeded timeout duration"
+
+  ComputeType:
+    description: "Compute backend type"
+    values:
+      - ECS: "AWS ECS Fargate containers"
+      - EC2: "AWS EC2 instances"
+      - Firecracker: "Firecracker micro-VMs"
+      - Lambda: "AWS Lambda functions (limited use)"
+      - Local: "Local development (testing only)"
+
+  ComputeSize:
+    description: "Compute resource allocation tier"
+    values:
+      - small: "1 vCPU, 2GB RAM (light coding)"
+      - medium: "2 vCPU, 4GB RAM (standard development)"
+      - large: "4 vCPU, 8GB RAM (heavy compilation)"
+      - xlarge: "8 vCPU, 16GB RAM (ML training)"
+      - gpu: "GPU-enabled instance (ML/graphics)"
+
+  AIAssistantProvider:
+    description: "AI coding assistant provider"
+    values:
+      - claude-code: "Claude Code CLI (Anthropic)"
+      - coder-cli: "Coder CLI (generic)"
+      - aider: "Aider CLI"
+      - copilot: "GitHub Copilot CLI"
+      - cursor: "Cursor CLI"
+      - none: "No AI assistant"
+
+  TerminalStatus:
+    description: "Terminal session state"
+    values:
+      - Creating: "Terminal initialization in progress"
+      - Active: "Terminal running and ready"
+      - Idle: "Terminal running but no recent activity"
+      - Disconnected: "Connection lost, awaiting reconnect"
+      - Terminated: "Terminal closed"
+
+  SharePermissions:
+    description: "Permissions granted via share link"
+    values:
+      - view: "Read-only view (watch session)"
+      - interact: "Read and execute commands"
+      - edit: "Read, write, and execute"
+      - admin: "Full control (terminate session)"
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+
+  CreateCodingSession:
+    type: create
+    description: "Create a new coding session with compute and environment"
+    operatesOn: CodingSession
+    params:
+      userId:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      computeConfig:
+        type: ComputeConfig
+        required: true
+      environmentConfig:
+        type: EnvironmentConfig
+        required: true
+      aiAssistant:
+        type: AIAssistantConfig
+      duration:
+        type: integer
+        description: "Session timeout in seconds"
+    returns: CodingSession
+    errors: [QUOTA_EXCEEDED, INVALID_CONFIG, PROVISIONING_FAILED]
+
+  AttachToSession:
+    type: read
+    description: "Attach to an existing coding session"
+    operatesOn: CodingSession
+    params:
+      sessionId:
+        type: string
+        required: true
+      userId:
+        type: string
+        required: true
+    returns: CodingSession
+    errors: [SESSION_NOT_FOUND, PERMISSION_DENIED]
+
+  TerminateSession:
+    type: update
+    description: "Terminate a coding session and release resources"
+    operatesOn: CodingSession
+    params:
+      sessionId:
+        type: string
+        required: true
+      userId:
+        type: string
+        required: true
+    returns: CodingSession
+    errors: [SESSION_NOT_FOUND, PERMISSION_DENIED]
+
+  RenameSession:
+    type: update
+    description: "Rename a coding session"
+    operatesOn: CodingSession
+    params:
+      sessionId:
+        type: string
+        required: true
+      newName:
+        type: string
+        required: true
+    returns: CodingSession
+
+  ListSessions:
+    type: read
+    description: "List coding sessions for a user"
+    operatesOn: CodingSession
+    params:
+      userId:
+        type: string
+        required: true
+      status:
+        type: CodingSessionStatus
+        description: "Filter by status"
+      limit:
+        type: integer
+        default: 20
+      offset:
+        type: integer
+        default: 0
+    returns:
+      type: array
+      items: CodingSession
+
+  CreateTerminal:
+    type: create
+    description: "Create a new terminal in a coding session"
+    operatesOn: Terminal
+    params:
+      sessionId:
+        type: string
+        required: true
+      name:
+        type: string
+      rows:
+        type: integer
+        default: 24
+      cols:
+        type: integer
+        default: 80
+    returns: Terminal
+    errors: [SESSION_NOT_FOUND, MAX_TERMINALS_EXCEEDED]
+
+  AttachToTerminal:
+    type: read
+    description: "Connect to an existing terminal"
+    operatesOn: Terminal
+    params:
+      terminalId:
+        type: string
+        required: true
+    returns: Terminal
+    errors: [TERMINAL_NOT_FOUND, TERMINAL_TERMINATED]
+
+  ResizeTerminal:
+    type: update
+    description: "Resize terminal dimensions"
+    operatesOn: Terminal
+    params:
+      terminalId:
+        type: string
+        required: true
+      rows:
+        type: integer
+        required: true
+      cols:
+        type: integer
+        required: true
+    returns: Terminal
+
+  CloseTerminal:
+    type: delete
+    description: "Close a terminal session"
+    operatesOn: Terminal
+    params:
+      terminalId:
+        type: string
+        required: true
+    returns: Terminal
+
+  CreateShareLink:
+    type: create
+    description: "Generate a shareable collaboration link"
+    operatesOn: ShareLink
+    params:
+      sessionId:
+        type: string
+        required: true
+      permissions:
+        type: SharePermissions
+        required: true
+      maxUses:
+        type: integer
+      expiresAt:
+        type: datetime
+    returns: ShareLink
+
+  JoinViaShareLink:
+    type: read
+    description: "Join a session using a share code"
+    operatesOn: ShareLink
+    params:
+      code:
+        type: string
+        required: true
+      userId:
+        type: string
+        required: true
+    returns: CodingSession
+    errors: [INVALID_CODE, LINK_EXPIRED, MAX_USES_EXCEEDED]
+
+  RevokeShareLink:
+    type: update
+    description: "Revoke a share link"
+    operatesOn: ShareLink
+    params:
+      linkId:
+        type: string
+        required: true
+    returns: ShareLink
+
+  CreateSSHKey:
+    type: create
+    description: "Add an SSH key for git authentication"
+    operatesOn: SSHKey
+    params:
+      userId:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      publicKey:
+        type: string
+        required: true
+      privateKey:
+        type: string
+        description: "Private key to store in Secrets Manager"
+    returns: SSHKey
+    errors: [INVALID_KEY_FORMAT, KEY_ALREADY_EXISTS]
+
+  RemoveSSHKey:
+    type: delete
+    description: "Remove an SSH key"
+    operatesOn: SSHKey
+    params:
+      keyId:
+        type: string
+        required: true
+    returns: SSHKey
+
+  CreateAPIKey:
+    type: create
+    description: "Generate a new API key for programmatic access"
+    operatesOn: APIKey
+    params:
+      userId:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      permissions:
+        type: array
+        items: string
+      expiresAt:
+        type: datetime
+    returns:
+      type: object
+      properties:
+        apiKey: APIKey
+        secretKey:
+          type: string
+          description: "Full key value (only returned once)"
+
+  RevokeAPIKey:
+    type: update
+    description: "Revoke an API key"
+    operatesOn: APIKey
+    params:
+      keyId:
+        type: string
+        required: true
+    returns: APIKey
+
+  GetSessionMetrics:
+    type: read
+    description: "Get usage metrics for a session or user"
+    operatesOn: SessionUsageMetrics
+    params:
+      sessionId:
+        type: string
+        description: "Filter by session"
+      userId:
+        type: string
+        description: "Filter by user"
+      periodStart:
+        type: datetime
+        required: true
+      periodEnd:
+        type: datetime
+        required: true
+    returns:
+      type: array
+      items: SessionUsageMetrics

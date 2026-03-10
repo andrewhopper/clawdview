@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Frontend",
+  "description": "Frontend frameworks, UI libraries, and styling",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "categories": {
+    "frontend_frameworks": {
+      "description": "JavaScript/TypeScript frontend frameworks",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Next.js",
+          "version": "15.x (stable with React 19)",
+          "rationale": "Full-stack React with App Router, Server Components, built-in API routes, excellent DX, React 19 stable support",
+          "useCases": [
+            "web apps",
+            "dashboards",
+            "marketing sites",
+            "full-stack projects"
+          ],
+          "docsUrl": "https://nextjs.org/docs",
+          "examplesUrl": "https://github.com/vercel/next.js/tree/canary/examples"
+        },
+        {
+          "rank": 2,
+          "name": "Vite + React",
+          "version": "6.x + React 19.x (stable)",
+          "rationale": "Fast HMR, simple SPAs, lightweight, ESM-first, no backend needed, React 19 stable support",
+          "useCases": [
+            "simple SPAs",
+            "client-only apps",
+            "fast prototypes",
+            "embedded widgets"
+          ],
+          "docsUrl": "https://vitejs.dev/guide/",
+          "examplesUrl": "https://github.com/vitejs/vite/tree/main/playground"
+        },
+        {
+          "rank": 3,
+          "name": "Expo",
+          "version": "SDK 51+",
+          "rationale": "React Native for mobile, managed workflow, cross-platform iOS/Android",
+          "useCases": [
+            "mobile apps",
+            "cross-platform native",
+            "iOS/Android"
+          ],
+          "docsUrl": "https://docs.expo.dev/",
+          "examplesUrl": "https://github.com/expo/examples"
+        }
+      ]
+    },
+    "ui_component_libraries": {
+      "description": "Pre-built UI component systems",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "shadcn/ui",
+          "version": "latest",
+          "rationale": "Copy-paste components, Radix UI primitives, Tailwind styling, full customization",
+          "useCases": [
+            "all web projects",
+            "design system foundation",
+            "accessible components"
+          ],
+          "docsUrl": "https://ui.shadcn.com/docs",
+          "examplesUrl": "https://ui.shadcn.com/examples"
+        },
+        {
+          "rank": 2,
+          "name": "Radix UI",
+          "version": "latest",
+          "rationale": "Unstyled accessible primitives, full control over styling",
+          "useCases": [
+            "custom design systems",
+            "headless UI",
+            "accessibility-first"
+          ],
+          "docsUrl": "https://www.radix-ui.com/primitives/docs/overview/introduction",
+          "examplesUrl": "https://www.radix-ui.com/primitives/docs/overview/getting-started"
+        },
+        {
+          "rank": 3,
+          "name": "Chakra UI",
+          "version": "2.x+",
+          "rationale": "Batteries-included, themeable, good defaults, fast setup",
+          "useCases": [
+            "rapid prototyping",
+            "admin dashboards",
+            "internal tools"
+          ],
+          "docsUrl": "https://chakra-ui.com/docs/getting-started",
+          "examplesUrl": "https://github.com/chakra-ui/chakra-ui/tree/main/examples"
+        },
+        {
+          "rank": 4,
+          "name": "AWS Cloudscape",
+          "version": "latest",
+          "rationale": "AWS design system, cloud-focused patterns, accessible, enterprise-grade",
+          "useCases": [
+            "AWS console-like apps",
+            "enterprise cloud UIs",
+            "internal AWS tools"
+          ],
+          "docsUrl": "https://cloudscape.design/get-started/",
+          "examplesUrl": "https://cloudscape.design/patterns/"
+        },
+        {
+          "rank": 5,
+          "name": "Material UI (MUI)",
+          "version": "5.x",
+          "rationale": "Material Design, comprehensive components, mature, large ecosystem",
+          "useCases": [
+            "Material Design apps",
+            "enterprise applications",
+            "complex data tables"
+          ],
+          "docsUrl": "https://mui.com/material-ui/getting-started/",
+          "examplesUrl": "https://github.com/mui/material-ui/tree/master/examples"
+        }
+      ]
+    },
+    "real_time_collaboration": {
+      "description": "Real-time collaborative editing and synchronization",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Yjs",
+          "version": "13.x",
+          "rationale": "CRDT-based, framework-agnostic, peer-to-peer sync, conflict-free merging",
+          "useCases": [
+            "collaborative editors",
+            "real-time collaboration",
+            "offline-first apps",
+            "multiplayer features"
+          ],
+          "docsUrl": "https://docs.yjs.dev/",
+          "examplesUrl": "https://github.com/yjs/yjs#readme"
+        },
+        {
+          "rank": 2,
+          "name": "Liveblocks",
+          "version": "latest",
+          "rationale": "Managed real-time infrastructure, presence, comments, notifications",
+          "useCases": [
+            "collaborative apps",
+            "managed infrastructure",
+            "presence indicators"
+          ],
+          "docsUrl": "https://liveblocks.io/docs",
+          "examplesUrl": "https://liveblocks.io/examples"
+        },
+        {
+          "rank": 3,
+          "name": "Automerge",
+          "version": "2.x",
+          "rationale": "CRDT library, JSON-like data structures, offline-first",
+          "useCases": [
+            "distributed systems",
+            "offline-first",
+            "conflict resolution"
+          ],
+          "docsUrl": "https://automerge.org/docs/hello/",
+          "examplesUrl": "https://automerge.org/docs/cookbook/"
+        }
+      ]
+    },
+    "styling": {
+      "description": "CSS and styling solutions",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Tailwind CSS",
+          "version": "3.x+",
+          "rationale": "Utility-first, fast development, consistent design, excellent DX with IntelliSense",
+          "useCases": [
+            "all web projects",
+            "rapid prototyping",
+            "design systems"
+          ],
+          "docsUrl": "https://tailwindcss.com/docs",
+          "examplesUrl": "https://tailwindcss.com/docs/installation"
+        },
+        {
+          "rank": 2,
+          "name": "CSS Modules",
+          "version": "built-in",
+          "rationale": "Scoped styles, no build config, works everywhere, simple",
+          "useCases": [
+            "component-scoped styles",
+            "legacy projects",
+            "simple projects"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "vanilla-extract",
+          "version": "latest",
+          "rationale": "Type-safe CSS-in-TS, zero runtime, excellent for design systems",
+          "useCases": [
+            "design systems",
+            "type-safe theming",
+            "library development"
+          ]
+        }
+      ]
+    }
+  }
+}

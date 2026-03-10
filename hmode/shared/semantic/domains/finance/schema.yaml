@@ -1,0 +1,516 @@
+# Finance Domain Model
+# Universal financial transactions, payments, and monetary operations
+
+domain:
+  name: finance
+  version: "2.0.0"
+  description: Financial transactions, payments, monetary operations, and accounting (AP/AR)
+  dependencies: [core]
+  created_at: "2025-11-22"
+  updated_at: "2025-11-25"
+
+entities:
+
+  Transaction:
+    description: Financial transaction representing movement of money
+    properties:
+      id: { type: string, required: true }
+      type: { type: TransactionType, required: true }
+      status: { type: TransactionStatus, required: true }
+      amount: { type: Money, required: true, from: core }
+      description: { type: string }
+      reference: { type: string, description: "External reference number" }
+      fromAccountId: { type: string }
+      toAccountId: { type: string }
+      transactionDate: { type: datetime, required: true }
+      settledAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Payment:
+    description: Execution of a payment from one party to another
+    properties:
+      id: { type: string, required: true }
+      amount: { type: Money, required: true, from: core }
+      method: { type: PaymentMethodType, required: true }
+      instrumentId: { type: string, description: "Reference to PaymentInstrument" }
+      status: { type: TransactionStatus, required: true }
+      payer: { type: string, description: "Payer identifier or name" }
+      payee: { type: string, description: "Payee identifier or name" }
+      reference: { type: string }
+      initiatedAt: { type: datetime }
+      completedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PaymentInstrument:
+    description: Specific payment method instance (e.g., a credit card)
+    properties:
+      id: { type: string, required: true }
+      ownerId: { type: string, required: true }
+      type: { type: PaymentMethodType, required: true }
+      nickname: { type: string, description: "User-defined name" }
+      lastFourDigits: { type: string }
+      expirationMonth: { type: integer }
+      expirationYear: { type: integer }
+      cardBrand: { type: string, description: "Visa, Mastercard, Amex" }
+      isDefault: { type: boolean, default: false }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  BankAccount:
+    description: Bank account for deposits and withdrawals
+    properties:
+      id: { type: string, required: true }
+      ownerId: { type: string, required: true }
+      accountName: { type: string }
+      accountNumberMasked: { type: string, description: "Last 4 digits only" }
+      routingNumber: { type: string }
+      bankName: { type: string }
+      accountType: { type: BankAccountType, required: true }
+      isDefault: { type: boolean, default: false }
+      isVerified: { type: boolean, default: false }
+      verifiedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Invoice:
+    description: Request for payment for goods or services
+    properties:
+      id: { type: string, required: true }
+      invoiceNumber: { type: string, required: true }
+      status: { type: InvoiceStatus, required: true }
+      amount: { type: Money, required: true, from: core }
+      amountPaid: { type: Money, from: core }
+      amountDue: { type: Money, from: core }
+      currency: { type: CurrencyCode, required: true }
+      dueDate: { type: date, required: true }
+      issuerId: { type: string, required: true }
+      recipientId: { type: string, required: true }
+      lineItems: { type: array, items: InvoiceLineItem }
+      issuedAt: { type: datetime }
+      paidAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  InvoiceLineItem:
+    description: Single line item on an invoice
+    properties:
+      id: { type: string, required: true }
+      description: { type: string, required: true }
+      quantity: { type: number, required: true }
+      unitPrice: { type: Money, required: true, from: core }
+      amount: { type: Money, required: true, from: core }
+
+  Refund:
+    description: Return of funds for a previous transaction
+    properties:
+      id: { type: string, required: true }
+      originalPaymentId: { type: string, required: true }
+      amount: { type: Money, required: true, from: core }
+      reason: { type: string }
+      status: { type: TransactionStatus, required: true }
+      processedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # ACCOUNTING ENTITIES (AP/AR)
+  # ============================================
+
+  Vendor:
+    description: Supplier or service provider to whom money is owed
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      email: { type: string }
+      phone: { type: string }
+      address: { type: Address, from: core }
+      taxId: { type: string, description: "Tax identification number" }
+      paymentTermsId: { type: string, description: "Default payment terms" }
+      accountNumber: { type: string, description: "Vendor account number" }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Customer:
+    description: Individual or organization to whom invoices are issued
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      email: { type: string }
+      phone: { type: string }
+      address: { type: Address, from: core }
+      taxId: { type: string, description: "Tax identification number" }
+      paymentTermsId: { type: string, description: "Default payment terms" }
+      accountNumber: { type: string, description: "Customer account number" }
+      creditLimit: { type: Money, from: core }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PaymentTerms:
+    description: Terms defining when payment is due
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: PaymentTermsType, required: true }
+      dueDays: { type: integer, description: "Days until payment is due" }
+      discountPercent: { type: number, description: "Early payment discount %" }
+      discountDays: { type: integer, description: "Days to qualify for discount" }
+      description: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Bill:
+    description: Vendor invoice received (money owed to vendor)
+    properties:
+      id: { type: string, required: true }
+      billNumber: { type: string, required: true }
+      vendorId: { type: string, required: true }
+      status: { type: BillStatus, required: true }
+      amount: { type: Money, required: true, from: core }
+      amountPaid: { type: Money, from: core }
+      amountDue: { type: Money, from: core }
+      currency: { type: CurrencyCode, required: true }
+      billDate: { type: date, required: true }
+      dueDate: { type: date, required: true }
+      paymentTermsId: { type: string }
+      lineItems: { type: array, items: BillLineItem }
+      referenceNumber: { type: string, description: "Vendor reference/PO number" }
+      receivedAt: { type: datetime }
+      paidAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  BillLineItem:
+    description: Single line item on a bill
+    properties:
+      id: { type: string, required: true }
+      description: { type: string, required: true }
+      quantity: { type: number, required: true }
+      unitPrice: { type: Money, required: true, from: core }
+      amount: { type: Money, required: true, from: core }
+      accountCode: { type: string, description: "GL account code" }
+
+  AccountsPayable:
+    description: Ledger of outstanding bills owed to vendors
+    properties:
+      id: { type: string, required: true }
+      vendorId: { type: string, required: true }
+      totalOutstanding: { type: Money, required: true, from: core }
+      totalOverdue: { type: Money, from: core }
+      billIds: { type: array, items: string }
+      agingReport: { type: AgingReport }
+      lastUpdatedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AccountsReceivable:
+    description: Ledger of outstanding invoices owed by customers
+    properties:
+      id: { type: string, required: true }
+      customerId: { type: string, required: true }
+      totalOutstanding: { type: Money, required: true, from: core }
+      totalOverdue: { type: Money, from: core }
+      invoiceIds: { type: array, items: string }
+      agingReport: { type: AgingReport }
+      lastUpdatedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AgingReport:
+    description: Breakdown of outstanding amounts by age
+    properties:
+      id: { type: string, required: true }
+      accountType: { type: AccountType, required: true }
+      asOfDate: { type: date, required: true }
+      buckets: { type: array, items: AgingBucket }
+      totalOutstanding: { type: Money, required: true, from: core }
+      createdAt: { type: datetime, required: true }
+
+  AgingBucket:
+    description: Single aging bucket (e.g., 0-30 days, 31-60 days)
+    properties:
+      id: { type: string, required: true }
+      type: { type: AgingBucketType, required: true }
+      amount: { type: Money, required: true, from: core }
+      count: { type: integer, description: "Number of invoices/bills in bucket" }
+
+  CreditMemo:
+    description: Credit issued against an invoice (reduces amount owed)
+    properties:
+      id: { type: string, required: true }
+      memoNumber: { type: string, required: true }
+      invoiceId: { type: string, required: true }
+      customerId: { type: string, required: true }
+      amount: { type: Money, required: true, from: core }
+      reason: { type: string, required: true }
+      status: { type: TransactionStatus, required: true }
+      issuedAt: { type: datetime }
+      appliedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  DebitMemo:
+    description: Additional charge against an invoice (increases amount owed)
+    properties:
+      id: { type: string, required: true }
+      memoNumber: { type: string, required: true }
+      invoiceId: { type: string, required: true }
+      customerId: { type: string, required: true }
+      amount: { type: Money, required: true, from: core }
+      reason: { type: string, required: true }
+      status: { type: TransactionStatus, required: true }
+      issuedAt: { type: datetime }
+      appliedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+enums:
+
+  PaymentMethodType:
+    description: Method used to make payments
+    values:
+      - CreditCard
+      - DebitCard
+      - CorporateCard
+      - PersonalCard
+      - Cash
+      - Check
+      - ACH
+      - Wire
+      - DirectDebit
+      - PayPal
+      - Crypto
+
+  TransactionStatus:
+    description: Status of a financial transaction
+    values:
+      - Pending
+      - Processing
+      - Completed
+      - Failed
+      - Cancelled
+      - Reversed
+      - Disputed
+
+  TransactionType:
+    description: Type of financial transaction
+    values:
+      - Credit      # Money coming in
+      - Debit       # Money going out
+      - Transfer    # Between accounts
+      - Refund      # Return of funds
+      - Fee         # Service fee
+      - Adjustment  # Manual adjustment
+
+  InvoiceStatus:
+    values:
+      - Draft
+      - Sent
+      - Viewed
+      - PartiallyPaid
+      - Paid
+      - Overdue
+      - Voided
+
+  BankAccountType:
+    values:
+      - Checking
+      - Savings
+      - Business
+
+  CurrencyCode:
+    description: ISO 4217 currency codes
+    values: [USD, EUR, GBP, JPY, CAD, AUD, CHF, CNY, INR, BRL]
+
+  # ============================================
+  # ACCOUNTING ENUMS
+  # ============================================
+
+  PaymentTermsType:
+    description: Standard payment term types
+    values:
+      - DueOnReceipt      # Payment due immediately
+      - Net15             # Payment due in 15 days
+      - Net30             # Payment due in 30 days
+      - Net45             # Payment due in 45 days
+      - Net60             # Payment due in 60 days
+      - Net90             # Payment due in 90 days
+      - COD               # Cash on delivery
+      - CIA               # Cash in advance
+      - EOM               # End of month
+      - Custom            # Custom terms
+
+  BillStatus:
+    description: Status of a vendor bill
+    values:
+      - Draft             # Bill created but not submitted
+      - Open              # Bill submitted, awaiting payment
+      - PartiallyPaid     # Partial payment received
+      - Paid              # Fully paid
+      - Overdue           # Past due date
+      - Disputed          # Under dispute
+      - Voided            # Cancelled/voided
+
+  AgingBucketType:
+    description: Age ranges for aging reports
+    values:
+      - Current           # 0-30 days
+      - Days30            # 31-60 days
+      - Days60            # 61-90 days
+      - Days90            # 91-120 days
+      - Days120Plus       # 121+ days
+
+  AccountType:
+    description: Type of account ledger
+    values:
+      - Payable           # Accounts Payable (money owed)
+      - Receivable        # Accounts Receivable (money due)
+
+actions:
+
+  CreatePayment:
+    description: Initiate a payment
+    parameters:
+      amount: { type: Money, required: true }
+      method: { type: PaymentMethodType, required: true }
+      payee: { type: string, required: true }
+      reference: { type: string }
+    result: Payment
+
+  ProcessPayment:
+    description: Process a pending payment
+    parameters:
+      paymentId: { type: string, required: true }
+    result: Payment
+
+  RefundPayment:
+    description: Issue a refund for a completed payment
+    parameters:
+      paymentId: { type: string, required: true }
+      amount: { type: Money, description: "Partial refund amount, or full if omitted" }
+      reason: { type: string }
+    result: Refund
+
+  CreateInvoice:
+    description: Create a new invoice
+    parameters:
+      recipientId: { type: string, required: true }
+      lineItems: { type: array, items: InvoiceLineItem, required: true }
+      dueDate: { type: date, required: true }
+      currency: { type: CurrencyCode, default: USD }
+    result: Invoice
+
+  RecordPayment:
+    description: Record payment received against an invoice
+    parameters:
+      invoiceId: { type: string, required: true }
+      amount: { type: Money, required: true }
+      method: { type: PaymentMethodType, required: true }
+    result: Invoice
+
+  AddPaymentInstrument:
+    description: Add a new payment method for a user
+    parameters:
+      ownerId: { type: string, required: true }
+      type: { type: PaymentMethodType, required: true }
+      token: { type: string, required: true, description: "Tokenized card/account data" }
+      nickname: { type: string }
+      isDefault: { type: boolean, default: false }
+    result: PaymentInstrument
+
+  # ============================================
+  # ACCOUNTING ACTIONS
+  # ============================================
+
+  CreateVendor:
+    description: Create a new vendor
+    parameters:
+      name: { type: string, required: true }
+      email: { type: string }
+      phone: { type: string }
+      address: { type: Address }
+      taxId: { type: string }
+      paymentTermsId: { type: string }
+    result: Vendor
+
+  CreateCustomer:
+    description: Create a new customer
+    parameters:
+      name: { type: string, required: true }
+      email: { type: string }
+      phone: { type: string }
+      address: { type: Address }
+      taxId: { type: string }
+      paymentTermsId: { type: string }
+      creditLimit: { type: Money }
+    result: Customer
+
+  CreatePaymentTerms:
+    description: Create new payment terms
+    parameters:
+      name: { type: string, required: true }
+      type: { type: PaymentTermsType, required: true }
+      dueDays: { type: integer }
+      discountPercent: { type: number }
+      discountDays: { type: integer }
+    result: PaymentTerms
+
+  CreateBill:
+    description: Create a new vendor bill
+    parameters:
+      vendorId: { type: string, required: true }
+      billNumber: { type: string, required: true }
+      lineItems: { type: array, items: BillLineItem, required: true }
+      billDate: { type: date, required: true }
+      dueDate: { type: date, required: true }
+      paymentTermsId: { type: string }
+      referenceNumber: { type: string }
+    result: Bill
+
+  RecordBillPayment:
+    description: Record payment made against a bill
+    parameters:
+      billId: { type: string, required: true }
+      amount: { type: Money, required: true }
+      method: { type: PaymentMethodType, required: true }
+      paymentDate: { type: date }
+    result: Bill
+
+  ApplyCreditMemo:
+    description: Apply a credit memo to an invoice
+    parameters:
+      invoiceId: { type: string, required: true }
+      amount: { type: Money, required: true }
+      reason: { type: string, required: true }
+    result: CreditMemo
+
+  ApplyDebitMemo:
+    description: Apply a debit memo to an invoice
+    parameters:
+      invoiceId: { type: string, required: true }
+      amount: { type: Money, required: true }
+      reason: { type: string, required: true }
+    result: DebitMemo
+
+  GenerateAgingReport:
+    description: Generate aging report for AP or AR
+    parameters:
+      accountType: { type: AccountType, required: true }
+      entityId: { type: string, description: "Vendor ID for AP or Customer ID for AR" }
+      asOfDate: { type: date, default: "today" }
+    result: AgingReport
+
+  GetAccountsPayable:
+    description: Get accounts payable for a vendor
+    parameters:
+      vendorId: { type: string, required: true }
+    result: AccountsPayable
+
+  GetAccountsReceivable:
+    description: Get accounts receivable for a customer
+    parameters:
+      customerId: { type: string, required: true }
+    result: AccountsReceivable

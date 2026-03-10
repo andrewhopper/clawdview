@@ -1,0 +1,151 @@
+{
+  "version": "1.2.0",
+  "lastUpdated": "2025-11-23",
+  "description": "Combined index of all AI steering rules",
+  "categories": [
+    {
+      "name": "tool_usage",
+      "file": "tool-usage.json",
+      "description": "Rules for selecting and using tools (Read, Grep, Glob, Edit, etc.)",
+      "ruleCount": 8,
+      "priority": "high"
+    },
+    {
+      "name": "file_operations",
+      "file": "file-operations.json",
+      "description": "Rules for file/directory operations (create, modify, delete)",
+      "ruleCount": 7,
+      "priority": "high"
+    },
+    {
+      "name": "workflow",
+      "file": "workflow.json",
+      "description": "Rules for task execution, planning, progress tracking",
+      "ruleCount": 8,
+      "priority": "critical"
+    },
+    {
+      "name": "communication",
+      "file": "communication.json",
+      "description": "Rules for AI responses, tone, formatting",
+      "ruleCount": 5,
+      "priority": "medium"
+    },
+    {
+      "name": "git",
+      "file": "git.json",
+      "description": "Rules for git operations (commit, push, branches)",
+      "ruleCount": 7,
+      "priority": "high"
+    },
+    {
+      "name": "sdlc",
+      "file": "sdlc-phases.json",
+      "description": "Rules for SDLC phase transitions, deliverables, gates",
+      "ruleCount": 11,
+      "priority": "critical"
+    },
+    {
+      "name": "artifacts",
+      "file": "artifacts.json",
+      "description": "Rules for creating documents, presentations, diagrams",
+      "ruleCount": 12,
+      "priority": "medium"
+    },
+    {
+      "name": "anti-patterns",
+      "file": "anti-patterns.json",
+      "description": "Common bad patterns to avoid (AI theater, fake limitations, etc.)",
+      "ruleCount": 15,
+      "priority": "high"
+    },
+    {
+      "name": "microsites",
+      "file": "microsites.json",
+      "description": "Rules for microsite/app development (tech stack, registries, workflows, approval, primitives, TypeScript/Python typing, HTML publishing)",
+      "ruleCount": 26,
+      "priority": "high"
+    },
+    {
+      "name": "composable",
+      "file": "composable.json",
+      "description": "Abstract, composable, context-aware rules - like React components with traits, needs, and context resolution",
+      "ruleCount": 5,
+      "priority": "high",
+      "type": "meta",
+      "features": ["traits", "contexts", "needs", "composition"]
+    },
+    {
+      "name": "viewport-density",
+      "file": "viewport-density.json",
+      "description": "Rules for viewport utility density - page type classification, VUD scoring, hero constraints, ATF content budgets",
+      "ruleCount": 5,
+      "priority": "high"
+    },
+    {
+      "name": "layout-archetypes",
+      "file": "layout-archetypes.json",
+      "description": "Machine-readable catalog of 12 page layout archetypes with required elements, skeletons, and constraints. AI must select archetype before page generation.",
+      "ruleCount": 12,
+      "priority": "high",
+      "type": "catalog"
+    },
+    {
+      "name": "layout-quality-checklist",
+      "file": "layout-quality-checklist.json",
+      "description": "Binary pass/fail post-generation quality checklist for page layouts. Replaces continuous VUD scoring with 10 concrete yes/no checks.",
+      "ruleCount": 10,
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "totalRules": 130,
+    "totalCategories": 13,
+    "constraintLevels": {
+      "NEVER": 18,
+      "ALWAYS": 16,
+      "MUST": 51,
+      "MUST_NOT": 0,
+      "SHOULD": 17,
+      "SHOULD_NOT": 7,
+      "PREFER": 1,
+      "AVOID": 0
+    },
+    "byPriority": {
+      "critical": 2,
+      "high": 9,
+      "medium": 2
+    }
+  },
+  "usage": {
+    "loadAll": "Load all rule files to get complete ruleset",
+    "loadCategory": "Load specific category file for targeted rules",
+    "matchContext": "Filter rules by context (phase, taskType, filePattern, etc.)",
+    "applyConstraints": "Enforce rules based on constraint level priority",
+    "generateDocs": "Use generator to create markdown documentation from JSON"
+  },
+  "integration": {
+    "claudeMd": ".claude/docs/core/CRITICAL_RULES.md references this system",
+    "intentDetection": ".claude/docs/core/INTENT_DETECTION.md uses rule matching",
+    "confirmationProtocol": ".claude/docs/core/CONFIRMATION_PROTOCOL.md enforces MUST/MUST_NOT",
+    "dynamicLoading": "Rules loaded on-demand based on detected context",
+    "generatedDocs": "Markdown guides generated from JSON source of truth"
+  },
+  "generators": {
+    "markdown": {
+      "script": "generate-docs.py",
+      "input": "rules/*.json",
+      "output": "generated/*.md",
+      "description": "Generate human-readable markdown from JSON rules"
+    },
+    "validation": {
+      "script": "validate-rules.py",
+      "input": "rules/*.json + schema.json",
+      "description": "Validate all rules against JSON schema"
+    },
+    "enforcement": {
+      "script": "rule-engine.py",
+      "description": "Runtime rule matching and enforcement logic"
+    }
+  }
+}

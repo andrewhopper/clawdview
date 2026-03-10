@@ -1,0 +1,17 @@
+{
+  "domain": "health",
+  "version": "1.0.0",
+  "description": "Health and fitness domain model",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - Health metrics and fitness tracking entities"
+  },
+  "entities": [
+    "Workout",
+    "Activity",
+    "HeartRate",
+    "Sleep",
+    "Nutrition"
+  ],
+  "w3c_standards": ["RDF", "OWL"]
+}

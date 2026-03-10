@@ -1,0 +1,54 @@
+# Media Objects
+
+entities:
+
+  MediaObject:
+    schemaOrg: MediaObject
+    description: Digital media file or reference
+    properties:
+      url:
+        type: uri
+        required: true
+      mimeType:
+        type: string
+        pattern: "^[a-z]+/[a-z0-9.+-]+$"
+      fileSize:
+        type: long
+        min: 0
+        description: Size in bytes
+      fileName:
+        type: string
+
+  Image:
+    extends: MediaObject
+    description: Image file
+    properties:
+      width:
+        type: integer
+        min: 1
+        description: Width in pixels
+      height:
+        type: integer
+        min: 1
+        description: Height in pixels
+
+  Document:
+    extends: MediaObject
+    description: Document file
+    properties:
+      pageCount:
+        type: integer
+
+  Video:
+    extends: MediaObject
+    description: Video file
+    properties:
+      duration:
+        type: Duration
+
+  Audio:
+    extends: MediaObject
+    description: Audio file
+    properties:
+      duration:
+        type: Duration

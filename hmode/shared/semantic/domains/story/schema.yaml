@@ -1,0 +1,349 @@
+# Story Domain Model
+# Canonical model for narrative story generation
+# Based on analysis of 10 classic children's books
+
+domain:
+  name: story
+  version: "1.0.0"
+  description: Narrative story entities - characters, scenes, time, transformations, patterns
+  dependencies: [core]
+  source: Analysis of 10 classic children's books
+  created_at: "2025-11-21"
+  updated_at: "2025-11-22"
+
+entities:
+
+  # ============================================
+  # CORE ENTITIES
+  # ============================================
+
+  Story:
+    description: Complete narrative with metadata, genre, status, and timeline
+    properties:
+      id: { type: string, required: true }
+      title: { type: string, required: true }
+      author: { type: string }
+      status: { type: StoryStatus, required: true }
+      genre: { type: GenreType }
+      themes: { type: array, items: string }
+      characters: { type: array, items: Character }
+      scenes: { type: array, items: Scene }
+      timeline: { type: StoryTimeline }
+      conflict: { type: Conflict }
+      targetAudience: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Character:
+    description: Person, animal, or entity with role, traits, and transformations over time
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      characterType: { type: CharacterType, required: true }
+      role: { type: CharacterRole, required: true }
+      species: { type: string, description: "Biological species (mallard duck, barn spider)" }
+      description: { type: string }
+      traits: { type: array, items: string }
+      anthropomorphicTraits: { type: array, items: AnthropomorphicTrait }
+      appearancesAtTime: { type: array, items: CharacterAtTime }
+      transformations: { type: array, items: Transformation }
+      groupMembership: { type: string, description: "CharacterGroup ID" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Scene:
+    description: Individual scene or chapter with location, characters, time, and events
+    properties:
+      id: { type: string, required: true }
+      title: { type: string }
+      sceneNumber: { type: integer, required: true }
+      content: { type: string }
+      location: { type: Location }
+      characters: { type: array, items: string, description: "Character IDs" }
+      objects: { type: array, items: Object }
+      timePoint: { type: TimePoint }
+      dialogue: { type: array, items: Dialogue }
+      isRepetition: { type: boolean, default: false }
+      partOfPattern: { type: string, description: "RepetitivePattern ID" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Location:
+    description: Physical or imaginary place where scenes occur
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      locationType: { type: LocationType }
+      description: { type: string }
+      isRealWorld: { type: boolean, default: true }
+      realityStatus: { type: RealityStatus }
+      city: { type: string }
+      state: { type: string }
+      country: { type: string }
+      inventory: { type: ObjectInventory }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Object:
+    description: Physical item or prop, may be symbolic or imaginary
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      objectType: { type: ObjectType }
+      description: { type: string }
+      isSymbolic: { type: boolean, default: false }
+      symbolizes: { type: string }
+      realityStatus: { type: RealityStatus }
+      createdBy: { type: string, description: "Character who imagined/created object" }
+      creationMethod: { type: string, description: "How object was created (drawn with purple crayon)" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # TIME MODELING (High Priority)
+  # ============================================
+
+  TimePoint:
+    description: Specific moment or period in story timeline
+    properties:
+      id: { type: string, required: true }
+      timestamp: { type: string, description: "Can be datetime, descriptive (childhood), or day (Monday)" }
+      timeDescription: { type: string }
+      season: { type: Season }
+      timeOfDay: { type: TimeOfDay }
+
+  CharacterAtTime:
+    description: Character appearance and state at specific time point
+    properties:
+      id: { type: string, required: true }
+      characterId: { type: string, required: true }
+      timePoint: { type: TimePoint, required: true }
+      age: { type: string, description: "Number (8), range (7-8), or stage (childhood)" }
+      lifeStage: { type: LifeStage }
+      physicalDescription: { type: string }
+      emotionalState: { type: string }
+
+  StoryTimeline:
+    description: Overall timeline with key time points and duration
+    properties:
+      id: { type: string, required: true }
+      duration: { type: string, description: "one day, one year, a lifetime" }
+      timePoints: { type: array, items: TimePoint }
+      seasonalProgression: { type: array, items: Season }
+
+  # ============================================
+  # TRANSFORMATION (High Priority)
+  # ============================================
+
+  Transformation:
+    description: Physical or state transformation of character or object over time
+    properties:
+      id: { type: string, required: true }
+      subjectId: { type: string, required: true, description: "Character or Object ID" }
+      transformationType: { type: TransformationType, required: true }
+      fromState: { type: string, required: true }
+      toState: { type: string, required: true }
+      duration: { type: string }
+      trigger: { type: string, description: "What causes the transformation" }
+
+  # ============================================
+  # REPETITIVE PATTERNS (Medium Priority)
+  # ============================================
+
+  RepetitivePattern:
+    description: Repeated scene, dialogue, or structure with variations (Green Eggs and Ham)
+    properties:
+      id: { type: string, required: true }
+      patternType: { type: PatternType, required: true }
+      baseContent: { type: string, description: "Base text that repeats" }
+      variations: { type: array, items: Variation }
+      occurrences: { type: integer }
+
+  Variation:
+    description: Individual variation of repetitive pattern
+    properties:
+      id: { type: string, required: true }
+      content: { type: string, required: true }
+      order: { type: integer, required: true }
+
+  # ============================================
+  # OBJECT INVENTORIES (Medium Priority)
+  # ============================================
+
+  ObjectInventory:
+    description: Catalog of all objects in a location (Goodnight Moon)
+    properties:
+      id: { type: string, required: true }
+      locationId: { type: string, required: true }
+      items: { type: array, items: CatalogedObject }
+
+  CatalogedObject:
+    description: Object with position and significance in inventory
+    properties:
+      objectId: { type: string, required: true }
+      position: { type: string }
+      significance: { type: string }
+
+  # ============================================
+  # CHARACTER GROUPS (Medium Priority)
+  # ============================================
+
+  CharacterGroup:
+    description: Group of related characters (siblings, family, team)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      members: { type: array, items: GroupMember }
+
+  GroupMember:
+    description: Individual member with distinctive traits
+    properties:
+      characterId: { type: string, required: true }
+      distinctiveTraits: { type: array, items: string, description: "inquisitive, sleepy, etc." }
+
+  # ============================================
+  # NARRATIVE ELEMENTS
+  # ============================================
+
+  Plot:
+    description: Plot structure with acts, turning points, and climax
+    properties:
+      id: { type: string, required: true }
+      structure: { type: PlotStructure }
+      acts: { type: array, items: Act }
+      turningPoints: { type: array, items: string }
+      climaxSceneId: { type: string }
+
+  Act:
+    description: Major section of plot
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      order: { type: integer, required: true }
+      scenes: { type: array, items: string, description: "Scene IDs" }
+
+  Conflict:
+    description: Central conflict driving the narrative
+    properties:
+      id: { type: string, required: true }
+      conflictType: { type: ConflictType, required: true }
+      description: { type: string }
+      protagonist: { type: string }
+      antagonist: { type: string }
+      resolution: { type: string }
+
+  Dialogue:
+    description: Character speech with speaker, content, and emotion
+    properties:
+      id: { type: string, required: true }
+      speakerId: { type: string, required: true }
+      content: { type: string, required: true }
+      emotion: { type: string }
+      order: { type: integer }
+
+  Arc:
+    description: Character or story arc
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      characterId: { type: string }
+      beginning: { type: string }
+      middle: { type: string }
+      end: { type: string }
+
+enums:
+
+  StoryStatus:
+    values: [Draft, InProgress, Complete, Published]
+
+  CharacterRole:
+    values: [Protagonist, Antagonist, Supporting, Minor]
+
+  CharacterType:
+    values:
+      - Human
+      - Animal
+      - AnthropomorphicAnimal
+      - InanimateObject
+      - Imaginary
+      - Mythical
+
+  GenreType:
+    values:
+      - Fantasy
+      - SciFi
+      - Romance
+      - Thriller
+      - Mystery
+      - Horror
+      - Literary
+      - Historical
+      - ChildrensBook
+
+  LocationType:
+    values: [Landmark, Building, Park, Street, Natural, Indoor, Outdoor]
+
+  ObjectType:
+    values: [Prop, Weapon, Vehicle, Artifact, NaturalObject, SymbolicObject]
+
+  RealityStatus:
+    values:
+      - Real
+      - Imaginary
+      - PerspectiveDependent
+      - Dream
+
+  TransformationType:
+    values:
+      - Metamorphosis
+      - Aging
+      - MagicalTransformation
+      - ImaginaryCreation
+      - EnvironmentalChange
+
+  PatternType:
+    values:
+      - Refrain
+      - Ritual
+      - QuestionAnswer
+      - Escalation
+
+  AnthropomorphicTrait:
+    values:
+      - Speech
+      - Clothing
+      - HumanEmotions
+      - WalksUpright
+      - UsesTools
+
+  ConflictType:
+    values:
+      - PersonVsPerson
+      - PersonVsNature
+      - PersonVsSelf
+      - PersonVsSociety
+
+  LifeStage:
+    values:
+      - Infant
+      - Toddler
+      - Child
+      - Preteen
+      - Teenager
+      - YoungAdult
+      - MiddleAged
+      - Elderly
+
+  Season:
+    values: [Spring, Summer, Fall, Winter]
+
+  TimeOfDay:
+    values: [Morning, Afternoon, Evening, Night, Dawn, Dusk]
+
+  PlotStructure:
+    values:
+      - ThreeAct
+      - HerosJourney
+      - Episodic
+      - Circular
+      - Linear

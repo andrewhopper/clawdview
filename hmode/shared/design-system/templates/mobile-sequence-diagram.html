@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<!--
+  Template: Mobile UML Sequence Diagram Viewer
+  Version: 1.0
+  Date: 2025-12-20
+
+  Usage:
+  1. Copy this template
+  2. Update DIAGRAM_DATA with your sequence steps
+  3. Customize participants and their types (actor, component, store, backend, external)
+
+  Features:
+  - Overview mode: SVG sequence diagram with lifelines
+  - Step mode: Detailed view with prev/next navigation
+  - Payload display: JSON syntax highlighting
+  - Mobile-first: Tailwind CSS, responsive
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sequence Diagram</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <div id="app"></div>
+
+  <script>
+    // ============================================================
+    // DIAGRAM DATA - Customize this section
+    // ============================================================
+    const DIAGRAM_DATA = {
+      title: "Sequence Diagram Title",
+
+      // Participants: id, name, type (actor|component|store|backend|external)
+      participants: [
+        { id: "user", name: "User", type: "actor" },
+        { id: "frontend", name: "Frontend", type: "component" },
+        { id: "store", name: "Store", type: "store" },
+        { id: "api", name: "API", type: "backend" },
+        { id: "external", name: "External", type: "external" }
+      ],
+
+      // Steps: from/to use participant ids
+      steps: [
+        {
+          id: 1,
+          from: "user",
+          to: "frontend",
+          action: "Action name",
+          description: "Description of what happens in this step.",
+          codeLocation: "file.ts:123",
+          payload: { key: "value" },
+          isReturn: false // true for dashed return arrows
+        }
+        // Add more steps...
+      ]
+    };
+
+    // ============================================================
+    // RENDERER - Do not modify below unless customizing
+    // ============================================================
+    const TYPE_COLORS = {
+      actor: { border: "#3B82F6", bg: "#EFF6FF", text: "#2563EB" },
+      component: { border: "#22C55E", bg: "#F0FDF4", text: "#16A34A" },
+      store: { border: "#F59E0B", bg: "#FFFBEB", text: "#D97706" },
+      backend: { border: "#8B5CF6", bg: "#F5F3FF", text: "#7C3AED" },
+      external: { border: "#EF4444", bg: "#FEF2F2", text: "#DC2626" }
+    };
+
+    let currentStep = 0;
+    let currentMode = 'overview';
+
+    function getParticipant(id) {
+      return DIAGRAM_DATA.participants.find(p => p.id === id);
+    }
+
+    function getParticipantIndex(id) {
+      return DIAGRAM_DATA.participants.findIndex(p => p.id === id);
+    }
+
+    function formatJSON(obj) {
+      return JSON.stringify(obj, null, 2)
+        .replace(/"([^"]+)":/g, '<span class="text-blue-600">"$1"</span>:')
+        .replace(/: "([^"]+)"/g, ': <span class="text-green-600">"$1"</span>')
+        .replace(/: (\d+)/g, ': <span class="text-amber-600">$1</span>')
+        .replace(/: (true|false)/g, ': <span class="text-purple-600">$1</span>')
+        .replace(/: (null)/g, ': <span class="text-gray-400">$1</span>');
+    }
+
+    function renderOverview() {
+      const participants = DIAGRAM_DATA.participants;
+      const steps = DIAGRAM_DATA.steps;
+      const width = 80 + participants.length * 90;
+      const height = 80 + steps.length * 45;
+
+      const participantsSVG = participants.map((p, i) => {
+        const x = 50 + i * 90;
+        const colors = TYPE_COLORS[p.type];
+        return `
+          <rect x="${x - 30}" y="10" width="60" height="28" rx="4" fill="${colors.bg}" stroke="${colors.border}" stroke-width="2"/>
+          <text x="${x}" y="28" text-anchor="middle" fill="${colors.text}" style="font-size: 10px; font-weight: 500;">${p.name}</text>
+        `;
+      }).join('');
+
+      const lifelines = participants.map((p, i) => {
+        const x = 50 + i * 90;
+        return `<line x1="${x}" y1="42" x2="${x}" y2="${height}" stroke="#D1D5DB" stroke-width="1" stroke-dasharray="4,4"/>`;
+      }).join('');
+
+      const stepsSVG = steps.map((step, i) => {
+        const y = 70 + i * 45;
+        const fromIdx = getParticipantIndex(step.from);
+        const toIdx = getParticipantIndex(step.to);
+        const fromX = 50 + fromIdx * 90;
+        const toX = 50 + toIdx * 90;
+        const isLeft = toIdx < fromIdx;
+        const colors = TYPE_COLORS[getParticipant(step.from).type];
+        const lineStyle = step.isReturn ? 'stroke-dasharray="4,2"' : '';
+
+        const arrowX = isLeft ? toX + 8 : toX - 8;
+        const arrowPoints = isLeft
+          ? `${toX},${y} ${toX + 6},${y - 4} ${toX + 6},${y + 4}`
+          : `${toX},${y} ${toX - 6},${y - 4} ${toX - 6},${y + 4}`;
+
+        const labelX = Math.min(fromX, toX) + Math.abs(toX - fromX) / 2;
+
+        return `
+          <g class="cursor-pointer" onclick="goToStep(${i})">
+            <circle cx="16" cy="${y}" r="10" fill="#1F2937"/>
+            <text x="16" y="${y + 4}" text-anchor="middle" fill="white" style="font-size: 10px; font-weight: 600;">${step.id}</text>
+            <line x1="${fromX}" y1="${y}" x2="${arrowX}" y2="${y}" stroke="${colors.border}" stroke-width="2" ${lineStyle}/>
+            <polygon points="${arrowPoints}" fill="${colors.border}"/>
+            <rect x="${labelX - 30}" y="${y - 12}" width="60" height="14" fill="white"/>
+            <text x="${labelX}" y="${y - 2}" text-anchor="middle" fill="#4B5563" style="font-size: 9px;">${step.action}</text>
+          </g>
+        `;
+      }).join('');
+
+      return `
+        <div class="overflow-auto h-[calc(100vh-120px)]">
+          <div class="min-w-[${width}px] p-4">
+            <svg viewBox="0 0 ${width} ${height}" class="w-full">
+              <g class="participants">${participantsSVG}</g>
+              <g class="lifelines">${lifelines}</g>
+              <g class="steps">${stepsSVG}</g>
+              <text x="${width/2}" y="${height - 10}" text-anchor="middle" fill="#9CA3AF" style="font-size: 10px;">Tap a step to see details</text>
+            </svg>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStepMode() {
+      const step = DIAGRAM_DATA.steps[currentStep];
+      const fromP = getParticipant(step.from);
+      const toP = getParticipant(step.to);
+      const fromColors = TYPE_COLORS[fromP.type];
+      const toColors = TYPE_COLORS[toP.type];
+      const prevStep = currentStep > 0 ? DIAGRAM_DATA.steps[currentStep - 1] : null;
+      const nextStep = currentStep < DIAGRAM_DATA.steps.length - 1 ? DIAGRAM_DATA.steps[currentStep + 1] : null;
+
+      const dots = DIAGRAM_DATA.steps.map((_, i) => {
+        if (i === currentStep) return '<div class="w-4 h-2 rounded-full bg-gray-900"></div>';
+        if (i < currentStep) return '<div class="w-2 h-2 rounded-full bg-gray-400"></div>';
+        return '<div class="w-2 h-2 rounded-full bg-gray-200"></div>';
+      }).join('');
+
+      return `
+        <div class="flex flex-col h-[calc(100vh-60px)]">
+          <!-- Step Counter -->
+          <div class="text-left px-4 py-2 border-b border-gray-200 text-sm text-gray-500">
+            Step <span class="text-gray-900 font-medium">${currentStep + 1}</span> of ${DIAGRAM_DATA.steps.length}
+          </div>
+
+          <!-- Prev Preview -->
+          ${prevStep ? `
+          <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+            <div class="flex items-center gap-3 p-2 rounded-md bg-white opacity-60 border border-gray-100 cursor-pointer" onclick="goToStep(${currentStep - 1})">
+              <span class="text-[10px] text-gray-400 uppercase w-8">Prev</span>
+              <div class="w-5 h-5 rounded-full bg-gray-200 text-gray-500 text-xs flex items-center justify-center">${prevStep.id}</div>
+              <span class="text-xs text-gray-500">${prevStep.action}</span>
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- Current Step -->
+          <div class="flex-1 overflow-auto p-4">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-full bg-gray-900 text-white font-bold flex items-center justify-center">${step.id}</div>
+              <div>
+                <div class="text-lg font-semibold text-gray-900">${step.action}</div>
+                <div class="text-sm text-blue-600">${fromP.name} → ${toP.name}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100 mb-4">
+              <div class="text-left">
+                <div class="text-sm font-medium" style="color: ${fromColors.text}">${fromP.name}</div>
+                <div class="text-xs text-gray-400">${fromP.type}</div>
+              </div>
+              <div class="text-lg text-gray-300">→</div>
+              <div class="text-left">
+                <div class="text-sm font-medium" style="color: ${toColors.text}">${toP.name}</div>
+                <div class="text-xs text-gray-400">${toP.type}</div>
+              </div>
+            </div>
+
+            <div class="mb-4 text-left">
+              <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Description</div>
+              <p class="text-sm text-gray-700 leading-relaxed">${step.description}</p>
+            </div>
+
+            <div class="mb-4 text-left">
+              <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Code</div>
+              <code class="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">${step.codeLocation}</code>
+            </div>
+
+            <div class="text-left">
+              <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Payload</div>
+              <div class="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                <div class="px-3 py-2 border-b border-gray-200 flex justify-between items-center bg-gray-100">
+                  <span class="text-sm font-medium text-gray-700">Request Data</span>
+                </div>
+                <pre class="p-3 text-xs overflow-auto bg-white text-left"><code>${formatJSON(step.payload)}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Preview -->
+          ${nextStep ? `
+          <div class="px-4 py-2 bg-gray-50 border-t border-gray-200">
+            <div class="flex items-center gap-3 p-2 rounded-md bg-white opacity-60 border border-gray-100 cursor-pointer" onclick="goToStep(${currentStep + 1})">
+              <span class="text-[10px] text-gray-400 uppercase w-8">Next</span>
+              <div class="w-5 h-5 rounded-full bg-gray-200 text-gray-500 text-xs flex items-center justify-center">${nextStep.id}</div>
+              <span class="text-xs text-gray-500">${nextStep.action}</span>
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- Bottom Nav -->
+          <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+            <button onclick="prevStep()" class="px-4 py-2 rounded-md bg-gray-100 text-gray-700 text-sm font-medium border border-gray-200 ${currentStep === 0 ? 'opacity-40' : ''}">← Prev</button>
+            <div class="flex gap-1.5">${dots}</div>
+            <button onclick="nextStep()" class="px-4 py-2 rounded-md bg-gray-900 text-white text-sm font-medium ${currentStep === DIAGRAM_DATA.steps.length - 1 ? 'opacity-40' : ''}">Next →</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="max-w-lg mx-auto bg-white min-h-screen shadow-xl">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 sticky top-0 bg-white z-10">
+            <h1 class="text-base font-semibold text-gray-900">${DIAGRAM_DATA.title}</h1>
+            <div class="flex bg-gray-100 rounded-md p-0.5 text-xs">
+              <button onclick="setMode('overview')" class="px-3 py-1.5 rounded ${currentMode === 'overview' ? 'bg-gray-900 text-white font-medium' : 'text-gray-500'}">Overview</button>
+              <button onclick="setMode('step')" class="px-3 py-1.5 rounded ${currentMode === 'step' ? 'bg-gray-900 text-white font-medium' : 'text-gray-500'}">Steps</button>
+            </div>
+          </div>
+          ${currentMode === 'overview' ? renderOverview() : renderStepMode()}
+        </div>
+      `;
+    }
+
+    window.setMode = function(mode) {
+      currentMode = mode;
+      render();
+    };
+
+    window.goToStep = function(idx) {
+      currentStep = idx;
+      currentMode = 'step';
+      render();
+    };
+
+    window.prevStep = function() {
+      if (currentStep > 0) {
+        currentStep--;
+        render();
+      }
+    };
+
+    window.nextStep = function() {
+      if (currentStep < DIAGRAM_DATA.steps.length - 1) {
+        currentStep++;
+        render();
+      }
+    };
+
+    render();
+  </script>
+</body>
+</html>

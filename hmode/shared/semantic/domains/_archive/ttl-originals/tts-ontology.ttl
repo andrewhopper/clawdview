@@ -1,0 +1,592 @@
+@prefix tts: <http://hopperlabs.ai/domain/tts#> .
+@prefix schema: <http://schema.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# ============================================
+# TTS Domain Ontology
+# Multi-provider text-to-speech abstraction
+# Supports ElevenLabs, AWS Polly, OpenAI TTS
+# ============================================
+
+# ----------------
+# CORE ENTITIES
+# ----------------
+
+tts:SynthesisRequest a owl:Class ;
+    rdfs:label "Synthesis Request" ;
+    rdfs:comment "Request to synthesize text to speech audio" .
+
+tts:SynthesisResult a owl:Class ;
+    rdfs:label "Synthesis Result" ;
+    rdfs:comment "Result of TTS synthesis containing audio data or URL" .
+
+tts:Voice a owl:Class ;
+    rdfs:label "Voice" ;
+    rdfs:comment "Voice configuration for TTS synthesis with provider, language, and characteristics" .
+
+tts:Provider a owl:Class ;
+    rdfs:label "Provider" ;
+    rdfs:comment "TTS provider (ElevenLabs, AWS Polly, OpenAI)" .
+
+tts:AudioFile a owl:Class ;
+    rdfs:label "Audio File" ;
+    rdfs:comment "Generated audio file with format, duration, and storage location" .
+
+tts:VoiceSettings a owl:Class ;
+    rdfs:label "Voice Settings" ;
+    rdfs:comment "Fine-tuned voice parameters (stability, similarity, style)" .
+
+tts:StreamChunk a owl:Class ;
+    rdfs:label "Stream Chunk" ;
+    rdfs:comment "Audio data chunk for streaming playback" .
+
+tts:UsageMetrics a owl:Class ;
+    rdfs:label "Usage Metrics" ;
+    rdfs:comment "Character count, cost, and provider usage statistics" .
+
+# ----------------
+# CONVERSATION ENTITIES (V1.5 Diarization)
+# ----------------
+
+tts:Conversation a owl:Class ;
+    rdfs:label "Conversation" ;
+    rdfs:comment "Multi-voice conversation containing ordered passages with speaker assignments" .
+
+tts:Passage a owl:Class ;
+    rdfs:label "Passage" ;
+    rdfs:comment "Single segment of text spoken by one speaker within a conversation" .
+
+tts:Speaker a owl:Class ;
+    rdfs:label "Speaker" ;
+    rdfs:comment "Named speaker in a conversation with assigned voice" .
+
+# ----------------
+# ENUMS
+# ----------------
+
+tts:ProviderType a owl:Class ;
+    rdfs:label "Provider Type" ;
+    owl:oneOf (tts:ElevenLabs tts:AWSPolly tts:OpenAI tts:GoogleTTS tts:Azure) .
+
+tts:ElevenLabs a tts:ProviderType ;
+    rdfs:label "ElevenLabs" ;
+    rdfs:comment "High-quality voices, voice cloning, multilingual" .
+
+tts:AWSPolly a tts:ProviderType ;
+    rdfs:label "AWS Polly" ;
+    rdfs:comment "AWS-native, neural voices, SSML support" .
+
+tts:OpenAI a tts:ProviderType ;
+    rdfs:label "OpenAI TTS" ;
+    rdfs:comment "Fast, affordable, multiple voices" .
+
+tts:GoogleTTS a tts:ProviderType ;
+    rdfs:label "Google Cloud TTS" ;
+    rdfs:comment "WaveNet voices, SSML multi-voice" .
+
+tts:Azure a tts:ProviderType ;
+    rdfs:label "Azure Cognitive Services" ;
+    rdfs:comment "Microsoft neural voices" .
+
+tts:AudioFormat a owl:Class ;
+    rdfs:label "Audio Format" ;
+    owl:oneOf (tts:MP3 tts:WAV tts:OGG tts:PCM tts:FLAC) .
+
+tts:MP3 a tts:AudioFormat ;
+    rdfs:label "MP3" ;
+    rdfs:comment "MPEG Layer 3, compressed, widely compatible" .
+
+tts:WAV a tts:AudioFormat ;
+    rdfs:label "WAV" ;
+    rdfs:comment "Uncompressed PCM, high quality, large files" .
+
+tts:OGG a tts:AudioFormat ;
+    rdfs:label "OGG Opus" ;
+    rdfs:comment "Open format, good compression, streaming-friendly" .
+
+tts:PCM a tts:AudioFormat ;
+    rdfs:label "PCM" ;
+    rdfs:comment "Raw audio, low latency streaming" .
+
+tts:FLAC a tts:AudioFormat ;
+    rdfs:label "FLAC" ;
+    rdfs:comment "Lossless compression" .
+
+tts:SynthesisStatus a owl:Class ;
+    rdfs:label "Synthesis Status" ;
+    owl:oneOf (tts:Pending tts:Processing tts:Completed tts:Failed tts:Streaming) .
+
+tts:Pending a tts:SynthesisStatus ;
+    rdfs:label "Pending" .
+
+tts:Processing a tts:SynthesisStatus ;
+    rdfs:label "Processing" .
+
+tts:Completed a tts:SynthesisStatus ;
+    rdfs:label "Completed" .
+
+tts:Failed a tts:SynthesisStatus ;
+    rdfs:label "Failed" .
+
+tts:Streaming a tts:SynthesisStatus ;
+    rdfs:label "Streaming" .
+
+tts:DeliveryMode a owl:Class ;
+    rdfs:label "Delivery Mode" ;
+    owl:oneOf (tts:FileGeneration tts:RealTimeStream tts:WebSocket) .
+
+tts:FileGeneration a tts:DeliveryMode ;
+    rdfs:label "File Generation" ;
+    rdfs:comment "Generate complete audio file (MP3/WAV)" .
+
+tts:RealTimeStream a tts:DeliveryMode ;
+    rdfs:label "Real-Time Stream" ;
+    rdfs:comment "Stream audio chunks for low-latency playback" .
+
+tts:WebSocket a tts:DeliveryMode ;
+    rdfs:label "WebSocket" ;
+    rdfs:comment "Bidirectional streaming over WebSocket" .
+
+tts:ModelType a owl:Class ;
+    rdfs:label "Model Type" ;
+    owl:oneOf (tts:MultilingualV2 tts:TurboV2 tts:TurboV2_5 tts:Neural tts:Standard) .
+
+tts:MultilingualV2 a tts:ModelType ;
+    rdfs:label "Multilingual V2" ;
+    rdfs:comment "ElevenLabs highest quality multilingual model" .
+
+tts:TurboV2 a tts:ModelType ;
+    rdfs:label "Turbo V2" ;
+    rdfs:comment "ElevenLabs fast low-latency English model" .
+
+tts:TurboV2_5 a tts:ModelType ;
+    rdfs:label "Turbo V2.5" ;
+    rdfs:comment "ElevenLabs fast multilingual model" .
+
+tts:Neural a tts:ModelType ;
+    rdfs:label "Neural" ;
+    rdfs:comment "Neural TTS (AWS Polly Neural, Azure Neural)" .
+
+tts:Standard a tts:ModelType ;
+    rdfs:label "Standard" ;
+    rdfs:comment "Standard/concatenative TTS" .
+
+# ----------------
+# SYNTHESIS REQUEST PROPERTIES
+# ----------------
+
+tts:text a owl:DatatypeProperty ;
+    rdfs:domain tts:SynthesisRequest ;
+    rdfs:range xsd:string ;
+    rdfs:label "Text" ;
+    rdfs:comment "Text content to convert to speech (max 5000 chars for ElevenLabs)" .
+
+tts:useVoice a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisRequest ;
+    rdfs:range tts:Voice ;
+    rdfs:label "Use Voice" .
+
+tts:useProvider a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisRequest ;
+    rdfs:range tts:Provider ;
+    rdfs:label "Use Provider" .
+
+tts:outputFormat a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisRequest ;
+    rdfs:range tts:AudioFormat ;
+    rdfs:label "Output Format" .
+
+tts:deliveryMode a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisRequest ;
+    rdfs:range tts:DeliveryMode ;
+    rdfs:label "Delivery Mode" .
+
+tts:model a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisRequest ;
+    rdfs:range tts:ModelType ;
+    rdfs:label "Model" .
+
+tts:voiceSettings a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisRequest ;
+    rdfs:range tts:VoiceSettings ;
+    rdfs:label "Voice Settings" .
+
+tts:requestedAt a owl:DatatypeProperty ;
+    rdfs:domain tts:SynthesisRequest ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Requested At" .
+
+tts:callbackUrl a owl:DatatypeProperty ;
+    rdfs:domain tts:SynthesisRequest ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "Callback URL" ;
+    rdfs:comment "URL for async completion notification" .
+
+# ----------------
+# SYNTHESIS RESULT PROPERTIES
+# ----------------
+
+tts:forRequest a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisResult ;
+    rdfs:range tts:SynthesisRequest ;
+    rdfs:label "For Request" .
+
+tts:status a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisResult ;
+    rdfs:range tts:SynthesisStatus ;
+    rdfs:label "Status" .
+
+tts:audioFile a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisResult ;
+    rdfs:range tts:AudioFile ;
+    rdfs:label "Audio File" .
+
+tts:audioData a owl:DatatypeProperty ;
+    rdfs:domain tts:SynthesisResult ;
+    rdfs:range xsd:base64Binary ;
+    rdfs:label "Audio Data" ;
+    rdfs:comment "Raw audio bytes (base64 encoded)" .
+
+tts:errorMessage a owl:DatatypeProperty ;
+    rdfs:domain tts:SynthesisResult ;
+    rdfs:range xsd:string ;
+    rdfs:label "Error Message" .
+
+tts:processingTimeMs a owl:DatatypeProperty ;
+    rdfs:domain tts:SynthesisResult ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Processing Time (ms)" .
+
+tts:completedAt a owl:DatatypeProperty ;
+    rdfs:domain tts:SynthesisResult ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Completed At" .
+
+tts:usageMetrics a owl:ObjectProperty ;
+    rdfs:domain tts:SynthesisResult ;
+    rdfs:range tts:UsageMetrics ;
+    rdfs:label "Usage Metrics" .
+
+# ----------------
+# VOICE PROPERTIES
+# ----------------
+
+tts:voiceId a owl:DatatypeProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range xsd:string ;
+    rdfs:label "Voice ID" ;
+    rdfs:comment "Provider-specific voice identifier" .
+
+tts:voiceName a owl:DatatypeProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range xsd:string ;
+    rdfs:label "Voice Name" .
+
+tts:voiceProvider a owl:ObjectProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range tts:ProviderType ;
+    rdfs:label "Voice Provider" .
+
+tts:language a owl:DatatypeProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range xsd:string ;
+    rdfs:label "Language" ;
+    rdfs:comment "ISO language code (en, en-US, es, fr)" .
+
+tts:description a owl:DatatypeProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range xsd:string ;
+    rdfs:label "Description" .
+
+tts:previewUrl a owl:DatatypeProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "Preview URL" ;
+    rdfs:comment "URL to voice preview audio sample" .
+
+tts:isCloned a owl:DatatypeProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Is Cloned" ;
+    rdfs:comment "Whether voice is a cloned custom voice" .
+
+tts:gender a owl:DatatypeProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range xsd:string ;
+    rdfs:label "Gender" ;
+    rdfs:comment "male, female, neutral" .
+
+tts:ageGroup a owl:DatatypeProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range xsd:string ;
+    rdfs:label "Age Group" ;
+    rdfs:comment "young, middle-aged, old" .
+
+tts:useCase a owl:DatatypeProperty ;
+    rdfs:domain tts:Voice ;
+    rdfs:range xsd:string ;
+    rdfs:label "Use Case" ;
+    rdfs:comment "narration, conversational, news, meditation, video-game" .
+
+# ----------------
+# VOICE SETTINGS PROPERTIES
+# ----------------
+
+tts:stability a owl:DatatypeProperty ;
+    rdfs:domain tts:VoiceSettings ;
+    rdfs:range xsd:float ;
+    rdfs:label "Stability" ;
+    rdfs:comment "Voice stability (0.0-1.0). Higher = more consistent, lower = more expressive" .
+
+tts:similarityBoost a owl:DatatypeProperty ;
+    rdfs:domain tts:VoiceSettings ;
+    rdfs:range xsd:float ;
+    rdfs:label "Similarity Boost" ;
+    rdfs:comment "Voice clarity/similarity (0.0-1.0). Higher = clearer, more similar to original" .
+
+tts:style a owl:DatatypeProperty ;
+    rdfs:domain tts:VoiceSettings ;
+    rdfs:range xsd:float ;
+    rdfs:label "Style" ;
+    rdfs:comment "Style exaggeration (0.0-1.0). Higher = more expressive" .
+
+tts:useSpeakerBoost a owl:DatatypeProperty ;
+    rdfs:domain tts:VoiceSettings ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Use Speaker Boost" ;
+    rdfs:comment "Enhance similarity to original speaker" .
+
+tts:speed a owl:DatatypeProperty ;
+    rdfs:domain tts:VoiceSettings ;
+    rdfs:range xsd:float ;
+    rdfs:label "Speed" ;
+    rdfs:comment "Speaking rate (0.5-2.0). 1.0 = normal" .
+
+tts:pitch a owl:DatatypeProperty ;
+    rdfs:domain tts:VoiceSettings ;
+    rdfs:range xsd:float ;
+    rdfs:label "Pitch" ;
+    rdfs:comment "Voice pitch adjustment (-20 to +20 semitones)" .
+
+# ----------------
+# PROVIDER PROPERTIES
+# ----------------
+
+tts:providerName a owl:DatatypeProperty ;
+    rdfs:domain tts:Provider ;
+    rdfs:range xsd:string ;
+    rdfs:label "Provider Name" .
+
+tts:providerType a owl:ObjectProperty ;
+    rdfs:domain tts:Provider ;
+    rdfs:range tts:ProviderType ;
+    rdfs:label "Provider Type" .
+
+tts:apiEndpoint a owl:DatatypeProperty ;
+    rdfs:domain tts:Provider ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "API Endpoint" .
+
+tts:supportsStreaming a owl:DatatypeProperty ;
+    rdfs:domain tts:Provider ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Supports Streaming" .
+
+tts:supportsVoiceCloning a owl:DatatypeProperty ;
+    rdfs:domain tts:Provider ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Supports Voice Cloning" .
+
+tts:supportedFormats a owl:ObjectProperty ;
+    rdfs:domain tts:Provider ;
+    rdfs:range tts:AudioFormat ;
+    rdfs:label "Supported Formats" .
+
+tts:supportedLanguages a owl:DatatypeProperty ;
+    rdfs:domain tts:Provider ;
+    rdfs:range xsd:string ;
+    rdfs:label "Supported Languages" ;
+    rdfs:comment "Comma-separated ISO language codes" .
+
+tts:rateLimit a owl:DatatypeProperty ;
+    rdfs:domain tts:Provider ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Rate Limit" ;
+    rdfs:comment "Requests per minute" .
+
+tts:costPerChar a owl:DatatypeProperty ;
+    rdfs:domain tts:Provider ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Cost Per Character" ;
+    rdfs:comment "USD cost per character synthesized" .
+
+# ----------------
+# AUDIO FILE PROPERTIES
+# ----------------
+
+tts:fileFormat a owl:ObjectProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range tts:AudioFormat ;
+    rdfs:label "File Format" .
+
+tts:filePath a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:string ;
+    rdfs:label "File Path" ;
+    rdfs:comment "Local file path" .
+
+tts:fileUrl a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "File URL" ;
+    rdfs:comment "Remote URL (S3, CDN)" .
+
+tts:presignedUrl a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "Presigned URL" ;
+    rdfs:comment "Time-limited access URL" .
+
+tts:expiresAt a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Expires At" ;
+    rdfs:comment "When presigned URL expires" .
+
+tts:fileSizeBytes a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:integer ;
+    rdfs:label "File Size (bytes)" .
+
+tts:durationMs a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Duration (ms)" .
+
+tts:sampleRate a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Sample Rate" ;
+    rdfs:comment "Audio sample rate in Hz (22050, 44100, 48000)" .
+
+tts:bitrate a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Bitrate" ;
+    rdfs:comment "Audio bitrate in kbps (128, 192, 320)" .
+
+tts:channels a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Channels" ;
+    rdfs:comment "Number of audio channels (1=mono, 2=stereo)" .
+
+tts:contentHash a owl:DatatypeProperty ;
+    rdfs:domain tts:AudioFile ;
+    rdfs:range xsd:string ;
+    rdfs:label "Content Hash" ;
+    rdfs:comment "SHA256 hash of audio content for deduplication" .
+
+# ----------------
+# USAGE METRICS PROPERTIES
+# ----------------
+
+tts:characterCount a owl:DatatypeProperty ;
+    rdfs:domain tts:UsageMetrics ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Character Count" .
+
+tts:estimatedCost a owl:DatatypeProperty ;
+    rdfs:domain tts:UsageMetrics ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Estimated Cost (USD)" .
+
+tts:providerUsed a owl:ObjectProperty ;
+    rdfs:domain tts:UsageMetrics ;
+    rdfs:range tts:ProviderType ;
+    rdfs:label "Provider Used" .
+
+tts:modelUsed a owl:ObjectProperty ;
+    rdfs:domain tts:UsageMetrics ;
+    rdfs:range tts:ModelType ;
+    rdfs:label "Model Used" .
+
+tts:voiceUsed a owl:ObjectProperty ;
+    rdfs:domain tts:UsageMetrics ;
+    rdfs:range tts:Voice ;
+    rdfs:label "Voice Used" .
+
+# ----------------
+# STREAM CHUNK PROPERTIES
+# ----------------
+
+tts:chunkData a owl:DatatypeProperty ;
+    rdfs:domain tts:StreamChunk ;
+    rdfs:range xsd:base64Binary ;
+    rdfs:label "Chunk Data" .
+
+tts:chunkIndex a owl:DatatypeProperty ;
+    rdfs:domain tts:StreamChunk ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Chunk Index" .
+
+tts:isLastChunk a owl:DatatypeProperty ;
+    rdfs:domain tts:StreamChunk ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Is Last Chunk" .
+
+# ----------------
+# CONVERSATION PROPERTIES (V1.5)
+# ----------------
+
+tts:title a owl:DatatypeProperty ;
+    rdfs:domain tts:Conversation ;
+    rdfs:range xsd:string ;
+    rdfs:label "Title" .
+
+tts:hasPassage a owl:ObjectProperty ;
+    rdfs:domain tts:Conversation ;
+    rdfs:range tts:Passage ;
+    rdfs:label "Has Passage" .
+
+tts:hasSpeaker a owl:ObjectProperty ;
+    rdfs:domain tts:Conversation ;
+    rdfs:range tts:Speaker ;
+    rdfs:label "Has Speaker" .
+
+# ----------------
+# PASSAGE PROPERTIES
+# ----------------
+
+tts:passageText a owl:DatatypeProperty ;
+    rdfs:domain tts:Passage ;
+    rdfs:range xsd:string ;
+    rdfs:label "Passage Text" .
+
+tts:passageOrder a owl:DatatypeProperty ;
+    rdfs:domain tts:Passage ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Passage Order" .
+
+tts:spokenBy a owl:ObjectProperty ;
+    rdfs:domain tts:Passage ;
+    rdfs:range tts:Speaker ;
+    rdfs:label "Spoken By" .
+
+# ----------------
+# SPEAKER PROPERTIES
+# ----------------
+
+tts:speakerName a owl:DatatypeProperty ;
+    rdfs:domain tts:Speaker ;
+    rdfs:range xsd:string ;
+    rdfs:label "Speaker Name" .
+
+tts:assignedVoice a owl:ObjectProperty ;
+    rdfs:domain tts:Speaker ;
+    rdfs:range tts:Voice ;
+    rdfs:label "Assigned Voice" .

@@ -1,0 +1,65 @@
+id: project-overview-pdf
+name: Project Overview PDF
+description: Printable PDF template for reviewing projects with visual stage indicators, file counts, and category badges
+version: 1.0.0
+created: 2025-12-13
+updated: 2025-12-13
+
+category: documentation
+tags:
+  - pdf
+  - project-management
+  - overview
+  - printable
+
+template: shared/templates/project-overview/v1-minimal.html
+
+output:
+  format: HTML (print to PDF)
+  orientation: portrait
+  size: letter
+  pages: variable (4 projects per page)
+
+structure:
+  header:
+    - title: "Project Overview"
+    - date: current date
+
+  legend:
+    - phase_indicators: "1-Research, 2-Expand, 3-Analyze, 4-Select, 5-PRD, 6-Design, 7-Test, 8-Impl, 9-Refine"
+    - status_colors: "green=done, blue=current, gray=pending"
+
+  per_project:
+    - name: project name
+    - category_badge: "OSS | Personal | Work | Shared | Unspecified"
+    - file_count: number of files (excluding node_modules, .git, __pycache__)
+    - stage_indicator: 9 dots showing phase progress
+    - summary: 1-2 sentence description + target user (densified, no flowery language)
+    - details: 3 bullet points
+    - tech_stack: comma-separated technologies
+    - next_steps: blank lines for handwritten notes
+
+  footer:
+    - date: YYYY-MM-DD
+    - page_number: "Page X of Y"
+    - git_hash: short commit hash
+
+  unspecified_projects:
+    - category_selector: checkable bubbles for Work/Personal/OSS
+
+generation_steps:
+  1: Scan monorepo for all projects (projects/**/active/, shared/)
+  2: Extract metadata from .project files or README
+  3: Count files per project
+  4: Get current git hash
+  5: Generate HTML with 4 projects per page
+  6: Include footer with date, page numbers, git hash
+  7: Open in browser for print-to-PDF
+
+data_sources:
+  - ".project files in projects/**/active/"
+  - "README.md files"
+  - "package.json for tech stack"
+  - "git rev-parse --short HEAD for hash"
+
+example_output: shared/templates/project-overview/protoflow-overview-2025-12-13.html

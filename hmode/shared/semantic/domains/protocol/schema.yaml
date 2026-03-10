@@ -1,0 +1,414 @@
+# Protocol Domain Model
+# Formal process definitions: Protocol, SOP (collection of protocols), ArtifactBundle (workflow outputs)
+
+domain:
+  name: protocol
+  version: "1.0.0"
+  description: Formal process definitions - protocols, SOPs, and artifact bundles
+  dependencies: [core, workflow]
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+
+entities:
+
+  # ============================================
+  # PROTOCOL - Formal step/rule definition
+  # ============================================
+
+  Protocol:
+    description: Formal definition of steps and rules that workflows implement
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      version: { type: string, required: true }
+      description: { type: string }
+      purpose: { type: string, description: "Why this protocol exists" }
+      scope: { type: ProtocolScope, description: "Where this protocol applies" }
+      steps: { type: array, items: ProtocolStep, required: true }
+      preconditions: { type: array, items: Condition, description: "Must be true before starting" }
+      postconditions: { type: array, items: Condition, description: "Must be true after completion" }
+      invariants: { type: array, items: Condition, description: "Must remain true throughout" }
+      exceptions: { type: array, items: ExceptionHandler }
+      status: { type: ProtocolStatus, default: Draft }
+      effectiveDate: { type: datetime }
+      expirationDate: { type: datetime }
+      owner: { type: string, description: "Person/team responsible" }
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ProtocolStep:
+    description: Single step within a protocol
+    properties:
+      id: { type: string, required: true }
+      order: { type: integer, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      action: { type: string, required: true, description: "What to do" }
+      actor: { type: ActorType, description: "Who performs this step" }
+      inputs: { type: array, items: ProtocolInput }
+      outputs: { type: array, items: ProtocolOutput }
+      validations: { type: array, items: Validation }
+      timeLimit: { type: Duration }
+      isOptional: { type: boolean, default: false }
+      isBranching: { type: boolean, default: false, description: "Has conditional paths" }
+      branches: { type: array, items: ProtocolBranch }
+
+  ProtocolBranch:
+    description: Conditional branch in a protocol step
+    properties:
+      condition: { type: string, required: true }
+      targetStepId: { type: string, required: true }
+      description: { type: string }
+
+  ProtocolInput:
+    description: Required input for a protocol step
+    properties:
+      name: { type: string, required: true }
+      type: { type: string, required: true }
+      description: { type: string }
+      isRequired: { type: boolean, default: true }
+      defaultValue: { type: any }
+      validationRule: { type: string }
+
+  ProtocolOutput:
+    description: Output produced by a protocol step
+    properties:
+      name: { type: string, required: true }
+      type: { type: string, required: true }
+      description: { type: string }
+      artifactType: { type: string, description: "If output is an artifact, its type" }
+
+  Condition:
+    description: Boolean condition for pre/post/invariants
+    properties:
+      id: { type: string, required: true }
+      expression: { type: string, required: true }
+      description: { type: string }
+      errorMessage: { type: string }
+
+  Validation:
+    description: Validation rule for step outputs
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ValidationType, required: true }
+      expression: { type: string }
+      errorMessage: { type: string }
+
+  ExceptionHandler:
+    description: How to handle exceptions during protocol execution
+    properties:
+      id: { type: string, required: true }
+      exceptionType: { type: string, required: true }
+      handler: { type: ExceptionHandlerType, required: true }
+      targetStepId: { type: string, description: "Step to jump to if applicable" }
+      description: { type: string }
+
+  # ============================================
+  # SOP - Standard Operating Procedure
+  # ============================================
+
+  SOP:
+    description: Standard Operating Procedure - a collection of protocols forming a complete procedure
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      version: { type: string, required: true }
+      description: { type: string }
+      purpose: { type: string, description: "Business purpose of this SOP" }
+      scope: { type: string, description: "What/who this SOP covers" }
+      protocols: { type: array, items: ProtocolReference, required: true }
+      sequence: { type: SOPSequence, description: "How protocols are executed" }
+      roles: { type: array, items: SOPRole, description: "Roles involved" }
+      artifacts: { type: array, items: SOPArtifact, description: "Required/produced artifacts" }
+      compliance: { type: array, items: ComplianceReference }
+      reviewCycle: { type: Duration, description: "How often to review" }
+      lastReviewDate: { type: datetime }
+      nextReviewDate: { type: datetime }
+      approvedBy: { type: string }
+      approvalDate: { type: datetime }
+      status: { type: SOPStatus, default: Draft }
+      effectiveDate: { type: datetime }
+      supersedes: { type: string, description: "Previous SOP version this replaces" }
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ProtocolReference:
+    description: Reference to a protocol within an SOP
+    properties:
+      protocolId: { type: string, required: true }
+      protocolVersion: { type: string }
+      order: { type: integer, required: true }
+      isRequired: { type: boolean, default: true }
+      condition: { type: string, description: "When to execute this protocol" }
+      dependsOn: { type: array, items: string, description: "Protocol IDs that must complete first" }
+
+  SOPRole:
+    description: Role definition within an SOP
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      responsibilities: { type: array, items: string }
+      requiredSkills: { type: array, items: string }
+
+  SOPArtifact:
+    description: Artifact definition within an SOP
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ArtifactType }
+      description: { type: string }
+      isInput: { type: boolean, default: false }
+      isOutput: { type: boolean, default: false }
+      template: { type: string, description: "Template reference if applicable" }
+
+  ComplianceReference:
+    description: Reference to compliance requirement
+    properties:
+      standard: { type: string, required: true, description: "e.g., ISO 9001, SOC2" }
+      section: { type: string }
+      requirement: { type: string }
+
+  # ============================================
+  # ARTIFACT BUNDLE - Grouped workflow outputs
+  # ============================================
+
+  ArtifactBundle:
+    description: Collection of related artifacts produced by a workflow
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      workflowInstanceId: { type: string, description: "Workflow that produced this bundle" }
+      protocolId: { type: string, description: "Protocol this bundle satisfies" }
+      artifacts: { type: array, items: BundledArtifact, required: true }
+      metadata: { type: BundleMetadata }
+      status: { type: BundleStatus, default: Pending }
+      validations: { type: array, items: BundleValidation }
+      completeness: { type: decimal, description: "0-100 percentage complete" }
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  BundledArtifact:
+    description: Individual artifact within a bundle
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ArtifactType, required: true }
+      url: { type: uri, description: "Location of artifact" }
+      mimeType: { type: string }
+      size: { type: integer, description: "Size in bytes" }
+      checksum: { type: string, description: "SHA256 hash for integrity" }
+      stepId: { type: string, description: "Protocol step that produced this" }
+      metadata: { type: object }
+      isRequired: { type: boolean, default: true }
+      status: { type: ArtifactStatus, default: Pending }
+      createdAt: { type: datetime, required: true }
+
+  BundleMetadata:
+    description: Metadata about the artifact bundle
+    properties:
+      generatedBy: { type: string, description: "System/user that generated bundle" }
+      generationDuration: { type: Duration }
+      sourceVersion: { type: string, description: "Version of source data" }
+      environment: { type: string, description: "dev, staging, prod" }
+      customFields: { type: object }
+
+  BundleValidation:
+    description: Validation result for a bundle
+    properties:
+      id: { type: string, required: true }
+      validatorId: { type: string }
+      validatorType: { type: string }
+      result: { type: ValidationResult, required: true }
+      message: { type: string }
+      validatedAt: { type: datetime, required: true }
+
+enums:
+
+  ProtocolScope:
+    description: Where a protocol applies
+    values:
+      - Organization   # Entire organization
+      - Department     # Specific department
+      - Team           # Specific team
+      - Project        # Specific project
+      - System         # Specific system/application
+
+  ProtocolStatus:
+    values:
+      - Draft          # Being developed
+      - Review         # Under review
+      - Approved       # Approved for use
+      - Active         # Currently in use
+      - Deprecated     # Being phased out
+      - Archived       # No longer used
+
+  SOPStatus:
+    values:
+      - Draft
+      - PendingApproval
+      - Approved
+      - Active
+      - UnderRevision
+      - Deprecated
+      - Archived
+
+  SOPSequence:
+    description: How protocols in an SOP are executed
+    values:
+      - Sequential     # One after another
+      - Parallel       # All at once
+      - Conditional    # Based on conditions
+      - Hybrid         # Mix of above
+
+  ActorType:
+    description: Who performs a protocol step
+    values:
+      - Human          # Requires human action
+      - System         # Automated by system
+      - AI             # AI agent performs
+      - Hybrid         # Human + AI collaboration
+
+  ValidationType:
+    values:
+      - Schema         # JSON schema validation
+      - Regex          # Pattern matching
+      - Range          # Numeric range check
+      - Enum           # Value in allowed set
+      - Custom         # Custom validation logic
+
+  ExceptionHandlerType:
+    values:
+      - Retry          # Retry the step
+      - Skip           # Skip and continue
+      - Abort          # Abort entire protocol
+      - Escalate       # Escalate to supervisor
+      - Fallback       # Use fallback step
+      - Compensate     # Run compensation logic
+
+  ArtifactType:
+    description: Type of artifact
+    values:
+      - Document       # Written document (MD, PDF, DOCX)
+      - Code           # Source code
+      - Data           # Data file (JSON, CSV, YAML)
+      - Image          # Image file
+      - Audio          # Audio file
+      - Video          # Video file
+      - Diagram        # Architecture/flow diagram
+      - Presentation   # Slides
+      - Spreadsheet    # Excel/CSV data
+      - Archive        # ZIP/TAR bundle
+      - Config         # Configuration file
+      - Log            # Log output
+      - Report         # Generated report
+      - Other          # Other type
+
+  ArtifactStatus:
+    values:
+      - Pending        # Not yet created
+      - InProgress     # Being created
+      - Complete       # Successfully created
+      - Failed         # Creation failed
+      - Validated      # Passed validation
+      - Invalid        # Failed validation
+
+  BundleStatus:
+    values:
+      - Pending        # Not yet started
+      - InProgress     # Artifacts being generated
+      - Complete       # All artifacts present
+      - Incomplete     # Missing some artifacts
+      - Validated      # All validations passed
+      - Invalid        # Validation failures
+
+  ValidationResult:
+    values:
+      - Pass
+      - Fail
+      - Warning
+      - Skipped
+
+actions:
+
+  CreateProtocol:
+    description: Create a new protocol definition
+    parameters:
+      name: { type: string, required: true }
+      description: { type: string }
+      steps: { type: array, items: ProtocolStep, required: true }
+    result: Protocol
+
+  UpdateProtocol:
+    description: Update an existing protocol
+    parameters:
+      protocolId: { type: string, required: true }
+      updates: { type: object, required: true }
+    result: Protocol
+
+  ActivateProtocol:
+    description: Activate a protocol for use
+    parameters:
+      protocolId: { type: string, required: true }
+    result: Protocol
+
+  CreateSOP:
+    description: Create a new Standard Operating Procedure
+    parameters:
+      name: { type: string, required: true }
+      description: { type: string }
+      protocols: { type: array, items: ProtocolReference, required: true }
+    result: SOP
+
+  UpdateSOP:
+    description: Update an existing SOP
+    parameters:
+      sopId: { type: string, required: true }
+      updates: { type: object, required: true }
+    result: SOP
+
+  ApproveSOP:
+    description: Approve an SOP for use
+    parameters:
+      sopId: { type: string, required: true }
+      approverId: { type: string, required: true }
+    result: SOP
+
+  CreateArtifactBundle:
+    description: Create a new artifact bundle
+    parameters:
+      name: { type: string, required: true }
+      workflowInstanceId: { type: string }
+      protocolId: { type: string }
+    result: ArtifactBundle
+
+  AddArtifactToBundle:
+    description: Add an artifact to a bundle
+    parameters:
+      bundleId: { type: string, required: true }
+      artifact: { type: BundledArtifact, required: true }
+    result: ArtifactBundle
+
+  ValidateBundle:
+    description: Run validations on an artifact bundle
+    parameters:
+      bundleId: { type: string, required: true }
+    result: ArtifactBundle
+
+  GetProtocolsByScope:
+    description: Get protocols by scope
+    parameters:
+      scope: { type: ProtocolScope, required: true }
+      status: { type: ProtocolStatus }
+    result: { type: array, items: Protocol }
+
+  GetSOPsByStatus:
+    description: Get SOPs by status
+    parameters:
+      status: { type: SOPStatus, required: true }
+    result: { type: array, items: SOP }

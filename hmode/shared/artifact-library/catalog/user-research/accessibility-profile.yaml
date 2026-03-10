@@ -1,0 +1,234 @@
+# Accessibility Profile Artifact Type
+# Sources: WCAG 2.1, Microsoft Inclusive Design, A11y Project
+# Version: 1.0.0
+
+# Composes from shared/semantic/domains/user-research
+domain_types:
+  imports:
+    - user-research/Actor
+    - user-research/AccessibilityProfile
+    - user-research/VisionProfile
+    - user-research/MotorProfile
+    - user-research/CognitiveProfile
+    - user-research/HearingProfile
+    - user-research/SimulationParams
+
+id: accessibility-profile
+name: Accessibility Profile
+description: |
+  Detailed accessibility characteristics for UX simulation.
+  Enables testing websites against realistic user capabilities.
+  Used alongside proto-personas to inform inclusive design.
+category: assessment
+complexity: simple
+version: "1.0.0"
+created_at: "2025-11-28"
+updated_at: "2025-11-28"
+
+tags:
+  - accessibility
+  - a11y
+  - inclusive-design
+  - ux
+  - wcag
+  - simulation
+
+schema:
+  sections:
+    - id: persona_reference
+      name: Persona Reference
+      order: 1
+      required: true
+      description: Link to associated persona
+      format: prose
+
+    - id: vision
+      name: Vision Profile
+      order: 2
+      required: true
+      description: Visual capabilities and accommodations
+      format: table
+
+    - id: motor
+      name: Motor Profile
+      order: 3
+      required: true
+      description: Physical interaction capabilities
+      format: table
+
+    - id: cognitive
+      name: Cognitive Profile
+      order: 4
+      required: true
+      description: Cognitive processing characteristics
+      format: table
+
+    - id: hearing
+      name: Hearing Profile
+      order: 5
+      required: true
+      description: Auditory capabilities
+      format: table
+
+    - id: technology
+      name: Technology & Environment
+      order: 6
+      required: true
+      description: Devices, assistive tech, connection
+      format: table
+
+    - id: ux_implications
+      name: UX Implications
+      order: 7
+      required: true
+      description: Specific design requirements
+      format: bullets
+
+    - id: simulation_params
+      name: Simulation Parameters
+      order: 8
+      required: true
+      description: Machine-readable settings for automated testing
+      format: code
+
+  required_fields:
+    - name: persona_name
+      type: string
+      required: true
+    - name: age_range
+      type: string
+      required: true
+      description: Affects probability of certain conditions
+
+prompt:
+  system_prompt: |
+    You are an accessibility specialist creating profiles for inclusive design testing.
+    Base characteristics on realistic correlations with demographics.
+    Provide both human-readable descriptions and machine-readable simulation parameters.
+
+  task_prompt: |
+    Create an accessibility profile for {{PERSONA_NAME}} (age {{AGE_RANGE}}).
+
+    Consider age-correlated factors:
+    - Vision: Presbyopia increases after 40, contrast sensitivity decreases
+    - Motor: Fine motor control may decrease with age
+    - Cognitive: Processing speed, working memory considerations
+    - Hearing: High-frequency hearing loss increases with age
+
+    Include:
+    1. **Vision** - Acuity, color vision, contrast sensitivity, light sensitivity
+    2. **Motor** - Fine motor, tremor, preferred input method
+    3. **Cognitive** - Attention span, reading level, memory, processing speed
+    4. **Hearing** - Range, processing, need for captions
+    5. **Technology** - Devices, assistive tech, screen size, connection speed
+    6. **UX Implications** - Specific design requirements (5-8 items)
+    7. **Simulation Parameters** - JSON for automated testing tools
+
+  audience: UX designers and developers
+  tone: technical
+
+constraints:
+  max_words: 500
+  density: dense
+
+output_formats:
+  - markdown
+  - yaml
+  - json
+
+examples:
+  - id: older-farmer
+    name: Older Farmer Accessibility Profile
+    description: Accessibility profile for 55-65 year old in rural area
+    input:
+      persona_name: Hobby Farmer Frank
+      age_range: 55-65
+    output: |
+      # Accessibility Profile: Hobby Farmer Frank
+      **Age Range:** 55-65
+
+      ## Vision Profile
+      | Attribute | Value | Notes |
+      |-----------|-------|-------|
+      | Acuity | Corrected (reading glasses) | Presbyopia, needs glasses for screens |
+      | Color Vision | Normal | No color blindness |
+      | Contrast Sensitivity | Reduced | Needs 7:1 ratio minimum |
+      | Light Sensitivity | Moderate | Prefers dark mode option |
+      | Font Size Preference | Large (18px+) | Struggles with 14px body text |
+
+      ## Motor Profile
+      | Attribute | Value | Notes |
+      |-----------|-------|-------|
+      | Fine Motor | Good | No significant issues |
+      | Click Accuracy | Moderate | Needs 44px+ touch targets |
+      | Preferred Input | Mouse + keyboard | Uses trackpad reluctantly |
+      | Scrolling | Standard | No issues |
+      | Tremor | None | - |
+
+      ## Cognitive Profile
+      | Attribute | Value | Notes |
+      |-----------|-------|-------|
+      | Attention Span | Standard | Can focus on task at hand |
+      | Reading Level | High school+ | Comfortable with moderate complexity |
+      | Working Memory | Standard | Can handle 3-4 item navigation |
+      | Processing Speed | Moderate | Don't rush through flows |
+      | Learning Preference | Step-by-step | Prefers linear processes |
+
+      ## Hearing Profile
+      | Attribute | Value | Notes |
+      |-----------|-------|-------|
+      | Range | Mild high-frequency loss | Common for age group |
+      | Audio Processing | Normal | No processing issues |
+      | Captions Needed | Helpful | Appreciates but not required |
+      | Audio Preference | Optional | Prefers text to video |
+
+      ## Technology & Environment
+      | Attribute | Value |
+      |-----------|-------|
+      | Primary Device | Desktop PC (Windows) |
+      | Screen Size | 24" monitor @ 1920x1080 |
+      | Secondary Device | Android phone (5.5" screen) |
+      | Assistive Tech | None currently |
+      | Browser | Chrome or Edge |
+      | Connection | Rural broadband (25-50 Mbps, variable) |
+      | Environment | Home office, variable lighting |
+
+      ## UX Implications
+      - **Typography:** Minimum 16px body, 18px+ preferred, 1.5 line height
+      - **Contrast:** WCAG AAA (7:1) for text, high contrast mode option
+      - **Touch Targets:** Minimum 44x44px for clickable elements
+      - **Navigation:** Maximum 4-5 top-level items, clear hierarchy
+      - **Forms:** Large input fields, clear labels, visible focus states
+      - **Images:** Compress aggressively for variable connection
+      - **Phone Number:** Prominently displayed, click-to-call on mobile
+      - **Dark Mode:** Offer as option to reduce eye strain
+
+      ## Simulation Parameters
+      ```json
+      {
+        "vision": {
+          "acuity": "corrected",
+          "minFontSize": 16,
+          "preferredFontSize": 18,
+          "contrastRatio": 7.0,
+          "colorBlind": false
+        },
+        "motor": {
+          "minTouchTarget": 44,
+          "pointerAccuracy": "moderate",
+          "inputMethod": "mouse"
+        },
+        "cognitive": {
+          "maxNavItems": 5,
+          "preferLinearFlow": true,
+          "readingLevel": "grade-12"
+        },
+        "environment": {
+          "connectionSpeed": "variable-broadband",
+          "screenWidth": 1920,
+          "deviceType": "desktop"
+        },
+        "wcagLevel": "AA",
+        "testPriority": ["contrast", "fontSize", "touchTargets", "pageWeight"]
+      }
+      ```

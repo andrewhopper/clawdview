@@ -1,0 +1,183 @@
+# Asset Domain Model
+# Represents generated assets (diagrams, documents, images, etc.)
+
+name: Asset
+version: "1.0.0"
+updated: "2025-12-03"
+
+types:
+  Asset:
+    description: "A generated digital asset"
+    properties:
+      uuid:
+        type: string
+        format: uuid
+        required: true
+        description: "Unique identifier for the asset"
+
+      project_uuid:
+        type: string
+        format: uuid
+        required: true
+        description: "UUID of the project this asset belongs to"
+
+      name:
+        type: string
+        required: true
+        description: "Human-readable name of the asset"
+
+      type:
+        type: AssetType
+        required: true
+        description: "Type of asset"
+
+      path:
+        type: string
+        required: true
+        description: "Local file path to the asset"
+
+      s3_url:
+        type: string
+        required: false
+        description: "S3 URL if published"
+
+      metadata:
+        type: AssetMetadata
+        required: false
+        description: "Additional metadata"
+
+      current_version:
+        type: integer
+        required: true
+        default: 1
+        description: "Current version number"
+
+      created_at:
+        type: datetime
+        required: true
+        description: "When the asset was first created"
+
+      updated_at:
+        type: datetime
+        required: true
+        description: "When the asset was last modified"
+
+  AssetVersion:
+    description: "A specific version of an asset"
+    properties:
+      uuid:
+        type: string
+        format: uuid
+        required: true
+        description: "Unique identifier for this version"
+
+      asset_uuid:
+        type: string
+        format: uuid
+        required: true
+        description: "UUID of the parent asset"
+
+      version_number:
+        type: integer
+        required: true
+        description: "Version number (1, 2, 3, ...)"
+
+      git_hash:
+        type: string
+        required: false
+        description: "Git commit hash when version was created"
+
+      path:
+        type: string
+        required: true
+        description: "Local file path to this version"
+
+      s3_url:
+        type: string
+        required: false
+        description: "S3 URL if published"
+
+      checksum:
+        type: string
+        required: false
+        description: "SHA256 checksum of the file"
+
+      file_size:
+        type: integer
+        required: false
+        description: "File size in bytes"
+
+      created_at:
+        type: datetime
+        required: true
+        description: "When this version was created"
+
+      created_by:
+        type: string
+        required: false
+        description: "Who/what created this version (user, tool, etc.)"
+
+  AssetType:
+    description: "Enumeration of asset types"
+    enum:
+      - diagram
+      - document
+      - image
+      - audio
+      - video
+      - data
+      - code
+      - archive
+      - other
+
+  AssetMetadata:
+    description: "Additional metadata for an asset"
+    properties:
+      title:
+        type: string
+        required: false
+
+      description:
+        type: string
+        required: false
+
+      tags:
+        type: array
+        items: string
+        required: false
+
+      generator:
+        type: string
+        required: false
+        description: "Tool that generated this asset"
+
+      generator_version:
+        type: string
+        required: false
+
+      content_type:
+        type: string
+        required: false
+        description: "MIME type"
+
+      dimensions:
+        type: object
+        required: false
+        description: "Width/height for images/diagrams"
+
+      timezone:
+        type: string
+        required: false
+        default: "US/Eastern"
+        description: "Timezone for timestamps"
+
+relationships:
+  - from: Asset
+    to: Project
+    type: belongs_to
+    via: project_uuid
+
+  - from: AssetVersion
+    to: Asset
+    type: belongs_to
+    via: asset_uuid

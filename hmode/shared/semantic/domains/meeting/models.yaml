@@ -1,0 +1,407 @@
+# models.yaml - Meeting Domain Models
+# Generated: 2025-11-24
+# Status: PENDING APPROVAL
+
+entities:
+  Meeting:
+    description: "Core meeting entity - scheduled event with participants"
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique identifier"
+      title:
+        type: string
+        required: true
+        max_length: 255
+        description: "Meeting title/subject"
+      description:
+        type: text
+        required: false
+        description: "Extended description or context"
+      scheduled_start:
+        type: datetime
+        required: true
+        description: "Planned start time"
+      scheduled_end:
+        type: datetime
+        required: true
+        description: "Planned end time"
+      actual_start:
+        type: datetime
+        required: false
+        description: "Actual start time (when meeting began)"
+      actual_end:
+        type: datetime
+        required: false
+        description: "Actual end time (when meeting concluded)"
+      location:
+        type: string
+        required: false
+        max_length: 500
+        description: "Physical location or virtual meeting URL"
+      status:
+        type: enum
+        enum_ref: MeetingStatus
+        required: true
+        default: scheduled
+      organizer_id:
+        type: uuid
+        required: true
+        references: User.id
+        description: "User who organized the meeting"
+      recurrence_rule:
+        type: string
+        required: false
+        description: "RRULE for recurring meetings (iCal format)"
+      parent_meeting_id:
+        type: uuid
+        required: false
+        references: Meeting.id
+        description: "Parent meeting for recurring series"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [scheduled_start]
+      - [organizer_id]
+      - [status]
+
+  Attendee:
+    description: "Meeting participant with role and response status"
+    properties:
+      id:
+        type: uuid
+        required: true
+      meeting_id:
+        type: uuid
+        required: true
+        references: Meeting.id
+      user_id:
+        type: uuid
+        required: false
+        references: User.id
+        description: "Internal user (if registered)"
+      position_id:
+        type: uuid
+        required: false
+        references: professional:Position.id
+        description: "Professional position (links person, organization, job details)"
+      affiliation_type:
+        type: enum
+        enum_ref: AffiliationType
+        required: false
+        description: "Relationship to meeting owner (customer, partner, internal)"
+      role:
+        type: enum
+        enum_ref: AttendeeRole
+        required: true
+        default: required
+      response_status:
+        type: enum
+        enum_ref: ResponseStatus
+        required: true
+        default: pending
+      attended:
+        type: boolean
+        required: false
+        description: "Whether attendee actually attended"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [meeting_id]
+      - [user_id]
+      - [position_id]
+
+  MeetingAgenda:
+    description: "Structured agenda document for a meeting"
+    properties:
+      id:
+        type: uuid
+        required: true
+      meeting_id:
+        type: uuid
+        required: true
+        references: Meeting.id
+      version:
+        type: integer
+        required: true
+        default: 1
+        description: "Agenda version for tracking revisions"
+      objectives:
+        type: text
+        required: false
+        description: "High-level meeting objectives"
+      prepared_by_id:
+        type: uuid
+        required: true
+        references: User.id
+      finalized_at:
+        type: datetime
+        required: false
+        description: "When agenda was finalized/locked"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [meeting_id]
+
+  AgendaItem:
+    description: "Individual item within an agenda"
+    properties:
+      id:
+        type: uuid
+        required: true
+      agenda_id:
+        type: uuid
+        required: true
+        references: MeetingAgenda.id
+      order:
+        type: integer
+        required: true
+        description: "Display order within agenda"
+      title:
+        type: string
+        required: true
+        max_length: 255
+      description:
+        type: text
+        required: false
+      duration_minutes:
+        type: integer
+        required: false
+        description: "Allocated time for this item"
+      presenter_id:
+        type: uuid
+        required: false
+        references: User.id
+        description: "Person responsible for this item"
+      item_type:
+        type: enum
+        enum_ref: AgendaItemType
+        required: true
+        default: discussion
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [agenda_id, order]
+
+  MeetingMinutes:
+    description: "Formal record of meeting proceedings"
+    properties:
+      id:
+        type: uuid
+        required: true
+      meeting_id:
+        type: uuid
+        required: true
+        references: Meeting.id
+      recorder_id:
+        type: uuid
+        required: true
+        references: User.id
+        description: "Person who recorded the minutes"
+      summary:
+        type: text
+        required: false
+        description: "Executive summary of meeting"
+      call_to_order_time:
+        type: datetime
+        required: false
+        description: "When meeting was officially called to order"
+      adjournment_time:
+        type: datetime
+        required: false
+        description: "When meeting was officially adjourned"
+      status:
+        type: enum
+        enum_ref: MinutesStatus
+        required: true
+        default: draft
+      approved_at:
+        type: datetime
+        required: false
+      approved_by_id:
+        type: uuid
+        required: false
+        references: User.id
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [meeting_id]
+      - [status]
+
+  MeetingNotes:
+    description: "Informal notes captured during/after meeting"
+    properties:
+      id:
+        type: uuid
+        required: true
+      meeting_id:
+        type: uuid
+        required: true
+        references: Meeting.id
+      author_id:
+        type: uuid
+        required: true
+        references: User.id
+      content:
+        type: text
+        required: true
+        description: "Free-form note content (markdown supported)"
+      visibility:
+        type: enum
+        enum_ref: NoteVisibility
+        required: true
+        default: shared
+      pinned:
+        type: boolean
+        required: true
+        default: false
+        description: "Highlight as important"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [meeting_id]
+      - [author_id]
+
+  Decision:
+    description: "Formal decision made during meeting"
+    properties:
+      id:
+        type: uuid
+        required: true
+      meeting_id:
+        type: uuid
+        required: true
+        references: Meeting.id
+      minutes_id:
+        type: uuid
+        required: false
+        references: MeetingMinutes.id
+        description: "Link to minutes if recorded there"
+      agenda_item_id:
+        type: uuid
+        required: false
+        references: AgendaItem.id
+        description: "Agenda item this decision relates to"
+      decision_text:
+        type: text
+        required: true
+        description: "The decision that was made"
+      rationale:
+        type: text
+        required: false
+        description: "Reasoning behind the decision"
+      decision_type:
+        type: enum
+        enum_ref: DecisionType
+        required: true
+        default: consensus
+      decided_at:
+        type: datetime
+        required: true
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [meeting_id]
+      - [decided_at]
+
+  ActionItem:
+    description: "Task or follow-up action from meeting"
+    properties:
+      id:
+        type: uuid
+        required: true
+      meeting_id:
+        type: uuid
+        required: true
+        references: Meeting.id
+      minutes_id:
+        type: uuid
+        required: false
+        references: MeetingMinutes.id
+      agenda_item_id:
+        type: uuid
+        required: false
+        references: AgendaItem.id
+      title:
+        type: string
+        required: true
+        max_length: 255
+      description:
+        type: text
+        required: false
+      assignee_id:
+        type: uuid
+        required: true
+        references: User.id
+      due_date:
+        type: date
+        required: false
+      priority:
+        type: enum
+        enum_ref: Priority
+        required: true
+        default: medium
+      status:
+        type: enum
+        enum_ref: ActionItemStatus
+        required: true
+        default: pending
+      completed_at:
+        type: datetime
+        required: false
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [meeting_id]
+      - [assignee_id]
+      - [status]
+      - [due_date]

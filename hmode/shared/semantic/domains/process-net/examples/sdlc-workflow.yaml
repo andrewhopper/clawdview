@@ -1,0 +1,548 @@
+# =============================================================================
+# SDLC 9-Phase Workflow as a Workflow Net
+# Validates process-net schema against real-world usage
+# =============================================================================
+
+version: "0.1.0"
+type: workflow_net
+name: "SDLC 9-Phase Standard Path"
+description: |
+  Models the standard SDLC path with optional gates:
+  - Phase 2.5 (Feasibility) - production projects only
+  - Phase 5.5 (Requirements) - production projects only
+  - Phase 8.5 (QA Validation) - web/UI projects only
+
+# =============================================================================
+# PLACES (Conditions/States)
+# =============================================================================
+# Convention: p_{phase}_{status}
+# Phases are conditions AFTER completing that phase's work
+
+places:
+  # Source (workflow entry)
+  - id: p_idle
+    name: "Idle"
+    capacity: 1
+
+  # Phase completions
+  - id: p_seed_done
+    name: "Seed Complete"
+
+  - id: p_research_done
+    name: "Research Complete"
+
+  # Branch point: needs feasibility check?
+  - id: p_feasibility_required
+    name: "Feasibility Required"
+
+  - id: p_feasibility_done
+    name: "Feasibility Complete"
+
+  - id: p_expansion_done
+    name: "Expansion Complete"
+
+  - id: p_analysis_done
+    name: "Analysis Complete"
+
+  - id: p_selection_done
+    name: "Selection Complete"
+
+  # Branch point: needs requirements?
+  - id: p_requirements_required
+    name: "Requirements Required"
+
+  - id: p_requirements_done
+    name: "Requirements Complete"
+
+  - id: p_design_done
+    name: "Design Complete"
+
+  - id: p_test_design_done
+    name: "Test Design Complete"
+
+  - id: p_implementation_done
+    name: "Implementation Complete"
+
+  # Branch point: needs QA?
+  - id: p_qa_required
+    name: "QA Required"
+
+  - id: p_qa_done
+    name: "QA Complete"
+
+  - id: p_refinement_done
+    name: "Refinement Complete"
+
+  # Sink (workflow exit)
+  - id: p_complete
+    name: "Project Complete"
+
+# =============================================================================
+# TRANSITIONS (Actions)
+# =============================================================================
+# Convention: t_{action}
+
+transitions:
+  # Phase 1: Seed
+  - id: t_start
+    name: "Start Project"
+
+  - id: t_seed
+    name: "Phase 1: Seed"
+
+  # Phase 2: Research
+  - id: t_research
+    name: "Phase 2: Research"
+
+  # Phase 2 → 2.5 or 3 (XOR-split)
+  - id: t_check_feasibility_required
+    name: "Check if Feasibility Required"
+
+  - id: t_skip_feasibility
+    name: "Skip Feasibility (non-production)"
+
+  # Phase 2.5: Feasibility
+  - id: t_feasibility
+    name: "Phase 2.5: Feasibility"
+
+  # Phase 3: Expansion
+  - id: t_expansion
+    name: "Phase 3: Expansion"
+
+  # Phase 4: Analysis
+  - id: t_analysis
+    name: "Phase 4: Analysis"
+
+  # Phase 5: Selection
+  - id: t_selection
+    name: "Phase 5: Selection"
+
+  # Phase 5 → 5.5 or 6 (XOR-split)
+  - id: t_check_requirements_required
+    name: "Check if Requirements Required"
+
+  - id: t_skip_requirements
+    name: "Skip Requirements (non-production)"
+
+  # Phase 5.5: Requirements
+  - id: t_requirements
+    name: "Phase 5.5: Requirements & PRD"
+
+  # Phase 6: Design
+  - id: t_design
+    name: "Phase 6: Technical Design"
+
+  # Phase 7: Test Design
+  - id: t_test_design
+    name: "Phase 7: Test Design"
+
+  # Phase 8: Implementation
+  - id: t_implementation
+    name: "Phase 8: Implementation"
+
+  # Phase 8 → 8.5 or 9 (XOR-split)
+  - id: t_check_qa_required
+    name: "Check if QA Required"
+
+  - id: t_skip_qa
+    name: "Skip QA (non-visual)"
+
+  # Phase 8.5: QA Validation
+  - id: t_qa
+    name: "Phase 8.5: QA Validation"
+
+  # Phase 9: Refinement
+  - id: t_refinement
+    name: "Phase 9: Refinement"
+
+  # Complete
+  - id: t_complete
+    name: "Mark Complete"
+
+# =============================================================================
+# ARCS (Connections)
+# =============================================================================
+# Bipartite: Place→Transition or Transition→Place only
+
+arcs:
+  # Start
+  - id: a1
+    source_id: p_idle
+    target_id: t_start
+    source_type: place
+    target_type: transition
+
+  - id: a2
+    source_id: t_start
+    target_id: p_seed_done
+    source_type: transition
+    target_type: place
+
+  # Phase 1 → Phase 2
+  - id: a3
+    source_id: p_seed_done
+    target_id: t_research
+    source_type: place
+    target_type: transition
+
+  - id: a4
+    source_id: t_research
+    target_id: p_research_done
+    source_type: transition
+    target_type: place
+
+  # Phase 2 → XOR-split (feasibility check)
+  - id: a5
+    source_id: p_research_done
+    target_id: t_check_feasibility_required
+    source_type: place
+    target_type: transition
+
+  - id: a6
+    source_id: t_check_feasibility_required
+    target_id: p_feasibility_required
+    source_type: transition
+    target_type: place
+
+  # Feasibility path (production)
+  - id: a7
+    source_id: p_feasibility_required
+    target_id: t_feasibility
+    source_type: place
+    target_type: transition
+
+  - id: a8
+    source_id: t_feasibility
+    target_id: p_feasibility_done
+    source_type: transition
+    target_type: place
+
+  # Skip feasibility path (non-production)
+  - id: a9
+    source_id: p_feasibility_required
+    target_id: t_skip_feasibility
+    source_type: place
+    target_type: transition
+
+  - id: a10
+    source_id: t_skip_feasibility
+    target_id: p_feasibility_done
+    source_type: transition
+    target_type: place
+
+  # Phase 2.5/skip → Phase 3
+  - id: a11
+    source_id: p_feasibility_done
+    target_id: t_expansion
+    source_type: place
+    target_type: transition
+
+  - id: a12
+    source_id: t_expansion
+    target_id: p_expansion_done
+    source_type: transition
+    target_type: place
+
+  # Phase 3 → Phase 4
+  - id: a13
+    source_id: p_expansion_done
+    target_id: t_analysis
+    source_type: place
+    target_type: transition
+
+  - id: a14
+    source_id: t_analysis
+    target_id: p_analysis_done
+    source_type: transition
+    target_type: place
+
+  # Phase 4 → Phase 5
+  - id: a15
+    source_id: p_analysis_done
+    target_id: t_selection
+    source_type: place
+    target_type: transition
+
+  - id: a16
+    source_id: t_selection
+    target_id: p_selection_done
+    source_type: transition
+    target_type: place
+
+  # Phase 5 → XOR-split (requirements check)
+  - id: a17
+    source_id: p_selection_done
+    target_id: t_check_requirements_required
+    source_type: place
+    target_type: transition
+
+  - id: a18
+    source_id: t_check_requirements_required
+    target_id: p_requirements_required
+    source_type: transition
+    target_type: place
+
+  # Requirements path (production)
+  - id: a19
+    source_id: p_requirements_required
+    target_id: t_requirements
+    source_type: place
+    target_type: transition
+
+  - id: a20
+    source_id: t_requirements
+    target_id: p_requirements_done
+    source_type: transition
+    target_type: place
+
+  # Skip requirements path (non-production)
+  - id: a21
+    source_id: p_requirements_required
+    target_id: t_skip_requirements
+    source_type: place
+    target_type: transition
+
+  - id: a22
+    source_id: t_skip_requirements
+    target_id: p_requirements_done
+    source_type: transition
+    target_type: place
+
+  # Phase 5.5/skip → Phase 6
+  - id: a23
+    source_id: p_requirements_done
+    target_id: t_design
+    source_type: place
+    target_type: transition
+
+  - id: a24
+    source_id: t_design
+    target_id: p_design_done
+    source_type: transition
+    target_type: place
+
+  # Phase 6 → Phase 7
+  - id: a25
+    source_id: p_design_done
+    target_id: t_test_design
+    source_type: place
+    target_type: transition
+
+  - id: a26
+    source_id: t_test_design
+    target_id: p_test_design_done
+    source_type: transition
+    target_type: place
+
+  # Phase 7 → Phase 8
+  - id: a27
+    source_id: p_test_design_done
+    target_id: t_implementation
+    source_type: place
+    target_type: transition
+
+  - id: a28
+    source_id: t_implementation
+    target_id: p_implementation_done
+    source_type: transition
+    target_type: place
+
+  # Phase 8 → XOR-split (QA check)
+  - id: a29
+    source_id: p_implementation_done
+    target_id: t_check_qa_required
+    source_type: place
+    target_type: transition
+
+  - id: a30
+    source_id: t_check_qa_required
+    target_id: p_qa_required
+    source_type: transition
+    target_type: place
+
+  # QA path (web/UI)
+  - id: a31
+    source_id: p_qa_required
+    target_id: t_qa
+    source_type: place
+    target_type: transition
+
+  - id: a32
+    source_id: t_qa
+    target_id: p_qa_done
+    source_type: transition
+    target_type: place
+
+  # Skip QA path (non-visual)
+  - id: a33
+    source_id: p_qa_required
+    target_id: t_skip_qa
+    source_type: place
+    target_type: transition
+
+  - id: a34
+    source_id: t_skip_qa
+    target_id: p_qa_done
+    source_type: transition
+    target_type: place
+
+  # Phase 8.5/skip → Phase 9
+  - id: a35
+    source_id: p_qa_done
+    target_id: t_refinement
+    source_type: place
+    target_type: transition
+
+  - id: a36
+    source_id: t_refinement
+    target_id: p_refinement_done
+    source_type: transition
+    target_type: place
+
+  # Phase 9 → Complete
+  - id: a37
+    source_id: p_refinement_done
+    target_id: t_complete
+    source_type: place
+    target_type: transition
+
+  - id: a38
+    source_id: t_complete
+    target_id: p_complete
+    source_type: transition
+    target_type: place
+
+# =============================================================================
+# GUARDS (Preconditions)
+# =============================================================================
+
+guards:
+  # Feasibility gate
+  - id: g_feasibility_required
+    transition_id: t_feasibility
+    expression: "project_type == 'production'"
+    description: "Production projects must complete feasibility"
+
+  - id: g_feasibility_skip
+    transition_id: t_skip_feasibility
+    expression: "project_type != 'production'"
+    description: "Non-production projects skip feasibility"
+
+  # Requirements gate
+  - id: g_requirements_required
+    transition_id: t_requirements
+    expression: "project_type == 'production'"
+    description: "Production projects must complete requirements"
+
+  - id: g_requirements_skip
+    transition_id: t_skip_requirements
+    expression: "project_type != 'production'"
+    description: "Non-production projects skip requirements"
+
+  # QA gate
+  - id: g_qa_required
+    transition_id: t_qa
+    expression: "has_web_ui == true"
+    description: "Web/UI projects must complete QA validation"
+
+  - id: g_qa_skip
+    transition_id: t_skip_qa
+    expression: "has_web_ui == false"
+    description: "Non-visual projects skip QA validation"
+
+  # Phase transition guards (quality gates)
+  - id: g_seed_complete
+    transition_id: t_research
+    expression: "seed_doc_complete == true AND problem_clear == true"
+    description: "Phase 1→2: Seed doc complete, problem clear"
+
+  - id: g_research_complete
+    transition_id: t_check_feasibility_required
+    expression: "existing_solutions_researched == true"
+    description: "Phase 2→2.5/3: Research complete"
+
+  - id: g_feasibility_go
+    transition_id: t_expansion
+    expression: "feasibility_decision in ['PROCEED', 'CONDITIONAL'] OR project_type != 'production'"
+    description: "Phase 2.5→3: Feasibility passed or skipped"
+
+  - id: g_selection_complete
+    transition_id: t_check_requirements_required
+    expression: "approach_selected == true AND mvp_defined == true"
+    description: "Phase 5→5.5/6: Selection complete"
+
+  - id: g_design_approved
+    transition_id: t_test_design
+    expression: "architecture_approved == true"
+    description: "Phase 6→7: Design approved"
+
+  - id: g_tests_written
+    transition_id: t_implementation
+    expression: "tests_written == true AND tests_fail == true"
+    description: "Phase 7→8: Tests written and failing (TDD red)"
+
+  - id: g_implementation_complete
+    transition_id: t_check_qa_required
+    expression: "tests_pass == true AND startup_script_created == true"
+    description: "Phase 8→8.5/9: Implementation complete"
+
+  - id: g_qa_complete
+    transition_id: t_refinement
+    expression: "validation_report_complete == true OR has_web_ui == false"
+    description: "Phase 8.5→9: QA complete or skipped"
+
+  - id: g_refinement_complete
+    transition_id: t_complete
+    expression: "all_tests_pass == true AND docs_complete == true"
+    description: "Phase 9→Complete: All tests pass, docs complete"
+
+# =============================================================================
+# WORKFLOW NET PROPERTIES
+# =============================================================================
+
+source_place_id: p_idle
+sink_place_id: p_complete
+
+# Initial marking: one token at source
+initial_marking:
+  tokens:
+    p_idle: 1
+
+# =============================================================================
+# METADATA
+# =============================================================================
+
+metadata:
+  # Phase checkpoints for priority scoring
+  phase_checkpoints:
+    - { phase: 1, place: p_seed_done, name: "SEED" }
+    - { phase: 2, place: p_research_done, name: "RESEARCH" }
+    - { phase: 2.5, place: p_feasibility_done, name: "FEASIBILITY", optional: true }
+    - { phase: 3, place: p_expansion_done, name: "EXPANSION" }
+    - { phase: 4, place: p_analysis_done, name: "ANALYSIS" }
+    - { phase: 5, place: p_selection_done, name: "SELECTION" }
+    - { phase: 5.5, place: p_requirements_done, name: "REQUIREMENTS", optional: true }
+    - { phase: 6, place: p_design_done, name: "DESIGN" }
+    - { phase: 7, place: p_test_design_done, name: "TEST_DESIGN" }
+    - { phase: 8, place: p_implementation_done, name: "IMPLEMENTATION" }
+    - { phase: 8.5, place: p_qa_done, name: "QA_VALIDATION", optional: true }
+    - { phase: 9, place: p_refinement_done, name: "REFINEMENT" }
+
+  # Priority hints for GetEnabledTransitions
+  priority_rules:
+    - rule: "forward_progress"
+      modifier: +20
+      description: "Prefer moving forward over backward"
+    - rule: "phase_complete"
+      modifier: +10
+      description: "Prefer completing current phase"
+    - rule: "skip_optional"
+      modifier: -5
+      description: "Slight penalty for skipping optional phases"
+
+  # Critical rule: NO CODE UNTIL PHASE 8
+  constraints:
+    - id: no_code_before_phase_8
+      expression: "current_phase < 8 implies code_files_created == 0"
+      description: "ZERO implementation code before Phase 8"
+      enforcement: hard

@@ -1,0 +1,2477 @@
+# Networking Domain Schema
+# Version: 0.3.0 (Draft - Awaiting Approval)
+# Purpose: Model TCP/IP networks, devices, access interfaces, and dependencies
+# Use Case: Network documentation generation
+# Features:
+#   - Abstract secret management (provider-agnostic: 1Password, Vault, Bitwarden, etc.)
+#   - Physical location tracking (Site → Building → Room → Rack → Device)
+#   - Device dependencies (controller → managed devices)
+#   - Access interfaces (web UI, SSH, API, mobile app, cloud portal)
+#   - Decomposed routing (RouteTable → Route)
+#   - Decomposed stateless firewall (NetworkACL → NetworkACLEntry)
+#   - WiFi/802.11 wireless networks
+#   - Link Aggregation (LAG/Port-channel/802.3ad)
+#   - DNS zone hierarchy (DNSZone → DNSRecord)
+#   - AWS VPC extension (VPC, IGW, NAT, Peering, Transit Gateway)
+
+domain: networking
+version: "0.3.0"
+status: draft
+description: |
+  Computer networking domain for modeling TCP/IP infrastructure.
+  Supports network documentation, access reference, dependency mapping.
+owner: platform
+dependencies:
+  - core
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+  DeviceType:
+    description: Type of network device
+    values:
+      # Infrastructure
+      - router
+      - switch
+      - access_point
+      - firewall
+      - load_balancer
+      - gateway
+      - modem
+      - bridge
+      # Compute
+      - server
+      - workstation
+      - laptop
+      - mobile
+      - tablet
+      - virtual_machine
+      - container
+      # Storage
+      - nas
+      - san
+      # Security
+      - ip_camera
+      - nvr
+      - dvr
+      - doorbell_camera
+      - access_control_panel
+      # Smart Home
+      - smart_hub
+      - smart_thermostat
+      - smart_lock
+      - smart_light
+      - smart_plug
+      - smart_speaker
+      - smart_display
+      # IoT
+      - iot_sensor
+      - iot_actuator
+      - iot_gateway
+      # Peripherals
+      - printer
+      - scanner
+      - voip_phone
+      # Entertainment
+      - gaming_console
+      - streaming_device
+      - smart_tv
+      - media_server
+      # Other
+      - other
+
+  AccessProtocol:
+    description: Protocol for accessing/managing a device
+    values:
+      - web_http
+      - web_https
+      - ssh
+      - telnet
+      - rdp
+      - vnc
+      - snmp_v1
+      - snmp_v2c
+      - snmp_v3
+      - api_rest
+      - api_graphql
+      - api_soap
+      - console_serial
+      - console_usb
+      - mobile_app
+      - cloud_portal
+      - winrm
+      - powershell_remoting
+
+  CredentialType:
+    description: Type of authentication credential
+    values:
+      - username_password
+      - ssh_key_password
+      - ssh_key_only
+      - api_token
+      - api_key
+      - certificate
+      - oauth2
+      - saml
+      - mfa_totp
+      - mfa_sms
+      - radius
+      - ldap
+      - active_directory
+      - local_only
+
+  IPVersion:
+    description: IP protocol version
+    values:
+      - ipv4
+      - ipv6
+      - dual_stack
+
+  Protocol:
+    description: Network protocol
+    values:
+      - tcp
+      - udp
+      - icmp
+      - icmpv6
+      - gre
+      - esp
+      - ah
+      - sctp
+      - any
+
+  RuleAction:
+    description: Firewall rule action
+    values:
+      - allow
+      - deny
+      - reject
+      - drop
+      - log
+      - log_allow
+      - log_deny
+
+  ConnectionState:
+    description: Device connection state
+    values:
+      - online
+      - offline
+      - degraded
+      - rebooting
+      - updating
+      - provisioning
+      - unknown
+
+  ManagementType:
+    description: Type of management relationship
+    values:
+      - controller          # Ubiquiti controller -> APs
+      - hypervisor          # ESXi/Proxmox -> VMs
+      - container_host      # Docker host -> containers
+      - orchestrator        # Kubernetes -> pods
+      - stack_primary       # Primary in switch stack
+      - stack_member        # Member in switch stack
+      - mesh_root           # Mesh network root
+      - mesh_node           # Mesh network node
+      - monitoring_server   # Nagios/PRTG -> monitored
+      - backup_server       # Backup server -> clients
+      - directory_server    # AD/LDAP -> domain members
+
+  DependencyType:
+    description: Type of dependency between devices
+    values:
+      - requires            # Hard dependency, won't function without
+      - uses                # Soft dependency, degraded without
+      - backup_for          # Failover/redundancy
+      - upstream            # Network path dependency
+      - power_source        # PoE or UPS dependency
+
+  DHCPMode:
+    description: DHCP configuration mode
+    values:
+      - static
+      - dhcp
+      - dhcp_reservation
+      - slaac              # IPv6 stateless
+      - dhcpv6
+
+  VLANType:
+    description: VLAN purpose/type
+    values:
+      - native
+      - management
+      - data
+      - voice
+      - guest
+      - iot
+      - security
+      - dmz
+      - storage
+      - backup
+
+  PortState:
+    description: Physical port state
+    values:
+      - up
+      - down
+      - admin_down
+      - err_disabled
+      - not_connected
+
+  DNSRecordType:
+    description: DNS record types
+    values:
+      - A
+      - AAAA
+      - CNAME
+      - MX
+      - TXT
+      - PTR
+      - SRV
+      - NS
+      - SOA
+      - CAA
+
+  VPNType:
+    description: VPN configuration type
+    values:
+      - site_to_site
+      - client_to_site
+      - ssl_vpn
+      - ipsec
+      - wireguard
+      - openvpn
+      - l2tp
+      - pptp
+
+  # ---------------------------------------------------------------------------
+  # Routing
+  # ---------------------------------------------------------------------------
+
+  RouteTargetType:
+    description: Type of route destination/target
+    values:
+      - local                 # Local VPC/network
+      - internet_gateway      # IGW
+      - nat_gateway           # NAT gateway
+      - virtual_private_gateway  # VPN gateway
+      - transit_gateway       # Transit gateway
+      - vpc_peering           # VPC peering connection
+      - network_interface     # ENI
+      - instance              # EC2 instance
+      - egress_only_gateway   # IPv6 egress-only
+      - carrier_gateway       # Wavelength carrier gateway
+      - local_gateway         # Outpost local gateway
+      - gateway_load_balancer_endpoint  # GWLB endpoint
+      - blackhole             # Drop traffic
+
+  RouteState:
+    description: Route status
+    values:
+      - active
+      - blackhole             # Target unavailable
+      - pending
+      - deleted
+
+  # ---------------------------------------------------------------------------
+  # Network ACL (Stateless Firewall)
+  # ---------------------------------------------------------------------------
+
+  RuleType:
+    description: Type of network rule
+    values:
+      - stateless             # Network ACL
+      - stateful              # Security group / firewall
+
+  TrafficDirection:
+    description: Direction of network traffic
+    values:
+      - inbound
+      - outbound
+      - bidirectional
+
+  # ---------------------------------------------------------------------------
+  # Wireless/802.11
+  # ---------------------------------------------------------------------------
+
+  WirelessBand:
+    description: WiFi radio band/frequency
+    values:
+      - band_2_4_ghz          # 2.4 GHz (802.11b/g/n/ax)
+      - band_5_ghz            # 5 GHz (802.11a/n/ac/ax)
+      - band_6_ghz            # 6 GHz (802.11ax/WiFi 6E)
+
+  WirelessSecurityType:
+    description: WiFi security protocol
+    values:
+      - open                  # No security
+      - wep                   # WEP (deprecated)
+      - wpa_personal          # WPA-PSK
+      - wpa2_personal         # WPA2-PSK
+      - wpa3_personal         # WPA3-SAE
+      - wpa_enterprise        # WPA-802.1X
+      - wpa2_enterprise       # WPA2-802.1X
+      - wpa3_enterprise       # WPA3-802.1X
+      - owe                   # Opportunistic Wireless Encryption
+
+  ChannelWidth:
+    description: WiFi channel bandwidth
+    values:
+      - width_20_mhz
+      - width_40_mhz
+      - width_80_mhz
+      - width_160_mhz
+      - width_320_mhz         # WiFi 7
+
+  # ---------------------------------------------------------------------------
+  # Link Aggregation (802.3ad)
+  # ---------------------------------------------------------------------------
+
+  LAGProtocol:
+    description: Link aggregation protocol
+    values:
+      - lacp                  # 802.3ad LACP (dynamic)
+      - static                # Static LAG (no negotiation)
+      - pagp                  # Cisco PAgP (legacy)
+
+  LAGMode:
+    description: LACP mode
+    values:
+      - active                # Initiate LACP
+      - passive               # Wait for LACP
+      - on                    # Static, no LACP
+
+  LAGState:
+    description: LAG operational state
+    values:
+      - up
+      - down
+      - degraded              # Some members down
+
+  # ---------------------------------------------------------------------------
+  # AWS VPC
+  # ---------------------------------------------------------------------------
+
+  VPCState:
+    description: VPC state
+    values:
+      - pending
+      - available
+      - unavailable
+
+  AttachmentState:
+    description: Attachment state (generic)
+    values:
+      - attaching
+      - attached
+      - detaching
+      - detached
+      - available
+      - in_use
+      - failed
+
+  PeeringState:
+    description: VPC peering connection state
+    values:
+      - initiating_request
+      - pending_acceptance
+      - active
+      - deleted
+      - rejected
+      - failed
+      - expired
+      - provisioning
+      - deleting
+
+  # ---------------------------------------------------------------------------
+  # AWS Transit Gateway
+  # ---------------------------------------------------------------------------
+
+  TransitGatewayState:
+    description: Transit Gateway state
+    values:
+      - pending
+      - available
+      - modifying
+      - deleting
+      - deleted
+
+  TransitGatewayAttachmentType:
+    description: Type of Transit Gateway attachment
+    values:
+      - vpc
+      - vpn
+      - direct_connect_gateway
+      - peering
+      - connect
+      - tgw_connect
+
+  TransitGatewayAttachmentState:
+    description: TGW attachment state
+    values:
+      - initiating
+      - initiating_request
+      - pending_acceptance
+      - rolling_back
+      - pending
+      - available
+      - modifying
+      - deleting
+      - deleted
+      - failed
+      - rejected
+      - rejecting
+
+  # ---------------------------------------------------------------------------
+  # Secret Manager Integration
+  # ---------------------------------------------------------------------------
+
+  SecretStoreType:
+    description: Type of external secret manager
+    values:
+      - onepassword           # 1Password
+      - bitwarden             # Bitwarden
+      - lastpass              # LastPass
+      - hashicorp_vault       # HashiCorp Vault
+      - aws_secrets_manager   # AWS Secrets Manager
+      - aws_ssm               # AWS Systems Manager Parameter Store
+      - azure_key_vault       # Azure Key Vault
+      - gcp_secret_manager    # Google Cloud Secret Manager
+      - cyberark              # CyberArk
+      - keepass               # KeePass (local)
+      - doppler               # Doppler
+      - infisical             # Infisical
+      - local_env             # Local environment variable
+      - local_file            # Local file (encrypted)
+      - manual                # Manual entry (not stored)
+
+  SecretType:
+    description: Type of secret being stored
+    values:
+      - password
+      - ssh_private_key
+      - ssh_public_key
+      - api_key
+      - api_token
+      - bearer_token
+      - certificate
+      - private_key
+      - psk                   # Pre-shared key
+      - totp_seed             # TOTP seed for MFA
+      - recovery_codes
+      - passphrase
+      - pin
+
+  # ---------------------------------------------------------------------------
+  # Physical Location
+  # ---------------------------------------------------------------------------
+
+  LocationType:
+    description: Type of physical location
+    values:
+      - site                  # Campus, data center, office
+      - building
+      - floor
+      - room
+      - closet                # Network closet, server room
+      - rack
+      - shelf
+      - desk
+      - wall_mount
+      - ceiling_mount
+      - outdoor
+
+  RackType:
+    description: Type of equipment rack
+    values:
+      - full_rack             # 42U standard
+      - half_rack             # 22U
+      - quarter_rack          # 12U
+      - wall_mount            # Wall-mounted enclosure
+      - open_frame            # Open frame rack
+      - cabinet               # Enclosed cabinet
+      - desktop               # Desktop/shelf unit
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Secret Manager Integration (KEY FEATURE)
+  # ---------------------------------------------------------------------------
+
+  SecretStore:
+    description: Configuration for an external secret manager
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Friendly name (e.g., 'Home 1Password', 'Work Vault')"
+      type:
+        type: SecretStoreType
+        required: true
+      description:
+        type: string
+      vault_name:
+        type: string
+        description: "Vault/collection name within the store"
+      base_url:
+        type: string
+        description: "For self-hosted (e.g., HashiCorp Vault URL)"
+      account_id:
+        type: string
+        description: "Account identifier (e.g., 1Password account)"
+      region:
+        type: string
+        description: "For cloud providers (e.g., us-east-1)"
+      namespace:
+        type: string
+        description: "For namespaced stores (e.g., Vault namespace)"
+      auth_method:
+        type: string
+        description: "How to authenticate (token, iam, ldap, etc.)"
+      is_default:
+        type: boolean
+        default: false
+        description: "Default store for new credentials"
+      notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  SecretReference:
+    description: Reference to a secret stored in an external secret manager
+    fields:
+      id:
+        type: string
+        required: true
+      store_id:
+        type: string
+        ref: SecretStore
+        required: true
+        description: "Which secret store contains this secret"
+      secret_type:
+        type: SecretType
+        required: true
+      item_id:
+        type: string
+        description: "Unique item ID in the secret store"
+      item_path:
+        type: string
+        description: "Path to secret (e.g., 'network/router-admin' for Vault)"
+      item_title:
+        type: string
+        description: "Human-readable title in the store"
+      field_name:
+        type: string
+        description: "Specific field within item (e.g., 'password', 'api_key')"
+      version:
+        type: string
+        description: "Specific version (for versioned stores)"
+      env_var_name:
+        type: string
+        description: "For local_env type - environment variable name"
+      file_path:
+        type: string
+        description: "For local_file type - path to encrypted file"
+      url:
+        type: string
+        description: "Direct URL to secret in manager's UI (for convenience)"
+      last_rotated:
+        type: datetime
+        description: "When the secret was last rotated"
+      rotation_policy:
+        type: string
+        description: "Rotation schedule (e.g., '90 days', 'manual')"
+      notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # Physical Location (KEY FEATURE)
+  # ---------------------------------------------------------------------------
+
+  Site:
+    description: Physical site (campus, data center, office, home)
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Site name (e.g., 'Home', 'HQ Office', 'AWS us-east-1')"
+      type:
+        type: string
+        description: "home, office, data_center, colo, cloud, branch"
+      address:
+        type: string
+        description: "Physical address"
+      city:
+        type: string
+      state:
+        type: string
+      country:
+        type: string
+      postal_code:
+        type: string
+      coordinates:
+        type: GeoCoordinates
+        description: "Lat/long for mapping"
+      timezone:
+        type: string
+        description: "IANA timezone (e.g., 'America/New_York')"
+      contact_name:
+        type: string
+        description: "Site contact person"
+      contact_phone:
+        type: string
+      contact_email:
+        type: string
+      notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  GeoCoordinates:
+    description: Geographic coordinates
+    fields:
+      latitude:
+        type: number
+        required: true
+      longitude:
+        type: number
+        required: true
+
+  Building:
+    description: Building within a site
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      site_id:
+        type: string
+        ref: Site
+        required: true
+      address:
+        type: string
+        description: "If different from site address"
+      floor_count:
+        type: integer
+      description:
+        type: string
+      notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Room:
+    description: Room, closet, or space within a building
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Room name or number"
+      building_id:
+        type: string
+        ref: Building
+      site_id:
+        type: string
+        ref: Site
+        description: "Direct site ref if no building hierarchy"
+      floor:
+        type: string
+        description: "Floor number or name (e.g., '2', 'Basement', 'Mezzanine')"
+      type:
+        type: LocationType
+        default: room
+      purpose:
+        type: string
+        description: "server_room, network_closet, office, lab, etc."
+      access_requirements:
+        type: string
+        description: "Key card, key, combo, badge + escort, etc."
+      climate_controlled:
+        type: boolean
+        default: false
+      has_ups:
+        type: boolean
+        default: false
+      has_generator:
+        type: boolean
+        default: false
+      max_power_watts:
+        type: integer
+        description: "Maximum power capacity"
+      notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Rack:
+    description: Equipment rack or mounting location
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Rack identifier (e.g., 'Rack-A1', 'Network Closet Shelf')"
+      room_id:
+        type: string
+        ref: Room
+      site_id:
+        type: string
+        ref: Site
+        description: "Direct site ref if no room hierarchy"
+      type:
+        type: RackType
+        default: full_rack
+      total_units:
+        type: integer
+        description: "Total rack units (e.g., 42 for full rack)"
+        default: 42
+      available_units:
+        type: integer
+        description: "Currently available units"
+      max_weight_kg:
+        type: number
+        description: "Maximum weight capacity"
+      max_power_watts:
+        type: integer
+        description: "Maximum power capacity"
+      has_pdu:
+        type: boolean
+        default: false
+        description: "Has power distribution unit"
+      pdu_outlets:
+        type: integer
+        description: "Number of PDU outlets"
+      row:
+        type: string
+        description: "Row identifier in data center"
+      position:
+        type: string
+        description: "Position in row"
+      front_facing:
+        type: string
+        description: "Direction rack faces (N, S, E, W)"
+      notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  DeviceLocation:
+    description: Physical location assignment for a device
+    fields:
+      device_id:
+        type: string
+        ref: Device
+        required: true
+      site_id:
+        type: string
+        ref: Site
+      building_id:
+        type: string
+        ref: Building
+      room_id:
+        type: string
+        ref: Room
+      rack_id:
+        type: string
+        ref: Rack
+      rack_unit_start:
+        type: integer
+        description: "Starting rack unit (1 = bottom)"
+      rack_unit_end:
+        type: integer
+        description: "Ending rack unit (for multi-U devices)"
+      rack_side:
+        type: string
+        description: "front, rear"
+      mount_type:
+        type: LocationType
+        description: "How device is mounted"
+      position_description:
+        type: string
+        description: "Free-text position (e.g., 'Top shelf, left side')"
+      notes:
+        type: string
+
+  # ---------------------------------------------------------------------------
+  # Network Topology
+  # ---------------------------------------------------------------------------
+
+  Network:
+    description: A logical network (typically a CIDR block)
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      cidr:
+        type: string
+        description: "CIDR notation (e.g., 192.168.1.0/24)"
+        required: true
+      ip_version:
+        type: IPVersion
+        default: ipv4
+      gateway:
+        type: string
+        description: Default gateway IP
+      dns_servers:
+        type: array
+        items: string
+      domain:
+        type: string
+        description: "DNS domain (e.g., home.local)"
+      vlan_id:
+        type: integer
+        description: Associated VLAN ID
+      purpose:
+        type: string
+        description: "Network purpose (e.g., IoT, Guest, Management)"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Subnet:
+    description: Subdivision of a network
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      network_id:
+        type: string
+        ref: Network
+        required: true
+      cidr:
+        type: string
+        required: true
+      gateway:
+        type: string
+      dhcp_enabled:
+        type: boolean
+        default: true
+      dhcp_range_start:
+        type: string
+      dhcp_range_end:
+        type: string
+      reservations:
+        type: array
+        items: DHCPReservation
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  VLAN:
+    description: Virtual LAN
+    fields:
+      id:
+        type: string
+        required: true
+      vlan_id:
+        type: integer
+        required: true
+        description: "802.1Q VLAN ID (1-4094)"
+      name:
+        type: string
+        required: true
+      type:
+        type: VLANType
+      description:
+        type: string
+      network_id:
+        type: string
+        ref: Network
+      tagged_ports:
+        type: array
+        items: string
+        description: Port IDs that tag this VLAN
+      untagged_ports:
+        type: array
+        items: string
+        description: Port IDs where this VLAN is native
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  DHCPReservation:
+    description: Static DHCP reservation
+    fields:
+      mac_address:
+        type: string
+        required: true
+      ip_address:
+        type: string
+        required: true
+      hostname:
+        type: string
+      description:
+        type: string
+
+  # ---------------------------------------------------------------------------
+  # Routing (Decomposed)
+  # ---------------------------------------------------------------------------
+
+  RouteTable:
+    description: Routing table containing route entries
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      network_id:
+        type: string
+        ref: Network
+        description: "Associated network/VPC"
+      is_main:
+        type: boolean
+        default: false
+        description: "Main/default route table for network"
+      associated_subnets:
+        type: array
+        items: string
+        description: "Subnet IDs using this route table"
+      routes:
+        type: array
+        items: Route
+        description: "Route entries in this table"
+      propagated_routes:
+        type: array
+        items: string
+        description: "Route sources with propagation enabled (VGW, TGW)"
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Route:
+    description: Individual route entry in a routing table
+    fields:
+      id:
+        type: string
+        required: true
+      route_table_id:
+        type: string
+        ref: RouteTable
+        required: true
+      destination_cidr:
+        type: string
+        required: true
+        description: "Destination CIDR block (e.g., 0.0.0.0/0, 192.168.1.0/24)"
+      destination_ipv6_cidr:
+        type: string
+        description: "IPv6 destination CIDR"
+      target_type:
+        type: RouteTargetType
+        required: true
+      target_id:
+        type: string
+        description: "ID of target resource (IGW, NAT, ENI, TGW, etc.)"
+      state:
+        type: RouteState
+        default: active
+      is_propagated:
+        type: boolean
+        default: false
+        description: "Route learned via propagation (not static)"
+      origin:
+        type: string
+        description: "How route was created (CreateRouteTable, CreateRoute, EnableVgwRoutePropagation)"
+      priority:
+        type: integer
+        description: "Route priority (lower = higher priority)"
+      description:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # Network ACL (Stateless Firewall - Decomposed)
+  # ---------------------------------------------------------------------------
+
+  NetworkACL:
+    description: Network Access Control List (stateless subnet-level firewall)
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      network_id:
+        type: string
+        ref: Network
+        description: "Parent network/VPC"
+      is_default:
+        type: boolean
+        default: false
+        description: "Default NACL for VPC"
+      associated_subnets:
+        type: array
+        items: string
+        description: "Subnet IDs protected by this NACL"
+      entries:
+        type: array
+        items: NetworkACLEntry
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  NetworkACLEntry:
+    description: Individual rule in a Network ACL
+    fields:
+      id:
+        type: string
+        required: true
+      network_acl_id:
+        type: string
+        ref: NetworkACL
+        required: true
+      rule_number:
+        type: integer
+        required: true
+        description: "Rule priority (1-32766, lower = higher priority)"
+      direction:
+        type: TrafficDirection
+        required: true
+      action:
+        type: RuleAction
+        required: true
+        description: "allow or deny"
+      protocol:
+        type: Protocol
+        default: any
+      source_cidr:
+        type: string
+        description: "Source CIDR (for inbound rules)"
+      destination_cidr:
+        type: string
+        description: "Destination CIDR (for outbound rules)"
+      source_port_range:
+        type: string
+        description: "Source port or range (e.g., '80', '1024-65535')"
+      destination_port_range:
+        type: string
+        description: "Destination port or range"
+      icmp_type:
+        type: integer
+        description: "ICMP type (-1 for all)"
+      icmp_code:
+        type: integer
+        description: "ICMP code (-1 for all)"
+      description:
+        type: string
+
+  # ---------------------------------------------------------------------------
+  # Wireless/802.11 (Decomposed)
+  # ---------------------------------------------------------------------------
+
+  WirelessNetwork:
+    description: WiFi/802.11 wireless network configuration
+    fields:
+      id:
+        type: string
+        required: true
+      ssid:
+        type: string
+        required: true
+        description: "Network name (SSID)"
+      bssid:
+        type: string
+        description: "Base station MAC address"
+      network_id:
+        type: string
+        ref: Network
+        description: "Associated logical network (VLAN)"
+      controller_device_id:
+        type: string
+        ref: Device
+        description: "Wireless controller managing this network"
+      enabled:
+        type: boolean
+        default: true
+      hidden_ssid:
+        type: boolean
+        default: false
+        description: "Hide SSID from broadcast"
+      security_type:
+        type: WirelessSecurityType
+        required: true
+      passphrase_secret_id:
+        type: string
+        ref: SecretReference
+        description: "Reference to WPA passphrase"
+      radius_server:
+        type: string
+        description: "RADIUS server for enterprise auth"
+      radius_secret_id:
+        type: string
+        ref: SecretReference
+      bands:
+        type: array
+        items: RadioBand
+      guest_network:
+        type: boolean
+        default: false
+      isolation_enabled:
+        type: boolean
+        default: false
+        description: "Client isolation (prevent client-to-client)"
+      band_steering:
+        type: boolean
+        default: false
+        description: "Push clients to 5GHz when available"
+      fast_roaming:
+        type: boolean
+        default: true
+        description: "802.11r fast roaming"
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  RadioBand:
+    description: Radio band configuration for wireless network
+    fields:
+      band:
+        type: WirelessBand
+        required: true
+      channel:
+        type: integer
+        description: "WiFi channel number (auto if not specified)"
+      channel_width:
+        type: ChannelWidth
+        default: width_20_mhz
+      transmit_power:
+        type: integer
+        description: "TX power in dBm"
+      min_data_rate:
+        type: string
+        description: "Minimum data rate (e.g., '12 Mbps')"
+
+  # ---------------------------------------------------------------------------
+  # Link Aggregation / Port Channel (Decomposed)
+  # ---------------------------------------------------------------------------
+
+  LinkAggregationGroup:
+    description: Link Aggregation Group (LAG/Port-channel/802.3ad)
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "LAG name or port-channel ID"
+      device_id:
+        type: string
+        ref: Device
+        required: true
+        description: "Device hosting this LAG"
+      protocol:
+        type: LAGProtocol
+        default: lacp
+      lacp_mode:
+        type: LAGMode
+        description: "LACP mode (active/passive/on)"
+      lacp_rate:
+        type: string
+        description: "fast (1s) or slow (30s)"
+      min_links:
+        type: integer
+        default: 1
+        description: "Minimum active links before LAG goes down"
+      load_balance_algorithm:
+        type: string
+        description: "src-mac, dst-mac, src-dst-mac, src-ip, dst-ip, src-dst-ip"
+      state:
+        type: LAGState
+        default: down
+      member_interfaces:
+        type: array
+        items: LAGMember
+      aggregated_bandwidth:
+        type: string
+        description: "Total bandwidth (e.g., '40 Gbps')"
+      description:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  LAGMember:
+    description: Physical interface member of a LAG
+    fields:
+      lag_id:
+        type: string
+        ref: LinkAggregationGroup
+        required: true
+      interface_id:
+        type: string
+        ref: NetworkInterface
+        required: true
+      state:
+        type: PortState
+        description: "up, down, suspended"
+      actor_port_priority:
+        type: integer
+        description: "LACP actor port priority"
+      partner_port_priority:
+        type: integer
+        description: "LACP partner port priority"
+      selected:
+        type: boolean
+        default: false
+        description: "Selected for aggregation by LACP"
+
+  # ---------------------------------------------------------------------------
+  # DNS Zone Hierarchy (Decomposed)
+  # ---------------------------------------------------------------------------
+
+  DNSZone:
+    description: DNS zone (hosted zone)
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Zone name (e.g., 'example.com', 'home.local')"
+      zone_type:
+        type: string
+        description: "public, private"
+      dns_server_id:
+        type: string
+        ref: Device
+        description: "DNS server hosting this zone"
+      network_id:
+        type: string
+        ref: Network
+        description: "For private zones - associated VPC/network"
+      soa_record:
+        type: SOARecord
+        description: "Start of Authority record"
+      ns_records:
+        type: array
+        items: string
+        description: "Name server records"
+      dnssec_enabled:
+        type: boolean
+        default: false
+      record_count:
+        type: integer
+        description: "Number of records in zone"
+      query_logging_enabled:
+        type: boolean
+        default: false
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  SOARecord:
+    description: Start of Authority DNS record
+    fields:
+      primary_ns:
+        type: string
+        required: true
+        description: "Primary name server"
+      admin_email:
+        type: string
+        required: true
+        description: "Administrator email"
+      serial:
+        type: integer
+        required: true
+        description: "Zone serial number"
+      refresh:
+        type: integer
+        default: 3600
+        description: "Refresh interval (seconds)"
+      retry:
+        type: integer
+        default: 600
+        description: "Retry interval (seconds)"
+      expire:
+        type: integer
+        default: 86400
+        description: "Expiration time (seconds)"
+      minimum_ttl:
+        type: integer
+        default: 300
+        description: "Minimum TTL (seconds)"
+
+  # ---------------------------------------------------------------------------
+  # Devices
+  # ---------------------------------------------------------------------------
+
+  Device:
+    description: Physical or virtual network device
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      type:
+        type: DeviceType
+        required: true
+      manufacturer:
+        type: string
+        description: "e.g., Ubiquiti, Cisco, Synology"
+      model:
+        type: string
+        description: "e.g., UDM-Pro, USW-24-PoE"
+      serial_number:
+        type: string
+      firmware_version:
+        type: string
+      description:
+        type: string
+      location_id:
+        type: string
+        ref: DeviceLocation
+        description: "Reference to physical location"
+      location_summary:
+        type: string
+        description: "Quick location text (e.g., 'Network Closet, Rack A, U12')"
+      state:
+        type: ConnectionState
+        default: unknown
+      primary_ip:
+        type: string
+        description: Primary management IP
+      primary_mac:
+        type: string
+        description: Primary MAC address
+      interfaces:
+        type: array
+        items: NetworkInterface
+      access_interfaces:
+        type: array
+        items: AccessInterface
+      tags:
+        type: array
+        items: string
+      notes:
+        type: string
+      purchase_date:
+        type: date
+      warranty_expiry:
+        type: date
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  NetworkInterface:
+    description: Network interface on a device
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Interface name (e.g., eth0, port1)"
+      mac_address:
+        type: string
+      ip_addresses:
+        type: array
+        items: IPAssignment
+      state:
+        type: PortState
+        default: unknown
+      speed:
+        type: string
+        description: "Link speed (e.g., 1Gbps, 10Gbps)"
+      duplex:
+        type: string
+        description: "full, half, auto"
+      mtu:
+        type: integer
+        default: 1500
+      vlan_mode:
+        type: string
+        description: "access, trunk, hybrid"
+      native_vlan:
+        type: integer
+      allowed_vlans:
+        type: array
+        items: integer
+      poe_enabled:
+        type: boolean
+      poe_power_watts:
+        type: number
+
+  IPAssignment:
+    description: IP address assigned to an interface
+    fields:
+      ip_address:
+        type: string
+        required: true
+      prefix_length:
+        type: integer
+        required: true
+        description: "CIDR prefix (e.g., 24 for /24)"
+      ip_version:
+        type: IPVersion
+      mode:
+        type: DHCPMode
+        default: static
+      is_primary:
+        type: boolean
+        default: false
+
+  # ---------------------------------------------------------------------------
+  # Access Interfaces (KEY FEATURE)
+  # ---------------------------------------------------------------------------
+
+  AccessInterface:
+    description: Method to access/manage a device
+    fields:
+      id:
+        type: string
+        required: true
+      protocol:
+        type: AccessProtocol
+        required: true
+      url:
+        type: string
+        description: "Full URL for web interfaces (e.g., https://192.168.1.1:8443)"
+      host:
+        type: string
+        description: "Hostname or IP for non-web protocols"
+      port:
+        type: integer
+        description: "Port number (defaults vary by protocol)"
+      credential_id:
+        type: string
+        ref: Credential
+        description: Reference to stored credential
+      is_primary:
+        type: boolean
+        default: false
+        description: Primary/preferred access method
+      requires_vpn:
+        type: boolean
+        default: false
+      requires_local_network:
+        type: boolean
+        default: true
+      cloud_service_name:
+        type: string
+        description: "For cloud portals (e.g., UniFi Cloud, Synology QuickConnect)"
+      mobile_app_name:
+        type: string
+        description: "For mobile apps (e.g., UniFi Network, Hue)"
+      notes:
+        type: string
+        description: "Access instructions, tips"
+
+  Credential:
+    description: Authentication credential for device access
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Friendly name (e.g., 'Router Admin')"
+      type:
+        type: CredentialType
+        required: true
+      username:
+        type: string
+      username_secret_id:
+        type: string
+        ref: SecretReference
+        description: "If username is sensitive, reference to secret"
+      password_secret_id:
+        type: string
+        ref: SecretReference
+        description: "Reference to password in secret store"
+      password_hint:
+        type: string
+        description: "Non-sensitive hint (e.g., 'standard home password')"
+      ssh_key_secret_id:
+        type: string
+        ref: SecretReference
+        description: "Reference to SSH private key in secret store"
+      ssh_key_name:
+        type: string
+        description: "SSH key identifier (e.g., 'id_rsa_home')"
+      api_key_secret_id:
+        type: string
+        ref: SecretReference
+        description: "Reference to API key in secret store"
+      api_key_prefix:
+        type: string
+        description: "First few chars for identification (e.g., 'sk-abc...')"
+      certificate_secret_id:
+        type: string
+        ref: SecretReference
+        description: "Reference to client certificate"
+      mfa_enabled:
+        type: boolean
+        default: false
+      mfa_type:
+        type: string
+        description: "totp, sms, push, hardware_key"
+      mfa_secret_id:
+        type: string
+        ref: SecretReference
+        description: "Reference to TOTP seed or recovery codes"
+      recovery_codes_secret_id:
+        type: string
+        ref: SecretReference
+        description: "Reference to backup/recovery codes"
+      notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # Management & Dependencies (KEY FEATURE)
+  # ---------------------------------------------------------------------------
+
+  ManagementRelationship:
+    description: Controller-to-managed-device relationship
+    fields:
+      id:
+        type: string
+        required: true
+      controller_id:
+        type: string
+        ref: Device
+        required: true
+        description: The managing/controlling device
+      managed_device_id:
+        type: string
+        ref: Device
+        required: true
+        description: The device being managed
+      type:
+        type: ManagementType
+        required: true
+      adoption_status:
+        type: string
+        description: "adopted, pending, failed, orphaned"
+      provisioning_mode:
+        type: string
+        description: "automatic, manual"
+      management_url:
+        type: string
+        description: "URL to manage this specific device in controller"
+      notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  DeviceDependency:
+    description: Operational dependency between devices
+    fields:
+      id:
+        type: string
+        required: true
+      dependent_device_id:
+        type: string
+        ref: Device
+        required: true
+        description: Device that depends on another
+      dependency_device_id:
+        type: string
+        ref: Device
+        required: true
+        description: Device being depended upon
+      type:
+        type: DependencyType
+        required: true
+      description:
+        type: string
+      impact_if_down:
+        type: string
+        description: "What happens if dependency is unavailable"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # Security
+  # ---------------------------------------------------------------------------
+
+  FirewallRule:
+    description: Firewall allow/deny rule
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      device_id:
+        type: string
+        ref: Device
+        description: Firewall device this rule belongs to
+      security_group_id:
+        type: string
+        ref: SecurityGroup
+      priority:
+        type: integer
+        default: 1000
+        description: Lower = higher priority
+      action:
+        type: RuleAction
+        required: true
+      direction:
+        type: string
+        description: "inbound, outbound, both"
+      protocol:
+        type: Protocol
+        default: any
+      source_cidr:
+        type: string
+        description: "Source CIDR (e.g., 192.168.1.0/24, any)"
+      source_port:
+        type: string
+        description: "Source port or range (e.g., 1024-65535)"
+      destination_cidr:
+        type: string
+      destination_port:
+        type: string
+        description: "Destination port or range (e.g., 443, 80-443)"
+      enabled:
+        type: boolean
+        default: true
+      logging:
+        type: boolean
+        default: false
+      schedule:
+        type: string
+        description: "Time-based rule schedule"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  SecurityGroup:
+    description: Named collection of firewall rules
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      rules:
+        type: array
+        items: string
+        description: FirewallRule IDs
+      applied_to:
+        type: array
+        items: string
+        description: Device IDs this group is applied to
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # Services
+  # ---------------------------------------------------------------------------
+
+  VPN:
+    description: VPN configuration
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      type:
+        type: VPNType
+        required: true
+      device_id:
+        type: string
+        ref: Device
+        description: Device hosting the VPN
+      server_address:
+        type: string
+      port:
+        type: integer
+      protocol:
+        type: Protocol
+      local_networks:
+        type: array
+        items: string
+        description: Networks accessible via VPN
+      remote_networks:
+        type: array
+        items: string
+        description: For site-to-site, remote side networks
+      client_cidr:
+        type: string
+        description: IP pool for VPN clients
+      dns_servers:
+        type: array
+        items: string
+      credential_id:
+        type: string
+        ref: Credential
+      config_file_location:
+        type: string
+        description: "Path to .ovpn, .conf file"
+      enabled:
+        type: boolean
+        default: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  LoadBalancer:
+    description: Load balancer configuration
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      device_id:
+        type: string
+        ref: Device
+      frontend_ip:
+        type: string
+        required: true
+      frontend_port:
+        type: integer
+        required: true
+      protocol:
+        type: Protocol
+        default: tcp
+      algorithm:
+        type: string
+        description: "round_robin, least_connections, ip_hash"
+      backends:
+        type: array
+        items: LoadBalancerBackend
+      health_check:
+        type: HealthCheck
+      enabled:
+        type: boolean
+        default: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  LoadBalancerBackend:
+    description: Backend server in load balancer pool
+    fields:
+      device_id:
+        type: string
+        ref: Device
+      ip_address:
+        type: string
+        required: true
+      port:
+        type: integer
+        required: true
+      weight:
+        type: integer
+        default: 1
+      enabled:
+        type: boolean
+        default: true
+
+  HealthCheck:
+    description: Health check configuration
+    fields:
+      type:
+        type: string
+        description: "tcp, http, https, icmp"
+      interval_seconds:
+        type: integer
+        default: 30
+      timeout_seconds:
+        type: integer
+        default: 5
+      unhealthy_threshold:
+        type: integer
+        default: 3
+      healthy_threshold:
+        type: integer
+        default: 2
+      http_path:
+        type: string
+        description: "For HTTP checks (e.g., /health)"
+      expected_codes:
+        type: string
+        description: "Expected HTTP codes (e.g., 200-299)"
+
+  DNSRecord:
+    description: DNS record within a zone
+    fields:
+      id:
+        type: string
+        required: true
+      zone_id:
+        type: string
+        ref: DNSZone
+        required: true
+        description: "Parent DNS zone"
+      zone_name:
+        type: string
+        description: "Zone name for convenience (e.g., home.local)"
+      name:
+        type: string
+        required: true
+        description: "Record name (e.g., router, @, *.subdomain)"
+      fqdn:
+        type: string
+        description: "Fully qualified domain name (computed)"
+      type:
+        type: DNSRecordType
+        required: true
+      value:
+        type: string
+        required: true
+        description: "Record value (IP, hostname, etc.)"
+      ttl:
+        type: integer
+        default: 3600
+      priority:
+        type: integer
+        description: "For MX/SRV records"
+      weight:
+        type: integer
+        description: "For SRV records"
+      port:
+        type: integer
+        description: "For SRV records"
+      routing_policy:
+        type: string
+        description: "simple, weighted, failover, geolocation, latency, multivalue"
+      device_id:
+        type: string
+        ref: Device
+        description: "DNS server hosting this record (if not zone-based)"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # AWS VPC ENTITIES (Cloud Extension)
+  # ---------------------------------------------------------------------------
+
+  VPC:
+    description: AWS Virtual Private Cloud
+    fields:
+      id:
+        type: string
+        required: true
+      vpc_id:
+        type: string
+        required: true
+        description: "AWS VPC ID (vpc-xxxxx)"
+      name:
+        type: string
+        required: true
+      cidr_block:
+        type: string
+        required: true
+        description: "Primary CIDR block"
+      secondary_cidr_blocks:
+        type: array
+        items: string
+        description: "Additional CIDR blocks"
+      ipv6_cidr_block:
+        type: string
+        description: "Associated IPv6 CIDR"
+      state:
+        type: VPCState
+        default: pending
+      is_default:
+        type: boolean
+        default: false
+      enable_dns_support:
+        type: boolean
+        default: true
+      enable_dns_hostnames:
+        type: boolean
+        default: false
+      tenancy:
+        type: string
+        description: "default, dedicated, host"
+      dhcp_options_id:
+        type: string
+      owner_id:
+        type: string
+        description: "AWS account ID"
+      region:
+        type: string
+        description: "AWS region"
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  InternetGateway:
+    description: AWS Internet Gateway
+    fields:
+      id:
+        type: string
+        required: true
+      igw_id:
+        type: string
+        required: true
+        description: "AWS IGW ID (igw-xxxxx)"
+      name:
+        type: string
+      vpc_id:
+        type: string
+        ref: VPC
+        description: "Attached VPC"
+      state:
+        type: AttachmentState
+        description: "available, attaching, attached, detaching, detached"
+      owner_id:
+        type: string
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  NATGateway:
+    description: AWS NAT Gateway
+    fields:
+      id:
+        type: string
+        required: true
+      nat_gateway_id:
+        type: string
+        required: true
+        description: "AWS NAT GW ID (nat-xxxxx)"
+      name:
+        type: string
+      vpc_id:
+        type: string
+        ref: VPC
+      subnet_id:
+        type: string
+        ref: Subnet
+        required: true
+        description: "Public subnet for NAT"
+      state:
+        type: string
+        description: "pending, failed, available, deleting, deleted"
+      connectivity_type:
+        type: string
+        description: "public, private"
+      elastic_ip_id:
+        type: string
+        description: "Associated Elastic IP"
+      public_ip:
+        type: string
+      private_ip:
+        type: string
+      network_interface_id:
+        type: string
+        description: "ENI ID created for NAT"
+      failure_code:
+        type: string
+      failure_message:
+        type: string
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  VPCPeeringConnection:
+    description: AWS VPC Peering Connection
+    fields:
+      id:
+        type: string
+        required: true
+      peering_connection_id:
+        type: string
+        required: true
+        description: "AWS peering ID (pcx-xxxxx)"
+      name:
+        type: string
+      requester_vpc_id:
+        type: string
+        ref: VPC
+        required: true
+      accepter_vpc_id:
+        type: string
+        ref: VPC
+        required: true
+      requester_owner_id:
+        type: string
+      accepter_owner_id:
+        type: string
+      requester_region:
+        type: string
+      accepter_region:
+        type: string
+      state:
+        type: PeeringState
+      status_message:
+        type: string
+      expiration_time:
+        type: datetime
+      allow_dns_resolution_from_remote_vpc:
+        type: boolean
+        default: false
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ElasticIP:
+    description: AWS Elastic IP address
+    fields:
+      id:
+        type: string
+        required: true
+      allocation_id:
+        type: string
+        required: true
+        description: "AWS allocation ID (eipalloc-xxxxx)"
+      public_ip:
+        type: string
+        required: true
+      private_ip:
+        type: string
+        description: "Private IP if associated"
+      domain:
+        type: string
+        description: "vpc or standard"
+      associated_resource_id:
+        type: string
+        description: "Instance ID or ENI ID"
+      association_id:
+        type: string
+        description: "AWS association ID"
+      network_interface_id:
+        type: string
+      network_border_group:
+        type: string
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  TransitGateway:
+    description: AWS Transit Gateway
+    fields:
+      id:
+        type: string
+        required: true
+      transit_gateway_id:
+        type: string
+        required: true
+        description: "AWS TGW ID (tgw-xxxxx)"
+      name:
+        type: string
+      description:
+        type: string
+      state:
+        type: TransitGatewayState
+      owner_id:
+        type: string
+      amazon_side_asn:
+        type: integer
+        description: "BGP ASN for TGW"
+      default_route_table_association:
+        type: boolean
+        default: true
+      default_route_table_propagation:
+        type: boolean
+        default: true
+      vpn_ecmp_support:
+        type: boolean
+        default: true
+        description: "Enable ECMP for VPN"
+      dns_support:
+        type: boolean
+        default: true
+      multicast_support:
+        type: boolean
+        default: false
+      transit_gateway_cidr_blocks:
+        type: array
+        items: string
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  TransitGatewayAttachment:
+    description: AWS Transit Gateway Attachment
+    fields:
+      id:
+        type: string
+        required: true
+      attachment_id:
+        type: string
+        required: true
+        description: "AWS attachment ID (tgw-attach-xxxxx)"
+      transit_gateway_id:
+        type: string
+        ref: TransitGateway
+        required: true
+      resource_type:
+        type: TransitGatewayAttachmentType
+        required: true
+      resource_id:
+        type: string
+        required: true
+        description: "VPC ID, VPN ID, DX GW ID, or peering ID"
+      state:
+        type: TransitGatewayAttachmentState
+      association_route_table_id:
+        type: string
+        description: "Associated TGW route table"
+      propagated_route_table_ids:
+        type: array
+        items: string
+        description: "Route tables with propagation enabled"
+      tags:
+        type: array
+        items: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+  - CreateNetwork
+  - UpdateNetwork
+  - DeleteNetwork
+  - CreateDevice
+  - UpdateDevice
+  - DeleteDevice
+  - AddAccessInterface
+  - RemoveAccessInterface
+  - CreateManagementRelationship
+  - DeleteManagementRelationship
+  - CreateFirewallRule
+  - UpdateFirewallRule
+  - DeleteFirewallRule
+  - GenerateNetworkDocumentation
+  - GenerateDeviceAccessGuide
+  - GenerateDependencyMap
+
+# =============================================================================
+# REGISTRY ENTRY
+# =============================================================================
+
+registry_entry:
+  networking:
+    status: development
+    version: "0.3.0"
+    description: |
+      Computer networking - TCP/IP, devices, access interfaces, dependencies.
+      Fully decomposed domain model with routing, wireless, DNS hierarchy.
+      Includes abstract secret management, physical location tracking, AWS VPC extension.
+    owner: platform
+    dependencies: [core]
+    entities:
+      # Secret Management (abstract, provider-agnostic)
+      - SecretStore
+      - SecretReference
+      # Physical Location
+      - Site
+      - Building
+      - Room
+      - Rack
+      - GeoCoordinates
+      - DeviceLocation
+      # Network Topology
+      - Network
+      - Subnet
+      - VLAN
+      - DHCPReservation
+      # Routing (Decomposed)
+      - RouteTable
+      - Route
+      # Network ACL (Decomposed)
+      - NetworkACL
+      - NetworkACLEntry
+      # Wireless/802.11 (Decomposed)
+      - WirelessNetwork
+      - RadioBand
+      # Link Aggregation (Decomposed)
+      - LinkAggregationGroup
+      - LAGMember
+      # DNS (Decomposed Hierarchy)
+      - DNSZone
+      - SOARecord
+      - DNSRecord
+      # Devices
+      - Device
+      - NetworkInterface
+      - IPAssignment
+      # Access & Credentials
+      - AccessInterface
+      - Credential
+      # Management & Dependencies
+      - ManagementRelationship
+      - DeviceDependency
+      # Security
+      - FirewallRule
+      - SecurityGroup
+      # Services
+      - VPN
+      - LoadBalancer
+      - LoadBalancerBackend
+      - HealthCheck
+      # AWS VPC (Cloud Extension)
+      - VPC
+      - InternetGateway
+      - NATGateway
+      - VPCPeeringConnection
+      - ElasticIP
+      - TransitGateway
+      - TransitGatewayAttachment
+    enums:
+      # Routing
+      - RouteTargetType
+      - RouteState
+      # Network ACL
+      - RuleType
+      - TrafficDirection
+      # Wireless
+      - WirelessBand
+      - WirelessSecurityType
+      - ChannelWidth
+      # Link Aggregation
+      - LAGProtocol
+      - LAGMode
+      - LAGState
+      # AWS
+      - VPCState
+      - AttachmentState
+      - PeeringState
+      - TransitGatewayState
+      - TransitGatewayAttachmentType
+      - TransitGatewayAttachmentState
+      # Secret Management
+      - SecretStoreType
+      - SecretType
+      # Physical Location
+      - LocationType
+      - RackType
+      # Device & Network
+      - DeviceType
+      - AccessProtocol
+      - CredentialType
+      - IPVersion
+      - Protocol
+      - RuleAction
+      - ConnectionState
+      - ManagementType
+      - DependencyType
+      - DHCPMode
+      - VLANType
+      - PortState
+      - DNSRecordType
+      - VPNType
+    actions:
+      # Secret Store
+      - CreateSecretStore
+      - CreateSecretReference
+      - RotateSecret
+      # Physical Location
+      - CreateSite
+      - CreateRoom
+      - CreateRack
+      - AssignDeviceLocation
+      # Network
+      - CreateNetwork
+      - UpdateNetwork
+      - DeleteNetwork
+      # Device
+      - CreateDevice
+      - UpdateDevice
+      - DeleteDevice
+      - AddAccessInterface
+      - RemoveAccessInterface
+      # Management
+      - CreateManagementRelationship
+      - DeleteManagementRelationship
+      # Security
+      - CreateFirewallRule
+      - UpdateFirewallRule
+      - DeleteFirewallRule
+      # Documentation Generation
+      - GenerateNetworkDocumentation
+      - GenerateDeviceAccessGuide
+      - GenerateDependencyMap
+      - GenerateRackDiagram
+    use_case: |
+      Network documentation, access reference, dependency mapping.
+      Physical location tracking for data center/home lab.
+      Abstract secret management for secure credential storage.

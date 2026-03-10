@@ -1,0 +1,17 @@
+{
+  "domain": "intent",
+  "version": "1.0.0",
+  "description": "Natural language intent to action mappings",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - Intent modeling with Speech Act Theory integration"
+  },
+  "entities": [
+    "Intent",
+    "SpeechAct",
+    "Goal",
+    "Context",
+    "ActionMapping"
+  ],
+  "w3c_standards": ["RDF", "OWL"]
+}

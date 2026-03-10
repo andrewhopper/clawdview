@@ -1,0 +1,1921 @@
+# Domain Model Registry
+# Central registry of all shared domain models
+
+version: "1.0"
+updated: "2025-12-19"
+
+domains:
+  bible-learning:
+    status: development
+    version: "0.1.0"
+    description: Multimodal Bible learning domain for visual learners and ADHD users
+    owner: personal
+    project: bible-buddy-a66e1
+    dependencies: [core, story, auth]
+    entities: [BiblicalPerson, BiblicalLocation, BiblicalEvent, Journey, Prayer, PrayerJournalEntry, TriviaQuestion, TriviaSession, UserProgress, AudioNarration, Achievement]
+    actions: [ViewCharacterAction, CreateJournalEntryAction, MarkPrayerAnsweredAction, StartTriviaSessionAction, SubmitTriviaAnswerAction, GenerateNarrationAction, UpdateProgressAction]
+    enums: [BiblicalPeriod, BiblicalRegion, FamilyRelationType, AgeGroup, BibleTranslation, PrayerSource, PrayerTopic, PrayerType, JournalMood, TriviaQuestionType, TriviaDifficulty, TriviaTopic, TriviaGameType, AudioContentType]
+    features: [age-adaptive content, audio narration, trivia games, prayer journal, family trees, historical maps, journey visualization]
+
+  asset:
+    path: asset/asset.yaml
+    description: "Digital assets (diagrams, documents, images, etc.)"
+
+  action:
+    status: production
+    version: "1.0.0"
+    description: CRUD operations as first-class semantic entities (Kinetic Layer pattern)
+    owner: platform
+    entities: [Action, ReadAction, WriteAction, CreateAction, UpdateAction, DeleteAction, Parameter, Result]
+    source: Palantir Foundry Kinetic Layer
+
+  email:
+    status: production
+    version: "1.0.0"
+    description: Canonical email domain model with entities, actions, and validation
+    owner: platform
+    entities: [Email, Inbox, Folder, Thread, Attachment]
+    actions: [SendEmailAction, DeleteEmailAction, ForwardEmailAction, MarkAsReadAction, ArchiveEmailAction, SearchEmailsAction]
+    enums: [EmailStatus]
+
+  sdlc:
+    status: production
+    version: "1.0.0"
+    description: Software development lifecycle phases, artifacts, and transitions
+    owner: platform
+    entities: [Phase, Artifact, Transition, Deliverable]
+    phases: [SEED, RESEARCH, EXPANSION, ANALYSIS, SELECTION, DESIGN, TEST_DESIGN, IMPLEMENTATION, REFINEMENT]
+
+  health:
+    status: production
+    version: "1.0.0"
+    description: Health and fitness domain model
+    owner: platform
+    entities: [Workout, Activity, HeartRate, Sleep, Nutrition]
+
+  intent:
+    status: production
+    version: "1.0.0"
+    description: Natural language intent to action mappings
+    owner: platform
+    entities: [Intent, SpeechAct, Goal, Context]
+
+  tech-advisory:
+    status: production
+    version: "1.0.0"
+    description: Technology consulting engagements, assessments, and recommendations
+    owner: platform
+    entities: [Engagement, Assessment, Recommendation, Capability, Risk, Stakeholder]
+
+  auth:
+    status: development
+    version: "0.1.0"
+    description: Authentication and authorization domain model
+    owner: platform
+    entities: [User, Principal, Role, Permission, Session, Credential, Policy]
+    actions: [AuthenticateAction, AuthorizeAction, RevokeSessionAction, AssignRoleAction]
+    enums: [AuthMethod, SessionStatus, PermissionScope]
+
+  story:
+    status: production
+    version: "1.0.0"
+    description: Story generation domain model (based on 10 classic children's books)
+    owner: platform
+    entities: [Story, Character, Scene, Location, Object, Plot, Theme, Conflict, Dialogue, Arc, TimePoint, CharacterAtTime, Transformation, RepetitivePattern, CharacterGroup]
+    enums: [StoryStatus, CharacterRole, CharacterType, ConflictType, GenreType, LifeStage, TransformationType, PatternType]
+    features: [time modeling, transformation, reality status, repetitive patterns, object inventories, symbolic objects]
+
+  story-audiobook:
+    status: production
+    version: "1.0.0"
+    description: Audiobook storytelling with multi-voice narration and synchronized diagrams
+    owner: platform
+    dependencies: [core, story]
+    entities: [Audiobook, AudiobookScene, AudioSegment, Diagram, Voice, Speaker, PlaybackTimeline, TimelineEvent]
+    enums: [AudioFormat, DiagramType, AnimationType, SpeakerRole, EventType, EventAction, Gender]
+    features: [multi-voice TTS, synchronized visuals, timeline events, CLI playback]
+
+  events:
+    status: production
+    version: "1.0.0"
+    description: Abstract domain events and pub/sub architecture for triggering actions based on conditions
+    owner: platform
+    dependencies: [core]
+    entities: [DomainEvent, EntityEvent, AggregateEvent, IntegrationEvent, EventMetadata, EventPublisher, PublishRequest, PublishReceipt, OutboxEntry, Outbox, EventHandler, ConditionalTrigger, EventCondition, EventFilter, EventSubscription, EventBus, DeadLetterEntry, AggregateRoot, EventSourcedAggregate, EventStore]
+    enums: [EventPriority, EventStatus, PublishMode, PublishResult, ConditionOperator, ConditionLogic, DeliveryMode, AckMode]
+    features: [pub/sub, conditional triggers, event sourcing, dead letter queue, correlation tracing, transactional outbox]
+
+  finance:
+    status: production
+    current_version: "2.0.0"
+    supported_versions: ["2.0.0", "1.0.0"]
+    deprecated_versions: []
+    description: Financial transactions, payments, monetary operations, and accounting (AP/AR)
+    owner: platform
+    dependencies:
+      core: "^1.0.0"
+    entities: [Transaction, Payment, PaymentInstrument, BankAccount, Invoice, InvoiceLineItem, Refund, Vendor, Customer, PaymentTerms, Bill, BillLineItem, AccountsPayable, AccountsReceivable, AgingReport, AgingBucket, CreditMemo, DebitMemo]
+    actions: [CreatePayment, ProcessPayment, RefundPayment, CreateInvoice, RecordPayment, AddPaymentInstrument, CreateVendor, CreateCustomer, CreatePaymentTerms, CreateBill, RecordBillPayment, ApplyCreditMemo, ApplyDebitMemo, GenerateAgingReport, GetAccountsPayable, GetAccountsReceivable]
+    enums: [PaymentMethodType, TransactionStatus, TransactionType, InvoiceStatus, BankAccountType, CurrencyCode, PaymentTermsType, BillStatus, AgingBucketType, AccountType]
+
+  workflow:
+    status: production
+    version: "1.0.0"
+    description: Reusable approval workflows, state machines, and process automation
+    owner: platform
+    dependencies: [core, auth]
+    entities: [WorkflowDefinition, StepDefinition, TransitionDefinition, WorkflowInstance, StepInstance, ApprovalRequest, Escalation]
+    actions: [CreateWorkflowDefinition, StartWorkflow, CompleteStep, DelegateStep, CancelWorkflow, EscalateStep, GetPendingApprovals]
+    enums: [WorkflowStatus, StepStatus, StepType, StepDecision, ApprovalStatus, AssigneeType, TransitionTrigger, EscalationReason]
+
+  expense-report:
+    status: development
+    version: "2.0.0"
+    description: Corporate expense reporting, reimbursement, and approval workflows
+    owner: platform
+    dependencies: [core, auth, finance, workflow]
+    entities: [ExpenseReport, ExpenseLineItem, Receipt, ExpensePolicy, Reimbursement]
+    actions: [CreateExpenseReport, AddLineItem, AttachReceipt, SubmitExpenseReport, ApproveExpenseReport, RejectExpenseReport, ProcessReimbursement, SearchExpenseReports]
+    enums: [ExpenseReportStatus, ExpenseCategory, ReimbursementMethod]
+    imports:
+      finance: [Payment, PaymentMethodType, TransactionStatus]
+      workflow: [WorkflowInstance, StepInstance, StepDecision]
+
+  tts:
+    status: production
+    version: "1.0.0"
+    description: Multi-provider text-to-speech abstraction layer (ElevenLabs, AWS Polly, OpenAI TTS)
+    owner: platform
+    dependencies: [core]
+    entities: [SynthesisRequest, SynthesisResult, Voice, Provider, AudioFile, VoiceSettings, StreamChunk, UsageMetrics]
+    enums: [ProviderType, AudioFormat, SynthesisStatus, DeliveryMode, ModelType]
+
+  artifact-library:
+    status: development
+    version: "0.1.0"
+    description: Company-wide library of document types with AI generation instructions
+    owner: platform
+    dependencies: [core]
+    entities: [ArtifactType, ArtifactSchema, Section, Field, GenerationPrompt, FewShotExample, PromptVariable, Validator, Example, Annotation, Constraints]
+    actions: [CreateArtifactType, GenerateArtifact, ValidateArtifact, TransformArtifact]
+    enums: [ArtifactCategory, ComplexityLevel, OutputFormat, FieldType, SectionFormat, ValidatorType, Severity, Tone, VariableSource, ReadingLevel, DensityLevel]
+
+  observer:
+    status: production
+    version: "1.0.0"
+    description: Deterministic validation system for AI outputs - like ECC RAM for LLMs
+    owner: platform
+    dependencies: [core]
+    entities: [Rule, Violation, CheckResult, ObserverConfig]
+    enums: [Severity, EnforcementLevel, LogLevel, AssetType, RuleCategory]
+    features: [zero LLM inference validation, regex pattern matching, enforcement levels, YAML-based rule definitions]
+
+  messaging:
+    status: production
+    version: "1.0.0"
+    description: SMS, MMS, and chat messaging for any platform
+    owner: platform
+    dependencies: [core]
+    entities: [Message, MessageMedia, MessagingService, PhoneNumber, PhoneCapabilities, Conversation, ConversationParticipant]
+    actions: [SendMessage, GetMessage, DeleteMessage, ListMessages, CreateConversation, AddParticipant, SendConversationMessage]
+    enums: [MessageStatus, MessageDirection, MessageChannel, ConversationState]
+    source: Twilio Programmable Messaging API
+
+  chat:
+    status: production
+    version: "1.0.0"
+    description: Enterprise and personal chat platforms (Slack, Teams, WhatsApp, Discord)
+    owner: platform
+    dependencies: [core]
+    entities: [Workspace, Channel, DirectMessage, ChatMessage, MessageContent, Block, Mention, Reaction, Attachment, ChatUser, Bot]
+    actions: [SendChatMessage, EditChatMessage, DeleteChatMessage, AddReaction, RemoveReaction, CreateChannel, ArchiveChannel, InviteToChannel, SetPresence, SearchMessages, ListChannels, GetThreadReplies]
+    enums: [ChatPlatform, ChannelType, DMType, ChatMessageType, ContentFormat, BlockType, MentionType, PresenceStatus]
+    sources:
+      - "Slack Web API"
+      - "MS Graph Teams API"
+      - "WhatsApp Business API"
+
+  voice:
+    status: production
+    version: "1.0.0"
+    description: Voice calls, conferencing, recording, and transcription
+    owner: platform
+    dependencies: [core]
+    entities: [Call, CallRecording, Transcription, TranscriptionWord, Conference, ConferenceParticipant, Voicemail]
+    actions: [MakeCall, GetCall, UpdateCall, EndCall, CreateConference, AddParticipant, MuteParticipant, StartRecording, StopRecording, TranscribeRecording]
+    enums: [CallStatus, CallDirection, AnsweredBy, RecordingSource, RecordingStatus, AudioFormat, TranscriptionStatus, ConferenceStatus, ConferenceEndReason, ParticipantStatus]
+    source: Twilio Programmable Voice API
+
+  notification:
+    status: production
+    version: "1.0.0"
+    description: Push notifications for mobile, web, and desktop platforms
+    owner: platform
+    dependencies: [core, auth]
+    entities: [Notification, NotificationService, DeviceBinding, Device, PushCredential, UserNotificationPreferences, Segment, DeliveryEvent]
+    actions: [SendNotification, RegisterDevice, CreateBinding, DeleteBinding, UpdatePreferences, CreateSegment, GetDeliveryStatus]
+    enums: [NotificationPriority, NotificationStatus, BindingType, DevicePlatform, CredentialType, NotificationFrequency, DeliveryStatus]
+    source: Twilio Notify, Firebase Cloud Messaging, APNs
+
+  network-client:
+    status: production
+    version: "2.2.0"
+    description: Network client/device identification, access control, and content filtering
+    owner: personal
+    project: internet-switch-0sv5e
+    entities: [Client, ClientGroup, Domain, Service, ServiceGroup, SiteEvaluation, AccessList, Schedule, Session, Rule, StaticDNSEntry, DNSQuery, ServiceUsageSession, AuditLog, BlockedRequest, DataSource]
+    actions: [DiscoverClients, SetClientStatus, EvaluateSite, ApplyRule, SyncAccessLists]
+    enums: [DeviceType, AccessStatus, ConnectionType, DayOfWeek, ScheduleAction, ActionType, DNSFilteringLevel, AccessListType, ContentRating, ContentCategory, ContentFlag, EvaluationMethod, AuditAction, DataSourceType, DataSourceFormat, DNSQueryType, SessionStatus]
+    features: [parental controls, network access control, content filtering, AI site evaluation, whitelist/blacklist, time-based scheduling, service categories, sessions, audit logging, blocked request tracking, external data sources, real-time usage tracking, service usage sessions]
+
+  site-validation:
+    status: production
+    version: "1.0.0"
+    description: Site/content validation and filtering for DNS-based access control
+    owner: personal
+    project: internet-switch-0sv5e
+    dependencies: [network-client]
+    entities: [ValidationResult, DomainEntry, DomainList, ValidationCache, CacheEntry, ValidationPolicy, FetchResult]
+    actions: [ValidateDomain, ValidateURL, AddToWhitelist, AddToBlacklist, ImportBlocklist, RecheckExpired, GetStats]
+    enums: [ContentCategory, ValidationPolicyType, ListType, FetchStrategy, ValidatorType]
+    features: [content filtering, semantic embeddings, LLM analysis, whitelist/blacklist, SafeSearch, 30-day cache]
+
+  mobile:
+    status: deprecated
+    version: "2.0.0"
+    description: "[DEPRECATED] Use messaging, voice, notification domains instead"
+    owner: platform
+    dependencies: [messaging, voice, notification]
+    note: "Split into messaging, voice, and notification domains for better reusability"
+
+  human-task:
+    status: production
+    version: "1.2.0"
+    description: Human task queue, review workflows, decisions, multi-reviewer approval patterns, review cases, and queue management
+    owner: platform
+    dependencies: [core, auth, notification]
+    entities: [Task, TaskInput, TaskDecision, Reminder, ReviewQueue, ReviewCase, TaskBundle, TaskAssignment, AggregateDecision, ReviewAuditLog, TaskType, ActionType, FeedbackDimension, ApprovalPattern, Actor, Priority, Recommendation, FeedbackSignal, CompletionCriteria, CaseProgress]
+    actions: [CreateTask, SubmitDecision, DeferTask, GetQueue, AssignReviewer, ComputeAggregateDecision, CreateReviewQueue, PullFromQueue, CreateReviewCase, GetCaseProgress]
+    enums: [TaskStatus, ReminderStatus, BundleType, BundleStatus, QueueType, QueueStatus, PriorityStrategy, CaseType, CaseStatus, ReviewerRole, AssignmentStatus, ApprovalPatternType, TieBreakerStrategy, RecommendationStrength, ScaleType, DependencyType, ImpactType, ImpactSeverity, ActorType, Modality, AuditEventType]
+    use_case: Human-in-the-loop review for RLHF training data, clinical notes, architecture approvals, and content moderation
+
+  human-tool:
+    status: production
+    version: "1.0.0"
+    description: Real-time wire protocol for AI ↔ Human communication via IoT Core MQTT
+    owner: platform
+    dependencies: [primitive-tool, human-task, approval-queue]
+    entities: [HumanToolInvocation, Stimulus, Option, Scale, Response, HumanToolBundle]
+    enums: [StimulusType, ResponseType, InvocationStatus]
+    serialization:
+      format: xml
+      examples: ["<human-tool id='' modality='' status=''><stimulus><question/></stimulus><response/></human-tool>"]
+    mapping:
+      to_human_task:
+        HumanToolInvocation: Task
+        Stimulus: TaskInput
+        Response: TaskDecision
+        HumanToolBundle: TaskBundle
+      to_approval_queue:
+        binary: Binary
+        single_choice: Classification
+        multi_choice: MultiLabel
+        slider: Rating
+        comparison: Comparison
+        ranking: Ranking
+        text_input: Freeform
+    implementation:
+      transport: "AWS IoT Core MQTT WebSockets"
+      form_server: "Lambda Function URL"
+      storage: "DynamoDB with 1-hour TTL"
+      auth: "SigV4 for MQTT, IAM for Lambda"
+    use_case: Claude Code /ask-human skill, human-in-the-loop approval forms, RLHF data collection
+
+  approval-queue:
+    status: production
+    version: "1.1.0"
+    description: Priority queue for human-in-the-loop approvals with AI confidence, auto-approval rules, batch operations, and 7 review types
+    owner: platform
+    extends: human-task
+    dependencies: [human-task, core, notification]
+    entities:
+      # Core
+      - ApprovalItem
+      - Confidence
+      - Alternative
+      - Priority
+      - PriorityFactor
+      - Decision
+      - FeedbackSignal
+      - ApprovalRule
+      - RuleCondition
+      - BatchGroup
+      - Source
+      # Content types
+      - DataModelField
+      - CodeChange
+      - EmailDraft
+      - AIGeneration
+      # Review config
+      - ReviewConfig
+      - UIHints
+      # Review type entities
+      - Category
+      - ScaleLabel
+      - ComparisonOption
+      - RankableItem
+      - ItemRank
+      - Label
+      - LabelGroup
+      - LabelConfidence
+      - TextDiff
+      - DiffSegment
+    actions: [GetPriorityQueue, SubmitDecision, BatchApprove, BatchByCriteria, EvaluateAutoApproval]
+    enums:
+      # Core
+      - ItemType
+      - ItemStatus
+      - ConfidenceLevel
+      - Action
+      - FeedbackType
+      - Modality
+      - ConditionOperator
+      - BatchCriteria
+      # Review types
+      - ReviewTypeName
+      - BinaryChoice
+      - RatingScaleType
+      - ComparisonType
+      - PreferenceStrength
+      - FreeformInputType
+    review_types:
+      - name: Binary
+        description: Simple yes/no or approve/reject
+        gestures: [swipe_right, swipe_left, tap]
+      - name: Classification
+        description: Select one category from predefined set
+        gestures: [tap, long_press]
+      - name: Rating
+        description: Rate on scale (stars, thumbs, -5 to +5)
+        gestures: [swipe_horizontal, tap_star]
+      - name: Comparison
+        description: A/B preference selection (RLHF)
+        gestures: [tap_left, tap_right, swipe_up, swipe_down]
+      - name: Ranking
+        description: Order items by preference
+        gestures: [drag, tap_number]
+      - name: Freeform
+        description: Text input for corrections/annotations
+        gestures: [tap, voice, swipe_up]
+      - name: MultiLabel
+        description: Select multiple tags/labels
+        gestures: [tap, long_press, double_tap]
+    features:
+      - AI confidence with alternatives and recommendations
+      - Auto-approval rules with condition matching
+      - Priority calculation (urgency, age, confidence_inverse, blocking, deadline)
+      - Batch operations by ID or criteria
+      - Type-specific content schemas (data model, code, email, AI generation)
+      - 7 review types (binary, classification, rating, comparison, ranking, freeform, multi-label)
+      - Gesture mappings per review type
+      - Voice input support
+      - UI hints for layout and feedback
+    use_case: Data model field review, code review, RLHF feedback, email draft approval, document approvals, image labeling, content moderation
+    authority_pattern:
+      description: ATC-style delegated authority with boundaries and check-ins
+      entities:
+        - Clearance
+        - FlightPlan
+        - FlightLeg
+        - LegConstraint
+        - AllowedAction
+        - CumulativeLimit
+        - Scope
+        - DeviationTolerance
+        - CheckInTrigger
+        - AutonomySchedule
+        - TimeRule
+        - ContextRule
+        - ActionLog
+        - CheckInResult
+      enums:
+        - ClearanceStatus
+        - AutonomyLevel
+        - TriggerType
+        - ContextType
+        - Severity
+        - DayOfWeek
+      actions:
+        - GrantClearance
+        - RevokeClearance
+        - AdjustAutonomy
+        - CheckInRequest
+        - EvaluateAction
+      autonomy_levels:
+        - full_auto: "AI acts without check-in (sleeping/unavailable)"
+        - high_autonomy: "AI acts, notifies after (busy)"
+        - supervised: "AI acts, human can intervene (available)"
+        - assisted: "AI suggests, human decides (focused review)"
+        - manual: "Human does everything, AI only observes"
+
+  card:
+    status: production
+    version: "1.1.0"
+    description: Universal card structure and presentation with review options and quick regeneration controls
+    owner: platform
+    dependencies: [core]
+    entities: [Card, CardSection, ContentBlock, TextBlock, RichTextBlock, CodeBlock, ImageBlock, ImageGalleryBlock, VideoBlock, AudioBlock, TableBlock, KeyValueBlock, ListBlock, ChartBlock, BadgeBlock, ComparisonBlock, QuoteBlock, DividerBlock, ReviewOptionsBlock, RegenerateOptionsBlock, CardAction, CardMetadata, ReviewOption, StyleOption, KeyboardShortcut]
+    actions: [CreateCard, UpdateCard, ArchiveCard]
+    enums: [CardType, SectionType, BlockType, TextFormat, RichTextFormat, Arrangement, Alignment, Spacing, GalleryLayout, KeyValueLayout, BadgeLayout, CardDensity, ThemeHint, ActionType, ActionStyle, BadgeVariant, DividerStyle, ChartType, SortDirection, DifferenceType, GradientType, OptionsLayout, RegenerateLayout, AdjustmentDirection, KeyModifier, CardState]
+    use_case: Social feeds, approval UIs, dashboards, RLHF interfaces, AI content generation with style adjustments
+
+  gesture:
+    status: production
+    version: "1.0.0"
+    description: Universal gesture and interaction primitives for touch, mouse, pen, and VR interfaces
+    owner: platform
+    dependencies: [core]
+    entities: [Gesture, GestureSequence, Swipe, Tap, LongPress, Drag, Pinch, GestureRecognizer, GestureThresholds, GestureAction, GestureFeedback, VisualFeedback, HapticFeedback, AudioFeedback, Point2D, PathPoint, Velocity, Distance, TargetRef, ActionResult]
+    actions: [RecordGesture, TriggerFeedback]
+    enums: [GestureType, SwipeDirection, GestureState, SequencePatternType, InputDevice, ActionType, VisualFeedbackType, HapticType]
+    use_case: Card swipes, map panning, photo pinch-zoom, drag-and-drop, long-press menus
+
+  steering:
+    status: production
+    version: "1.0.0"
+    description: Composable, context-aware AI steering rules (React-inspired patterns)
+    owner: platform
+    dependencies: [core, observer, workflow]
+    entities: [Rule, Trait, Context, Need, Guardrail, NeedResolution, CompositionSpec]
+    actions: [ResolveContext, ResolveNeed, MatchTraits, ComposeRules, EvaluateGuardrail]
+    enums: [ConstraintLevel, RuleCategory, DirectiveType, ContextType, TraitType, NeedType, ResolutionStatus]
+    features:
+      - React-like composition (Traits as components)
+      - Context-aware resolution (POC vs Production)
+      - Needs with context defaults (like props)
+      - Guardrails for tech preferences
+    use_case: AI behavioral guidance with composable, context-aware rules
+
+  business-strategy:
+    status: production
+    version: "1.1.0"
+    description: Business strategy frameworks - Business Model Canvas, Lean Canvas, Four Steps to Epiphany, Lean Startup, Market Analysis
+    owner: platform
+    dependencies: [core]
+    entities:
+      # Business Model Canvas (Osterwalder & Pigneur, 2010)
+      - BusinessModelCanvas
+      - CustomerSegment
+      - ValueProposition
+      - Channel
+      - CustomerRelationship
+      - RevenueStream
+      - KeyResource
+      - KeyActivity
+      - KeyPartnership
+      - CostStructure
+      - CostItem
+      # Lean Canvas (Maurya, 2012)
+      - LeanCanvas
+      - ProblemBlock
+      - Problem
+      - LeanCustomerSegment
+      - UVP
+      - SolutionBlock
+      - SolutionFeature
+      - UnfairAdvantage
+      - KeyMetric
+      # Four Steps to Epiphany (Blank, 2013)
+      - CustomerDevelopmentProcess
+      - CustomerDiscovery
+      - CustomerValidation
+      - CustomerCreation
+      - CompanyBuilding
+      - Hypothesis
+      - CustomerInterview
+      - Pivot
+      - Earlyvangelist
+      - SalesRoadmap
+      - SalesStage
+      - Objection
+      - ExitCriterion
+      - DemandCreationActivity
+      - PositioningStrategy
+      - OrgStructure
+      - Department
+      # Lean Startup (Ries, 2011)
+      - LeanStartupProcess
+      - Vision
+      - BMLCycle
+      - BuildPhase
+      - MeasurePhase
+      - LearnPhase
+      - MVP
+      - ActionableMetric
+      - CohortAnalysis
+      - CohortMetric
+      - SplitTest
+      - ValidatedLearning
+      - InnovationAccounting
+      - GrowthMetric
+      - LearningMilestone
+      # Validation & Experimentation Toolkit (Bland & Osterwalder, 2019)
+      - TestCard
+      - LearningCard
+      - ValidationBoard
+      - ValidationColumn
+      - BoardHypothesis
+      - ExperimentBoard
+      - Experiment
+      - ExperimentResults
+      - ObservedMetric
+      - ExperimentLibrary
+      - ExperimentTemplate
+      # Market Analysis (2025)
+      - MarketResearch
+      - MarketSizing
+      - MarketSize
+      - MarketTrend
+      - CompetitiveAnalysis
+      - Competitor
+      - Substitute
+      - PortersFiveForces
+      - RegulatoryFactor
+      - MarketBarrier
+      # Target Market
+      - TargetMarket
+      - MarketSegment
+      - IdealCustomerProfile
+      - BuyerPersona
+      - PersonaDemographics
+      # Business Model
+      - BusinessModel
+      - RevenueModel
+      - RevenueStream
+      - RevenueProjection
+      - PricingStrategy
+      - PricingTier
+      - GoToMarketStrategy
+      - GTMChannel
+      - GTMPhase
+      - SalesModel
+      - ConversionRate
+      - UnitEconomics
+    enums:
+      # Business Model Canvas
+      - CustomerSegmentType
+      - SegmentPriority
+      - ValueType
+      - ChannelType
+      - ChannelPhase
+      - ChannelOwnership
+      - RelationshipType
+      - RelationshipMotivation
+      - RevenueType
+      - RevenueFrequency
+      - PricingMechanism
+      - ResourceType
+      - ResourceOwnership
+      - ActivityType
+      - PartnershipType
+      - PartnershipMotivation
+      - CostStructureType
+      # Lean Canvas
+      - ProblemSeverity
+      - UnfairAdvantageType
+      - MetricType
+      # Four Steps
+      - CustomerDevPhase
+      - PhaseStatus
+      - HypothesisType
+      - HypothesisStatus
+      - InterestLevel
+      - WillingnessLevel
+      - PivotType
+      - EarlyvangelistStatus
+      - MarketType
+      - LaunchType
+      - DemandCreationType
+      - OrgStructureType
+      # Lean Startup
+      - CycleStatus
+      - MVPType
+      - MVPStatus
+      - PivotOrPersevere
+      - MetricCategory
+      - EngineOfGrowth
+      - GrowthMetricType
+      # Validation & Experimentation Toolkit
+      - TestCardStatus
+      - TestCost
+      - TestStrength
+      - DataReliability
+      - ConfidenceLevel
+      - ValidationStage
+      - HypothesisCategoryBMC
+      - HypothesisImportance
+      - BoardHypothesisStatus
+      - ExperimentType
+      - ExperimentCategory
+      - ExperimentStatus
+      # Market Analysis
+      - MarketSizingMethodology
+      - TrendImpact
+      - TrendTimeframe
+      - MarketConcentration
+      - CompetitiveIntensity
+      - CompetitorType
+      - ThreatLevel
+      - SwitchingCost
+      - ForceRating
+      - RegulatoryImpact
+      - BarrierType
+      - BarrierSeverity
+      - BuyingRole
+      - BusinessModelType
+      - RevenueModelType
+      - PricingType
+      - PricingPosition
+      - BillingFrequency
+      - GTMApproach
+      - ChannelPriority
+      - SalesModelType
+    sources:
+      - "Business Model Generation (Osterwalder & Pigneur, 2010)"
+      - "Running Lean (Maurya, 2012)"
+      - "The Four Steps to the Epiphany (Blank, 2013)"
+      - "The Lean Startup (Ries, 2011)"
+      - "Testing Business Ideas (Bland & Osterwalder, 2019)"
+    use_case: Startup validation, business model design, customer development, product-market fit, hypothesis testing
+
+  # ============================================
+  # HUMAN-LLM INTERACTION DOMAIN SUITE
+  # 12 composable domains for modeling LLM interactions
+  # Created: 2025-11-23
+  # Sources: Anthropic, OpenAI, Microsoft, arXiv research
+  # ============================================
+
+  llm-participant:
+    status: production
+    version: "1.0.0"
+    description: Actor types in LLM interactions - humans, assistants, agents, systems
+    owner: platform
+    dependencies: [core]
+    entities: [Participant, HumanParticipant, AssistantParticipant, AgentParticipant, SystemParticipant, UserPreferences, ParticipantSession]
+    enums: [ParticipantType, AgentType, AutonomyLevel, SystemSource, SessionRole, VerbosityLevel]
+    sources: [RAISE paper, Open Message Format, Anthropic/OpenAI APIs]
+
+  llm-model:
+    status: production
+    version: "1.0.0"
+    description: LLM model definitions, capabilities, pricing, and provider configurations
+    owner: platform
+    dependencies: [core]
+    entities: [Model, Provider, ModelPricing, RateLimits, ModelBenchmark, ModelComparison, ModelEndpoint]
+    enums: [ProviderType, ModelFamily, ModelCapability, Modality, TaskCategory, AuthMethod, DeploymentType, HealthStatus]
+    sources: [OpenAI, Anthropic, AWS Bedrock, RouteLLM]
+
+  llm-message:
+    status: production
+    version: "1.0.0"
+    description: Message structure for LLM interactions - roles, content types, formatting
+    owner: platform
+    dependencies: [core, llm-participant]
+    entities: [Message, ContentBlock, TextContent, ImageContent, ImageSource, FileContent, ToolUseContent, ToolResultContent, ThinkingContent, MessageMetadata, MessageTemplate, TemplateVariable]
+    enums: [MessageRole, ContentType, TextFormat, ImageSourceType, StopReason, CacheStatus]
+    sources: [OpenAI Chat API, Anthropic Messages API, Open Message Format]
+
+  llm-conversation:
+    status: production
+    version: "1.0.0"
+    description: Conversation structures - sessions, turns, threads for multi-turn interactions
+    owner: platform
+    dependencies: [core, llm-participant, llm-message]
+    entities: [Session, Turn, Thread, ConversationHistory, HistoryTurn, Scene, ChainOfThought, CoTIteration, SessionMetadata, ConversationSummary]
+    enums: [SessionStatus, TurnStatus, Sentiment]
+    sources: [RAISE paper, LoCoMo benchmark, multi-turn dialogue surveys]
+
+  llm-tool-use:
+    status: production
+    version: "1.0.0"
+    description: Tool definitions, function calling, and Model Context Protocol (MCP)
+    owner: platform
+    dependencies: [core, llm-model]
+    entities: [Tool, ParameterSchema, ToolParameter, ToolCall, ToolResult, RetryPolicy, MCPServer, MCPResource, MCPPrompt, ToolRegistry, ToolCallBatch]
+    enums: [ToolCategory, ParameterType, ToolCallStatus, ExecutionMode, ToolErrorType, BackoffType, MCPTransport, SchemaFormat]
+    sources: [ToolACE, Anthropic MCP, OpenAI Function Calling, AsyncLM]
+
+  llm-context-window:
+    status: production
+    version: "1.0.0"
+    description: Context window management - token budgets, slots, and priority allocation
+    owner: platform
+    dependencies: [core]
+    entities: [ContextWindow, ContextSlot, TokenBudget, ContextAllocation, ContextOverflow, TokenCount, ContextSnapshot]
+    enums: [SlotType, AllocationStrategy, OverflowPolicy, OverflowResolution]
+    sources: [Anthropic context engineering, proto-context-management-game]
+
+  llm-context-engineering:
+    status: production
+    version: "1.0.0"
+    description: Advanced context techniques - compaction, JIT retrieval, RAG, sub-agents
+    owner: platform
+    dependencies: [core, llm-context-window, llm-message]
+    entities: [SystemPrompt, PromptVariable, Compaction, CompactionRule, JustInTimeRetrieval, RAGContext, RAGChunk, FewShotExample, ExamplesPool, SubAgentContext, StructuredNotes]
+    enums: [SystemPromptCategory, VariableSource, CompactionStrategy, PreserveType, ReferenceType, RetrievalMethod, ExampleSelectionStrategy, NoteCategory]
+    sources: [Anthropic context engineering guide, RAG research]
+
+  llm-routing:
+    status: production
+    version: "1.0.0"
+    description: LLM routing - model selection, cost-quality tradeoffs, fallback strategies
+    owner: platform
+    dependencies: [core, llm-model]
+    entities: [Router, RouterConfig, Route, RouteCondition, RoutingDecision, CostOptimizer, QualityThreshold, FallbackStrategy, FallbackTrigger, RouterTrainingData, RoutingMetrics]
+    enums: [RouterType, RoutingReason, CostStrategy, QualityMetric, ConditionOperator, FallbackTriggerType]
+    sources: [RouteLLM, AutoMix, HybridLLM, IBM Frugal Routing]
+
+  llm-caching:
+    status: production
+    version: "1.0.0"
+    description: Prompt caching - exact and semantic matching, cache policies, breakpoints
+    owner: platform
+    dependencies: [core, llm-message]
+    entities: [CacheEntry, CacheKey, CacheKeyComponent, CacheBreakpoint, CachePolicy, SemanticHash, CacheHit, CacheMiss, CacheMetrics, CacheInvalidation, PrefixCache]
+    enums: [CacheKeyType, ComponentType, BreakpointContentType, CachePolicyType, EvictionStrategy, CacheHitType, CacheMissReason, InvalidationReason, TTLType]
+    sources: [Anthropic Prompt Caching, SCALM, MeanCache, GPTCache]
+
+  llm-memory:
+    status: production
+    version: "1.0.0"
+    description: LLM memory systems - short-term, long-term, retrieval, and forgetting
+    owner: platform
+    dependencies: [core, llm-conversation]
+    entities: [MemoryBank, ShortTermMemory, LongTermMemory, MemoryItem, MemoryRetrieval, ForgettingCurve, ConsolidationPolicy, MemoryConsolidation, ExperientialMemory, EntityMemory, EntityFact, EntityRelationship, MemoryService]
+    enums: [MemoryType, MemorySource, StorageType, IndexType, RetrievalMethod, ConsolidationTrigger, MemoryServiceType, MemoryCapability]
+    sources: [RAISE, MemoryBank, LongMem, M+, MaaS papers]
+
+  llm-evaluation:
+    status: production
+    version: "1.0.0"
+    description: LLM output evaluation - quality scoring, feedback loops, judging
+    owner: platform
+    dependencies: [core, llm-message, llm-conversation]
+    entities: [Evaluation, Criterion, CriterionScore, Judge, PairwiseComparison, Feedback, QualityReport, ValidationCheck, ImprovementSuggestion, ABTest, TestVariant, EvaluationMetrics]
+    enums: [EvaluationTargetType, EvaluatorType, CriterionCategory, ComparisonWinner, FeedbackType, FeedbackSentiment, ThumbsRating, ValidationCheckType, Severity, ImprovementCategory, EffortLevel, ABTestStatus]
+    sources: [LLM-as-Judge, proto-self-improving-writer-bot, Chatbot Arena]
+
+  llm-guardrails:
+    status: production
+    version: "1.0.0"
+    description: Safety guardrails - constraints, content filtering, output validation
+    owner: platform
+    dependencies: [core, llm-message]
+    entities: [GuardrailSet, GuardrailRule, ContentFilter, OutputValidator, GuardrailViolation, TopicPolicy, Topic, PIIConfig, WordPolicy, GroundingConfig, SafetyScore, CategoryScore, GuardrailMetrics]
+    enums: [RuleType, RuleScope, RuleAction, FilterCategory, FilterMethod, FilterAction, ValidatorType, ValidatorAction, ViolationType, Severity, EnforcementLevel, TopicAction, PIIType, PIIAction, GroundingAction]
+    sources: [Anthropic Constitutional AI, OpenAI Moderation, AWS Bedrock Guardrails]
+
+  claude-code-session:
+    status: production
+    version: "1.0.0"
+    description: Claude Code local session storage format - JSONL event stream with metadata
+    owner: platform
+    dependencies: [core, llm-conversation, llm-message, llm-participant]
+    entities: [SessionFile, SessionEvent, EventMetadata, EventMessage, TokenUsage, CacheCreationDetail, ContentBlock, UserMessage, AssistantMessage, SystemMessage, QueueOperation, MessageThread, SessionSnapshot, ProjectSession]
+    enums: [EventType, ContentBlockType]
+    actions: [ReadSessionFile, GetEventsByType, GetMessageThread, GetTokenUsage, ListProjectSessions]
+    sources: [Claude Code session storage, Claude Code version 2.0.50+]
+
+  coding-session:
+    status: production
+    version: "1.0.0"
+    description: Interactive coding sessions with ephemeral compute, terminals, and AI assistants
+    owner: platform
+    project: gocoder-t9x2k
+    dependencies: [core, auth, infrastructure]
+    entities: [CodingSession, ComputeConfig, EnvironmentConfig, GitRepoConfig, AIAssistantConfig, Terminal, SSHKey, APIKey, ShareLink, SessionUsageMetrics]
+    enums: [CodingSessionStatus, ComputeType, ComputeSize, AIAssistantProvider, TerminalStatus, SharePermissions]
+    actions: [CreateCodingSession, AttachToSession, TerminateSession, RenameSession, ListSessions, CreateTerminal, AttachToTerminal, ResizeTerminal, CloseTerminal, CreateShareLink, JoinViaShareLink, RevokeShareLink, CreateSSHKey, RemoveSSHKey, CreateAPIKey, RevokeAPIKey, GetSessionMetrics]
+    features: [session management, terminal management, collaboration via share links, SSH key management, API key management, usage tracking]
+    use_case: GoCoder CLI - cloud-based development environments with compute provisioning and AI assistants
+
+  api:
+    status: production
+    version: "1.0.0"
+    description: HTTP/REST API endpoints, requests, responses, and authentication patterns
+    owner: platform
+    dependencies: [core]
+    entities: [API, Endpoint, Parameter, RequestBody, ResponseDefinition, HTTPRequest, HTTPResponse, Header, HTTPError, AuthenticationConfig, Authentication, APIKeyAuth, BearerTokenAuth, BasicAuth, OAuth2Auth, CookieAuth, Pagination, RateLimitConfig, RateLimitStatus, RetryPolicy, Webhook, APICall]
+    enums: [HttpMethod, ParameterLocation, ParameterType, AuthMethod, PaginationStrategy, RateLimitStrategy, BackoffStrategy]
+    actions: [CallEndpoint, GetRateLimitStatus, RetryRequest, ValidateResponse]
+    sources: [HTTP/1.1 RFC 7230-7235, REST, OpenAPI 3.0, OAuth 2.0 RFC 6749, JWT RFC 7519]
+
+  # ============================================
+  # PROCESS & CAPABILITY DOMAINS
+  # ============================================
+
+  protocol:
+    status: production
+    version: "1.0.0"
+    description: Formal process definitions - protocols, SOPs, and artifact bundles
+    owner: platform
+    dependencies: [core, workflow]
+    entities: [Protocol, ProtocolStep, ProtocolBranch, ProtocolInput, ProtocolOutput, Condition, Validation, ExceptionHandler, SOP, ProtocolReference, SOPRole, SOPArtifact, ComplianceReference, ArtifactBundle, BundledArtifact, BundleMetadata, BundleValidation]
+    actions: [CreateProtocol, UpdateProtocol, ActivateProtocol, CreateSOP, UpdateSOP, ApproveSOP, CreateArtifactBundle, AddArtifactToBundle, ValidateBundle, GetProtocolsByScope, GetSOPsByStatus]
+    enums: [ProtocolScope, ProtocolStatus, SOPStatus, SOPSequence, ActorType, ValidationType, ExceptionHandlerType, ArtifactType, ArtifactStatus, BundleStatus, ValidationResult]
+    relationships:
+      - "SOP contains multiple Protocols"
+      - "Workflow implements Protocol"
+      - "Workflow produces ArtifactBundle"
+    use_case: Formal process documentation, compliance, workflow standardization
+
+  approval:
+    status: production
+    version: "1.0.0"
+    description: Generic approval, voting, and consensus mechanisms with Web3-inspired patterns
+    owner: platform
+    dependencies: [core, workflow]
+    entities: [VotingSession, Vote, Delegation, ApproverGroup, MembershipRule, VoteTally, EscalationPolicy, EscalationTrigger, AutoApprovalRule, AutoApprovalCondition, Prediction, ApprovalRecord]
+    actions: [CreateVotingSession, CastVote, DelegateVote, RevokeDelegation, WithdrawVote, CalculateTally, CloseVotingSession, MakePrediction, ApplyAutoApprovalRules, EscalateSession]
+    enums: [VotingMechanism, VotingSessionStatus, VotingOutcome, VoteDecision, VoterType, QuorumType, DelegationScope, DelegationStatus, MembershipRuleType, EscalationTriggerType, TimeoutAction, AutoApprovalConditionType, ComparisonOperator, DecisionMethod]
+    sources:
+      - "Quadratic Voting: https://www.radicalxchange.org/wiki/quadratic-voting/"
+      - "Conviction Voting: https://limechain.tech/blog/dao-voting-mechanisms-explained/"
+      - "Liquid Democracy: https://acceleratedcapital.substack.com/p/daos-and-democracy-voting-mechanisms"
+      - "DAO Governance: https://www.krayondigital.com/blog/top-dao-voting-mechanisms-compared-2024"
+    features:
+      - Web3-inspired voting (quadratic, conviction, holographic consensus)
+      - Liquid democracy with delegation chains
+      - Multisig (M of N) approval
+      - Rage-quit grace periods
+      - Auto-approval rules with SLA timeouts
+      - Prediction markets for proposal boosting
+    use_case: Approval workflows, governance voting, consensus mechanisms
+
+  ai-judging:
+    status: production
+    version: "1.0.0"
+    description: AI/LLM-as-judge with reputation tracking, feedback loops, and confidence-based escalation
+    owner: platform
+    dependencies: [core, approval, llm-evaluation, llm-participant]
+    entities: [Judge, JudgeReputation, Judgment, CriteriaScore, JudgmentIssue, JudgmentFeedback, FeedbackCategory, CriteriaSet, JudgmentCriterion, JudgingEscalationConfig, JudgmentQueueItem, CalibrationSet, CalibrationExample, CalibrationResult]
+    actions: [CreateJudge, SubmitJudgment, ProvideFeedback, CalculateReputation, CalibrateJudge, EscalateJudgment, ResolveQueueItem, GetPendingReviews, ApplyTimeoutAction]
+    enums: [JudgeType, JudgeStatus, JudgmentDecision, FeedbackAgreement, FeedbackProviderType, JudgmentFeedbackType, IssueSeverity, CriterionCategory, ExpertiseLevel, ReputationTrend, TimeoutActionType, QueuePriority, QueueItemStatus, DifficultyLevel]
+    sources:
+      - "LLM-as-Judge: https://arxiv.org/abs/2306.05685"
+      - "Chatbot Arena: https://lmsys.org/blog/2023-05-03-arena/"
+      - "Constitutional AI: https://arxiv.org/abs/2212.08073"
+    features:
+      - AI judge with confidence scoring
+      - Reputation tracking based on feedback
+      - Confidence-based escalation to humans
+      - SLA timeouts with auto-action
+      - Human feedback on AI judgments
+      - Calibration against ground truth
+      - Queue management for human review
+    use_case: AI-assisted quality assurance, content moderation, approval automation
+
+  capability:
+    status: production
+    version: "1.0.0"
+    description: Interface and capability abstractions - provider-agnostic service definitions
+    owner: platform
+    dependencies: [core]
+    entities: [Capability, CapabilityInput, CapabilityOutput, CapabilityConstraint, InputConstraints, QualityMetric, ServiceLevelAgreement, Interface, ProvidedCapability, InterfaceConfig, AuthenticationSpec, RateLimitSpec, RetryPolicy, Endpoint, ErrorCode, ProviderInfo, CostSpec, FreeTierSpec, InterfaceInstance, CredentialReference, HealthCheckResult, UsageStats, CapabilityRegistry, RegisteredCapability]
+    actions: [RegisterCapability, RegisterInterface, CreateInstance, InvokeCapability, CheckHealth, GetCapabilityProviders, SetPreferredProvider, GetUsageStats]
+    enums: [CapabilityCategory, CapabilityStatus, InterfaceStatus, InstanceStatus, HealthStatus, AuthType, AuthLocation, HttpMethod, ConstraintType, CostModel, CredentialType, EnvironmentType, SelectionStrategy]
+    relationships:
+      - "Interface provides Capability"
+      - "InterfaceInstance is runtime of Interface"
+    use_case: Provider abstraction layer (e.g., TTS via ElevenLabs/Polly/OpenAI)
+
+  infrastructure:
+    status: production
+    version: "1.0.0"
+    description: Cloud-agnostic infrastructure components for solution architecture
+    owner: platform
+    dependencies: [core]
+    entities: [ComputeProvider, Server, AttachedVolume, Container, PortMapping, VolumeMount, ServerlessFunction, Database, Cache, ObjectStorage, LifecycleRule, StorageTransition, CorsRule, Network, Subnet, LoadBalancer, Listener, TargetGroup, HealthCheck, ApiGateway, ApiStage, ThrottlingConfig, DNS, DnsRecord, CDN, CdnOrigin, CachePolicy, Queue, EventBus, Topic, Subscription, EventRule, EventTarget]
+    actions: [CreateServer, CreateDatabase, CreateQueue, CreateLoadBalancer, CreateObjectStorage, ScaleServer, ConfigureHealthCheck]
+    enums: [ComputeProviderType, ServerType, DatabaseEngine, CacheEngine, StorageType, StorageClass, LoadBalancerType, ApiGatewayType, QueueType, SubscriptionProtocol, DnsRecordType, HealthStatus]
+    sources: [AWS Well-Architected Framework, TOGAF, Terraform Registry, Kubernetes]
+
+  ai-ml:
+    status: production
+    version: "1.0.0"
+    description: AI/ML infrastructure - GPUs, training, quantization, LoRA, fine-tuning, inference
+    owner: platform
+    dependencies: [core, llm-model]
+    entities:
+      # Hardware
+      - GPU
+      - Accelerator
+      - ComputeCluster
+      # Quantization
+      - Quantization
+      - QuantizedModel
+      - QuantizationBenchmark
+      # LoRA & Adapters
+      - LoRAConfig
+      - LoRAAdapter
+      - QLoRAConfig
+      - BitsAndBytesConfig
+      # Training
+      - TrainingRun
+      - Hyperparameters
+      - HardwareConfig
+      - DeepSpeedConfig
+      - FSDPConfig
+      - Dataset
+      - DatasetSplit
+      - Checkpoint
+      # RLHF & Alignment
+      - RLHFConfig
+      - DPOConfig
+      - PreferenceDataset
+      # Inference
+      - InferenceConfig
+      - KVCacheConfig
+      - SpeculativeDecodingConfig
+      - InferenceBenchmark
+      # Embeddings
+      - EmbeddingModel
+      - Embedding
+      # Architecture
+      - ModelArchitecture
+    enums:
+      # Hardware
+      - GPUVendor
+      - GPUArchitecture
+      - GPUInterconnect
+      - AcceleratorType
+      - DistributedBackend
+      # Precision
+      - PrecisionType
+      - QuantizationMethod
+      - QuantizedFileFormat
+      # LoRA
+      - LoRATarget
+      - LoRABiasMode
+      - LoRATaskType
+      # Training
+      - TrainingType
+      - TrainingStatus
+      - OptimizerType
+      - SchedulerType
+      - DistributedStrategy
+      - FSDPShardingStrategy
+      - DatasetFormat
+      # Alignment
+      - AlignmentMethod
+      - DPOLossType
+      - PreferenceFormat
+      # Inference
+      - InferenceEngine
+      # Embeddings
+      - EmbeddingModality
+      - PoolingStrategy
+      - SimilarityMetric
+      - EmbeddingInputType
+      # Architecture
+      - ArchitectureType
+      - AttentionType
+      - ActivationFunction
+      - NormalizationType
+    sources:
+      - "NVIDIA CUDA Documentation"
+      - "PyTorch Documentation"
+      - "HuggingFace Transformers/PEFT"
+      - "bitsandbytes quantization"
+      - "llama.cpp GGUF format"
+      - "vLLM inference engine"
+  data-pipeline:
+    status: production
+    version: "1.0.0"
+    description: Data pipelines, ETL/ELT workflows, orchestration, transformations, data quality, lineage, and observability
+    owner: platform
+    dependencies: [core, database, infrastructure]
+    entities: [Pipeline, Schedule, Task, PipelineRun, TaskRun, DataSource, DataDestination, ConnectionConfig, SourceSchema, TableConfig, DestinationSchema, PartitionSpec, Transformation, TransformationLogic, DataModel, ColumnDefinition, DataQualityCheck, QualityRule, QualityCheckResult, DataTest, DataProfile, ColumnProfile, ValueFrequency, ColumnCorrelation, DataLineage, LineageEdge, ColumnLineage, CDCStream, ChangeEvent, DataObservability, ObservabilityMetric, DataAlert, AlertCondition, NotificationConfig, DataIncident, SLA, DataCatalog, DatasetMetadata, DatasetStatistics, GlossaryTerm, RetryPolicy, RunMetrics, TaskMetrics, LogEntry]
+    actions: [CreatePipeline, RunPipeline, CreateDataSource, CreateTransformation, CreateQualityCheck, RunQualityCheck, ProfileDataset, TrackLineage, CreateCDCStream, CreateDataAlert, RegisterDataset]
+    enums: [PipelineType, ScheduleType, TaskType, TriggerRule, RunType, RunStatus, DataSourceType, DataDestinationType, ExtractionMode, LoadMode, AuthType, TransformationType, TransformationLanguage, MaterializationType, ModelType, QualityCheckType, RuleType, ComparisonOperator, QualityStatus, TestType, Severity, CaptureMode, OperationType, LineageRelationship, MetricType, AlertType, AggregationType, NotificationChannel, IncidentStatus, DataClassification, DataFormat, PartitionStrategy, LogLevel]
+    sources: [Apache Airflow, dbt, AWS Glue, Databricks, Fivetran, Great Expectations, Apache NiFi]
+    features: [ETL/ELT orchestration, task scheduling, data quality, lineage tracking, CDC, data profiling, dbt models, observability, alerting, data catalog]
+  database:
+    status: production
+    version: "1.0.0"
+    description: Relational and NoSQL database structures - schemas, tables, indexes, constraints, queries, transactions, and migrations
+    owner: platform
+    dependencies: [core]
+    entities: [Claim, Evidence, ClaimEvidenceLink, ConfidenceScore, Source, ClaimRelationship, TemporalRelevance]
+    enums: [ClaimType, ClaimStatus, EvidenceType, EvidenceRelationship, ConfidenceLevel, ScoringMethod, ScoredEntityType, SourceType, ClaimRelationshipType, DecayFunction]
+    features: [hierarchical claims, evidence quality scoring, temporal decay, polymorphic confidence scoring, bibliographic metadata]
+  human-drives:
+    status: production
+    version: "1.0.0"
+    description: Fundamental existential and evolutionary drives - meaning, purpose, joy, affiliation, procreation
+    owner: platform
+    dependencies: [core]
+    entities: [MeaningSource, WillToMeaning, ExistentialVacuum, MeaningPathway, LifeTask, Ikigai, LifePurpose, IkigaiDimension, PurposeAlignment, HedonicWellbeing, EudaimonicWellbeing, Flourishing, JoySource, PeakExperience, SocialConnection, BelongingNeed, TribalIdentity, Coalition, SocialSupport, MatingStrategy, MatePreference, ReproductiveFitness, PairBond, SexualSelection, ParentalInvestment]
+    actions: [SeekMeaningAction, AlignWithPurposeAction, CultivateJoyAction, BuildConnectionAction, SelectMateAction, InvestInOffspringAction]
+    enums: [MeaningSourceType, PathwayType, IkigaiDimensionType, PurposeClarity, TaskStatus, Severity, JoySourceType, FlourishingLevel, ConnectionType, TribalRole, SupportType, MatingStrategyType, TimeHorizon, MateSelectionCriterion, SelectionType, InvestmentType]
+    sources:
+      - "Viktor Frankl - Logotherapy (Man's Search for Meaning, 1946)"
+      - "Ikigai Research - Japanese purpose in life framework"
+      - "Hedonic/Eudaimonic Psychology - Positive psychology research"
+      - "Sexual Strategies Theory - David Buss evolutionary psychology"
+      - "Attachment Theory - Social bonding research"
+      - "Serotonin & Social Hierarchy - Neuroscience research"
+
+  api-traffic:
+    status: production
+    version: "1.0.0"
+    description: HTTP traffic capture, reverse engineering, and API discovery - HAR, Chrome DevTools, WebSocket, HTTP/2, X.509 certificates
+    owner: platform
+    dependencies: [core, api]
+    entities: [TrafficCapture, CapturedCall, TrafficSession, DiscoveredAPI, DiscoveredEndpoint, HARFile, CDPNetworkEvent, WebSocketConnection, X509Certificate, CertificateChain]
+    enums: [CaptureSource, SessionIdentifierType, AuthSchemeType, ConfidenceLevel, PatternType]
+    features: [HAR import, Chrome DevTools Protocol, WebSocket frames, HTTP/2 streams, TLS/X.509 analysis, auth scheme detection, API discovery]
+    sources:
+      - "HAR 1.2 Spec"
+      - "Chrome DevTools Protocol"
+      - "RFC 6455 (WebSocket)"
+      - "RFC 9113 (HTTP/2)"
+      - "RFC 5280 (X.509)"
+
+  meeting:
+    status: production
+    version: "1.0.0"
+    description: Meeting scheduling, agendas, minutes, decisions, action items, and attendee management
+    owner: platform
+    dependencies: [core]
+    entities: [Meeting, Attendee, MeetingAgenda, AgendaItem, MeetingMinutes, MeetingNotes, Decision, ActionItem]
+    enums: [MeetingStatus, AttendeeRole, ResponseStatus, AgendaItemType, MinutesStatus, NoteVisibility, DecisionType, ActionItemStatus, AffiliationType, JobType, SeniorityLevel, Priority]
+    features: [recurring meetings, attendee tracking, agenda management, formal minutes, decisions and action items]
+
+  organization:
+    status: production
+    version: "1.0.0"
+    description: Companies, institutions, addresses, contacts, and inter-org relationships
+    owner: platform
+    dependencies: [core]
+    entities: [Organization, OrganizationAddress, OrganizationContact, OrganizationRelationship]
+    enums: [OrganizationType, Industry, OrganizationSize, OrganizationStatus, AddressType, ContactType, RelationshipType, RelationshipStatus]
+    features: [hierarchical organizations, multi-address support, relationship tracking]
+
+  professional:
+    status: production
+    version: "1.0.0"
+    description: Professional relationships between people and organizations through positions, with contact methods
+    owner: platform
+    dependencies: [core, organization]
+    entities: [Position, ContactMethod]
+    enums: [JobType, SeniorityLevel, ContactMethodType]
+    features: [employment history tracking, current position detection, multi-method contact, social media profiles]
+    sources:
+      - "schema.org Person"
+      - "LinkedIn profiles"
+      - "HubSpot contacts"
+
+  talking-avatar:
+    status: production
+    version: "1.0.0"
+    description: AI-powered talking avatar video generation and real-time streaming (HeyGen, D-ID, Synthesia)
+    owner: platform
+    dependencies: [core, tts]
+    entities: [Avatar, Voice, AvatarVideo, Scene, AvatarTrainingJob, StreamingSession, StreamingMessage, AvatarEmotion]
+    enums: [AvatarType, AvatarProvider, VoiceProvider, VideoStatus, TrainingStatus, StreamingStatus, AvatarEmotion]
+    features: [custom avatar training, real-time WebRTC streaming, emotion control, multi-provider support]
+    sources:
+      - "HeyGen API"
+      - "D-ID API"
+      - "Synthesia API"
+
+  work-item-typed:
+    status: production
+    version: "1.0.0"
+    description: Typed work items - prototypes, components, domains, tools, assets, meta
+    owner: platform
+    dependencies: [core, work-item, sdlc]
+    entities: [TypedWorkItem, PhaseEntry, VersionEntry]
+    enums: [WorkItemType, OwnershipType, ItemStatus, PriorityLevel, ChangeType, TargetOutput]
+    use_case: Unified tracking for all SDLC work items in the repo
+
+  # ============================================
+  # GEO, ROUTING & TRACKING DOMAIN SUITE
+  # Decomposed spatial primitives for location-aware applications
+  # Created: 2025-11-26
+  # Use cases: Fleet management, marine navigation, hiking, cold-chain
+  # ============================================
+
+  geo-point:
+    status: production
+    version: "1.0.0"
+    description: Geographic points, coordinates, and reference systems (WGS84, UTM, etc.)
+    owner: platform
+    dependencies: []
+    entities: [Point, Point3D, ProjectedPoint, CoordinateReferenceSystem, MapTile, Quadkey, H3Cell, S2Cell, Geohash, What3Words]
+    enums: [CRSType, ProjectionType, CoordinateUnits, AltitudeReference, CardinalDirection, Hemisphere]
+    features: [WGS84, Web Mercator, UTM zones, H3 hexagonal grid, S2 cells, geohash, What3Words]
+    sources: [EPSG Registry, OGC Simple Features, H3, S2 Geometry, GeoJSON RFC 7946]
+
+  geo-shape:
+    status: production
+    version: "1.0.0"
+    description: Geographic shapes - bounding boxes, polygons, circles, corridors
+    owner: platform
+    dependencies: [geo-point]
+    entities: [BoundingBox, BoundingBox3D, ProjectedBoundingBox, LineString, MultiLineString, LinearRing, Polygon, MultiPolygon, Circle, Ellipse, Sector, Arc, GeometryCollection, Geometry, Feature, FeatureCollection, Corridor]
+    enums: [GeometryType, WindingOrder, CapStyle, JoinStyle, SpatialRelation]
+    operations: [intersection, union, difference, buffer, convex_hull, centroid, simplify]
+    sources: [GeoJSON RFC 7946, OGC Simple Features, DE-9IM, JTS, Turf.js, PostGIS]
+
+  geo-place:
+    status: production
+    version: "1.0.0"
+    description: Named places, addresses, POIs, and administrative regions
+    owner: platform
+    dependencies: [geo-point, geo-shape]
+    entities: [Place, Address, PointOfInterest, ContactInfo, OperatingHours, HoursPeriod, SpecialHours, POIAttribute, AdministrativeRegion, NaturalFeature, WaterFeature, TransportHub, GeocodeResult]
+    enums: [PlaceType, POICategory, AdminLevel, NaturalFeatureClass, WaterType, Salinity, TransportType, GeocodeAccuracy, PriceLevel, DayOfWeek]
+    sources: [Google Places API, OpenStreetMap, GeoNames, Foursquare, ISO 3166]
+
+  geo-elevation:
+    status: production
+    version: "1.0.0"
+    description: Elevation data, terrain profiles, slope analysis, viewsheds
+    owner: platform
+    dependencies: [geo-point, geo-shape]
+    entities: [ElevationPoint, ElevationProfile, ElevationSample, ElevationStatistics, ElevationGrid, ContourLine, ContourSet, SlopeAnalysis, AspectAnalysis, TerrainAnalysis, HillshadeConfig, Viewshed, ObstacleClearance, Obstacle]
+    enums: [ElevationSource, VerticalUnits, ContourType, SlopeClass, LandformClass, ObstacleType]
+    datasets: [SRTM, ASTER GDEM, Copernicus DEM, USGS NED, GEBCO bathymetry]
+    sources: [USGS, NASA SRTM, Copernicus, GEBCO]
+
+  routing-route:
+    status: production
+    version: "1.0.0"
+    description: Routes, legs, steps, and path planning between waypoints
+    owner: platform
+    dependencies: [geo-point, geo-shape, geo-elevation]
+    entities: [Route, Leg, Step, Maneuver, RouteSummary, RouteWarning, TrafficSegment, TransitDetails, TransitLine, TransitStop, Isochrone, IsochroneContour, DistanceMatrix, DistanceMatrixRow, DistanceMatrixElement]
+    enums: [TravelMode, ManeuverType, ManeuverModifier, CongestionLevel, RouteWarningType, WarningSeverity, TransitVehicleType, IsochroneUnit, DistanceMatrixStatus]
+    sources: [Google Directions API, Mapbox Directions, OSRM, Valhalla, HERE Routing, OpenRouteService]
+
+  routing-waypoint:
+    status: production
+    version: "1.0.0"
+    description: Waypoints, stops, checkpoints, time windows, and delivery points
+    owner: platform
+    dependencies: [geo-point, geo-place]
+    entities: [Waypoint, Stop, TimeWindow, Checkpoint, FuelStop, RestStop, DeliveryStop, DeliveryItem, ProofOfDelivery, Dimensions, BorderCrossing]
+    enums: [WaypointType, StopType, StopStatus, TimeWindowStrictness, SideOfRoad, CheckpointType, VerificationMethod, FuelType, ChargerType, RestType, DeliveryAction]
+    sources: [Google Directions, FMCSA Hours of Service, EU Regulation 561/2006, GS1]
+
+  routing-constraints:
+    status: production
+    version: "1.0.0"
+    description: Route constraints, vehicle profiles, hazmat, VRP optimization
+    owner: platform
+    dependencies: [geo-point, geo-shape, routing-route]
+    entities: [RouteOptions, VehicleProfile, HazmatProfile, CustomAvoidance, CustomPreference, RoadRestriction, TimeRestriction, SeasonalRestriction, VRPConstraints, MarineConstraints, AviationConstraints]
+    enums: [AvoidFeature, PreferFeature, OptimizeFor, TrafficModel, VehicleType, EmissionClass, TunnelCategory, HazmatClass, RestrictionType, RestrictionDirection, CustomRestrictionType, VRPObjective, MarineVesselType, AirspaceClass]
+    sources: [Google Directions, HERE Routing, ADR Tunnels, CFR 49 Hazmat, Google OR-Tools VRP]
+
+  routing-navigation:
+    status: production
+    version: "1.0.0"
+    description: Real-time navigation, turn-by-turn guidance, ETA tracking
+    owner: platform
+    dependencies: [geo-point, routing-route, routing-waypoint]
+    entities: [NavigationSession, NavigationPosition, UpcomingManeuver, VoiceInstruction, BannerInstruction, RoadShield, LaneGuidance, Lane, ETAEstimate, ETAFactor, RouteProgress, NavigationSettings, NavigationEvent, SpeedAlert, TrafficIncident, Reroute]
+    enums: [NavigationStatus, ETAConfidence, ETAFactorType, NavigationEventType, SpeedAlertType, TrafficIncidentType, IncidentSeverity, RerouteReason, LaneDirection, RoadShieldType, VoiceGender, DistanceUnits]
+    sources: [Google Navigation SDK, Mapbox Navigation, Apple MapKit, HERE SDK, TomTom]
+
+  tracking-position:
+    status: production
+    version: "1.0.0"
+    description: Position tracking - thing at place at time, tracks, trajectories
+    owner: platform
+    dependencies: [geo-point, geo-shape, geo-elevation]
+    entities: [Position, PositionAccuracy, MotionVector, Acceleration, Track, TrackStatistics, TrackSegment, Trip, TripEvent, DetectedStop, TrajectoryPrediction, PredictedPosition, PositionSubscription, DeliveryConfig]
+    enums: [PositionSource, GPSFixType, SegmentType, TripStatus, TripPurpose, TripEventType, StopClassification, PredictionMethod, SubscriptionStatus, DeliveryMethod, DeliveryFormat]
+    sources: [GPS.gov, GPX 1.1, GeoJSON, AIS, ADS-B]
+
+  tracking-asset:
+    status: production
+    version: "1.0.0"
+    description: Trackable entities - vehicles, vessels, aircraft, cargo, people
+    owner: platform
+    dependencies: [geo-point, tracking-position]
+    entities: [TrackedAsset, Tracker, Vehicle, VehicleDimensions, TelematicsData, Vessel, Aircraft, Cargo, CargoDimensions, CargoItem, TemperatureRange, CustodyEvent, TrackedPerson, AssetGroup]
+    enums: [AssetType, AssetStatus, TrackerType, TrackerStatus, TrackerCapability, PowerSource, VehicleType, VesselType, AISShipType, AISNavigationStatus, AircraftType, CargoType, HandlingRequirement, CustodyEventType, TrackedPersonType, AssetGroupType]
+    sources: [AIS, ADS-B, OBD-II SAE J1979, ITU MMSI]
+
+  tracking-geofence:
+    status: production
+    version: "1.0.0"
+    description: Geofences, virtual boundaries, zone monitoring, spatial triggers
+    owner: platform
+    dependencies: [geo-point, geo-shape, tracking-position, tracking-asset]
+    entities: [Geofence, GeofenceTriggers, GeofenceSchedule, SchedulePeriod, GeofenceEvent, AssetGeofenceState, Zone, ZoneRule, RouteCorridor, CorridorCheckpoint, GeofenceAlertConfig, NotificationTarget, GeofenceCheckRequest, GeofenceCheckResult, GeofenceMatch]
+    enums: [GeofenceStatus, GeofenceGeometryType, GeofenceCategory, GeofenceEventType, GeofenceState, ZoneType, ZoneRuleType, AlertSeverity, NotificationType]
+    sources: [GeoJSON RFC 7946, OGC Simple Features, Fleet Management]
+
+  # ============================================
+  # ECONOMIC EXCHANGE DOMAIN SUITE
+  # First-principles model for value exchange
+  # Created: 2025-11-26
+  # Use cases: Payroll, API billing, subscriptions, barter, refunds
+  # ============================================
+
+  economic-actor:
+    status: production
+    version: "1.0.0"
+    description: Economic actors - any entity that provides or consumes value (human, machine, AI, org)
+    owner: platform
+    dependencies: [core]
+    entities: [EconomicActor, HumanActor, Skill, Certification, WorkLocation, MachineActor, Throughput, MaintenanceSchedule, Depreciation, AIActor, RateLimits, AIPricingModel, OrganizationActor, Capability, Availability, WeeklySchedule, SchedulePeriod, AvailabilityException, CostModel, Rate, RateCondition, OperationalHours]
+    enums: [ActorType, ActorClass, ActorStatus, EmploymentType, TaxClassification, WorkLocationType, SkillLevel, MachineType, AIType, OrganizationType, CapabilityCategory, AvailabilityType, CostModelType, RateType, RateConditionType, TimePeriod, DepreciationMethod, DayOfWeek]
+    sources: [IRS Employment Classifications, FLSA, ISO 22400, OpenAI/Anthropic Pricing, GAAP]
+
+  economic-value:
+    status: production
+    version: "1.0.0"
+    description: Abstract value - quantity + unit, the fundamental exchangeable primitive
+    owner: platform
+    dependencies: [core]
+    entities: [Value, Money, ConversionRate]
+    enums: [ValueType]
+    sources: [ISO 4217, SI Units]
+
+  economic-exchange:
+    status: production
+    version: "1.0.0"
+    description: Record of value transfer between actors - the fundamental economic transaction
+    owner: platform
+    dependencies: [core, economic-actor, economic-value, finance]
+    entities: [Exchange, AppliedModifier, ExchangeReference, Settlement, ExchangeSummary]
+    enums: [ExchangeType, ExchangeStatus, ExchangeRelationship, SettlementMethod, SettlementStatus, ExchangeRole]
+    features: [refunds, partial refunds, currency exchange, barter, internal allocation]
+    sources: [Double-entry bookkeeping, ISO 20022]
+
+  economic-agreement:
+    status: production
+    version: "1.0.0"
+    description: Terms governing exchanges - contracts, subscriptions, employment, API agreements
+    owner: platform
+    dependencies: [core, economic-actor, economic-value]
+    entities: [Agreement, Party, Term, Rate, Condition, PaymentTerms]
+    enums: [AgreementType, AgreementStatus, PartyRole, TermType, RateType, ConditionType, PaymentMethod]
+    sources: [Contract law, FLSA, SaaS best practices]
+
+  economic-modifier:
+    status: production
+    version: "1.0.0"
+    description: Value modifiers - coupons, discounts, surcharges, adjustments, dynamic pricing rules
+    owner: platform
+    dependencies: [core, economic-value]
+    entities: [Modifier, ModifierEffect, ModifierCondition, ModifierApplication, PricingRule, PriceEffect, PricingCondition, PriceCalculation, AppliedPricingRule, PriceAdjustment]
+    enums: [ModifierType, ModifierDirection, EffectType, ConditionType, Operator, ModifierStatus, PricingRuleType, PricingConditionType, PriceEffectType]
+    features: [percentage discounts, fixed discounts, volume tiers, conditions, stacking rules, dynamic pricing, time-based rates, demand pricing, seasonal pricing]
+    sources: [Promotional pricing, E-commerce patterns, Revenue management, Yield management]
+
+  # ============================================
+  # MATERIAL & PROCESS DOMAINS
+  # Decomposed primitives for recipes, manufacturing, lab protocols
+  # Created: 2025-11-26
+  # ============================================
+
+  material:
+    status: production
+    version: "1.0.0"
+    description: Physical and abstract materials - ingredients, raw materials, reagents, parts, components
+    owner: platform
+    dependencies: [core]
+    entities: [Material, MaterialProperty, Composition, UnitConversion, StorageRequirements, Hazard, Substitute]
+    enums: [MaterialType, MaterialState, PropertyType, HazardType, HazardSeverity, SourceType, QualityImpact, MaterialStatus]
+    features: [composite materials, unit conversions, storage requirements, hazard tracking, substitutes]
+    use_case: Recipes, manufacturing BOMs, lab protocols, supply chain
+
+  process:
+    status: production
+    version: "1.0.0"
+    description: Transformation process - input materials + instructions = output
+    owner: platform
+    dependencies: [core, material]
+    entities: [Process, ProcessInput, ProcessStep, StepCondition, ProcessOutput, EquipmentRequirement, Yield, EnvironmentRequirements, QualityCriterion, ProcessExecution, InputUsage, StepCompletion, ConditionRecord, ActualOutput, QualityCheck]
+    enums: [ProcessType, OutputType, ProcessStatus, ExecutionStatus, QualityStatus]
+    features: [input/output tracking, step sequencing, quality criteria, execution recording]
+    use_case: Recipes, manufacturing work orders, lab protocols, build pipelines
+
+  inventory:
+    status: production
+    version: "1.0.0"
+    description: Stock tracking - materials and products at locations with quantities
+    owner: platform
+    dependencies: [core, material]
+    entities: [StockItem, InventoryLocation, InventoryMovement, InventoryAdjustment, ReorderAlert, InventoryCount]
+    enums: [TrackingType, CostMethod, StockStatus, ItemCondition, LocationType, LocationStatus, MovementType, MovementDirection, MovementStatus, AdjustmentType, AdjustmentReason, AdjustmentStatus, AlertType, AlertAction, AlertStatus, CountType, CountStatus]
+    features: [lot tracking, serial tracking, reorder alerts, cycle counting, movement history]
+    use_case: Warehouse, retail, kitchen pantry, lab supplies
+
+  # ============================================
+  # SOCIAL / CONTENT DOMAINS
+  # Forums, comments, reactions, communities
+  # Created: 2025-11-26
+  # ============================================
+
+  content:
+    status: production
+    version: "1.1.0"
+    description: Authored content - articles, posts, documents, presentations with revisions
+    owner: platform
+    dependencies: [core]
+    entities: [Content, ContentBlock, ContentRevision, Draft, Contributor, ContentRelation, Presentation, Slide]
+    enums: [ContentType, ContentFormat, ContentStatus, Visibility, BlockType, ChangeType, ContributorRole, RelationType, PresentationStatus, SlideLayout]
+    features: [block-based content, revisions, drafts, SEO metadata, presentations, slides]
+    use_case: CMS, blogs, forums, wikis, documentation, slide decks
+
+  thread:
+    status: production
+    version: "1.0.0"
+    description: Threaded discussions - comments, replies, nested conversations
+    owner: platform
+    dependencies: [core, content]
+    entities: [Thread, Post, PostEdit, Mention, ThreadSubscription, ReadReceipt]
+    enums: [ThreadType, ThreadStatus, ThreadVisibility, PostStatus, AuthorType, MentionType, SubscriptionType, ContentFormat]
+    features: [nested replies, mentions, subscriptions, read tracking, Q&A support]
+    use_case: Forums, comments, chat threads, Q&A, support tickets
+
+  reaction:
+    status: production
+    version: "1.0.0"
+    description: User reactions - votes, ratings, emoji reactions, awards
+    owner: platform
+    dependencies: [core]
+    entities: [Reaction, Vote, Rating, RatingDimension, Award, AwardType, ReactionSummary]
+    enums: [ReactionType, VoteDirection, RatingType, RatingStatus, GiverType, AwardCategory, AwardTypeStatus]
+    features: [emoji reactions, up/down votes, multi-dimension ratings, awards system]
+    use_case: Social platforms, reviews, forums, e-commerce ratings
+
+  community:
+    status: production
+    version: "1.0.0"
+    description: Online communities - groups, membership, roles, moderation
+    owner: platform
+    dependencies: [core]
+    entities: [Community, CommunityRule, CommunitySettings, CommunityMember, CustomRole, Moderation, Ban, Report]
+    enums: [CommunityType, CommunityVisibility, CommunityStatus, RuleCategory, FilterStrength, MemberRole, MemberStatus, Permission, RoleStatus, ModerationAction, ModerationStatus, ViolationAction, BanType, BanStatus, ReportReason, ReportStatus, ReportResolution]
+    features: [moderation tools, custom roles, banning, reporting, community rules]
+    use_case: Forums, social platforms, Discord-style communities
+
+  # ============================================
+  # ACCESS / BOOKING DOMAINS
+  # Memberships, subscriptions, reservations
+  # Created: 2025-11-26
+  # ============================================
+
+  membership:
+    status: production
+    version: "1.0.0"
+    description: Membership and subscription management - plans, access, billing
+    owner: platform
+    dependencies: [core, economic-agreement, economic-exchange]
+    entities: [Plan, PlanPricing, PlanFeature, UsageLimit, Subscription, SubscriptionEvent, UsageRecord, Entitlement, LoyaltyProgram, LoyaltyTier, LoyaltyMember, EarningRule, RedemptionRule]
+    enums: [PlanType, TierLevel, BillingPeriod, FeatureType, LimitType, PlanStatus, SubscriberType, SubscriptionStatus, CancellationReason, SubscriptionEventType, AccessLevel]
+    features: [subscription plans, usage tracking, loyalty programs, tiered access]
+    use_case: SaaS, gyms, clubs, loyalty programs, paywalls
+
+  booking:
+    status: production
+    version: "1.0.0"
+    description: Bookings, appointments, and reservations for resources
+    owner: platform
+    dependencies: [core, capacity]
+    entities: [Booking, PriceAdjustment, BookableResource, AvailabilityWindow, TimeSlot, BookingRequest, WaitlistEntry, BookingReminder]
+    enums: [BookingType, CustomerType, BookingStatus, PaymentStatus, BookingSource, ResourceType, ResourceStatus, PriceUnit, SlotStatus, RequestStatus, WaitlistStatus, ReminderType, ReminderChannel, ReminderStatus]
+    features: [resource scheduling, waitlists, reminders, recurring bookings]
+    use_case: Appointments, rentals, reservations, classes, events
+
+  service-catalog:
+    status: production
+    version: "1.0.0"
+    description: Services offered by a business with pricing and scheduling
+    owner: platform
+    dependencies: [core, booking]
+    entities: [Service, ServiceCategory, ServiceVariation, ServiceAddOn, ResourceRequirement, ServiceProvider, CancellationPolicy, CancellationRule, ServicePackage, PackageItem]
+    enums: [ServiceType, DurationType, PricingType, PriceUnit, ServiceStatus, CategoryStatus, ProviderStatus]
+    features: [service variations, add-ons, service packages, cancellation policies]
+    use_case: Salons, auto shops, professional services, home services
+
+  reporting:
+    status: production
+    version: "1.0.0"
+    description: Business reports and research artifacts with structured sections
+    owner: platform
+    dependencies: [core]
+    entities: [Report, ReportSection, ReportSectionContent, ResearchReport, Citation]
+    enums: [ReportType, ReportStatus, SectionContentType, ResearchType, CitationType, ConfidenceLevel]
+    actions: [CreateReport, AddSection, PublishReport, CreateResearchReport]
+    features: [structured sections, executive summaries, citations, research methodology]
+    use_case: Business reports, market research, competitive analysis, audits
+
+  # ============================================
+  # REAL ESTATE / FINANCING DOMAINS
+  # Property, loans, mortgages
+  # Created: 2025-11-26
+  # ============================================
+
+  real-property:
+    status: production
+    version: "1.0.0"
+    description: Real estate and land - parcels, buildings, zoning, assessments
+    owner: platform
+    dependencies: [core, geo-point, geo-shape, geo-place]
+    entities: [Property, LegalDescription, Building, Unit, Zoning, Setbacks, Assessment, TaxExemption, SaleRecord, Utilities, Listing, PriceChange]
+    enums: [PropertyType, PropertyStatus, LegalDescriptionType, BuildingType, ConstructionType, GarageType, BuildingCondition, BuildingQuality, UnitType, ZoningCategory, ExemptionType, SaleType, UtilityType, ListingType, ListingStatus, PriceChangeType, AreaUnit]
+    features: [legal descriptions, zoning, assessments, listings, sale history]
+    use_case: Real estate, property management, land records
+
+  financing:
+    status: production
+    version: "1.0.0"
+    description: Lending and financing - loans, mortgages, amortization
+    owner: platform
+    dependencies: [core, economic-exchange, economic-agreement]
+    entities: [Loan, AmortizationSchedule, ScheduledPayment, LoanPayment, Escrow, EscrowDisbursement, Refinance, LoanApplication]
+    enums: [LoanType, RateType, IndexType, CollateralType, PaymentFrequency, LoanStatus, ScheduleType, PaymentMethod, PaymentStatus, EscrowDisbursementType, RefinanceType, ApplicationStatus, LoanPurpose]
+    features: [amortization schedules, escrow management, refinancing, loan applications]
+    use_case: Home loans, auto loans, equipment financing, personal loans
+
+  vehicle:
+    status: production
+    version: "1.0.0"
+    description: Vehicles - automobiles, watercraft (boats), aircraft, motorcycles, RVs with generic attribute system
+    owner: platform
+    dependencies: [core]
+    entities:
+      - Vehicle
+      - VehicleAttribute
+      - AttributeDefinition
+      - VehicleTrait
+      - TraitDefinition
+      - VehicleOption
+      - VehicleDocument
+      - Watercraft
+      - Engine
+      - MarineElectronic
+      - Trailer
+      - Automobile
+      - VehicleHistory
+      - OwnershipRecord
+      - AccidentRecord
+      - TitleIssue
+      - ServiceRecord
+      - RecallRecord
+      - DealerInventory
+      - PlatformListing
+      - ListingPlatform
+    enums:
+      - VehicleCategory
+      - VehicleCondition
+      - VehicleStatus
+      - TitleStatus
+      - DistanceUnit
+      - OptionCategory
+      - VehicleDocumentType
+      - AttributeCategory
+      - AttributeValueType
+      - FilterType
+      - TraitCategory
+      - WatercraftType
+      - HullType
+      - HullMaterial
+      - PropulsionType
+      - EnginePosition
+      - EngineType
+      - FuelType
+      - FuelInjectionType
+      - MarineElectronicType
+      - TrailerType
+      - TrailerBrakeType
+      - CECategory
+      - BodyStyle
+      - Drivetrain
+      - TransmissionType
+      - CabType
+      - OwnerType
+      - AccidentSeverity
+      - TitleIssueType
+      - ServiceType
+      - RecallStatus
+      - AcquisitionType
+      - InventoryStatus
+      - PlatformType
+      - PlatformListingStatus
+    features:
+      - Generic attribute/trait system for cross-vehicle properties
+      - Polymorphic value types with validation
+      - ListingPlatform entity for external marketplace integration
+      - Full watercraft support (30+ boat types)
+      - Automobile support
+      - Vehicle history tracking
+      - Dealer inventory management
+    sources:
+      - "NMMA Standards"
+      - "USCG 33 CFR 183"
+      - "ISO 10087 - HIN"
+      - "ISO 3779 - VIN"
+      - "ABYC Standards"
+    use_case: Boat dealers, car dealers, RV dealers, fleet management, marinas
+
+  tech-stack:
+    status: production
+    version: "1.0.0"
+    description: Technology registry with rich metadata - frameworks, libraries, tools as first-class entities
+    owner: platform
+    dependencies: [core]
+    entities: [URL, Website, Email, License, Organization, Technology, Repository, Package, DetectionRule, TechProfile]
+    enums: [Protocol, URLStatus, OrgType, WebsiteType, EmailType, TechCategory, RepoPlatform, PackageRegistry, Runtime, DetectorType, ConfidenceLevel, TargetOutput]
+    registry_files:
+      - registry/organizations.yaml   # Companies, foundations, individuals
+      - registry/licenses.yaml        # MIT, Apache-2.0, GPL, etc.
+      - registry/frameworks.yaml      # React, Vue, Svelte, Next.js, etc.
+      - registry/backend.yaml         # Express, FastAPI, Django, etc.
+      - registry/ai-ml.yaml           # Anthropic, OpenAI, LangChain, BAML, etc.
+      - registry/cli.yaml             # Ink, Commander, Click, Typer, etc.
+      - registry/databases.yaml       # PostgreSQL, MongoDB, Prisma, etc.
+      - registry/cloud.yaml           # AWS, CDK, Terraform, Docker, etc.
+      - registry/build-tools.yaml     # Vite, Playwright, Jest, ESLint, etc.
+      - registry/styling.yaml         # Tailwind, shadcn/ui, Radix, etc.
+    features:
+      - Technologies as entities with author, website, repo, docs
+      - Detection rules for auto-discovery from project files
+      - Relationships (extends, alternative_to, related_to)
+      - Target output classification (webapp, cli, api, mcp_server, etc.)
+    use_case: Project portfolio management, tech stack detection, dependency analysis
+
+  # ============================================
+  # UNIFIED WORK SYSTEM DOMAIN
+  # Combines Item, Resource, Actor, Check, Workflow primitives
+  # Created: 2025-12-01
+  # ============================================
+
+  work-system:
+    status: production
+    version: "1.0.0"
+    description: Unified work tracking with Items (work units), Resources (allocatable), Actors (capabilities), Checks (gates), and Workflows (state machines)
+    owner: platform
+    dependencies: [core]
+    entities:
+      # Primitives
+      - Ref
+      - Quantity
+      - Duration
+      - Interval
+      - Version
+      # Resource System
+      - Resource
+      - Pool
+      - Allocation
+      - Consumption
+      # Actor System
+      - Actor
+      - Skill
+      - RoleGrant
+      - Certification
+      - Availability
+      # Item Dimensions
+      - ItemType
+      - TypeDefaults
+      - Scale
+      - Intent
+      # Constraint & Check
+      - Constraint
+      - Check
+      - ApproverReq
+      - Requirement
+      - Approval
+      - Condition
+      - Verification
+      - Reservation
+      - Escalation
+      - Waiver
+      # State Machine
+      - StateMachine
+      - State
+      - Transition
+      - Guard
+      - Action
+      - Event
+      - StateEvent
+      # Template System
+      - Template
+      - ItemSpec
+      - Variable
+      - Prompt
+      # Scheme & Container
+      - Scheme
+      - DefaultRule
+      - RuleCondition
+      - Container
+      # Core Item
+      - Item
+      # Graph
+      - Graph
+      - Node
+      - Edge
+      - GraphIndex
+      - Traversal
+      - PathPattern
+      - PatternStep
+      # Scored Set
+      - ScoredSet
+      - ScoredItem
+      - MatchReason
+    enums:
+      - DurationUnit
+      - ResourceType
+      - AllocationStatus
+      - ActorType
+      - AvailabilityStatus
+      - ConstraintOperator
+      - ExceedAction
+      - ApproverMode
+      - RequirementType
+      - ApprovalDecision
+      - ApprovalStatus
+      - ConditionType
+      - ConditionStatus
+      - VerificationMethod
+      - Severity
+      - EscalationAction
+      - StateType
+      - ActionType
+      - TemplateStatus
+      - SchemeType
+      - OverrideMode
+      - GraphIndexType
+      - Direction
+      - MatchType
+    item_types: [capture, research, generate, build, execute, discover, validate, decide]
+    scales: [seed, action, task, milestone, project, initiative]
+    edge_types: [HAS_TYPE, HAS_SCALE, HAS_STATE, HAS_INTENT, HAS_CONSTRAINT, HAS_CHECK, HAS_APPROVAL, HAS_CONDITION, APPROVED_BY, HAS_SKILL, HAS_ROLE, HAS_CERT, PARENT_OF, DEPENDS_ON, HAS_ALLOCATION, FROM_POOL, CONSUMES, CREATED_FROM, IN_CONTAINER, TRANSITIONED]
+    features:
+      - Item as core work atom (type + scale + intent + state)
+      - Resource pools with allocation/consumption tracking
+      - Actor capabilities (skills, roles, certifications)
+      - Conditional approvals with verification
+      - State machine with event sourcing
+      - Template system with semver versioning
+      - Jira-inspired scheme pattern for defaults
+      - Property graph for relationships
+      - Scored sets for search results
+    sources:
+      - "Atlassian Jira API (Issue, Scheme patterns)"
+      - "CLAUDE.md workflow system"
+      - "First-principles decomposition"
+    use_case: Unified work tracking for ideas, research, assets, projects, spikes across SDLC workflows
+
+  repo-sync:
+    status: development
+    version: "1.0.0"
+    description: Bidirectional sync between private monorepo and public standalone git repositories
+    owner: platform
+    dependencies: [core, workflow]
+    entities: [SyncConfig, Package, Settings, SyncOperation, CommitInfo, PackageSyncStatus, Conflict]
+    actions: [InitConfig, AddPackage, CheckStatus, Publish, Pull, ResolveConflict]
+    enums: [SyncStrategy, SyncDirection, OperationStatus, SyncState, ConflictType, ConflictResolution]
+    features:
+      - Bidirectional sync (monorepo ↔ public repos)
+      - Multiple sync strategies (copy-sync, subtree)
+      - Conflict detection and resolution
+      - Commit attribution preservation
+      - Dry-run mode
+    use_case: Publishing packages from monorepo to public repos, pulling PRs back
+
+  frontgate:
+    status: development
+    version: "1.0.0"
+    description: Self-organizing file system gatekeeper with deterministic rules
+    owner: platform
+    dependencies: [observer, human-task, core, events, gesture]
+    entities:
+      # Value Objects
+      - File
+      - FileScope
+      - Destination
+      - AutoFix
+      - FileTriageInput
+      - TriageGestureBinding
+      # Entities
+      - FileRule
+      - QuarantineEntry
+      - FileTriage
+      - TriageSession
+      # Events
+      - FileCreatedEvent
+      - FileViolationEvent
+      - FileQuarantinedEvent
+      - FileTriageCompletedEvent
+      - RuleLearnedEvent
+    actions: [CheckFile, ScanDirectory, QuarantineFile, StartTriageSession, SubmitTriageDecision, LearnRule]
+    enums: [AutoFixType, QuarantineReason, EventSource, Resolution, OperatingMode]
+    features:
+      - Extends observer.Rule with file-specific fields (FileScope, Destination, AutoFix)
+      - Composes human-task.Task pattern for triage workflows
+      - Gesture bindings for swipe-based UI (references gesture domain)
+      - Quarantine zone with resolution tracking
+      - Rule learning from user decisions
+      - Real-time file watching via watchdog daemon
+      - Git pre-commit hook integration
+    use_case: File organization enforcement in monorepos, AI-generated file quarantine, triage approval workflows
+
+  screenshot:
+    status: production
+    version: "1.0.0"
+    description: Web page screenshot capture with performance metrics, resource analysis, and viewport configurations
+    owner: platform
+    dependencies: [core]
+    entities: [Screenshot, Viewport, DocumentDimensions, PerformanceMetrics, ResourceMetrics, ResourceTypeMetrics, ScreenshotFile, ScreenshotBatch, CaptureOptions]
+    actions: [CaptureScreenshot, CaptureScreenshotBatch]
+    enums: [ViewportPreset, ImageFormat, ResourceType]
+    features: [web vitals metrics, resource analysis, viewport presets, full page capture, lazy content scrolling]
+    use_case: Website QA, responsive testing, visual regression, performance monitoring
+
+  project-capsule:
+    status: development
+    version: "1.0.0"
+    description: CEO-friendly capsule summaries of projects (who/problem/versus/solution/status)
+    owner: platform
+    dependencies: [core]
+    extends: tool-project-portfolio-manager/Project
+    entities: [ProjectCapsule, Alternative, StatusSummary]
+    enums: [StatusIndicator]
+    file_format: ".capsule.yaml in project root"
+    features:
+      - 30-second scannable executive summary
+      - Alternatives analysis (versus existing solutions)
+      - Status indicators for dashboards
+      - One-liner and elevator pitch formats
+    use_case: Executive summaries, portfolio dashboards, project discovery
+
+  process-net:
+    status: development
+    version: "0.1.0"
+    description: Petri net primitives for deterministic, verifiable process execution
+    owner: platform
+    dependencies: [core]
+    primitives:
+      - Place
+      - Transition
+      - Arc
+      - Token
+      - Marking
+      - Guard
+      - Inhibitor
+    entities:
+      - Net
+      - WorkflowNet
+      - Case
+      - Firing
+      - GuardResult
+      - EnabledTransition
+      - EnabledSet
+    actions: [CreateNet, CreateWorkflowNet, VerifySoundness, StartCase, GetEnabledTransitions, Fire, SuspendCase, ResumeCase, ReplayTo, ForkCase]
+    events: [CaseStartedEvent, TransitionFiredEvent, CaseSuspendedEvent, CaseResumedEvent, CaseCompletedEvent, CaseForkedEvent]
+    enums: [NodeType, CaseStatus, ActorType, ActionType]
+    patterns:
+      - Sequence
+      - ExclusiveChoice
+      - ParallelSplit
+      - MultiChoice
+      - SimpleMerge
+      - Synchronization
+      - StructuredDiscriminator
+      - ArbitraryLoop
+      - DeferredChoice
+      - MilestonePattern
+    features:
+      - Mathematical Petri net foundation
+      - Workflow net soundness verification
+      - Event sourcing with full replay
+      - Fork from any checkpoint
+      - Priority queue via GetEnabledTransitions
+      - BPMN-aligned workflow patterns
+    sources:
+      - "Petri (1962) - Kommunikation mit Automaten"
+      - "Van Der Aalst (1998) - Workflow Nets"
+      - "OMG BPMN 2.0 Specification"
+    use_case: Deterministic agent orchestration, SOP execution, manufacturing work orders, approval workflows with replay
+
+  personal-context:
+    status: development
+    version: "1.0.0"
+    description: Personal context management - source of truth for user state, location, activity, and preferences for AI personalization
+    owner: platform
+    dependencies: [core]
+    entities: [UserContext, LocationContext, Coordinates, NamedLocation, BoundingBox, ActivityContext, StateContext, BipolarDimensions, UnipolarDimensions, BipolarValue, UnipolarValue, EnvironmentContext, UserPreferences, SchedulePreferences, TimeWindow, DietaryPreferences, MealSchedule, ActivityPreferences, ContextSnapshot]
+    actions: [CaptureContext, GetCurrentContext, UpdateLocation, UpdateActivity, UpdateStateDimension, CreateNamedLocation, UpdatePreferences]
+    enums: [LocationLabel, MotionState, ActivityType, FocusLevel, NoiseLevel, SocialContext, DietaryRestriction, DietType, SocialPreference, DayOfWeek, ContextSource]
+    features:
+      - GPS coordinates with semantic labels
+      - Named locations with bounding box geofencing
+      - Motion state detection (stationary/walking/running/driving)
+      - Bipolar state dimensions (-5 to +5) for energy, mood, stress, social battery
+      - Unipolar state dimensions (1-5) for hunger, alertness, focus, cognitive load, comfort
+      - Activity tracking with focus level
+      - Schedule, dietary, and activity preferences
+      - Context history storage (captured but not analyzed)
+    use_case: AI personalization layer - productivity tools, meal planning, focus apps, smart home
+
+  personal-capability:
+    status: development
+    version: "1.0.0"
+    description: Personal capability management - time, money, skills, and constraints for better AI recommendations
+    owner: platform
+    dependencies: [core]
+    entities: [UserCapabilities, TimeCapability, TimeBlock, MoneyCapability, BudgetRange, SkillsCapability, SkillArea, ConstraintsCapability, Constraint, Blocker]
+    actions: [CaptureCapabilities, GetCurrentCapabilities, UpdateTimeCapability, UpdateMoneyCapability, AddSkill, AddConstraint, RemoveConstraint]
+    enums: [BusyLevel, FlexibilityLevel, TimeOfDayPreference, PressureLevel, TimeQuality, BudgetLevel, BudgetPeriod, ComfortLevel, SpendingPriority, SkillCategory, ProficiencyLevel, LearningCapacity, LearningStyle, ConstraintType, BlockerCategory, SeverityLevel, RiskTolerance]
+    features:
+      - Time availability (hours, blocks, busy level, flexibility)
+      - Financial capability (budget ranges, comfort level, spending priority)
+      - Skills inventory with proficiency levels
+      - Constraint and blocker tracking with severity
+      - Simple capture for AI decision-making
+    use_case: AI planning layer - task scoping, learning recommendations, project planning, delegation decisions
+    related:
+      - personal-context: "Momentary state vs stable capabilities"
+      - personal-values: "What matters vs what's possible"
+      - personal-priorities: "What to focus on vs what's achievable"
+
+  verification:
+    status: production
+    version: "1.0.0"
+    description: Project verification with atomic Eval primitives
+    owner: platform
+    dependencies: [core]
+    entities: [Eval, PatternEval, ExistsEval, FieldEval, ContainsEval, CompoundEval, ConditionalEval, Rule, EvalResult, RuleResult, Report]
+    actions: [Evaluate, CheckRule, Verify]
+    enums: [EvalTarget, ExistsKind, LogicOperator, RuleCategory, Severity, TechStack, Grade]
+    consumers: [frontgate, overwatch, manual, ci]
+    features:
+      - Atomic Eval primitive (true/false)
+      - Rule = Eval + metadata
+      - Composable with CompoundEval (AND/OR)
+      - ConditionalEval for if-then logic
+    theme_reference: "https://asset-distribution-bucket-1762910336.s3.us-east-1.amazonaws.com/previews/night-sky-theme.html"
+
+  project:
+    path: project/project.yaml
+    description: "Project metadata and references"
+
+  investor:
+    status: production
+    version: "1.0.0"
+    description: Angel investors, VCs, accelerators - profiles, thesis, check sizes, portfolio tracking
+    owner: platform
+    dependencies: [core, organization]
+    entities: [Investor, InvestmentFirm, InvestmentThesis, InvestorContact, PortfolioCompany, AcceleratorProgram, InvestorActivity]
+    actions: [SearchInvestors, RefreshInvestorData, GenerateInvestorReport, TrackActivityTrends]
+    enums: [InvestorType, FirmType, InvestorStatus, InvestmentStage, SectorFocus, GeographicFocus, ContactType, InvestmentOutcome, ActivityLevel, ConfidenceLevel]
+    data_storage: data/investor-db/
+    features:
+      - Living database with periodic refresh
+      - JSON per object storage
+      - Indexed by sector, stage, geography, check size
+      - Trend tracking over time
+    use_case: Fundraising research, investor CRM, trend dashboards
+
+  food-beverage:
+    status: draft
+    version: "1.0.0"
+    description: Food and beverage menu items with customization support
+    owner: platform
+    dependencies: [core, product]
+    entities: [MenuItem, MenuCategory, ModifierGroup, Modifier, Size, NutritionalInfo, Recipe, RecipeStep, RecipeIngredient, TimeRange]
+    enums: [MenuItemType, SelectionType, Allergen, DietaryTag, DayOfWeek, CategoryStatus, RecipeComplexity]
+    features:
+      - Multi-level modifier groups (milk, syrup, size, shots)
+      - Nutritional information with allergen tracking
+      - Size-based pricing and calorie scaling
+      - Time-based availability (breakfast, lunch, all-day)
+      - Recipe with preparation steps
+    use_case: Restaurant ordering, cafe POS, food delivery apps
+
+  order:
+    status: draft
+    version: "1.0.0"
+    description: Cart and order management with fulfillment tracking
+    owner: platform
+    dependencies: [core, auth, product, finance]
+    entities: [Cart, CartItem, Order, OrderItem, FulfillmentDetails, OrderStatusHistory, SelectedModifier]
+    enums: [PaymentStatus, FulfillmentStatus, FulfillmentType, StatusType]
+    features:
+      - Ephemeral cart with expiration
+      - Dual-state tracking (payment + fulfillment)
+      - Denormalized order items for history preservation
+      - Multiple fulfillment types (pickup, delivery, dine-in, curbside, drive-thru)
+      - Order status audit trail
+      - Special instructions and modifiers
+    use_case: E-commerce checkout, restaurant ordering, food delivery

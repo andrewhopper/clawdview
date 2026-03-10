@@ -1,0 +1,33 @@
+{
+  "name": "@hopperlabs/project-status-tracker",
+  "version": "0.1.0",
+  "description": "Event-sourced status tracking for project portfolio manager",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": ["event-sourcing", "status-tracking", "todos", "project-management"],
+  "author": "Hopper Labs",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^9.3.0",
+    "ulid": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.2",
+    "typescript": "~5.7.2",
+    "vitest": "^1.0.0"
+  }
+}

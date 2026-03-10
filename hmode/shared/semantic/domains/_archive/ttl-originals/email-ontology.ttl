@@ -1,0 +1,391 @@
+@prefix email: <http://hopperlabs.ai/ontology/email#> .
+@prefix action: <http://hopperlabs.ai/ontology/action#> .
+@prefix schema: <http://schema.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# ============================================
+# Email Domain Ontology
+# Canonical model for email entities and actions
+# Use case: Generate consistent email apps across mobile, web, CLI
+# ============================================
+
+# ----------------
+# SEMANTIC LAYER: Entities (What Exists)
+# ----------------
+
+email:Email a owl:Class ;
+    rdfs:label "Email" ;
+    rdfs:comment "Electronic mail message" .
+
+email:Inbox a owl:Class ;
+    rdfs:label "Inbox" ;
+    rdfs:comment "Container for received emails" .
+
+email:Folder a owl:Class ;
+    rdfs:label "Email Folder" ;
+    rdfs:comment "Organizational folder for emails" .
+
+email:Thread a owl:Class ;
+    rdfs:label "Email Thread" ;
+    rdfs:comment "Conversation thread of related emails" .
+
+email:Attachment a owl:Class ;
+    rdfs:label "Email Attachment" ;
+    rdfs:comment "File attached to email" .
+
+# ----------------
+# Properties
+# ----------------
+
+email:subject a owl:DatatypeProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range xsd:string ;
+    rdfs:label "Subject" ;
+    rdfs:comment "Email subject line" .
+
+email:body a owl:DatatypeProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range xsd:string ;
+    rdfs:label "Body" ;
+    rdfs:comment "Email body content" .
+
+email:recipients a owl:DatatypeProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range xsd:string ;
+    rdfs:label "Recipients" ;
+    rdfs:comment "Email recipient addresses (To field)" .
+
+email:cc a owl:DatatypeProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range xsd:string ;
+    rdfs:label "CC Recipients" ;
+    rdfs:comment "Carbon copy recipients" .
+
+email:bcc a owl:DatatypeProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range xsd:string ;
+    rdfs:label "BCC Recipients" ;
+    rdfs:comment "Blind carbon copy recipients" .
+
+email:sender a owl:ObjectProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range schema:Person ;
+    rdfs:label "Sender" ;
+    rdfs:comment "Person who sent the email" .
+
+email:status a owl:DatatypeProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range email:EmailStatus ;
+    rdfs:label "Status" ;
+    rdfs:comment "Current status of email" .
+
+email:EmailStatus a owl:Class ;
+    rdfs:label "Email Status" ;
+    owl:oneOf (email:Draft email:Sent email:Deleted email:Archived) .
+
+email:Draft a email:EmailStatus ;
+    rdfs:label "Draft" .
+
+email:Sent a email:EmailStatus ;
+    rdfs:label "Sent" .
+
+email:Deleted a email:EmailStatus ;
+    rdfs:label "Deleted" .
+
+email:Archived a email:EmailStatus ;
+    rdfs:label "Archived" .
+
+email:isRead a owl:DatatypeProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Is Read" ;
+    rdfs:comment "Whether email has been read" .
+
+email:sentAt a owl:DatatypeProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Sent At" ;
+    rdfs:comment "Timestamp when email was sent" .
+
+email:readAt a owl:DatatypeProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Read At" ;
+    rdfs:comment "Timestamp when email was read" .
+
+email:hasAttachment a owl:ObjectProperty ;
+    rdfs:domain email:Email ;
+    rdfs:range email:Attachment ;
+    rdfs:label "Has Attachment" ;
+    rdfs:comment "Email has file attachment" .
+
+# ----------------
+# SHACL Constraints (Validation Rules)
+# ----------------
+
+email:EmailShape a sh:NodeShape ;
+    sh:targetClass email:Email ;
+    sh:property [
+        sh:path email:subject ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 998 ; # RFC 2822 limit
+        sh:message "Subject is required and must be between 1-998 characters"
+    ] ;
+    sh:property [
+        sh:path email:recipients ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$" ;
+        sh:message "At least one valid recipient email address required"
+    ] ;
+    sh:property [
+        sh:path email:status ;
+        sh:in (email:Draft email:Sent email:Deleted email:Archived) ;
+        sh:message "Status must be one of: Draft, Sent, Deleted, Archived"
+    ] .
+
+# ----------------
+# KINETIC LAYER: Actions (What Can Be Done)
+# ----------------
+
+email:SendEmailAction a action:CreateAction ;
+    rdfs:label "Send Email" ;
+    rdfs:comment "Send email message to recipients via SMTP" ;
+    action:operatesOn email:Email ;
+    action:requiresPermission "email:send" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Creates email record in sent folder, sends via SMTP, updates status to Sent" ;
+    action:errorConditions "INVALID_RECIPIENT, SMTP_CONNECTION_ERROR, QUOTA_EXCEEDED, ATTACHMENT_TOO_LARGE" .
+
+# Parameters for SendEmailAction
+email:SendEmailAction action:requires [
+    action:parameterName "to" ;
+    action:parameterType "string[]" ;
+    action:isRequired true ;
+    rdfs:comment "Recipient email addresses (To field)"
+] , [
+    action:parameterName "subject" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Email subject line"
+] , [
+    action:parameterName "body" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Email body content (plain text or HTML)"
+] , [
+    action:parameterName "cc" ;
+    action:parameterType "string[]" ;
+    action:isRequired false ;
+    rdfs:comment "CC recipients (optional)"
+] , [
+    action:parameterName "bcc" ;
+    action:parameterType "string[]" ;
+    action:isRequired false ;
+    rdfs:comment "BCC recipients (optional)"
+] , [
+    action:parameterName "attachments" ;
+    action:parameterType "Attachment[]" ;
+    action:isRequired false ;
+    rdfs:comment "File attachments (optional)"
+] .
+
+# Output for SendEmailAction
+email:SendEmailAction action:produces [
+    action:resultType "Email" ;
+    rdfs:comment "Sent email object with id, sentAt timestamp, and messageId"
+] .
+
+# ----------------
+
+email:DeleteEmailAction a action:DeleteAction ;
+    rdfs:label "Delete Email" ;
+    rdfs:comment "Move email to trash or permanently delete" ;
+    action:operatesOn email:Email ;
+    action:requiresPermission "email:delete" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Updates email status to Deleted, moves to Trash folder, or permanently removes if already in Trash" ;
+    action:errorConditions "EMAIL_NOT_FOUND, INSUFFICIENT_PERMISSIONS" .
+
+email:DeleteEmailAction action:requires [
+    action:parameterName "emailId" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "ID of email to delete"
+] , [
+    action:parameterName "permanent" ;
+    action:parameterType "boolean" ;
+    action:isRequired false ;
+    action:defaultValue "false" ;
+    rdfs:comment "If true, permanently delete; if false, move to Trash"
+] .
+
+email:DeleteEmailAction action:produces [
+    action:resultType "void" ;
+    rdfs:comment "No return value, throws error if operation fails"
+] .
+
+# ----------------
+
+email:ForwardEmailAction a action:CreateAction ;
+    rdfs:label "Forward Email" ;
+    rdfs:comment "Forward existing email to new recipients" ;
+    action:operatesOn email:Email ;
+    action:requiresPermission "email:send" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Creates new email with original content quoted, sends to new recipients" ;
+    action:errorConditions "EMAIL_NOT_FOUND, INVALID_RECIPIENT, SMTP_CONNECTION_ERROR" .
+
+email:ForwardEmailAction action:requires [
+    action:parameterName "emailId" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "ID of email to forward"
+] , [
+    action:parameterName "to" ;
+    action:parameterType "string[]" ;
+    action:isRequired true ;
+    rdfs:comment "New recipient email addresses"
+] , [
+    action:parameterName "message" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "Optional message to prepend to forwarded content"
+] .
+
+email:ForwardEmailAction action:produces [
+    action:resultType "Email" ;
+    rdfs:comment "Newly created forwarded email"
+] .
+
+# ----------------
+
+email:MarkAsReadAction a action:UpdateAction ;
+    rdfs:label "Mark Email as Read" ;
+    rdfs:comment "Update email read status" ;
+    action:operatesOn email:Email ;
+    action:requiresPermission "email:read" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Sets isRead to true, records readAt timestamp" ;
+    action:errorConditions "EMAIL_NOT_FOUND" .
+
+email:MarkAsReadAction action:requires [
+    action:parameterName "emailId" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "ID of email to mark as read"
+] .
+
+email:MarkAsReadAction action:produces [
+    action:resultType "Email" ;
+    rdfs:comment "Updated email with isRead=true and readAt timestamp"
+] .
+
+# ----------------
+
+email:ArchiveEmailAction a action:UpdateAction ;
+    rdfs:label "Archive Email" ;
+    rdfs:comment "Move email to archive folder" ;
+    action:operatesOn email:Email ;
+    action:requiresPermission "email:archive" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Updates email status to Archived, moves to Archive folder" ;
+    action:errorConditions "EMAIL_NOT_FOUND" .
+
+email:ArchiveEmailAction action:requires [
+    action:parameterName "emailId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] .
+
+email:ArchiveEmailAction action:produces [
+    action:resultType "Email" ;
+    rdfs:comment "Archived email"
+] .
+
+# ----------------
+
+email:SearchEmailsAction a action:ReadAction ;
+    rdfs:label "Search Emails" ;
+    rdfs:comment "Search emails by keywords, sender, date range" ;
+    action:operatesOn email:Email ;
+    action:requiresPermission "email:read" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "None (read-only query)" ;
+    action:errorConditions "INVALID_QUERY_SYNTAX" .
+
+email:SearchEmailsAction action:requires [
+    action:parameterName "query" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Search query string"
+] , [
+    action:parameterName "folder" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "Limit search to specific folder"
+] , [
+    action:parameterName "dateFrom" ;
+    action:parameterType "Date" ;
+    action:isRequired false ;
+    rdfs:comment "Search emails from this date onward"
+] , [
+    action:parameterName "dateTo" ;
+    action:parameterType "Date" ;
+    action:isRequired false ;
+    rdfs:comment "Search emails up to this date"
+] .
+
+email:SearchEmailsAction action:produces [
+    action:resultType "Email[]" ;
+    rdfs:comment "Array of matching emails, sorted by relevance"
+] .
+
+# ----------------
+# Workflow: Process Inbox
+# ----------------
+
+email:ProcessInboxWorkflow a action:ActionSequence ;
+    rdfs:label "Process Inbox Workflow" ;
+    rdfs:comment "Standard workflow for efficiently processing email inbox" ;
+    action:hasStep email:SearchEmailsAction ,
+                   email:MarkAsReadAction ,
+                   email:ArchiveEmailAction ,
+                   email:DeleteEmailAction ;
+    rdfs:comment "Read → Decide (Archive/Delete/Respond) → Next email" .
+
+# ----------------
+# LLM Agent Integration
+# ----------------
+
+email:EmailDomainCapability a action:AgentCapability ;
+    rdfs:label "Email Domain Capability" ;
+    action:naturalLanguageDescription """
+You can perform the following email operations:
+- Send email to recipients with subject, body, and optional attachments
+- Delete emails (move to trash or permanent deletion)
+- Forward emails to new recipients with optional message
+- Mark emails as read/unread
+- Archive emails for long-term storage
+- Search emails by keywords, sender, date range
+
+All operations require appropriate permissions (email:send, email:read, email:delete, email:archive).
+""" ;
+    action:exampleUsage """
+Example 1: Send email
+Input: { to: ["user@example.com"], subject: "Meeting Notes", body: "See attached slides" }
+Output: { id: "msg-123", status: "sent", sentAt: "2025-11-18T10:30:00Z" }
+
+Example 2: Search emails
+Input: { query: "project alpha", dateFrom: "2025-11-01" }
+Output: [{ id: "msg-456", subject: "Project Alpha Update", from: "boss@company.com", ... }]
+
+Example 3: Archive old emails
+Input: { emailId: "msg-789" }
+Output: { id: "msg-789", status: "archived" }
+""" .

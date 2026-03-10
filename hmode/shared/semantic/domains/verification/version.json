@@ -1,0 +1,10 @@
+{
+  "domain": "verification",
+  "version": "1.0.0",
+  "description": "Project verification with atomic Eval primitives",
+  "dependencies": ["core"],
+  "entities": ["Eval", "PatternEval", "ExistsEval", "FieldEval", "ContainsEval", "CompoundEval", "ConditionalEval", "Rule", "EvalResult", "RuleResult", "Report"],
+  "actions": ["Evaluate", "CheckRule", "Verify"],
+  "enums": ["EvalTarget", "ExistsKind", "LogicOperator", "RuleCategory", "Severity", "TechStack", "Grade"],
+  "consumers": ["frontgate", "overwatch", "manual", "ci"]
+}

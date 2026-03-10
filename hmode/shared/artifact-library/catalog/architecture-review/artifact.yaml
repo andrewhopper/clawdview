@@ -1,0 +1,263 @@
+# Architecture Review Document
+# Category: review
+# Complexity: complex
+
+id: architecture-review
+name: Architecture Review
+version: "1.0.0"
+description: Critical evaluation of architecture decisions, patterns, and risks
+category: review
+complexity: complex
+created_at: "2025-12-10"
+updated_at: "2025-12-10"
+
+# -----------------------------------------
+# SDLC GATE ASSOCIATION
+# -----------------------------------------
+sdlc_gate:
+  phase: 6  # Design phase
+  gate_name: Architecture Gate
+  purpose: Validate architecture decisions before implementation
+  approval_required: true
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: executive-summary
+      name: Executive Summary
+      description: Architecture assessment verdict and key findings
+      required: true
+      format: prose
+      word_limit: 200
+
+    - id: system-overview
+      name: System Overview
+      description: Brief description of the system being reviewed
+      required: true
+      format: prose
+      word_limit: 300
+
+    - id: review-scope
+      name: Review Scope
+      description: What was reviewed and what was out of scope
+      required: true
+      format: bullets
+
+    - id: architecture-assessment
+      name: Architecture Assessment
+      description: Evaluation against key architectural concerns
+      required: true
+      format: mixed
+      subsections:
+        - id: scalability
+          name: Scalability
+          format: prose
+        - id: reliability
+          name: Reliability & Availability
+          format: prose
+        - id: security
+          name: Security
+          format: prose
+        - id: maintainability
+          name: Maintainability
+          format: prose
+        - id: performance
+          name: Performance
+          format: prose
+        - id: cost
+          name: Cost Efficiency
+          format: prose
+
+    - id: patterns-review
+      name: Patterns & Decisions
+      description: Evaluation of architectural patterns and design decisions
+      required: true
+      format: table
+      columns:
+        - Decision/Pattern
+        - Rationale
+        - Assessment
+        - Recommendation
+
+    - id: strengths
+      name: Strengths
+      description: What the architecture does well
+      required: true
+      format: bullets
+
+    - id: concerns
+      name: Concerns
+      description: Issues that need attention
+      required: true
+      format: table
+      columns:
+        - Concern
+        - Severity
+        - Impact
+        - Recommendation
+
+    - id: risks
+      name: Architectural Risks
+      description: Risks introduced by current architecture
+      required: true
+      format: table
+      columns:
+        - Risk
+        - Probability
+        - Impact
+        - Mitigation
+
+    - id: recommendations
+      name: Recommendations
+      description: Prioritized list of improvements
+      required: true
+      format: numbered
+
+    - id: verdict
+      name: Verdict
+      description: Final assessment (Approved / Approved with conditions / Not approved)
+      required: true
+      format: prose
+
+    - id: approval
+      name: Approval
+      description: Sign-off section
+      required: true
+      format: table
+      columns:
+        - Role
+        - Name
+        - Date
+        - Decision
+
+  required_inputs:
+    - name: system_name
+      type: string
+      description: Name of the system being reviewed
+      required: true
+    - name: architecture_docs
+      type: text
+      description: Architecture documentation, diagrams, or descriptions
+      required: true
+    - name: context
+      type: text
+      description: Business context and requirements
+      required: false
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a principal architect conducting an architecture review.
+
+    Your evaluation approach:
+    - Assess against quality attributes (scalability, reliability, security, etc.)
+    - Evaluate design decisions and trade-offs
+    - Identify risks and technical debt
+    - Provide actionable recommendations
+    - Be constructive but honest about issues
+
+    Writing style:
+    - Evidence-based assessments
+    - Clear severity ratings for concerns
+    - Prioritized, actionable recommendations
+    - Professional but direct
+
+  task: |
+    Generate an Architecture Review document for {{SYSTEM_NAME}}.
+
+    Architecture documentation:
+    {{ARCHITECTURE_DOCS}}
+
+    Business context:
+    {{CONTEXT}}
+
+    Structure the document with:
+    1. **Executive Summary** - Overall verdict and key findings
+    2. **System Overview** - What the system does
+    3. **Review Scope** - What was reviewed
+    4. **Architecture Assessment** - Evaluate scalability, reliability, security, maintainability, performance, cost
+    5. **Patterns & Decisions** - Review of key architectural choices
+    6. **Strengths** - What works well
+    7. **Concerns** - Issues to address (with severity)
+    8. **Architectural Risks** - Risk analysis
+    9. **Recommendations** - Prioritized improvements
+    10. **Verdict** - Approved / Approved with conditions / Not approved
+    11. **Approval** - Sign-off table
+
+    Total length: 1500-3500 words.
+
+  tone: professional
+  reading_level: technical
+  density: standard
+
+# -----------------------------------------
+# VALIDATORS
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 1500
+      max: 3500
+    severity: error
+    message: "Architecture review must be 1500-3500 words"
+
+  - id: section-presence
+    name: Required Sections
+    type: section_presence
+    rule:
+      required:
+        - executive-summary
+        - system-overview
+        - architecture-assessment
+        - strengths
+        - concerns
+        - recommendations
+        - verdict
+    severity: error
+    message: "Missing required section"
+
+  - id: has-verdict
+    name: Clear Verdict
+    type: regex
+    rule:
+      pattern: "(Approved|Not approved|Approved with conditions)"
+      should_match: true
+    severity: error
+    message: "Must include clear verdict"
+
+  - id: has-severity
+    name: Severity Ratings
+    type: regex
+    rule:
+      pattern: "(Critical|High|Medium|Low)"
+      should_match: true
+    severity: warning
+    message: "Concerns should include severity ratings"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 1500
+  max_words: 3500
+  reading_level: technical
+  density: standard
+  output_formats:
+    - markdown
+    - docx
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - architecture
+  - review
+  - assessment
+  - approval
+  - sdlc-gate

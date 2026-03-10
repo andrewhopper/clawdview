@@ -1,0 +1,644 @@
+# Economic Domain: Exchange
+# Record of value transfer between actors
+# Version: 1.0.0
+
+domain: economic-exchange
+version: "1.0.0"
+status: production
+description: Record of value transfer - the fundamental economic transaction
+dependencies:
+  - core
+  - economic-actor
+  - economic-value
+  - finance  # For monetary settlement
+
+# =============================================================================
+# DESIGN PHILOSOPHY
+# =============================================================================
+#
+# An Exchange is any transfer of value between actors:
+# - Employee works 8 hours → Company pays $200
+# - Robot welds 100 parts → (internal allocation)
+# - Customer pays $50 → Gets product
+# - Refund: Company returns $50 → Customer returns product
+#
+# Time is always: started_at, ended_at (nullable for instant)
+# Duration is computed, never stored.
+#
+# Money flows link to finance domain (Transaction, Payment, Invoice)
+#
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Exchange (the core record)
+  # ---------------------------------------------------------------------------
+
+  Exchange:
+    description: Record of value transfer between two actors
+    fields:
+      id:
+        type: string
+        required: true
+
+      # Type
+      exchange_type:
+        type: ExchangeType
+        required: true
+        default: STANDARD
+
+      # Parties
+      provider_id:
+        type: string
+        required: true
+        description: Actor providing value
+      consumer_id:
+        type: string
+        required: true
+        description: Actor receiving value
+
+      # What was exchanged
+      value_provided:
+        type: Value
+        required: true
+        description: What provider gave
+      value_received:
+        type: Value
+        required: false
+        description: What provider got in return (often money)
+
+      # When
+      started_at:
+        type: datetime
+        required: true
+        description: When exchange began
+      ended_at:
+        type: datetime
+        required: false
+        description: When exchange ended (null if instant or ongoing)
+
+      # Context
+      agreement_id:
+        type: string
+        required: false
+        description: Governing agreement
+      project_id:
+        type: string
+        required: false
+      task_id:
+        type: string
+        required: false
+
+      # Currency handling
+      exchange_rate:
+        type: ConversionRate
+        required: false
+        description: If currencies differ
+
+      # Modifiers applied
+      modifiers:
+        type: array
+        items:
+          type: AppliedModifier
+        required: false
+        description: Coupons, discounts, adjustments
+
+      # References to related exchanges
+      references:
+        type: array
+        items:
+          type: ExchangeReference
+        required: false
+        description: Links to related exchanges (refunds, adjustments)
+
+      # Settlement (links to finance domain)
+      settlement:
+        type: Settlement
+        required: false
+        description: How money side was settled
+
+      # Status
+      status:
+        type: ExchangeStatus
+        required: true
+        default: COMPLETED
+
+      # Metadata
+      notes:
+        type: string
+        required: false
+      metadata:
+        type: object
+        required: false
+      created_at:
+        type: datetime
+        required: false
+      created_by:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Applied Modifier
+  # ---------------------------------------------------------------------------
+
+  AppliedModifier:
+    description: Modifier applied to this exchange
+    fields:
+      modifier_id:
+        type: string
+        required: true
+        description: Reference to Modifier definition
+      code:
+        type: string
+        required: false
+        description: Coupon/promo code used
+      effect:
+        type: Value
+        required: true
+        description: The adjustment (e.g., -$20, -10%)
+      reason:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Exchange Reference
+  # ---------------------------------------------------------------------------
+
+  ExchangeReference:
+    description: Reference to a related exchange
+    fields:
+      exchange_id:
+        type: string
+        required: true
+      relationship:
+        type: ExchangeRelationship
+        required: true
+        description: How this exchange relates
+
+  # ---------------------------------------------------------------------------
+  # Settlement (link to finance)
+  # ---------------------------------------------------------------------------
+
+  Settlement:
+    description: How the monetary side was settled
+    fields:
+      method:
+        type: SettlementMethod
+        required: true
+      status:
+        type: SettlementStatus
+        required: true
+
+      # Links to finance domain
+      transaction_id:
+        type: string
+        required: false
+        description: finance.Transaction ID
+      payment_id:
+        type: string
+        required: false
+        description: finance.Payment ID
+      invoice_id:
+        type: string
+        required: false
+        description: finance.Invoice ID
+
+      settled_at:
+        type: datetime
+        required: false
+      settled_amount:
+        type: Money
+        required: false
+        description: Actual amount settled (may differ from value_received)
+
+  # ---------------------------------------------------------------------------
+  # Exchange Summary (aggregation)
+  # ---------------------------------------------------------------------------
+
+  ExchangeSummary:
+    description: Aggregated exchanges over a period
+    fields:
+      actor_id:
+        type: string
+        required: true
+      role:
+        type: ExchangeRole
+        required: true
+        description: As provider or consumer
+      period_start:
+        type: datetime
+        required: true
+      period_end:
+        type: datetime
+        required: true
+
+      # Totals
+      exchange_count:
+        type: integer
+        required: true
+      total_value_provided:
+        type: Value
+        required: false
+      total_value_received:
+        type: Value
+        required: false
+
+      # Breakdowns
+      by_type:
+        type: object
+        required: false
+        description: Counts by exchange type
+      by_status:
+        type: object
+        required: false
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  ExchangeType:
+    description: Type of exchange
+    values:
+      - STANDARD        # Normal exchange
+      - REVERSAL        # Full reversal (refund, return)
+      - ADJUSTMENT      # Partial adjustment
+      - CORRECTION      # Error correction
+      - TRANSFER        # Internal transfer (no external party)
+
+  ExchangeStatus:
+    description: Status of exchange
+    values:
+      - PENDING         # Not yet started
+      - IN_PROGRESS     # Ongoing (for duration-based)
+      - COMPLETED       # Successfully finished
+      - CANCELLED       # Cancelled before completion
+      - DISPUTED        # Under dispute
+      - REVERSED        # Fully reversed
+
+  ExchangeRelationship:
+    description: How exchanges relate
+    values:
+      - REVERSAL_OF     # This reverses that exchange
+      - ADJUSTMENT_TO   # This adjusts that exchange
+      - CONTINUATION_OF # This continues that exchange
+      - REPLACEMENT_FOR # This replaces that exchange
+      - PART_OF         # This is part of larger exchange
+
+  SettlementMethod:
+    description: How monetary settlement occurs
+    values:
+      - IMMEDIATE       # Paid immediately
+      - INVOICED        # Will be invoiced
+      - PAYROLL         # Via payroll cycle
+      - PREPAID         # Already paid (credits, subscription)
+      - INTERNAL        # Internal allocation (no money moves)
+      - BARTER          # Non-monetary exchange
+      - DEFERRED        # Payment deferred
+
+  SettlementStatus:
+    description: Status of settlement
+    values:
+      - NOT_REQUIRED    # No monetary settlement needed
+      - PENDING         # Awaiting settlement
+      - PARTIAL         # Partially settled
+      - SETTLED         # Fully settled
+      - OVERDUE         # Past due
+      - DISPUTED        # Under dispute
+      - WRITTEN_OFF     # Written off
+
+  ExchangeRole:
+    description: Role in exchange
+    values:
+      - PROVIDER        # Providing value
+      - CONSUMER        # Receiving value
+
+# =============================================================================
+# EXAMPLES
+# =============================================================================
+
+examples:
+
+  hourly_employee:
+    description: "Employee works 8 hours"
+    exchange_type: STANDARD
+    provider_id: "emp_123"
+    consumer_id: "company_abc"
+    value_provided: { quantity: 8, unit: "hours", value_type: LABOR }
+    value_received: { quantity: 200, unit: "USD", value_type: CURRENCY, currency: "USD" }
+    started_at: "2025-01-15T09:00:00Z"
+    ended_at: "2025-01-15T17:00:00Z"
+    agreement_id: "employment_contract_456"
+    settlement: { method: PAYROLL, status: PENDING }
+
+  api_usage:
+    description: "AI API call"
+    exchange_type: STANDARD
+    provider_id: "anthropic_claude"
+    consumer_id: "app_xyz"
+    value_provided: { quantity: 5000, unit: "tokens", value_type: DATA }
+    value_received: { quantity: 0.05, unit: "USD", value_type: CURRENCY, currency: "USD" }
+    started_at: "2025-01-15T14:32:01Z"
+    ended_at: "2025-01-15T14:32:03Z"
+    settlement: { method: INVOICED, status: PENDING }
+
+  refund:
+    description: "Full refund"
+    exchange_type: REVERSAL
+    provider_id: "amazon"
+    consumer_id: "customer_789"
+    value_provided: { quantity: 50, unit: "USD", value_type: CURRENCY, currency: "USD" }
+    value_received: { quantity: 1, unit: "unit", value_type: OUTPUT, description: "returned item" }
+    started_at: "2025-01-15T10:00:00Z"
+    references:
+      - exchange_id: "original_purchase_001"
+        relationship: REVERSAL_OF
+
+  currency_exchange:
+    description: "USD to EUR conversion"
+    exchange_type: STANDARD
+    provider_id: "forex_broker"
+    consumer_id: "traveler_abc"
+    value_provided: { quantity: 450, unit: "EUR", value_type: CURRENCY, currency: "EUR" }
+    value_received: { quantity: 500, unit: "USD", value_type: CURRENCY, currency: "USD" }
+    started_at: "2025-01-15T12:00:00Z"
+    exchange_rate: { from_unit: "USD", to_unit: "EUR", rate: 0.90 }
+
+# =============================================================================
+# DEPOSITS
+# Refundable funds held against future obligations
+# =============================================================================
+
+entities:
+
+  Deposit:
+    description: Refundable funds held as security, reservation, or advance payment
+    fields:
+      id:
+        type: string
+        required: true
+
+      # What's being secured
+      deposit_type:
+        type: DepositType
+        required: true
+      reference_type:
+        type: string
+        required: true
+        description: "Type of thing being secured (booking, lease, purchase)"
+      reference_id:
+        type: string
+        required: true
+        description: "ID of the booking, lease, purchase, etc."
+
+      # Amount
+      amount:
+        type: Money
+        required: true
+        description: Original deposit amount
+
+      # Parties
+      paid_by:
+        type: string
+        required: true
+        description: Actor who paid deposit
+      held_by:
+        type: string
+        required: true
+        description: Actor holding deposit
+
+      # Payment
+      paid_at:
+        type: datetime
+        required: true
+      payment_method:
+        type: string
+        description: "credit_card, ach, cash, etc."
+      payment_reference:
+        type: string
+        description: "FK to finance.Payment or transaction ID"
+
+      # Refund policy
+      refund_policy:
+        type: RefundPolicy
+        required: true
+
+      # Status tracking
+      status:
+        type: DepositStatus
+        required: true
+        default: HELD
+
+      # Resolution
+      deductions:
+        type: array
+        items:
+          type: Deduction
+        description: Amounts deducted before refund
+      applied_amount:
+        type: Money
+        description: Amount applied to final payment
+      refunded_amount:
+        type: Money
+        description: Amount refunded
+      forfeited_amount:
+        type: Money
+        description: Amount forfeited (non-refundable)
+
+      # Resolution dates
+      applied_at:
+        type: datetime
+      refunded_at:
+        type: datetime
+      forfeited_at:
+        type: datetime
+
+      # Audit
+      notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Deduction:
+    description: Amount deducted from deposit before refund
+    fields:
+      id:
+        type: string
+        required: true
+      reason:
+        type: DeductionReason
+        required: true
+      amount:
+        type: Money
+        required: true
+      description:
+        type: string
+        description: "Detailed explanation of deduction"
+      evidence:
+        type: array
+        items:
+          type: string
+        description: "Photos, inspection reports, etc."
+      disputed:
+        type: boolean
+        default: false
+      dispute_notes:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+
+  RefundPolicy:
+    description: Rules governing deposit refundability
+    fields:
+      type:
+        type: RefundPolicyType
+        required: true
+
+      # For partial refunds
+      refundable_percentage:
+        type: decimal
+        description: "0.0-1.0, what percentage is refundable"
+
+      # Time-based policies
+      full_refund_before:
+        type: duration
+        description: "Full refund if cancelled before this duration"
+      partial_refund_before:
+        type: duration
+        description: "Partial refund if cancelled before this"
+      no_refund_after:
+        type: duration
+        description: "No refund after this point"
+
+      # Grace period
+      grace_period:
+        type: duration
+        description: "Time after payment to cancel for full refund"
+
+      # Conditions
+      conditions:
+        type: array
+        items:
+          type: string
+        description: "Additional conditions affecting refundability"
+
+enums:
+
+  DepositType:
+    description: Type of deposit
+    values:
+      - security           # Damage protection (rental, lease)
+      - holding            # Reserve item pending purchase
+      - reservation        # Confirm booking
+      - pet                # Pet-related damages
+      - cleaning           # Cleaning costs
+      - key                # Key/fob replacement
+      - utility            # Utility deposit
+      - earnest_money      # Real estate purchase intent
+      - retainer           # Professional services retainer
+      - layaway            # Hold item for future purchase
+
+  DepositStatus:
+    description: Current status of deposit
+    values:
+      - held               # Being held, not yet resolved
+      - applied            # Applied to final payment
+      - partially_refunded # Some deductions, partial refund
+      - fully_refunded     # Full amount refunded
+      - forfeited          # Entire amount forfeited
+      - disputed           # Under dispute
+      - expired            # Time limit expired (unclaimed)
+
+  DeductionReason:
+    description: Why amount was deducted from deposit
+    values:
+      - damage             # Physical damage
+      - cleaning           # Cleaning required
+      - missing_items      # Items not returned
+      - late_return        # Returned late
+      - early_termination  # Contract ended early
+      - unpaid_balance     # Outstanding balance owed
+      - violation          # Policy/rule violation
+      - administrative     # Administrative fees
+      - other              # Other reason (see description)
+
+  RefundPolicyType:
+    description: Type of refund policy
+    values:
+      - full_refund        # Fully refundable
+      - partial_refund     # Partially refundable (fixed %)
+      - non_refundable     # Not refundable
+      - time_based         # Refundability depends on timing
+      - conditional        # Refundability depends on conditions
+
+# =============================================================================
+# DEPOSIT EXAMPLES
+# =============================================================================
+
+deposit_examples:
+
+  rental_security_deposit:
+    description: "Apartment security deposit"
+    deposit_type: security
+    reference_type: "lease"
+    reference_id: "lease_abc123"
+    amount: { amount: 2000, currency: "USD" }
+    paid_by: "tenant_456"
+    held_by: "landlord_789"
+    paid_at: "2025-01-01T00:00:00Z"
+    refund_policy:
+      type: full_refund
+      conditions: ["No damage beyond normal wear", "All rent paid", "Proper notice given"]
+    status: HELD
+
+  hotel_reservation:
+    description: "Hotel room reservation hold"
+    deposit_type: reservation
+    reference_type: "booking"
+    reference_id: "booking_xyz"
+    amount: { amount: 150, currency: "USD" }
+    paid_by: "guest_123"
+    held_by: "hotel_marriott"
+    paid_at: "2025-01-10T00:00:00Z"
+    refund_policy:
+      type: time_based
+      full_refund_before: "P7D"
+      partial_refund_before: "P2D"
+      refundable_percentage: 0.5
+    status: HELD
+
+  car_rental_with_deduction:
+    description: "Car rental deposit with damage deduction"
+    deposit_type: security
+    reference_type: "rental"
+    reference_id: "rental_car_001"
+    amount: { amount: 500, currency: "USD" }
+    paid_by: "driver_abc"
+    held_by: "enterprise"
+    paid_at: "2025-01-05T00:00:00Z"
+    refund_policy: { type: full_refund }
+    status: partially_refunded
+    deductions:
+      - reason: damage
+        amount: { amount: 150, currency: "USD" }
+        description: "Scratch on rear bumper"
+        evidence: ["photo_001.jpg", "inspection_report.pdf"]
+    refunded_amount: { amount: 350, currency: "USD" }
+    refunded_at: "2025-01-12T00:00:00Z"
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "Double-entry bookkeeping principles"
+  - "ISO 20022 (Financial messaging)"
+  - "State landlord-tenant deposit laws"
+  - "Credit card authorization hold practices"

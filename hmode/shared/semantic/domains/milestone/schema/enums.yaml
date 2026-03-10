@@ -1,0 +1,214 @@
+# Milestone Domain - Enums
+# All enum definitions for milestone domain
+
+enums:
+
+  MilestoneType:
+    description: Category of milestone
+    values:
+      - Organizational # Corporate/organizational milestones
+      - Personal       # Individual life milestones
+      - Career         # Professional development milestones
+      - Financial      # Financial goals and achievements
+      - Relationship   # Family, friends, community milestones
+      - Health         # Health and wellness milestones
+      - Learning       # Education and skill acquisition
+
+  MilestoneStatus:
+    description: Current state of a milestone
+    values:
+      - Planned        # Future milestone, not yet started
+      - InProgress     # Active work toward milestone
+      - AtRisk         # Behind schedule or facing blockers
+      - Achieved       # Successfully completed
+      - Missed         # Did not achieve by target date
+      - Deferred       # Postponed to later date
+      - Cancelled      # No longer pursuing
+
+  MilestonePriority:
+    description: Importance level of milestone
+    values:
+      - Critical       # Must achieve, foundational
+      - High           # Very important, significant impact
+      - Medium         # Important, but flexible
+      - Low            # Nice to have
+
+  OrganizationalMilestoneCategory:
+    description: Specific organizational milestone types
+    values:
+      - BoardPresentation    # Board of directors presentation
+      - BoardMeeting         # Regular board meeting
+      - FundingRound         # Seed, Series A, B, etc.
+      - ProductLaunch        # New product/service launch
+      - RevenueTarget        # Revenue milestone
+      - CustomerTarget       # Customer count milestone
+      - Acquisition          # M&A activity
+      - IPO                  # Initial public offering
+      - Partnership          # Strategic partnership
+      - Certification        # Compliance/certification achieved
+      - TeamMilestone        # Hiring/team growth target
+      - AnnualPlanning       # Annual strategy/planning cycle
+
+  PersonalMilestoneCategory:
+    description: Specific personal milestone types
+    values:
+      - VisionCraft          # Personal vision creation/update
+      - LifeGoal             # Major life goal achievement
+      - FinancialTarget      # Personal financial milestone
+      - HealthGoal           # Fitness/health achievement
+      - RelationshipEvent    # Marriage, family milestones
+      - CareerTransition     # Job change, promotion, retirement
+      - EducationGoal        # Degree, certification, learning
+      - TravelGoal           # Travel/adventure milestone
+      - CreativeProject      # Artistic/creative achievement
+      - CommunityService     # Volunteer/giving milestone
+      - LegacyPlanning       # Estate, succession planning
+
+  TimeHorizon:
+    description: Planning horizon for goals
+    values:
+      - Immediate      # Within 30 days
+      - ShortTerm      # 1-6 months
+      - MediumTerm     # 6-18 months
+      - LongTerm       # 18 months - 5 years
+      - Visionary      # 5+ years
+
+  ValueCategory:
+    description: Category of organizational/personal value
+    values:
+      - Core           # Fundamental, non-negotiable values
+      - Aspirational   # Values we strive toward
+      - Permission     # Values that enable specific behaviors
+      - Accidental     # Organic values that emerged
+
+  PresentationType:
+    description: Type of board presentation
+    values:
+      - Quarterly        # Regular quarterly update
+      - Annual           # Annual review
+      - Strategic        # Strategic planning session
+      - Emergency        # Urgent/unscheduled
+      - Special          # Special topic
+
+  BoardType:
+    description: Type of board
+    values:
+      - Directors        # Board of directors (governance)
+      - Advisory         # Advisory board (non-binding)
+      - Trustees         # Board of trustees (nonprofits)
+      - Governors        # Board of governors
+
+  CommitteeType:
+    description: Type of board committee
+    values:
+      - Audit            # Financial oversight
+      - Compensation     # Executive pay
+      - Nominating       # Board member selection
+      - Governance       # Corporate governance
+      - Risk             # Risk management
+      - Executive        # Day-to-day oversight
+      - Special          # Ad-hoc committee
+
+  BoardRole:
+    description: Role on board of directors
+    values:
+      - Chair
+      - ViceChair
+      - Secretary
+      - Treasurer
+      - Director
+      - Observer
+
+  AgendaItemType:
+    description: Type of agenda item
+    values:
+      - Presentation
+      - Discussion
+      - Vote
+      - Report
+      - Update
+
+  MaterialType:
+    description: Type of presentation material
+    values:
+      - Slides
+      - Financials
+      - Report
+      - Memo
+      - Appendix
+
+  ConfidentialityLevel:
+    description: Information classification
+    values:
+      - Public
+      - Internal
+      - Confidential
+      - Restricted
+
+  DecisionOutcome:
+    description: Outcome of board vote
+    values:
+      - Approved
+      - Rejected
+      - Deferred
+      - Amended
+      - Tabled
+
+  ActionStatus:
+    description: Status of follow-up action
+    values:
+      - Pending
+      - InProgress
+      - Completed
+      - Overdue
+      - Cancelled
+
+  BlockerSeverity:
+    description: Severity of blocker
+    values:
+      - Low
+      - Medium
+      - High
+      - Critical
+
+  Trend:
+    description: Direction of metric change
+    values:
+      - Improving
+      - Stable
+      - Declining
+
+  LifeAreaType:
+    description: Areas of life for personal planning
+    values:
+      - Career           # Work, profession
+      - Finance          # Money, investments
+      - Health           # Physical wellness
+      - Relationships    # Family, friends
+      - PersonalGrowth   # Learning, development
+      - Recreation       # Fun, hobbies
+      - PhysicalEnv      # Home, possessions
+      - Spirituality     # Meaning, purpose
+
+  MissionScope:
+    description: Scope of mission statement
+    values:
+      - Organizational   # Company/org mission
+      - Team             # Team/department mission
+      - Personal         # Individual mission
+
+  VisionScope:
+    description: Scope of vision statement
+    values:
+      - Organizational   # Company/org vision
+      - Team             # Team/department vision
+      - Personal         # Individual vision
+      - Product          # Product/service vision
+
+  ValueScope:
+    description: Scope of value set
+    values:
+      - Organizational   # Company/org values
+      - Team             # Team/department values
+      - Personal         # Individual values
+      - Family           # Family values

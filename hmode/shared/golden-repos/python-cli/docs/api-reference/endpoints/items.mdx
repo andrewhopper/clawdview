@@ -1,0 +1,177 @@
+---
+title: 'Items'
+description: 'Manage items in the system'
+api: 'GET /api/items'
+---
+
+## List Items
+
+<ParamField query="page" type="number" default="1">
+  Page number
+</ParamField>
+
+<ParamField query="pageSize" type="number" default="10">
+  Items per page (max 100)
+</ParamField>
+
+<RequestExample>
+```bash curl
+curl -X GET "http://localhost:3000/api/items?page=1&pageSize=10" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript fetch
+const response = await fetch('http://localhost:3000/api/items?page=1&pageSize=10', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+const data = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "items": [
+    {
+      "id": "abc123",
+      "name": "Example Item",
+      "description": "An example item",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "pageSize": 10,
+  "hasNext": false
+}
+```
+</ResponseExample>
+
+---
+
+## Create Item
+
+<api method="POST" path="/api/items" />
+
+<ParamField body="name" type="string" required>
+  Item name (1-100 characters)
+</ParamField>
+
+<ParamField body="description" type="string">
+  Item description (max 500 characters)
+</ParamField>
+
+<RequestExample>
+```bash curl
+curl -X POST "http://localhost:3000/api/items" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "New Item", "description": "A new item"}'
+```
+
+```javascript fetch
+const response = await fetch('http://localhost:3000/api/items', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'New Item',
+    description: 'A new item'
+  })
+});
+const data = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 201
+{
+  "id": "xyz789",
+  "name": "New Item",
+  "description": "A new item",
+  "createdAt": "2024-01-15T11:00:00.000Z",
+  "updatedAt": "2024-01-15T11:00:00.000Z"
+}
+```
+
+```json 400
+{
+  "error": [
+    {
+      "code": "too_small",
+      "path": ["name"],
+      "message": "String must contain at least 1 character(s)"
+    }
+  ]
+}
+```
+</ResponseExample>
+
+---
+
+## Get Item
+
+<api method="GET" path="/api/items/{id}" />
+
+<ParamField path="id" type="string" required>
+  Item ID
+</ParamField>
+
+<RequestExample>
+```bash curl
+curl -X GET "http://localhost:3000/api/items/abc123" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "abc123",
+  "name": "Example Item",
+  "description": "An example item",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "updatedAt": "2024-01-15T10:30:00.000Z"
+}
+```
+
+```json 404
+{
+  "error": "Item not found"
+}
+```
+</ResponseExample>
+
+---
+
+## Delete Item
+
+<api method="DELETE" path="/api/items/{id}" />
+
+<ParamField path="id" type="string" required>
+  Item ID
+</ParamField>
+
+<RequestExample>
+```bash curl
+curl -X DELETE "http://localhost:3000/api/items/abc123" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+</RequestExample>
+
+<ResponseExample>
+```json 204
+// No content
+```
+
+```json 404
+{
+  "error": "Item not found"
+}
+```
+</ResponseExample>

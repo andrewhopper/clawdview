@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mockup Title</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --primary-foreground: 0 0% 98%;
+      --secondary: 240 4.8% 95.9%;
+      --secondary-foreground: 240 5.9% 10%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --accent: 240 4.8% 95.9%;
+      --accent-foreground: 240 5.9% 10%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 5.9% 90%;
+      --input: 240 5.9% 90%;
+      --ring: 240 5.9% 10%;
+      --radius: 0.5rem;
+    }
+    .dark {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --popover: 240 10% 3.9%;
+      --popover-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      --secondary: 240 3.7% 15.9%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+    }
+    * { border-color: hsl(var(--border)); }
+    body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
+
+    /* Button component styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: colors 0.2s;
+      padding: 0.5rem 1rem;
+      height: 2.5rem;
+    }
+    .btn:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+    .btn:disabled { pointer-events: none; opacity: 0.5; }
+    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+    .btn-secondary:hover { opacity: 0.8; }
+    .btn-outline { border: 1px solid hsl(var(--input)); background: hsl(var(--background)); }
+    .btn-outline:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+    .btn-ghost:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+    .btn-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
+    .btn-destructive:hover { opacity: 0.9; }
+    .btn-sm { height: 2.25rem; padding: 0 0.75rem; border-radius: calc(var(--radius) - 2px); }
+    .btn-lg { height: 2.75rem; padding: 0 2rem; border-radius: calc(var(--radius) - 2px); }
+
+    /* Card component styles */
+    .card { border-radius: var(--radius); border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--card-foreground)); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card-header { display: flex; flex-direction: column; gap: 0.375rem; padding: 1.5rem; }
+    .card-title { font-size: 1.5rem; font-weight: 600; line-height: 1; letter-spacing: -0.025em; }
+    .card-description { font-size: 0.875rem; color: hsl(var(--muted-foreground)); }
+    .card-content { padding: 1.5rem; padding-top: 0; }
+    .card-footer { display: flex; align-items: center; padding: 1.5rem; padding-top: 0; }
+
+    /* Input component styles */
+    .input {
+      display: flex;
+      height: 2.5rem;
+      width: 100%;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid hsl(var(--input));
+      background: hsl(var(--background));
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+    }
+    .input::placeholder { color: hsl(var(--muted-foreground)); }
+    .input:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+    .input:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    /* Badge component styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 9999px;
+      border: 1px solid transparent;
+      padding: 0.125rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-default { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .badge-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+    .badge-outline { border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
+    .badge-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
+
+    /* Alert component styles */
+    .alert { position: relative; width: 100%; border-radius: var(--radius); border: 1px solid hsl(var(--border)); padding: 1rem; }
+    .alert-default { background: hsl(var(--background)); color: hsl(var(--foreground)); }
+    .alert-destructive { border-color: hsl(var(--destructive) / 0.5); color: hsl(var(--destructive)); }
+    .alert-title { margin-bottom: 0.25rem; font-weight: 500; line-height: 1; letter-spacing: -0.025em; }
+    .alert-description { font-size: 0.875rem; }
+  </style>
+</head>
+<body class="min-h-screen bg-background font-sans antialiased">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div class="container mx-auto flex h-14 items-center px-4">
+      <div class="mr-4 flex">
+        <a class="mr-6 flex items-center space-x-2" href="#">
+          <span class="font-bold">App Name</span>
+        </a>
+        <nav class="flex items-center space-x-6 text-sm font-medium">
+          <a class="text-foreground/60 hover:text-foreground" href="#">Dashboard</a>
+          <a class="text-foreground/60 hover:text-foreground" href="#">Projects</a>
+          <a class="text-foreground/60 hover:text-foreground" href="#">Settings</a>
+        </nav>
+      </div>
+      <div class="flex flex-1 items-center justify-end space-x-2">
+        <button class="btn btn-outline btn-sm">Sign In</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto py-6 px-4">
+    <div class="flex flex-col gap-6">
+
+      <!-- Page Header -->
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Page Title</h1>
+        <p class="text-muted-foreground">Page description goes here.</p>
+      </div>
+
+      <!-- Card Grid Example -->
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Card Title</div>
+            <div class="card-description">Card description text.</div>
+          </div>
+          <div class="card-content">
+            <p>Card content goes here. You can add any content.</p>
+          </div>
+          <div class="card-footer">
+            <button class="btn btn-primary btn-sm">Action</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Another Card</div>
+            <div class="card-description">With different content.</div>
+          </div>
+          <div class="card-content">
+            <div class="flex gap-2">
+              <span class="badge badge-default">Badge</span>
+              <span class="badge badge-secondary">Secondary</span>
+              <span class="badge badge-outline">Outline</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Form Card</div>
+            <div class="card-description">Example form layout.</div>
+          </div>
+          <div class="card-content">
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <label class="text-sm font-medium">Email</label>
+                <input type="email" class="input" placeholder="name@example.com">
+              </div>
+              <button class="btn btn-primary w-full">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Example -->
+      <div class="alert alert-default">
+        <div class="alert-title">Heads up!</div>
+        <div class="alert-description">This is an informational alert using the design system.</div>
+      </div>
+
+      <!-- Button Variants -->
+      <div class="flex flex-wrap gap-4">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-outline">Outline</button>
+        <button class="btn btn-ghost">Ghost</button>
+        <button class="btn btn-destructive">Destructive</button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t py-6 md:py-0">
+    <div class="container mx-auto flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row px-4">
+      <p class="text-sm text-muted-foreground">
+        &copy; 2024 Company Name. All rights reserved.
+      </p>
+      <nav class="flex gap-4">
+        <a class="text-sm text-muted-foreground hover:text-foreground" href="#">Privacy</a>
+        <a class="text-sm text-muted-foreground hover:text-foreground" href="#">Terms</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

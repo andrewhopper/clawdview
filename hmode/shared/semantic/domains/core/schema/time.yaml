@@ -1,0 +1,298 @@
+# Time Primitives
+
+entities:
+
+  TimePoint:
+    description: Specific moment in time with optional timezone
+    properties:
+      timestamp:
+        type: datetime
+        required: true
+      timezone:
+        type: string
+        pattern: "^[A-Za-z_/]+$|^UTC$"
+        description: IANA timezone (e.g., 'America/New_York')
+
+  Duration:
+    description: Length of time
+    properties:
+      isoDuration:
+        type: duration
+        description: ISO 8601 format (e.g., 'PT1H30M')
+      milliseconds:
+        type: long
+        description: Duration in ms for computation
+
+  DateRange:
+    description: Time period with start and end
+    properties:
+      startTime:
+        type: TimePoint
+        required: true
+      endTime:
+        type: TimePoint
+      duration:
+        type: Duration
+        description: Computed duration
+
+  TimeRange:
+    description: Simple date range for employment periods, project durations, etc.
+    properties:
+      start_date:
+        type: date
+        required: true
+        description: Start date
+      end_date:
+        type: date
+        required: false
+        description: End date (null if ongoing/current)
+      is_current:
+        type: boolean
+        computed: "end_date == null"
+        description: Whether this time range is currently active
+
+  Recurrence:
+    description: Repeating time pattern
+    properties:
+      rule:
+        type: string
+        description: RRULE format (RFC 5545)
+      frequency:
+        type: RecurrenceFrequency
+
+enums:
+
+  TimeOfDay:
+    values:
+      - Morning    # 6:00 - 12:00
+      - Afternoon  # 12:00 - 18:00
+      - Evening    # 18:00 - 21:00
+      - Night      # 21:00 - 6:00
+
+  Season:
+    values: [Spring, Summer, Fall, Winter]
+
+  LifeStage:
+    values:
+      - Infant      # 0-2 years
+      - Child       # 2-12 years
+      - Adolescent  # 12-18 years
+      - YoungAdult  # 18-35 years
+      - Adult       # 35-55 years
+      - MiddleAge   # 55-70 years
+      - Senior      # 70+ years
+
+  RecurrenceFrequency:
+    values: [Hourly, Daily, Weekly, Monthly, Yearly]
+
+  DayOfWeek:
+    values: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+
+  # ============================================
+  # SCHEDULING PRIMITIVES
+  # For store hours, school schedules, gym classes, etc.
+  # ============================================
+
+entities:
+
+  TimeWindow:
+    description: Time range within a day (e.g., 9:00-17:00)
+    properties:
+      start:
+        type: string
+        format: time
+        required: true
+        description: "HH:MM format (24-hour)"
+      end:
+        type: string
+        format: time
+        required: true
+        description: "HH:MM format (24-hour)"
+      crossesMidnight:
+        type: boolean
+        default: false
+        description: "True if end < start (e.g., 22:00-02:00)"
+
+  SchedulePeriod:
+    description: Named time slot within a schedule (e.g., Period 1, Lunch, Open Hours)
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Period 1, Lunch, Morning Shift, etc."
+      window:
+        type: TimeWindow
+        required: true
+      sequence:
+        type: integer
+        description: Order within the day (1, 2, 3...)
+      type:
+        type: SchedulePeriodType
+
+  ScheduleTemplate:
+    description: Named collection of periods for a day type (Regular Day, Half Day, Assembly)
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Regular A-Day, Half Day, Assembly Schedule, Summer Hours"
+      description:
+        type: string
+      periods:
+        type: array
+        items: SchedulePeriod
+        required: true
+      totalDuration:
+        type: Duration
+        description: Computed sum of all periods
+      isDefault:
+        type: boolean
+        default: false
+        description: Default template when none specified
+
+  ScheduleAssignment:
+    description: Maps days to schedule templates (Mon-Fri = Regular, Sat = Weekend)
+    properties:
+      daysOfWeek:
+        type: array
+        items: DayOfWeek
+        description: Which days use this template
+      template:
+        type: string
+        required: true
+        description: FK to ScheduleTemplate.id
+      effectiveFrom:
+        type: date
+        description: When this assignment starts
+      effectiveUntil:
+        type: date
+        description: When this assignment ends
+
+  CalendarDay:
+    description: Specific date with its schedule (overrides default assignment)
+    properties:
+      date:
+        type: date
+        required: true
+      templateId:
+        type: string
+        description: FK to ScheduleTemplate.id (null = closed)
+      isClosed:
+        type: boolean
+        default: false
+      reason:
+        type: string
+        description: "Holiday, Snow Day, Professional Development"
+      overrides:
+        type: array
+        items: SchedulePeriod
+        description: Period-level overrides for this day only
+
+  ScheduleException:
+    description: Date range exception (holiday break, special event period)
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Winter Break, Finals Week, Construction"
+      startDate:
+        type: date
+        required: true
+      endDate:
+        type: date
+        required: true
+      templateId:
+        type: string
+        description: Template to use during exception (null = closed)
+      isClosed:
+        type: boolean
+        default: false
+      recurrence:
+        type: Recurrence
+        description: For annual holidays
+
+  CalendarPeriod:
+    description: Named date range (semester, quarter, fiscal year, season)
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: "Fall 2025, Q1, FY2025"
+      type:
+        type: CalendarPeriodType
+        required: true
+      startDate:
+        type: date
+        required: true
+      endDate:
+        type: date
+        required: true
+      parentPeriodId:
+        type: string
+        description: FK to parent CalendarPeriod (semester within academic year)
+
+  OperatingSchedule:
+    description: Complete schedule definition for an entity (store, school, gym)
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+      timezone:
+        type: string
+        required: true
+        description: IANA timezone
+      templates:
+        type: array
+        items: ScheduleTemplate
+        required: true
+      defaultAssignments:
+        type: array
+        items: ScheduleAssignment
+        required: true
+      exceptions:
+        type: array
+        items: ScheduleException
+      calendarPeriods:
+        type: array
+        items: CalendarPeriod
+
+enums:
+
+  SchedulePeriodType:
+    values:
+      - class           # Academic class period
+      - break           # Recess, passing period
+      - lunch           # Meal break
+      - shift           # Work shift
+      - open            # Open for business
+      - appointment     # Bookable slot
+      - event           # Special event
+      - maintenance     # Maintenance window
+
+  CalendarPeriodType:
+    values:
+      - academic_year
+      - semester
+      - trimester
+      - quarter
+      - term
+      - fiscal_year
+      - season
+      - month
+      - week
+      - pay_period
+      - billing_cycle

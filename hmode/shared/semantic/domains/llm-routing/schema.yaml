@@ -1,0 +1,207 @@
+# LLM Routing Domain Model
+# Model selection, cost optimization, and routing strategies
+# Source: RouteLLM, AutoMix, HybridLLM, IBM Frugal Routing
+
+domain:
+  name: llm-routing
+  version: "1.0.0"
+  description: LLM routing - model selection, cost-quality tradeoffs, fallback strategies
+  dependencies: [core, llm-model]
+  sources:
+    - "RouteLLM: lmsys.org/blog/2024-07-01-routellm"
+    - "AutoMix: arxiv.org/abs/2406.28"
+    - "HybridLLM: arxiv.org/abs/2404.22"
+    - "IBM Frugal Routing: research.ibm.com/blog/LLM-routers"
+    - "IPR: arxiv.org/abs/2509.06274"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  Router:
+    description: LLM router that selects models based on query characteristics
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: RouterType, required: true }
+      strongModelId: { type: string, required: true }
+      weakModelId: { type: string, required: true }
+      threshold: { type: decimal, description: "Routing threshold 0-1" }
+      config: { type: RouterConfig }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  RouterConfig:
+    description: Configuration for a router
+    properties:
+      qualityTarget: { type: decimal, description: "Target quality level 0-1" }
+      costBudget: { type: decimal, description: "Cost budget per request" }
+      latencyTargetMs: { type: integer, description: "Target latency" }
+      preferenceDataSource: { type: string, description: "Source of preference data" }
+      calibrationDate: { type: date }
+
+  Route:
+    description: A specific routing path to a model
+    properties:
+      id: { type: string, required: true }
+      routerId: { type: string, required: true }
+      modelId: { type: string, required: true }
+      conditions: { type: array, items: RouteCondition }
+      priority: { type: integer }
+      weight: { type: decimal, description: "For weighted routing" }
+      isEnabled: { type: boolean, default: true }
+
+  RouteCondition:
+    description: Condition for selecting a route
+    properties:
+      field: { type: string, required: true }
+      operator: { type: ConditionOperator, required: true }
+      value: { type: string, required: true }
+
+  RoutingDecision:
+    description: A routing decision made for a specific request
+    properties:
+      id: { type: string, required: true }
+      routerId: { type: string, required: true }
+      queryId: { type: string, required: true }
+      selectedModelId: { type: string, required: true }
+      confidence: { type: decimal, description: "Router confidence 0-1" }
+      reason: { type: RoutingReason }
+      predictedQuality: { type: decimal }
+      predictedCost: { type: decimal }
+      actualQuality: { type: decimal }
+      actualCost: { type: decimal }
+      decisionTimeMs: { type: integer }
+      decidedAt: { type: datetime, required: true }
+
+  CostOptimizer:
+    description: Cost optimization configuration
+    properties:
+      id: { type: string, required: true }
+      strategy: { type: CostStrategy, required: true }
+      maxCostPerRequest: { type: decimal }
+      dailyBudget: { type: decimal }
+      monthlyBudget: { type: decimal }
+      currentSpend: { type: decimal }
+      alertThreshold: { type: decimal, description: "% of budget to alert" }
+
+  QualityThreshold:
+    description: Quality threshold for routing decisions
+    properties:
+      id: { type: string, required: true }
+      metric: { type: QualityMetric, required: true }
+      minimumScore: { type: decimal, required: true }
+      targetScore: { type: decimal }
+      weight: { type: decimal, description: "Weight in composite score" }
+
+  FallbackStrategy:
+    description: Fallback configuration when primary model fails
+    properties:
+      id: { type: string, required: true }
+      primaryModelId: { type: string, required: true }
+      fallbackChain: { type: array, items: string, description: "Model IDs in order" }
+      triggerConditions: { type: array, items: FallbackTrigger }
+      maxRetries: { type: integer, default: 2 }
+      retryDelayMs: { type: integer, default: 1000 }
+
+  FallbackTrigger:
+    description: Condition that triggers fallback
+    properties:
+      type: { type: FallbackTriggerType, required: true }
+      threshold: { type: string }
+
+  RouterTrainingData:
+    description: Training data for router models (preference data)
+    properties:
+      id: { type: string, required: true }
+      query: { type: string, required: true }
+      strongModelResponse: { type: string }
+      weakModelResponse: { type: string }
+      preferredModel: { type: string, description: "Which model was better" }
+      humanJudge: { type: boolean }
+      source: { type: string, description: "Chatbot Arena, etc." }
+      createdAt: { type: datetime, required: true }
+
+  RoutingMetrics:
+    description: Aggregated routing metrics
+    properties:
+      routerId: { type: string, required: true }
+      period: { type: string, description: "Hour, day, week, month" }
+      totalRequests: { type: integer }
+      strongModelRequests: { type: integer }
+      weakModelRequests: { type: integer }
+      averageQuality: { type: decimal }
+      totalCost: { type: decimal }
+      costSavings: { type: decimal }
+      latencyP50Ms: { type: integer }
+      latencyP99Ms: { type: integer }
+      recordedAt: { type: datetime }
+
+enums:
+
+  RouterType:
+    description: Type of routing algorithm (from RouteLLM)
+    values:
+      - SimilarityWeighted  # SW ranking based on query similarity
+      - MatrixFactorization # MF model predicting model suitability
+      - BERTClassifier      # BERT-based binary classifier
+      - CausalLMClassifier  # Causal LM predicting response quality
+      - RuleBased           # Simple rule-based routing
+      - CostBased           # Route based on cost constraints
+      - LatencyBased        # Route based on latency requirements
+      - Hybrid              # Combination of methods
+
+  RoutingReason:
+    description: Reason for routing decision
+    values:
+      - QualityRequirement  # High quality needed
+      - CostOptimization    # Cheaper model sufficient
+      - LatencyConstraint   # Need fast response
+      - QueryComplexity     # Based on query difficulty
+      - TaskType            # Based on task category
+      - Fallback            # Primary model unavailable
+      - LoadBalancing       # Distribute load
+      - ABTest              # Part of A/B test
+
+  CostStrategy:
+    description: Strategy for cost optimization
+    values:
+      - MinimizeCost        # Always use cheapest viable option
+      - MaximizeQuality     # Use best model within budget
+      - BalancedCostQuality # Balance cost and quality
+      - BudgetCapped        # Hard budget limit
+      - FrugalFirst         # Try weak model first (IBM pattern)
+
+  QualityMetric:
+    description: Metrics for measuring response quality
+    values:
+      - Accuracy
+      - Relevance
+      - Completeness
+      - Coherence
+      - Factuality
+      - UserSatisfaction
+      - TaskCompletion
+
+  ConditionOperator:
+    description: Operators for route conditions
+    values:
+      - Equals
+      - NotEquals
+      - Contains
+      - StartsWith
+      - GreaterThan
+      - LessThan
+      - Matches
+      - In
+
+  FallbackTriggerType:
+    description: Types of fallback triggers
+    values:
+      - RateLimited
+      - Timeout
+      - Error5xx
+      - ContentFiltered
+      - ModelOverloaded
+      - QualityBelowThreshold

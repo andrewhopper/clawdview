@@ -1,0 +1,741 @@
+# Artifact Library Registry
+# Quick lookup for artifact detection and routing
+
+version: "2.1.0"
+updated_at: "2026-02-23"
+
+artifacts:
+  # -----------------------------------------
+  # BRIEFS
+  # -----------------------------------------
+  executive-brief:
+    name: Executive Brief
+    category: brief
+    complexity: simple
+    word_range: [300, 500]
+    aliases:
+      - executive brief
+      - exec brief
+      - executive summary
+      - exec summary
+      - management summary
+      - leadership brief
+      - exco brief
+    triggers:
+      - brief for executives
+      - summary for leadership
+      - c-suite summary
+      - board summary
+    description: Concise 1-2 page summary for executive decision-makers
+
+  one-pager:
+    name: One Pager (PR/FAQ)
+    category: brief
+    complexity: moderate
+    word_range: [800, 1500]
+    aliases:
+      - one pager
+      - one-pager
+      - pr/faq
+      - prfaq
+      - pr faq
+      - amazon doc
+      - working backwards doc
+      - press release faq
+      - working backwards
+    triggers:
+      - amazon style doc
+      - product one-pager
+      - initiative summary
+      - new feature doc
+      - project pitch
+    description: Amazon-style PR/FAQ document for new initiatives
+
+  research-brief:
+    name: Research Brief
+    category: brief
+    complexity: moderate
+    word_range: [800, 3000]
+    aliases:
+      - research brief
+      - research summary
+      - literature review
+      - research findings brief
+      - academic research summary
+      - hypothesis validation
+      - research synthesis
+    triggers:
+      - summarize research
+      - research findings
+      - validate hypotheses
+      - literature summary
+      - academic citations
+      - cite sources
+      - research with citations
+    description: Academic/industry research summary with citations and hypothesis support analysis
+
+  # -----------------------------------------
+  # REPORTS
+  # -----------------------------------------
+  findings-report:
+    name: Findings Report
+    category: report
+    complexity: moderate
+    word_range: [600, 2000]
+    aliases:
+      - findings report
+      - findings doc
+      - analysis report
+      - investigation report
+      - research findings
+      - audit report
+      - assessment report
+      - investigation findings
+    triggers:
+      - report on findings
+      - document findings
+      - write up findings
+      - summarize findings
+      - audit results
+      - research results
+    description: Evidence-based findings and recommendations
+
+  deployment-report:
+    name: Deployment Report
+    category: report
+    complexity: moderate
+    word_range: [400, 2000]
+    aliases:
+      - deployment report
+      - deploy report
+      - release report
+      - deployment documentation
+      - deployment doc
+      - release notes
+      - deployment summary
+    triggers:
+      - deployment report
+      - document deployment
+      - release documentation
+      - deployment checklist
+      - post-deployment report
+    description: Comprehensive deployment documentation with verification and rollback procedures
+
+  security-report:
+    name: Security Report
+    category: report
+    complexity: complex
+    word_range: [800, 5000]
+    aliases:
+      - security report
+      - security assessment
+      - vulnerability report
+      - security findings
+      - pentest report
+      - security audit report
+      - threat assessment
+    triggers:
+      - security report
+      - security assessment
+      - vulnerability findings
+      - pentest results
+      - security audit
+    description: Security assessment findings with vulnerability classification and remediation
+
+  website-qa-report:
+    name: Website QA Report
+    category: report
+    complexity: moderate
+    word_range: [600, 3000]
+    aliases:
+      - website qa report
+      - web qa report
+      - site qa report
+      - qa checklist
+      - website testing report
+      - web testing report
+      - frontend qa report
+    triggers:
+      - website qa report
+      - qa the website
+      - test the website
+      - website checklist
+      - web qa checklist
+      - frontend qa
+    description: Website quality assurance covering design system, accessibility, performance, and SEO
+
+  # -----------------------------------------
+  # REQUIREMENTS
+  # -----------------------------------------
+  prd:
+    name: Product Requirements Document
+    category: requirements
+    complexity: complex
+    word_range: [2000, 5000]
+    aliases:
+      - prd
+      - product requirements document
+      - product requirements
+      - product spec
+      - product specification
+      - requirements document
+    triggers:
+      - create a prd
+      - product requirements
+      - write requirements
+      - feature spec
+      - product specification
+    description: Comprehensive product requirements with user stories, acceptance criteria, and success metrics
+
+  functional-reqs:
+    name: Functional Requirements
+    category: requirements
+    complexity: moderate
+    word_range: [800, 2500]
+    aliases:
+      - functional requirements
+      - functional reqs
+      - functional spec
+      - what the system does
+      - feature requirements
+    triggers:
+      - functional requirements
+      - what should it do
+      - system functions
+      - feature list
+    description: What the system must do - specific behaviors and functions
+
+  nonfunctional-reqs:
+    name: Non-Functional Requirements
+    category: requirements
+    complexity: moderate
+    word_range: [600, 1500]
+    aliases:
+      - non-functional requirements
+      - nonfunctional requirements
+      - nfr
+      - quality attributes
+      - system qualities
+      - ilities
+    triggers:
+      - non-functional requirements
+      - performance requirements
+      - scalability requirements
+      - security requirements
+      - quality attributes
+    description: Quality attributes - performance, security, scalability, reliability
+
+  user-stories:
+    name: User Stories Collection
+    category: requirements
+    complexity: moderate
+    word_range: [500, 2000]
+    aliases:
+      - user stories
+      - stories
+      - epics and stories
+      - agile requirements
+    triggers:
+      - user stories
+      - write stories
+      - agile requirements
+      - as a user
+    description: Agile user stories with acceptance criteria
+
+  # -----------------------------------------
+  # ARCHITECTURE & DESIGN
+  # -----------------------------------------
+  architecture-doc:
+    name: Architecture Document
+    category: architecture
+    complexity: complex
+    word_range: [2000, 5000]
+    aliases:
+      - architecture document
+      - architecture doc
+      - system architecture
+      - technical architecture
+      - arch doc
+    triggers:
+      - architecture document
+      - system architecture
+      - how is it built
+      - technical design
+    description: Comprehensive system architecture with components, integrations, and decisions
+
+  architecture-review:
+    name: Architecture Review
+    category: review
+    complexity: complex
+    word_range: [1500, 3500]
+    aliases:
+      - architecture review
+      - arch review
+      - architecture assessment
+      - architecture evaluation
+      - technical review
+    triggers:
+      - review architecture
+      - evaluate architecture
+      - architecture assessment
+      - arch audit
+    description: Critical evaluation of architecture decisions, patterns, and risks
+
+  data-model-doc:
+    name: Data Model Document
+    category: architecture
+    complexity: moderate
+    word_range: [1000, 3000]
+    aliases:
+      - data model document
+      - data model doc
+      - data model
+      - entity model
+      - database design
+      - schema document
+    triggers:
+      - data model document
+      - database schema
+      - entity design
+      - data structures
+    description: Database entities, relationships, and schema design
+
+  data-model-review:
+    name: Data Model Review
+    category: review
+    complexity: moderate
+    word_range: [800, 2000]
+    aliases:
+      - data model review
+      - schema review
+      - database review
+      - entity review
+    triggers:
+      - review data model
+      - evaluate schema
+      - database assessment
+    description: Evaluation of data model design, normalization, and integrity
+
+  api-design:
+    name: API Design Document
+    category: architecture
+    complexity: moderate
+    word_range: [1500, 4000]
+    aliases:
+      - api design
+      - api document
+      - api spec
+      - api specification
+      - rest api design
+      - graphql design
+    triggers:
+      - api design
+      - design the api
+      - rest endpoints
+      - api specification
+    description: API endpoints, schemas, authentication, and usage patterns
+
+  system-design:
+    name: System Design Document
+    category: architecture
+    complexity: complex
+    word_range: [2500, 6000]
+    aliases:
+      - system design
+      - system design document
+      - high-level design
+      - hld
+      - technical design document
+    triggers:
+      - system design
+      - high level design
+      - how to build this
+      - technical design
+    description: End-to-end system design with all components and integrations
+
+  # -----------------------------------------
+  # TECHNOLOGY & SELECTION
+  # -----------------------------------------
+  tech-selection:
+    name: Technology Selection Approval
+    category: decision
+    complexity: moderate
+    word_range: [1000, 2500]
+    aliases:
+      - technology selection
+      - tech selection
+      - technology approval
+      - tech approval
+      - technology decision
+      - stack selection
+    triggers:
+      - technology selection
+      - choose technology
+      - select tech stack
+      - approve technology
+      - tech decision
+    description: Structured evaluation and approval of technology choices
+
+  vendor-evaluation:
+    name: Vendor Evaluation Matrix
+    category: decision
+    complexity: moderate
+    word_range: [800, 2000]
+    aliases:
+      - vendor evaluation
+      - vendor comparison
+      - vendor matrix
+      - vendor assessment
+      - tool comparison
+    triggers:
+      - compare vendors
+      - evaluate vendors
+      - vendor selection
+      - which vendor
+    description: Comparative analysis of vendors with scoring criteria
+
+  feasibility-study:
+    name: Feasibility Study
+    category: decision
+    complexity: complex
+    word_range: [1500, 3500]
+    aliases:
+      - feasibility study
+      - feasibility analysis
+      - feasibility assessment
+      - go no-go
+      - viability study
+    triggers:
+      - feasibility study
+      - is this feasible
+      - can we build this
+      - go no-go decision
+    description: Technical, operational, and economic feasibility analysis
+
+  # -----------------------------------------
+  # PLANNING & EXECUTION
+  # -----------------------------------------
+  execution-plan:
+    name: Execution Plan
+    category: planning
+    complexity: moderate
+    word_range: [1000, 3000]
+    aliases:
+      - execution plan
+      - implementation plan
+      - project plan
+      - delivery plan
+      - work plan
+    triggers:
+      - execution plan
+      - how to implement
+      - implementation roadmap
+      - project plan
+    description: Step-by-step implementation roadmap with dependencies
+
+  project-charter:
+    name: Project Charter
+    category: planning
+    complexity: moderate
+    word_range: [800, 2000]
+    aliases:
+      - project charter
+      - charter
+      - project initiation
+      - project kickoff
+    triggers:
+      - project charter
+      - kickoff document
+      - project initiation
+      - start project
+    description: Project authorization with scope, objectives, and stakeholders
+
+  sprint-plan:
+    name: Sprint Plan
+    category: planning
+    complexity: simple
+    word_range: [400, 1000]
+    aliases:
+      - sprint plan
+      - sprint planning
+      - iteration plan
+      - sprint scope
+    triggers:
+      - sprint plan
+      - plan the sprint
+      - sprint goals
+      - iteration planning
+    description: Sprint goals, scope, and committed work items
+
+  risk-assessment:
+    name: Risk Assessment
+    category: planning
+    complexity: moderate
+    word_range: [600, 1500]
+    aliases:
+      - risk assessment
+      - risk analysis
+      - risk register
+      - risk identification
+      - risk matrix
+    triggers:
+      - risk assessment
+      - identify risks
+      - risk analysis
+      - what could go wrong
+    description: Risk identification, probability, impact, and mitigation
+
+  # -----------------------------------------
+  # STANDARDS & GUIDES
+  # -----------------------------------------
+  naming-conventions:
+    name: Naming Conventions
+    category: standards
+    complexity: simple
+    word_range: [400, 1200]
+    aliases:
+      - naming conventions
+      - naming rules
+      - naming standards
+      - naming guide
+      - nomenclature
+    triggers:
+      - naming conventions
+      - how to name things
+      - naming rules
+      - naming standards
+    description: Consistent naming rules for code, files, and resources
+
+  setup-guide:
+    name: Setup Guide
+    category: standards
+    complexity: moderate
+    word_range: [600, 2000]
+    aliases:
+      - setup guide
+      - setup document
+      - getting started
+      - dev setup
+      - development setup
+      - installation guide
+    triggers:
+      - setup guide
+      - how to set up
+      - getting started
+      - dev environment
+    description: Developer environment setup and configuration instructions
+
+  coding-standards:
+    name: Coding Standards
+    category: standards
+    complexity: moderate
+    word_range: [800, 2500]
+    aliases:
+      - coding standards
+      - code standards
+      - style guide
+      - code style
+      - programming standards
+    triggers:
+      - coding standards
+      - code style
+      - how to write code
+      - programming conventions
+    description: Code style, patterns, and best practices for the project
+
+  onboarding-doc:
+    name: Onboarding Document
+    category: standards
+    complexity: moderate
+    word_range: [1000, 3000]
+    aliases:
+      - onboarding document
+      - onboarding guide
+      - new hire guide
+      - team onboarding
+      - getting started guide
+    triggers:
+      - onboarding document
+      - new team member
+      - joining the team
+      - new hire
+    description: New team member orientation with codebase overview
+
+  runbook:
+    name: Runbook
+    category: standards
+    complexity: moderate
+    word_range: [800, 2500]
+    aliases:
+      - runbook
+      - operations runbook
+      - ops guide
+      - operations manual
+      - playbook
+    triggers:
+      - runbook
+      - operations guide
+      - how to operate
+      - incident response
+    description: Operational procedures for deployment, monitoring, and incidents
+
+  # -----------------------------------------
+  # REVIEW & APPROVAL
+  # -----------------------------------------
+  security-review:
+    name: Security Review
+    category: review
+    complexity: complex
+    word_range: [1200, 3000]
+    aliases:
+      - security review
+      - security assessment
+      - security audit
+      - security analysis
+      - threat assessment
+    triggers:
+      - security review
+      - security assessment
+      - is it secure
+      - security audit
+    description: Security analysis with threat modeling and recommendations
+
+  performance-review:
+    name: Performance Review
+    category: review
+    complexity: moderate
+    word_range: [800, 2000]
+    aliases:
+      - performance review
+      - performance analysis
+      - performance assessment
+      - load analysis
+    triggers:
+      - performance review
+      - performance analysis
+      - is it fast enough
+      - load testing results
+    description: Performance analysis with bottlenecks and optimization recommendations
+
+  code-review-checklist:
+    name: Code Review Checklist
+    category: review
+    complexity: simple
+    word_range: [300, 800]
+    aliases:
+      - code review checklist
+      - pr checklist
+      - review checklist
+      - code review guide
+    triggers:
+      - code review checklist
+      - pr review guide
+      - how to review code
+    description: Structured checklist for pull request reviews
+
+  # -----------------------------------------
+  # DIAGRAMS
+  # -----------------------------------------
+  architecture-diagram:
+    name: Architecture Diagram
+    category: diagram
+    complexity: moderate
+    output_format: html
+    aliases:
+      - architecture diagram
+      - arch diagram
+      - system diagram
+      - component diagram
+    triggers:
+      - draw architecture
+      - architecture diagram
+      - system diagram
+      - visualize architecture
+    description: Visual representation of system components and connections
+
+  data-flow-diagram:
+    name: Data Flow Diagram
+    category: diagram
+    complexity: moderate
+    output_format: html
+    aliases:
+      - data flow diagram
+      - dfd
+      - data flow
+      - information flow
+    triggers:
+      - data flow diagram
+      - how data flows
+      - data movement
+      - information flow
+    description: Visualization of data movement through the system
+
+  sequence-diagram:
+    name: Sequence Diagram
+    category: diagram
+    complexity: simple
+    output_format: mermaid
+    aliases:
+      - sequence diagram
+      - sequence chart
+      - interaction diagram
+      - message flow
+    triggers:
+      - sequence diagram
+      - interaction flow
+      - message sequence
+      - call flow
+    description: Time-ordered interaction between components
+
+  entity-relationship:
+    name: ER Diagram
+    category: diagram
+    complexity: moderate
+    output_format: mermaid
+    aliases:
+      - er diagram
+      - entity relationship diagram
+      - erd
+      - database diagram
+      - schema diagram
+    triggers:
+      - er diagram
+      - database diagram
+      - entity relationships
+      - schema visualization
+    description: Database entities and relationships visualization
+
+# -----------------------------------------
+# DETECTION CONFIG
+# -----------------------------------------
+detection:
+  # Patterns that trigger artifact detection
+  trigger_patterns:
+    - "make a/an {X}"
+    - "create a/an {X}"
+    - "write a/an {X}"
+    - "generate a/an {X}"
+    - "draft a/an {X}"
+    - "I need a/an {X}"
+    - "help me write a/an {X}"
+    - "can you create a/an {X}"
+    - "prepare a/an {X}"
+    - "put together a/an {X}"
+
+  # Confidence thresholds
+  thresholds:
+    auto_suggest: 0.9      # Automatically suggest template
+    ask_user: 0.7          # Ask if user wants template
+    ignore: 0.7            # Below this, don't suggest
+
+  # Words to strip before matching
+  stop_words:
+    - quick
+    - simple
+    - short
+    - detailed
+    - comprehensive
+    - rough
+    - draft
+    - formal
+    - informal

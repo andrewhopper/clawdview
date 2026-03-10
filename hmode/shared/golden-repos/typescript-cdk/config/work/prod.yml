@@ -1,0 +1,62 @@
+# ===========================================
+# Production Environment Configuration
+# ===========================================
+
+account: "123456789012"
+region: "us-east-1"
+
+projectName: "my-app"
+stackPrefix: "myapp"
+
+# ===========================================
+# Domain Configuration
+# ===========================================
+domain:
+  rootDomain: "example.com"
+  subdomain: "api"
+  # hostedZoneId: "Z1234567890ABC"
+  # certificateArn: "arn:aws:acm:us-east-1:123456789012:certificate/..."
+
+# ===========================================
+# Notification Configuration
+# ===========================================
+notifications:
+  adminEmail: "ops@example.com"
+  supportEmail: "support@example.com"
+  sesDomain: "example.com"
+
+# ===========================================
+# Database Configuration
+# ===========================================
+database:
+  instanceClass: "r5.large"
+  allocatedStorage: 100
+  multiAz: true
+  deletionProtection: true
+  backupRetentionDays: 30
+
+# ===========================================
+# Compute Configuration
+# ===========================================
+compute:
+  lambdaMemory: 1024
+  lambdaTimeout: 30
+  taskCpu: 1024
+  taskMemory: 2048
+  desiredCount: 3
+  minCount: 2
+  maxCount: 10
+
+# ===========================================
+# Monitoring Configuration
+# ===========================================
+monitoring:
+  enableDashboards: true
+  enableTracing: true
+  logRetentionDays: 90
+  alarmEvaluationPeriods: 5
+
+tags:
+  Team: "Platform"
+  CostCenter: "Engineering"
+  Compliance: "SOC2"

@@ -1,0 +1,365 @@
+# Research Brief Artifact Definition
+# Category: brief
+# Complexity: moderate
+
+id: research-brief
+name: Research Brief
+version: "1.0.0"
+description: Academic/industry research summary with citations, hypothesis support analysis, and actionable conclusions
+category: brief
+complexity: moderate
+created_at: "2025-11-23"
+updated_at: "2025-11-23"
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: title
+      name: Title
+      description: Clear research topic title
+      required: true
+      format: prose
+      word_limit: 15
+
+    - id: metadata
+      name: Metadata
+      description: Purpose, date, project reference
+      required: true
+      format: table
+      fields:
+        - purpose
+        - date
+        - project_id
+        - status
+
+    - id: executive-summary
+      name: Executive Summary
+      description: Research findings in 3-5 bullet points
+      required: true
+      format: bullets
+      bullet_count: 3-5
+      word_limit: 150
+
+    - id: research-areas
+      name: Research Areas Covered
+      description: Numbered list of research domains explored
+      required: true
+      format: numbered
+      item_count: 3-5
+
+    - id: key-findings
+      name: Key Findings
+      description: Major findings with direct quotes and source citations
+      required: true
+      format: structured
+      item_count: 4-8
+      subformat:
+        - finding_title
+        - quote (blockquote)
+        - source_link
+        - implication
+
+    - id: hypothesis-support
+      name: Evidence for Hypotheses
+      description: Map research findings to project hypotheses
+      required: true
+      format: table
+      columns:
+        - hypothesis_id
+        - hypothesis_statement
+        - support_level (Strong/Moderate/Weak)
+        - evidence_summary
+
+    - id: sources
+      name: Sources & Citations
+      description: Organized list of all cited sources with links
+      required: true
+      format: grouped
+      groups:
+        - academic_papers
+        - industry_research
+        - educational_resources
+      subformat:
+        - author/org
+        - title
+        - url
+        - year
+
+    - id: gaps
+      name: Research Gaps
+      description: What the literature doesn't cover
+      required: false
+      format: bullets
+      bullet_count: 2-4
+
+    - id: conclusion
+      name: Conclusion
+      description: Summary statement and recommendation to proceed/not proceed
+      required: true
+      format: prose
+      word_limit: 150
+      includes:
+        - summary_bullets
+        - recommendation_statement
+
+  required_inputs:
+    - name: topic
+      type: string
+      description: Research topic or question
+      required: true
+    - name: hypotheses
+      type: list
+      description: List of hypotheses to validate
+      required: true
+    - name: search_queries
+      type: list
+      description: Search queries used to find research
+      required: false
+    - name: project_id
+      type: string
+      description: Related project identifier
+      default: "N/A"
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a research analyst who synthesizes academic and industry literature into actionable briefs.
+
+    Your writing principles:
+    - Lead with key findings, support with citations
+    - Always include direct quotes from sources
+    - Every claim must have a linked source
+    - Clearly map findings to hypotheses
+    - Distinguish between strong and weak evidence
+    - Be explicit about research gaps
+
+    Citation standards:
+    - Use markdown links: [Title](URL)
+    - Include publication year when available
+    - Group by source type (academic, industry, educational)
+    - Prefer peer-reviewed sources over blog posts
+    - Note arXiv paper IDs when applicable
+
+  task: |
+    Generate a research brief on: {{TOPIC}}
+
+    Hypotheses to validate:
+    {{HYPOTHESES}}
+
+    Project ID: {{PROJECT_ID}}
+
+    Structure your brief:
+    1. **Title** - Research topic
+    2. **Metadata** - Purpose, date, project reference
+    3. **Executive Summary** - 3-5 bullet key findings
+    4. **Research Areas** - Domains explored (numbered)
+    5. **Key Findings** - Each with:
+       - Finding title
+       - Direct quote (blockquote)
+       - Source link
+       - Implication for project
+    6. **Evidence for Hypotheses** - Table mapping findings to each hypothesis
+       - Hypothesis ID (H1, H2, etc.)
+       - Statement
+       - Support level (Strong/Moderate/Weak)
+       - Evidence summary
+    7. **Sources & Citations** - Grouped by type with links
+    8. **Research Gaps** - What literature doesn't cover
+    9. **Conclusion** - Summary + proceed/no-go recommendation
+
+  tone: professional
+  reading_level: technical
+  density: high
+
+# -----------------------------------------
+# OUTPUT FORMATS
+# -----------------------------------------
+output_formats:
+  markdown:
+    description: Standard markdown with links
+    primary: true
+
+  html:
+    description: Mobile-friendly HTML report
+    template: research-brief-html
+    features:
+      - blockquote_styling
+      - source_link_cards
+      - hypothesis_support_badges
+      - responsive_layout
+
+# -----------------------------------------
+# VALIDATORS: Quality Checks
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 800
+      max: 3000
+    severity: warning
+    message: "Research brief should be 800-3000 words"
+
+  - id: has-citations
+    name: Has Source Citations
+    type: regex
+    rule:
+      pattern: "\\[.+\\]\\(https?://.+\\)"
+      min_matches: 5
+    severity: error
+    message: "Must have at least 5 source citations with links"
+
+  - id: has-quotes
+    name: Has Direct Quotes
+    type: regex
+    rule:
+      pattern: '>"[^"]+"|"[^"]+"'
+      min_matches: 3
+    severity: error
+    message: "Must include at least 3 direct quotes from sources"
+
+  - id: has-hypothesis-mapping
+    name: Hypothesis Support Table
+    type: section_presence
+    rule:
+      required: [hypothesis-support]
+    severity: error
+    message: "Must include hypothesis support analysis"
+
+  - id: has-support-levels
+    name: Support Levels Assigned
+    type: regex
+    rule:
+      pattern: "\\b(Strong|Moderate|Weak)\\s+(Support|Evidence)"
+      min_matches: 1
+    severity: warning
+    message: "Assign support levels (Strong/Moderate/Weak) to hypotheses"
+
+  - id: has-conclusion
+    name: Has Actionable Conclusion
+    type: regex
+    rule:
+      pattern: "\\b(proceed|continue|recommend|go/no-go|prototype)\\b"
+      min_matches: 1
+    severity: info
+    message: "Conclusion should include clear recommendation"
+
+  - id: sources-grouped
+    name: Sources Properly Grouped
+    type: section_presence
+    rule:
+      required: [sources]
+    severity: warning
+    message: "Sources should be grouped by type (academic, industry, etc.)"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 800
+  max_words: 3000
+  reading_level: technical
+  density: high
+  min_citations: 5
+  min_quotes: 3
+  output_formats:
+    - markdown
+    - html
+
+# -----------------------------------------
+# EXAMPLE STRUCTURE
+# -----------------------------------------
+example: |
+  # Research Brief: [Topic]
+
+  **Purpose:** [Why this research was conducted]
+  **Date:** YYYY-MM-DD
+  **Project:** [project-id]
+
+  ---
+
+  ## Executive Summary
+
+  - Finding 1: [Key insight]
+  - Finding 2: [Key insight]
+  - Finding 3: [Key insight]
+
+  ---
+
+  ## Research Areas Covered
+
+  1. [Area 1]
+  2. [Area 2]
+  3. [Area 3]
+
+  ---
+
+  ## Key Findings
+
+  ### Finding 1: [Title]
+
+  > "Direct quote from source that supports this finding."
+  > — [Source Title](https://url.com)
+
+  **Implication:** What this means for the project.
+
+  ### Finding 2: [Title]
+
+  > "Another direct quote."
+  > — [Source Title](https://url.com)
+
+  **Implication:** What this means for the project.
+
+  ---
+
+  ## Evidence for Hypotheses
+
+  | Hypothesis | Statement | Support | Evidence |
+  |------------|-----------|---------|----------|
+  | H1 | [Statement] | **Strong** | [Summary] |
+  | H2 | [Statement] | Moderate | [Summary] |
+  | H3 | [Statement] | Weak | [Summary] |
+
+  ---
+
+  ## Sources & Citations
+
+  ### Academic Papers
+  - Author (Year). [Title](URL)
+  - Author (Year). [Title](URL)
+
+  ### Industry Research
+  - Org. [Title](URL)
+  - Org. [Title](URL)
+
+  ---
+
+  ## Research Gaps
+
+  - Gap 1: [What literature doesn't cover]
+  - Gap 2: [What needs further research]
+
+  ---
+
+  ## Conclusion
+
+  [Summary of findings]
+
+  **Recommendation:** Proceed to prototype / Further research needed / No-go
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - research
+  - brief
+  - citations
+  - academic
+  - hypothesis-validation
+  - literature-review
+  - evidence-based

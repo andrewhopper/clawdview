@@ -1,0 +1,246 @@
+# Primitive: Event
+# Something that happened - occurrence at a point in time
+# Physics: Interaction (particles exchanging energy)
+# Philosophy: Becoming (change from potential to actual)
+# Biology: Stimulus-response (organism reacting to environment)
+
+domain:
+  name: primitive-event
+  version: "1.0.0"
+  description: Events and occurrences - things that happen
+  layer: primitive
+  dependencies: [primitive-entity]
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  # ============================================
+  # EVENT FUNDAMENTALS
+  # ============================================
+
+  Event:
+    description: Something that happened at a specific moment
+    properties:
+      id: { type: string, required: true }
+      type: { type: string, required: true, description: "Event type name" }
+      occurredAt: { type: datetime, required: true }
+      detectedAt: { type: datetime, description: "When system learned of event" }
+      source: { type: string, description: "What/who caused the event" }
+      correlationId: { type: string, description: "Links related events" }
+      causationId: { type: string, description: "Event that caused this one" }
+    meta:
+      physics: "Interaction - exchange of energy/momentum between particles"
+      philosophy: "Becoming (Aristotle) - actualization of potential"
+      biology: "Stimulus - environmental change triggering response"
+
+  # ============================================
+  # EVENT TYPES BY SCOPE
+  # ============================================
+
+  DomainEvent:
+    extends: Event
+    description: Business-meaningful occurrence
+    properties:
+      aggregateId: { type: string, required: true }
+      aggregateType: { type: string, required: true }
+      payload: { type: object, required: true }
+      version: { type: integer, description: "Aggregate version after event" }
+      metadata: { type: EventMetadata }
+    examples:
+      - "OrderPlaced"
+      - "PaymentReceived"
+      - "UserRegistered"
+
+  IntegrationEvent:
+    extends: Event
+    description: Event for cross-system communication
+    properties:
+      schema: { type: string, required: true, description: "Schema version/URI" }
+      payload: { type: object, required: true }
+      targetSystems: { type: array, items: string }
+
+  SystemEvent:
+    extends: Event
+    description: Infrastructure/technical event
+    properties:
+      component: { type: string, required: true }
+      severity: { type: Severity }
+      message: { type: string }
+    examples:
+      - "ServiceStarted"
+      - "ConnectionLost"
+      - "ThresholdExceeded"
+
+  # ============================================
+  # EVENT METADATA
+  # ============================================
+
+  EventMetadata:
+    description: Context about the event occurrence
+    properties:
+      userId: { type: string, description: "User who caused event" }
+      sessionId: { type: string }
+      traceId: { type: string, description: "Distributed tracing ID" }
+      spanId: { type: string }
+      clientIp: { type: string }
+      userAgent: { type: string }
+      environment: { type: string }
+      version: { type: string, description: "Application version" }
+
+  # ============================================
+  # EVENT CAUSATION
+  # ============================================
+
+  Cause:
+    description: What brought about an event
+    properties:
+      type: { type: CauseType, required: true }
+      description: { type: string }
+      agentId: { type: string, description: "Actor that caused it" }
+      precedingEventId: { type: string, description: "Event that led to this" }
+    meta:
+      philosophy: "Aristotelian four causes"
+      physics: "Causation - energy transfer"
+
+  Consequence:
+    description: Effect of an event
+    properties:
+      type: { type: ConsequenceType, required: true }
+      entityId: { type: string }
+      changeType: { type: ChangeType }
+      before: { type: object }
+      after: { type: object }
+
+  # ============================================
+  # EVENT PATTERNS
+  # ============================================
+
+  Signal:
+    extends: Event
+    description: Notification without detailed payload
+    properties:
+      severity: { type: Severity }
+      acknowledged: { type: boolean, default: false }
+      acknowledgedAt: { type: datetime }
+      acknowledgedBy: { type: string }
+
+  Command:
+    description: Intent to make something happen (future event)
+    properties:
+      id: { type: string, required: true }
+      type: { type: string, required: true }
+      issuedAt: { type: datetime, required: true }
+      issuedBy: { type: string }
+      targetAggregate: { type: string }
+      targetAggregateId: { type: string }
+      payload: { type: object }
+      expectedEvents: { type: array, items: string }
+    meta:
+      pattern: "Command-Event separation (CQRS)"
+      philosophy: "Intention precedes action"
+
+  # ============================================
+  # EVENT STREAM
+  # ============================================
+
+  EventStream:
+    description: Ordered sequence of events for an aggregate
+    properties:
+      aggregateType: { type: string, required: true }
+      aggregateId: { type: string, required: true }
+      events: { type: array, items: DomainEvent }
+      currentVersion: { type: integer }
+    meta:
+      pattern: "Event Sourcing"
+      physics: "World line - path through spacetime"
+
+  Snapshot:
+    description: Point-in-time state derived from events
+    properties:
+      aggregateType: { type: string, required: true }
+      aggregateId: { type: string, required: true }
+      version: { type: integer, required: true }
+      state: { type: object, required: true }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # TEMPORAL PATTERNS
+  # ============================================
+
+  RecurringEvent:
+    extends: Event
+    description: Event that repeats according to a pattern
+    properties:
+      recurrenceRule: { type: string, description: "RRULE format" }
+      instanceNumber: { type: integer }
+      seriesId: { type: string }
+
+  ScheduledEvent:
+    description: Event planned for future occurrence
+    properties:
+      scheduledFor: { type: datetime, required: true }
+      eventType: { type: string, required: true }
+      payload: { type: object }
+      tolerance: { type: string, description: "Acceptable timing variance" }
+
+enums:
+
+  Severity:
+    description: Importance/urgency level
+    values:
+      - trace
+      - debug
+      - info
+      - warning
+      - error
+      - critical
+
+  CauseType:
+    description: Type of causation (Aristotelian + modern)
+    values:
+      - efficient     # Agent that made it happen (who/what)
+      - material      # What it was made from
+      - formal        # Pattern/structure it follows
+      - final         # Purpose/goal (teleological)
+      - trigger       # Immediate precipitating cause
+      - enabling      # Necessary background condition
+
+  ConsequenceType:
+    description: Type of effect
+    values:
+      - creation      # New entity created
+      - modification  # Entity changed
+      - deletion      # Entity removed
+      - transition    # State changed
+      - notification  # Information sent
+      - side_effect   # External system affected
+
+  ChangeType:
+    description: Nature of change
+    values:
+      - create
+      - update
+      - delete
+      - archive
+      - restore
+
+meta:
+  theoretical_basis:
+    physics: "Interaction - particles exchange quanta"
+    philosophy: "Becoming - potentiality becoming actuality"
+    biology: "Stimulus - environmental signal triggering response"
+
+  patterns:
+    - "Event Sourcing"
+    - "CQRS (Command Query Responsibility Segregation)"
+    - "Domain Events (DDD)"
+    - "Event-Driven Architecture"
+
+  composition_role: "Bridge between states (what changed)"
+
+  related_primitives:
+    - state: "Events cause state transitions"
+    - entity: "Events happen to entities"
+    - actor: "Actors cause events"
+    - time: "Events occur at points in time"

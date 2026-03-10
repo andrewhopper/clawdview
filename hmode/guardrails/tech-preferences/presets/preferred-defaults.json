@@ -1,0 +1,441 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Preferred Tech Defaults Preset",
+  "description": "Uses Rank 1 (default/preferred) choices for all categories - Andrew Hopper's preferred stack",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "presetName": "preferred-defaults",
+  "note": "This preset explicitly sets all Rank 1 defaults. Use for prototypes that should follow standard preferences exactly. Generally not needed since Rank 1 is default, but useful for documentation or when overriding a parent .tech-preferences.local.json file.",
+  "description_extended": "This preset represents the 'golden path' tech stack - battle-tested, well-documented, and recommended for most projects. It uses shadcn/ui for components, Next.js for full-stack apps, Deepgram for ASR, Claude for LLMs, PostHog for analytics, etc.",
+  "overrides": {
+    "frontend_frameworks": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Next.js",
+          "version": "15.x (stable with React 19)",
+          "rationale": "Full-stack React with App Router, Server Components, built-in API routes, excellent DX, React 19 stable support",
+          "useCases": ["web apps", "dashboards", "marketing sites", "full-stack projects"]
+        }
+      ]
+    },
+    "ui_component_libraries": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "shadcn/ui",
+          "version": "latest",
+          "rationale": "Copy-paste components, Radix UI primitives, Tailwind styling, full customization",
+          "useCases": ["all web projects", "design system foundation", "accessible components"]
+        }
+      ]
+    },
+    "real_time_collaboration": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Yjs",
+          "version": "13.x",
+          "rationale": "CRDT-based, framework-agnostic, peer-to-peer sync, conflict-free merging",
+          "useCases": ["collaborative editors", "real-time collaboration", "offline-first apps", "multiplayer features"]
+        }
+      ]
+    },
+    "styling": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Tailwind CSS",
+          "version": "3.x+",
+          "rationale": "Utility-first, fast development, consistent design, excellent DX with IntelliSense",
+          "useCases": ["all web projects", "rapid prototyping", "design systems"]
+        }
+      ]
+    },
+    "backend_frameworks": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Next.js API Routes",
+          "version": "15.x",
+          "rationale": "Integrated with frontend, serverless-ready, TypeScript, simple deploy",
+          "useCases": ["full-stack Next.js apps", "simple APIs", "serverless functions"]
+        }
+      ]
+    },
+    "databases": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "PostgreSQL",
+          "version": "16.x",
+          "rationale": "Industry standard, ACID, JSON support, full-text search, mature ecosystem",
+          "useCases": ["production apps", "relational data", "complex queries", "ACID requirements"]
+        }
+      ]
+    },
+    "orm_query_builders": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Drizzle ORM",
+          "version": "0.29+",
+          "rationale": "TypeScript-first, SQL-like syntax, lightweight, excellent DX, type-safe",
+          "useCases": ["all TypeScript projects", "type safety", "SQL-like queries", "edge runtimes"]
+        }
+      ]
+    },
+    "asr_speech_recognition": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Deepgram",
+          "version": "API",
+          "rationale": "Fast, accurate, real-time streaming, speaker diarization, affordable, great API",
+          "useCases": ["real-time transcription", "high accuracy", "production apps"]
+        }
+      ]
+    },
+    "tts_text_to_speech": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "ElevenLabs",
+          "version": "API",
+          "rationale": "Best quality, natural voices, voice cloning, multilingual, API + SDKs",
+          "useCases": ["high-quality voiceovers", "voice cloning", "production audio"]
+        }
+      ]
+    },
+    "ocr_document_intelligence": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Claude Vision (Anthropic)",
+          "version": "claude-3-5-sonnet-20241022",
+          "rationale": "Multimodal LLM, understands context, charts, diagrams, handwriting, reasoning",
+          "useCases": ["complex documents", "contextual understanding", "multimodal analysis"]
+        }
+      ]
+    },
+    "llm_inference": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Bedrock (Claude)",
+          "version": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+          "rationale": "AWS-native, no data retention, enterprise compliance, VPC support",
+          "useCases": ["AWS apps", "enterprise compliance", "production applications"]
+        }
+      ]
+    },
+    "llm_orchestration": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "BAML",
+          "version": "0.x",
+          "rationale": "Type-safe LLM framework, Pydantic integration, compile-time validation, structured outputs",
+          "useCases": ["structured LLM outputs", "type safety", "Pydantic projects", "prompt engineering"]
+        }
+      ]
+    },
+    "vector_embeddings": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Bedrock (Titan Embeddings)",
+          "version": "amazon.titan-embed-text-v2:0",
+          "rationale": "AWS-native, 8K context, multilingual, cost-effective, no data retention",
+          "useCases": ["AWS apps", "enterprise compliance", "high-scale RAG", "semantic search"]
+        }
+      ]
+    },
+    "vector_databases": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "pgvector (PostgreSQL)",
+          "version": "0.5.x",
+          "rationale": "PostgreSQL extension, no new infrastructure, ACID guarantees, mature",
+          "useCases": ["existing PostgreSQL", "RAG applications", "simple vector search"]
+        }
+      ]
+    },
+    "testing_e2e": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Playwright",
+          "version": "1.40+",
+          "rationale": "Cross-browser, fast, reliable, auto-wait, parallel execution, great DX",
+          "useCases": ["all E2E testing", "cross-browser", "CI/CD", "visual regression"]
+        }
+      ]
+    },
+    "testing_unit": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Vitest",
+          "version": "1.x+",
+          "rationale": "Vite-native, fast, Jest-compatible API, ESM first, watch mode",
+          "useCases": ["Vite projects", "modern ESM", "fast tests", "TypeScript"]
+        }
+      ]
+    },
+    "deployment_frontend": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Amplify",
+          "version": "Gen 2",
+          "rationale": "AWS-native, branch previews, SSR support, env vars, CI/CD",
+          "useCases": ["AWS apps", "Next.js SSR", "branch deployments"]
+        }
+      ]
+    },
+    "deployment_backend": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Lambda + API Gateway",
+          "version": "AWS",
+          "rationale": "Serverless, auto-scaling, pay-per-use, AWS ecosystem integration",
+          "useCases": ["AWS apps", "serverless APIs", "event-driven architectures"]
+        }
+      ]
+    },
+    "monitoring": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Sentry",
+          "version": "latest",
+          "rationale": "Error tracking, performance monitoring, release tracking, source maps",
+          "useCases": ["all projects", "error tracking", "performance monitoring"]
+        }
+      ]
+    },
+    "ci_cd": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "GitHub Actions",
+          "version": "built-in",
+          "rationale": "Native to GitHub, matrix builds, reusable workflows, marketplace",
+          "useCases": ["all GitHub projects", "automated testing", "deployments"]
+        }
+      ]
+    },
+    "authentication": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Clerk",
+          "version": "latest",
+          "rationale": "Complete auth solution, beautiful UI, Next.js integration, user mgmt",
+          "useCases": ["all web apps", "rapid development", "user management UI"]
+        }
+      ]
+    },
+    "email_sending": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Resend",
+          "version": "API",
+          "rationale": "Developer-first, React Email support, simple API, excellent DX",
+          "useCases": ["all projects", "React email templates", "developer experience"]
+        }
+      ]
+    },
+    "payments": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Stripe",
+          "version": "API",
+          "rationale": "Industry standard, excellent API, Stripe Elements, webhooks, subscriptions",
+          "useCases": ["all payment needs", "subscriptions", "marketplaces"]
+        }
+      ]
+    },
+    "storage": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS S3",
+          "version": "AWS",
+          "rationale": "AWS-native, 11 9s durability, versioning, lifecycle policies, cost tiers",
+          "useCases": ["all AWS apps", "file storage", "static assets", "data lakes"]
+        }
+      ]
+    },
+    "analytics": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "PostHog",
+          "version": "latest",
+          "rationale": "Self-hosted or cloud, feature flags, session replay, privacy-friendly",
+          "useCases": ["all projects", "feature flags", "session replay", "privacy-conscious"]
+        }
+      ]
+    },
+    "caching": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Redis (Upstash)",
+          "version": "7.x",
+          "rationale": "Serverless Redis, per-request pricing, REST API, global replication",
+          "useCases": ["serverless apps", "edge caching", "session storage"]
+        }
+      ]
+    },
+    "search": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Algolia",
+          "version": "API",
+          "rationale": "Fast, typo-tolerance, faceting, instant search, great DX",
+          "useCases": ["product search", "instant search", "e-commerce"]
+        }
+      ]
+    },
+    "task_queues": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Inngest",
+          "version": "latest",
+          "rationale": "Serverless, event-driven, durable execution, retries, type-safe, great DX",
+          "useCases": ["serverless workflows", "background jobs", "event-driven apps"]
+        }
+      ]
+    },
+    "workflow_orchestration": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Temporal",
+          "version": "latest",
+          "rationale": "Durable execution, workflow-as-code, retries, versioning, excellent DX",
+          "useCases": ["complex workflows", "long-running processes", "distributed systems"]
+        }
+      ]
+    },
+    "infrastructure_as_code": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS CDK",
+          "version": "2.x",
+          "rationale": "AWS-native, TypeScript/Python, high-level constructs, CloudFormation under the hood",
+          "useCases": ["AWS infrastructure", "type-safe IaC", "CloudFormation abstractions"]
+        }
+      ]
+    },
+    "data_transformation": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "dbt (Data Build Tool)",
+          "version": "1.x",
+          "rationale": "SQL-based transformations, version control, testing, documentation, modular models",
+          "useCases": ["data warehousing", "analytics engineering", "data modeling", "ELT pipelines"]
+        }
+      ]
+    },
+    "data_warehouses": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Redshift",
+          "version": "AWS",
+          "rationale": "AWS-native, columnar storage, scalable, SQL interface",
+          "useCases": ["AWS data warehouses", "large-scale analytics", "OLAP queries"]
+        }
+      ]
+    },
+    "data_lakes": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS S3 + Lake Formation",
+          "version": "AWS",
+          "rationale": "AWS-native, fine-grained access control, integrated with Glue/Athena",
+          "useCases": ["AWS data lakes", "centralized governance", "secure data sharing"]
+        }
+      ]
+    },
+    "data_visualization": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Recharts",
+          "version": "2.x",
+          "rationale": "React-native, composable, responsive, simple API, good defaults",
+          "useCases": ["React apps", "dashboards", "rapid prototyping", "responsive charts"]
+        }
+      ]
+    },
+    "diagramming": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Mermaid",
+          "version": "10.x",
+          "rationale": "Text-based, simple syntax, GitHub integration, version-controllable, no layout",
+          "useCases": ["documentation", "automatic diagrams", "CI/CD", "flowcharts", "sequence diagrams"]
+        }
+      ]
+    },
+    "api_documentation": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "OpenAPI 3.0 (Swagger)",
+          "version": "3.0+",
+          "rationale": "Industry standard, auto docs, Swagger UI, code generation",
+          "useCases": ["all REST APIs", "auto-generated docs", "client SDKs"]
+        }
+      ]
+    },
+    "documentation_platforms": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Astro (Starlight)",
+          "version": "4.x + Starlight 0.x",
+          "rationale": "Developer-first, MDX support, fast builds, component islands, Git-based",
+          "useCases": ["technical documentation", "developer portals", "open source docs"]
+        }
+      ]
+    },
+    "internal_documentation": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Notion",
+          "version": "platform",
+          "rationale": "All-in-one workspace, databases, wikis, collaboration, AI features",
+          "useCases": ["team wikis", "project management", "internal knowledge base"]
+        }
+      ]
+    },
+    "static_site_generators": {
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Astro",
+          "version": "4.x",
+          "rationale": "Fast, component islands, MDX, framework-agnostic, excellent DX",
+          "useCases": ["content-heavy sites", "technical blogs", "documentation"]
+        }
+      ]
+    }
+  }
+}

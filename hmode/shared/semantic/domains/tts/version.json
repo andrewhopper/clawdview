@@ -1,0 +1,90 @@
+{
+  "domain": "tts",
+  "version": "1.0.0",
+  "description": "Multi-provider text-to-speech domain model supporting ElevenLabs, AWS Polly, OpenAI TTS",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.1.0": "Add Conversation, Passage, Speaker entities for V1.5 diarization support",
+    "1.0.0": "Initial release with synthesis request/result, voice configuration, provider abstraction, audio file handling, streaming support, usage metrics"
+  },
+  "entities": [
+    "SynthesisRequest",
+    "SynthesisResult",
+    "Voice",
+    "Provider",
+    "AudioFile",
+    "VoiceSettings",
+    "StreamChunk",
+    "UsageMetrics",
+    "Conversation",
+    "Passage",
+    "Speaker"
+  ],
+  "enums": [
+    "ProviderType",
+    "AudioFormat",
+    "SynthesisStatus",
+    "DeliveryMode",
+    "ModelType"
+  ],
+  "features": {
+    "core": [
+      "Multi-provider abstraction (ElevenLabs, AWS Polly, OpenAI)",
+      "Voice configuration with fine-tuned settings",
+      "File generation and streaming delivery modes",
+      "S3 integration with presigned URLs"
+    ],
+    "advanced": [
+      "Voice cloning support (ElevenLabs)",
+      "SSML support (Polly, Google)",
+      "Multi-voice script stitching",
+      "Usage metrics and cost tracking"
+    ]
+  },
+  "providers": {
+    "elevenlabs": {
+      "rank": 1,
+      "features": ["voice-cloning", "multilingual", "streaming", "high-quality"],
+      "pricing": "credit-based"
+    },
+    "aws_polly": {
+      "rank": 2,
+      "features": ["neural-voices", "ssml", "aws-native"],
+      "pricing": "per-character"
+    },
+    "openai": {
+      "rank": 3,
+      "features": ["fast", "affordable", "simple-api"],
+      "pricing": "per-character"
+    }
+  },
+  "generated": {
+    "typescript": {
+      "file": "generated/typescript/tts.types.ts",
+      "exports": [
+        "SynthesisRequest",
+        "SynthesisResult",
+        "Voice",
+        "Provider",
+        "AudioFile",
+        "VoiceSettings",
+        "ProviderType",
+        "AudioFormat",
+        "SynthesisStatus",
+        "DeliveryMode",
+        "ModelType"
+      ]
+    },
+    "python": {
+      "file": "generated/python/tts.py",
+      "exports": [
+        "SynthesisRequest",
+        "SynthesisResult",
+        "Voice",
+        "Provider",
+        "AudioFile",
+        "VoiceSettings"
+      ]
+    }
+  }
+}

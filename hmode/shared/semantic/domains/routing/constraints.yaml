@@ -1,0 +1,614 @@
+# Routing Domain: Constraints & Preferences
+# Route options, avoidances, vehicle restrictions
+# Version: 1.0.0
+
+domain: routing-constraints
+version: "1.0.0"
+status: production
+description: Route constraints, preferences, vehicle profiles, and optimization
+dependencies:
+  - geo-point
+  - geo-shape
+  - routing-route
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Route Options (preferences)
+  # ---------------------------------------------------------------------------
+
+  RouteOptions:
+    description: Preferences and constraints for route calculation
+    fields:
+      mode:
+        type: TravelMode
+        required: true
+      avoid:
+        type: array
+        items:
+          type: AvoidFeature
+        required: false
+        description: Features to avoid
+      prefer:
+        type: array
+        items:
+          type: PreferFeature
+        required: false
+        description: Features to prefer
+      optimize:
+        type: OptimizeFor
+        required: false
+        default: BALANCED
+        description: What to optimize for
+      departure_time:
+        type: datetime
+        required: false
+        description: Planned departure time
+      arrival_time:
+        type: datetime
+        required: false
+        description: Target arrival time
+      traffic_model:
+        type: TrafficModel
+        required: false
+        default: BEST_GUESS
+      alternatives:
+        type: boolean
+        required: false
+        default: false
+        description: Return alternative routes
+      max_alternatives:
+        type: integer
+        required: false
+        default: 3
+      vehicle_profile:
+        type: VehicleProfile
+        required: false
+        description: Vehicle characteristics
+      hazmat:
+        type: HazmatProfile
+        required: false
+        description: Hazardous materials restrictions
+      custom_avoidances:
+        type: array
+        items:
+          type: CustomAvoidance
+        required: false
+        description: Custom areas/roads to avoid
+      custom_preferences:
+        type: array
+        items:
+          type: CustomPreference
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Vehicle Profile
+  # ---------------------------------------------------------------------------
+
+  VehicleProfile:
+    description: Vehicle characteristics affecting routing
+    fields:
+      type:
+        type: VehicleType
+        required: true
+      weight_kg:
+        type: float
+        required: false
+        description: Total vehicle weight
+      axle_weight_kg:
+        type: float
+        required: false
+        description: Weight per axle
+      axle_count:
+        type: integer
+        required: false
+      height_meters:
+        type: float
+        required: false
+        description: Vehicle height
+      width_meters:
+        type: float
+        required: false
+        description: Vehicle width
+      length_meters:
+        type: float
+        required: false
+        description: Vehicle length
+      trailer_count:
+        type: integer
+        required: false
+        default: 0
+      fuel_type:
+        type: FuelType
+        required: false
+      fuel_efficiency:
+        type: float
+        required: false
+        description: km/L or miles/gallon
+      max_speed_kmh:
+        type: float
+        required: false
+        description: Maximum speed
+      emission_class:
+        type: EmissionClass
+        required: false
+      tunnel_category:
+        type: TunnelCategory
+        required: false
+        description: ADR tunnel restriction code
+
+  # ---------------------------------------------------------------------------
+  # Hazmat Profile
+  # ---------------------------------------------------------------------------
+
+  HazmatProfile:
+    description: Hazardous materials transport restrictions
+    fields:
+      classes:
+        type: array
+        items:
+          type: HazmatClass
+        required: true
+        description: Hazmat classes being transported
+      quantity_kg:
+        type: float
+        required: false
+      placards_required:
+        type: boolean
+        required: false
+      tunnel_restrictions:
+        type: boolean
+        required: false
+        default: true
+      water_crossing_restrictions:
+        type: boolean
+        required: false
+        default: true
+
+  # ---------------------------------------------------------------------------
+  # Custom Avoidance/Preference
+  # ---------------------------------------------------------------------------
+
+  CustomAvoidance:
+    description: Custom area or road to avoid
+    fields:
+      name:
+        type: string
+        required: false
+      type:
+        type: CustomRestrictionType
+        required: true
+      geometry:
+        type: Geometry
+        required: false
+        description: Area to avoid (polygon, bbox)
+      road_ids:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Specific road IDs to avoid
+      reason:
+        type: string
+        required: false
+      active_from:
+        type: datetime
+        required: false
+      active_until:
+        type: datetime
+        required: false
+
+  CustomPreference:
+    description: Custom preferred route/area
+    fields:
+      name:
+        type: string
+        required: false
+      type:
+        type: CustomRestrictionType
+        required: true
+      geometry:
+        type: Geometry
+        required: false
+      road_ids:
+        type: array
+        items:
+          type: string
+        required: false
+      weight:
+        type: float
+        required: false
+        default: 1.0
+        description: Preference weight (higher = more preferred)
+
+  # ---------------------------------------------------------------------------
+  # Road Restriction
+  # ---------------------------------------------------------------------------
+
+  RoadRestriction:
+    description: Physical or legal restriction on road segment
+    fields:
+      road_id:
+        type: string
+        required: false
+      geometry:
+        type: LineString
+        required: false
+      restriction_type:
+        type: RestrictionType
+        required: true
+      value:
+        type: float
+        required: false
+        description: Numeric value (weight, height, speed limit)
+      unit:
+        type: string
+        required: false
+      direction:
+        type: RestrictionDirection
+        required: false
+        default: BOTH
+      vehicle_types:
+        type: array
+        items:
+          type: VehicleType
+        required: false
+        description: Affected vehicle types
+      time_restrictions:
+        type: array
+        items:
+          type: TimeRestriction
+        required: false
+      seasonal:
+        type: SeasonalRestriction
+        required: false
+
+  TimeRestriction:
+    description: Time-based restriction
+    fields:
+      days:
+        type: array
+        items:
+          type: DayOfWeek
+        required: false
+      start_time:
+        type: string
+        required: false
+        description: Start time (HH:MM)
+      end_time:
+        type: string
+        required: false
+        description: End time (HH:MM)
+      timezone:
+        type: string
+        required: false
+
+  SeasonalRestriction:
+    description: Seasonal road restriction
+    fields:
+      start_date:
+        type: string
+        required: true
+        description: MM-DD
+      end_date:
+        type: string
+        required: true
+        description: MM-DD
+      reason:
+        type: string
+        required: false
+        description: Snow closure, weight limits, etc.
+
+  # ---------------------------------------------------------------------------
+  # VRP Constraints (Vehicle Routing Problem)
+  # ---------------------------------------------------------------------------
+
+  VRPConstraints:
+    description: Multi-stop optimization constraints
+    fields:
+      max_stops_per_route:
+        type: integer
+        required: false
+      max_distance_meters:
+        type: float
+        required: false
+      max_duration_seconds:
+        type: float
+        required: false
+      vehicle_capacity:
+        type: float
+        required: false
+        description: Weight or volume capacity
+      capacity_unit:
+        type: string
+        required: false
+      time_windows:
+        type: boolean
+        required: false
+        default: true
+        description: Respect stop time windows
+      balance_routes:
+        type: boolean
+        required: false
+        default: false
+        description: Balance load across vehicles
+      minimize:
+        type: VRPObjective
+        required: false
+        default: TOTAL_DISTANCE
+      depot:
+        type: Point
+        required: false
+        description: Start/end depot location
+      return_to_depot:
+        type: boolean
+        required: false
+        default: true
+
+  # ---------------------------------------------------------------------------
+  # Marine Routing Constraints
+  # ---------------------------------------------------------------------------
+
+  MarineConstraints:
+    description: Marine vessel routing constraints
+    fields:
+      vessel_type:
+        type: MarineVesselType
+        required: true
+      draft_meters:
+        type: float
+        required: false
+        description: Vessel draft (below waterline)
+      beam_meters:
+        type: float
+        required: false
+        description: Vessel width
+      air_draft_meters:
+        type: float
+        required: false
+        description: Height above waterline
+      max_wave_height_meters:
+        type: float
+        required: false
+      max_wind_speed_knots:
+        type: float
+        required: false
+      avoid_shipping_lanes:
+        type: boolean
+        required: false
+        default: false
+      prefer_shipping_lanes:
+        type: boolean
+        required: false
+        default: false
+      weather_routing:
+        type: boolean
+        required: false
+        default: true
+        description: Factor in weather forecasts
+
+  # ---------------------------------------------------------------------------
+  # Aviation Constraints
+  # ---------------------------------------------------------------------------
+
+  AviationConstraints:
+    description: Aviation routing constraints
+    fields:
+      aircraft_type:
+        type: string
+        required: false
+      range_nm:
+        type: float
+        required: false
+        description: Aircraft range in nautical miles
+      cruise_altitude_ft:
+        type: float
+        required: false
+      avoid_airspace:
+        type: array
+        items:
+          type: AirspaceClass
+        required: false
+      avoid_countries:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Countries to avoid (overflight)
+      etops:
+        type: boolean
+        required: false
+        description: Extended-range twin operations
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  AvoidFeature:
+    description: Features to avoid in routing
+    values:
+      - TOLLS             # Toll roads
+      - HIGHWAYS          # Limited-access highways
+      - FERRIES           # Ferry crossings
+      - UNPAVED           # Unpaved/gravel roads
+      - TUNNELS           # Tunnels
+      - BRIDGES           # Bridges
+      - BORDER_CROSSINGS  # International borders
+      - U_TURNS           # U-turns
+      - SHARP_TURNS       # Sharp turns
+      - DIFFICULT_TURNS   # Difficult intersections
+      - COUNTRY_BORDERS   # Country border crossings
+      - LOW_EMISSION_ZONES # Restricted emission zones
+      - CONGESTION_ZONES  # Congestion charging zones
+      - SEASONAL_ROADS    # Seasonally closed roads
+      - CONSTRUCTION      # Active construction
+      - ACCIDENTS         # Current accidents
+
+  PreferFeature:
+    description: Features to prefer in routing
+    values:
+      - HIGHWAYS          # Prefer highways
+      - SCENIC            # Scenic routes
+      - SHORTEST          # Shortest distance
+      - FASTEST           # Fastest time
+      - SIMPLEST          # Fewest turns/maneuvers
+      - FUEL_EFFICIENT    # Most fuel efficient
+      - TRUCK_ROUTES      # Designated truck routes
+      - BIKE_LANES        # Dedicated bike infrastructure
+      - PAVED             # Paved roads only
+      - WELL_LIT          # Well-lit roads (night)
+
+  OptimizeFor:
+    description: Route optimization objective
+    values:
+      - FASTEST           # Minimize travel time
+      - SHORTEST          # Minimize distance
+      - BALANCED          # Balance time and distance
+      - FUEL_EFFICIENT    # Minimize fuel consumption
+      - CHEAPEST          # Minimize cost (tolls + fuel)
+      - SCENIC            # Maximize scenic value
+      - SAFEST            # Minimize accident risk
+      - SIMPLEST          # Minimize complexity
+
+  TrafficModel:
+    description: Traffic prediction model
+    values:
+      - BEST_GUESS        # Current + historical
+      - OPTIMISTIC        # Lighter traffic
+      - PESSIMISTIC       # Heavier traffic
+
+  VehicleType:
+    description: Type of vehicle
+    values:
+      - CAR
+      - MOTORCYCLE
+      - BICYCLE
+      - PEDESTRIAN
+      - VAN
+      - TRUCK             # Medium truck
+      - SEMI_TRUCK        # Tractor-trailer
+      - BUS
+      - RV                # Recreational vehicle
+      - EMERGENCY
+      - TAXI
+
+  EmissionClass:
+    description: Vehicle emission standard
+    values:
+      - EURO_1
+      - EURO_2
+      - EURO_3
+      - EURO_4
+      - EURO_5
+      - EURO_6
+      - ZERO_EMISSION     # Electric/hydrogen
+
+  TunnelCategory:
+    description: ADR tunnel restriction category
+    values:
+      - A                 # No restrictions
+      - B                 # Slight restrictions
+      - C                 # Moderate restrictions
+      - D                 # Significant restrictions
+      - E                 # Most restrictive
+
+  HazmatClass:
+    description: UN hazmat classification
+    values:
+      - CLASS_1_EXPLOSIVES
+      - CLASS_2_GASES
+      - CLASS_3_FLAMMABLE_LIQUIDS
+      - CLASS_4_FLAMMABLE_SOLIDS
+      - CLASS_5_OXIDIZERS
+      - CLASS_6_TOXIC
+      - CLASS_7_RADIOACTIVE
+      - CLASS_8_CORROSIVE
+      - CLASS_9_MISC
+
+  RestrictionType:
+    description: Type of road restriction
+    values:
+      - MAX_WEIGHT
+      - MAX_AXLE_WEIGHT
+      - MAX_HEIGHT
+      - MAX_WIDTH
+      - MAX_LENGTH
+      - MAX_SPEED
+      - NO_TRUCKS
+      - NO_HAZMAT
+      - NO_THROUGH_TRAFFIC
+      - ONE_WAY
+      - CLOSED
+      - PERMIT_REQUIRED
+
+  RestrictionDirection:
+    description: Direction restriction applies
+    values:
+      - BOTH
+      - FORWARD
+      - BACKWARD
+
+  CustomRestrictionType:
+    description: Type of custom restriction
+    values:
+      - AREA              # Polygon area
+      - CORRIDOR          # Buffered line
+      - ROAD_SEGMENT      # Specific road
+      - BOUNDING_BOX      # Rectangle
+
+  VRPObjective:
+    description: VRP optimization objective
+    values:
+      - TOTAL_DISTANCE    # Minimize total distance
+      - TOTAL_TIME        # Minimize total time
+      - NUM_VEHICLES      # Minimize vehicles used
+      - MAKESPAN          # Minimize longest route
+      - BALANCED          # Balance route lengths
+
+  MarineVesselType:
+    description: Type of marine vessel
+    values:
+      - SAILBOAT
+      - MOTORBOAT
+      - YACHT
+      - CARGO_SHIP
+      - TANKER
+      - CONTAINER_SHIP
+      - FERRY
+      - TUG
+      - FISHING
+      - KAYAK
+      - JET_SKI
+
+  AirspaceClass:
+    description: Aviation airspace classification
+    values:
+      - CLASS_A           # High altitude (FL180+)
+      - CLASS_B           # Major airports
+      - CLASS_C           # Busy airports
+      - CLASS_D           # Towered airports
+      - CLASS_E           # Controlled
+      - CLASS_G           # Uncontrolled
+      - RESTRICTED        # R-areas
+      - PROHIBITED        # P-areas
+      - WARNING           # W-areas
+      - MOA               # Military Operations Area
+      - TFR               # Temporary Flight Restriction
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "Google Directions API: Route Options"
+  - "HERE Routing API: Truck Parameters"
+  - "ADR Tunnels: https://unece.org/transport/dangerous-goods"
+  - "CFR 49 Hazmat: https://www.ecfr.gov/current/title-49"
+  - "VRP: https://developers.google.com/optimization/routing"
+  - "OpenRouteService Vehicle Profiles"

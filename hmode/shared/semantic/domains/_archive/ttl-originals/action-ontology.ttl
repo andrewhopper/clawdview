@@ -1,0 +1,365 @@
+@prefix action: <http://hopperlabs.ai/ontology/action#> .
+@prefix sdlc: <http://hopperlabs.ai/ontology/sdlc#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <http://schema.org/> .
+
+# ============================================
+# Action Ontology for Hopper Labs
+# Defines verbs/actions as first-class capabilities
+# Inspired by Palantir Foundry's Kinetic Layer
+# ============================================
+
+# ----------------
+# Core Action Classes
+# ----------------
+
+action:Action a owl:Class ;
+    rdfs:label "Action" ;
+    rdfs:comment "A capability that performs an operation on entities" .
+
+action:ReadAction a owl:Class ;
+    rdfs:subClassOf action:Action ;
+    rdfs:label "Read Action" ;
+    rdfs:comment "Retrieves entity state without modification" .
+
+action:WriteAction a owl:Class ;
+    rdfs:subClassOf action:Action ;
+    rdfs:label "Write Action" ;
+    rdfs:comment "Modifies entity state (create, update, delete)" .
+
+action:CreateAction a owl:Class ;
+    rdfs:subClassOf action:WriteAction ;
+    rdfs:label "Create Action" ;
+    rdfs:comment "Creates a new entity instance" .
+
+action:UpdateAction a owl:Class ;
+    rdfs:subClassOf action:WriteAction ;
+    rdfs:label "Update Action" ;
+    rdfs:comment "Modifies existing entity state" .
+
+action:DeleteAction a owl:Class ;
+    rdfs:subClassOf action:WriteAction ;
+    rdfs:label "Delete Action" ;
+    rdfs:comment "Removes entity or marks as deleted" .
+
+action:TransformAction a owl:Class ;
+    rdfs:subClassOf action:Action ;
+    rdfs:label "Transform Action" ;
+    rdfs:comment "Converts entity from one state/type to another" .
+
+action:ValidationAction a owl:Class ;
+    rdfs:subClassOf action:Action ;
+    rdfs:label "Validation Action" ;
+    rdfs:comment "Validates entity against constraints without modification" .
+
+# ----------------
+# Action Properties
+# ----------------
+
+action:operatesOn a owl:ObjectProperty ;
+    rdfs:domain action:Action ;
+    rdfs:range owl:Class ;
+    rdfs:comment "The entity type this action operates on" .
+
+action:requires a owl:ObjectProperty ;
+    rdfs:domain action:Action ;
+    rdfs:range action:Parameter ;
+    rdfs:comment "Input parameters required for action execution" .
+
+action:produces a owl:ObjectProperty ;
+    rdfs:domain action:Action ;
+    rdfs:range action:Result ;
+    rdfs:comment "Output/result type produced by action" .
+
+action:hasSideEffect a owl:DatatypeProperty ;
+    rdfs:domain action:Action ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Description of side effects (state changes, events emitted)" .
+
+action:requiresPermission a owl:DatatypeProperty ;
+    rdfs:domain action:Action ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Permission scope required to execute action (e.g., 'email:send')" .
+
+action:isIdempotent a owl:DatatypeProperty ;
+    rdfs:domain action:Action ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether multiple executions with same input produce same result" .
+
+action:errorConditions a owl:DatatypeProperty ;
+    rdfs:domain action:Action ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Possible error conditions and codes" .
+
+# ----------------
+# Parameter & Result Types
+# ----------------
+
+action:Parameter a owl:Class ;
+    rdfs:label "Action Parameter" ;
+    rdfs:comment "Input parameter for an action" .
+
+action:parameterName a owl:DatatypeProperty ;
+    rdfs:domain action:Parameter ;
+    rdfs:range xsd:string .
+
+action:parameterType a owl:DatatypeProperty ;
+    rdfs:domain action:Parameter ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type of parameter (string, number, Email, Person, etc.)" .
+
+action:isRequired a owl:DatatypeProperty ;
+    rdfs:domain action:Parameter ;
+    rdfs:range xsd:boolean .
+
+action:defaultValue a owl:DatatypeProperty ;
+    rdfs:domain action:Parameter ;
+    rdfs:range xsd:string .
+
+action:Result a owl:Class ;
+    rdfs:label "Action Result" ;
+    rdfs:comment "Output produced by action execution" .
+
+action:resultType a owl:DatatypeProperty ;
+    rdfs:domain action:Result ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type of result (void, Email, ValidationReport, etc.)" .
+
+# ----------------
+# Example: Email Actions
+# ----------------
+
+action:Email a owl:Class ;
+    rdfs:label "Email" ;
+    rdfs:comment "Electronic mail message entity" .
+
+action:SendEmailAction a action:CreateAction ;
+    rdfs:label "Send Email" ;
+    rdfs:comment "Send an email message to recipients" ;
+    action:operatesOn action:Email ;
+    action:requiresPermission "email:send" ;
+    action:hasSideEffect "Creates email record, sends via SMTP, updates sender's sent folder" ;
+    action:isIdempotent false ;
+    action:errorConditions "INVALID_RECIPIENT, SMTP_ERROR, QUOTA_EXCEEDED" .
+
+action:SendEmail_ToParameter a action:Parameter ;
+    action:parameterName "to" ;
+    action:parameterType "string[]" ;
+    action:isRequired true ;
+    rdfs:comment "Recipient email addresses" .
+
+action:SendEmail_SubjectParameter a action:Parameter ;
+    action:parameterName "subject" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Email subject line" .
+
+action:SendEmail_BodyParameter a action:Parameter ;
+    action:parameterName "body" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Email body content" .
+
+action:SendEmail_AttachmentsParameter a action:Parameter ;
+    action:parameterName "attachments" ;
+    action:parameterType "File[]" ;
+    action:isRequired false ;
+    rdfs:comment "Optional file attachments" .
+
+action:SendEmailAction action:requires action:SendEmail_ToParameter ,
+                                       action:SendEmail_SubjectParameter ,
+                                       action:SendEmail_BodyParameter ,
+                                       action:SendEmail_AttachmentsParameter .
+
+action:SendEmail_Result a action:Result ;
+    action:resultType "Email" ;
+    rdfs:comment "Sent email object with id and sentAt timestamp" .
+
+action:SendEmailAction action:produces action:SendEmail_Result .
+
+# ----------------
+
+action:DeleteEmailAction a action:DeleteAction ;
+    rdfs:label "Delete Email" ;
+    rdfs:comment "Move email to trash or permanently delete" ;
+    action:operatesOn action:Email ;
+    action:requiresPermission "email:delete" ;
+    action:hasSideEffect "Updates email.status to 'deleted', moves to trash folder" ;
+    action:isIdempotent true ;
+    action:errorConditions "EMAIL_NOT_FOUND, INSUFFICIENT_PERMISSIONS" .
+
+action:DeleteEmail_IdParameter a action:Parameter ;
+    action:parameterName "emailId" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "ID of email to delete" .
+
+action:DeleteEmail_PermanentParameter a action:Parameter ;
+    action:parameterName "permanent" ;
+    action:parameterType "boolean" ;
+    action:isRequired false ;
+    action:defaultValue "false" ;
+    rdfs:comment "Whether to permanently delete (true) or move to trash (false)" .
+
+action:DeleteEmailAction action:requires action:DeleteEmail_IdParameter ,
+                                         action:DeleteEmail_PermanentParameter .
+
+action:DeleteEmail_Result a action:Result ;
+    action:resultType "void" .
+
+action:DeleteEmailAction action:produces action:DeleteEmail_Result .
+
+# ----------------
+
+action:ForwardEmailAction a action:CreateAction ;
+    rdfs:label "Forward Email" ;
+    rdfs:comment "Forward existing email to new recipients" ;
+    action:operatesOn action:Email ;
+    action:requiresPermission "email:send" ;
+    action:hasSideEffect "Creates new email with original content, sends to new recipients" ;
+    action:isIdempotent false ;
+    action:errorConditions "EMAIL_NOT_FOUND, INVALID_RECIPIENT, SMTP_ERROR" .
+
+action:ForwardEmail_IdParameter a action:Parameter ;
+    action:parameterName "emailId" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "ID of email to forward" .
+
+action:ForwardEmail_ToParameter a action:Parameter ;
+    action:parameterName "to" ;
+    action:parameterType "string[]" ;
+    action:isRequired true ;
+    rdfs:comment "New recipient email addresses" .
+
+action:ForwardEmail_MessageParameter a action:Parameter ;
+    action:parameterName "message" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "Optional message to prepend to forwarded email" .
+
+action:ForwardEmailAction action:requires action:ForwardEmail_IdParameter ,
+                                          action:ForwardEmail_ToParameter ,
+                                          action:ForwardEmail_MessageParameter .
+
+action:ForwardEmail_Result a action:Result ;
+    action:resultType "Email" ;
+    rdfs:comment "Newly created forwarded email" .
+
+action:ForwardEmailAction action:produces action:ForwardEmail_Result .
+
+# ----------------
+
+action:ReadEmailAction a action:ReadAction ;
+    rdfs:label "Read Email" ;
+    rdfs:comment "Mark email as read" ;
+    action:operatesOn action:Email ;
+    action:requiresPermission "email:read" ;
+    action:hasSideEffect "Updates email.isRead to true, updates readAt timestamp" ;
+    action:isIdempotent true ;
+    action:errorConditions "EMAIL_NOT_FOUND" .
+
+action:ReadEmail_IdParameter a action:Parameter ;
+    action:parameterName "emailId" ;
+    action:parameterType "string" ;
+    action:isRequired true .
+
+action:ReadEmailAction action:requires action:ReadEmail_IdParameter .
+
+action:ReadEmail_Result a action:Result ;
+    action:resultType "Email" ;
+    rdfs:comment "Updated email object with isRead=true" .
+
+action:ReadEmailAction action:produces action:ReadEmail_Result .
+
+# ----------------
+# Example: SDLC Artifact Actions
+# ----------------
+
+action:ApproveArtifactAction a action:UpdateAction ;
+    rdfs:label "Approve Artifact" ;
+    rdfs:comment "Approve an SDLC artifact at a given approval level" ;
+    action:operatesOn sdlc:Artifact ;
+    action:requiresPermission "sdlc:approve" ;
+    action:hasSideEffect "Updates artifact.status to 'approved', records approver and timestamp" ;
+    action:isIdempotent true .
+
+action:RejectArtifactAction a action:UpdateAction ;
+    rdfs:label "Reject Artifact" ;
+    rdfs:comment "Reject an SDLC artifact with feedback" ;
+    action:operatesOn sdlc:Artifact ;
+    action:requiresPermission "sdlc:approve" ;
+    action:hasSideEffect "Updates artifact.status to 'rejected', stores rejection reason" ;
+    action:isIdempotent true .
+
+action:RegenerateArtifactAction a action:CreateAction ;
+    rdfs:label "Regenerate Artifact" ;
+    rdfs:comment "Create new version of rejected artifact using AI" ;
+    action:operatesOn sdlc:Artifact ;
+    action:requiresPermission "sdlc:generate" ;
+    action:hasSideEffect "Creates new artifact instance, increments version number" ;
+    action:isIdempotent false .
+
+action:EditArtifactAction a action:UpdateAction ;
+    rdfs:label "Edit Artifact" ;
+    rdfs:comment "Manually edit artifact content" ;
+    action:operatesOn sdlc:Artifact ;
+    action:requiresPermission "sdlc:edit" ;
+    action:hasSideEffect "Updates artifact content, records editor and timestamp" ;
+    action:isIdempotent false .
+
+# ----------------
+# Action Composition
+# ----------------
+
+action:ActionSequence a owl:Class ;
+    rdfs:label "Action Sequence" ;
+    rdfs:comment "Ordered sequence of actions (workflow)" .
+
+action:hasStep a owl:ObjectProperty ;
+    rdfs:domain action:ActionSequence ;
+    rdfs:range action:Action .
+
+action:stepOrder a owl:DatatypeProperty ;
+    rdfs:domain action:Action ;
+    rdfs:range xsd:integer .
+
+# Example: Email Workflow
+action:SendAndArchiveWorkflow a action:ActionSequence ;
+    rdfs:label "Send and Archive Email Workflow" ;
+    rdfs:comment "Send email then move to archive folder" ;
+    action:hasStep action:SendEmailAction , action:ArchiveEmailAction .
+
+# ----------------
+# LLM Agent Integration
+# ----------------
+
+action:AgentCapability a owl:Class ;
+    rdfs:label "Agent Capability" ;
+    rdfs:comment "Action exposed to LLM agents with natural language description" .
+
+action:naturalLanguageDescription a owl:DatatypeProperty ;
+    rdfs:domain action:AgentCapability ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Human-readable description for LLM function calling" .
+
+action:exampleUsage a owl:DatatypeProperty ;
+    rdfs:domain action:AgentCapability ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Example input/output for LLM context" .
+
+action:SendEmailCapability a action:AgentCapability ;
+    rdfs:label "Send Email Capability" ;
+    action:wrapsAction action:SendEmailAction ;
+    action:naturalLanguageDescription "Send an email message to one or more recipients with optional attachments" ;
+    action:exampleUsage """
+Input: { to: ['user@example.com'], subject: 'Hello', body: 'Test message' }
+Output: { id: '123', status: 'sent', sentAt: '2025-11-18T12:00:00Z' }
+""" .
+
+action:wrapsAction a owl:ObjectProperty ;
+    rdfs:domain action:AgentCapability ;
+    rdfs:range action:Action .

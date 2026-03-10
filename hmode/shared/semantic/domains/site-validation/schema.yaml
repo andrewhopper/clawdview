@@ -1,0 +1,408 @@
+# File UUID: 9a0b1c2d-3e4f-5a6b-7c8d-9e0f1a2b3c4d
+#
+# Site Validation Domain Model
+# Represents content filtering, domain validation, and access policies
+# Used for: parental controls, school filtering, content moderation
+#
+# Related domains: network-client (device-level access)
+
+domain:
+  name: site-validation
+  version: 1.0.0
+  description: Site/content validation and filtering for network access control
+  tags: [content-filtering, parental-controls, dns-filtering, security]
+
+entities:
+
+  ValidationResult:
+    description: Result of validating a domain or URL
+    properties:
+      id:
+        type: string
+        required: true
+        description: Unique identifier (UUID)
+      domain:
+        type: string
+        required: true
+        description: Domain that was validated
+      url:
+        type: string
+        description: Full URL if URL-level validation
+      blocked:
+        type: boolean
+        required: true
+        description: Whether access should be blocked
+      reason:
+        type: string
+        description: Human-readable reason for decision
+      category:
+        type: ContentCategory
+        required: true
+        description: Detected content category
+      confidence:
+        type: number
+        description: Confidence score (0.0-1.0)
+      validator:
+        type: string
+        description: Name of validator that made decision
+      cached:
+        type: boolean
+        description: Whether result was from cache
+      needs_recheck:
+        type: boolean
+        description: Whether cached result has expired
+      details:
+        type: object
+        description: Additional metadata about validation
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  DomainEntry:
+    description: Entry in a whitelist or blacklist
+    properties:
+      domain:
+        type: string
+        required: true
+        description: Domain (supports wildcard matching via parent domains)
+      added_at:
+        type: datetime
+        required: true
+        description: When domain was added
+      added_by:
+        type: string
+        required: true
+        description: Who added (manual, api, import, etc.)
+      reason:
+        type: string
+        description: Reason for adding to list
+      category:
+        type: ContentCategory
+        description: Category if known
+      source:
+        type: string
+        description: Source of entry (pihole, crowdsec, manual, etc.)
+      expires_at:
+        type: datetime
+        description: Optional expiration time
+
+  DomainList:
+    description: Collection of domains (whitelist or blacklist)
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: List name (e.g., "Family Whitelist", "School Blacklist")
+      type:
+        type: ListType
+        required: true
+        description: whitelist or blacklist
+      description:
+        type: string
+      entries:
+        type: array
+        items: DomainEntry
+      entry_count:
+        type: integer
+      source_url:
+        type: string
+        description: URL for auto-updating from external source
+      last_updated:
+        type: datetime
+      auto_update:
+        type: boolean
+        description: Whether to auto-update from source
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ValidationCache:
+    description: Cache of validation results
+    properties:
+      id:
+        type: string
+        required: true
+      entries:
+        type: array
+        items: CacheEntry
+      max_size:
+        type: integer
+        description: Maximum entries before eviction
+      ttl_days:
+        type: integer
+        required: true
+        description: Default TTL for entries (typically 30 days)
+      hit_count:
+        type: integer
+      miss_count:
+        type: integer
+
+  CacheEntry:
+    description: Single cached validation result
+    properties:
+      domain:
+        type: string
+        required: true
+      blocked:
+        type: boolean
+        required: true
+      reason:
+        type: string
+      category:
+        type: ContentCategory
+      confidence:
+        type: number
+      validator:
+        type: string
+      cached_at:
+        type: datetime
+        required: true
+      expires_at:
+        type: datetime
+        required: true
+
+  ValidationPolicy:
+    description: Content filtering policy configuration
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+        description: Policy name (family, school, work, strict, none)
+      description:
+        type: string
+      blocked_categories:
+        type: array
+        items: ContentCategory
+        description: Categories to block
+      allowed_categories:
+        type: array
+        items: ContentCategory
+        description: Categories to always allow (overrides blocked)
+      blocked_domains:
+        type: array
+        items: string
+        description: Specific domains to always block
+      allowed_domains:
+        type: array
+        items: string
+        description: Specific domains to always allow
+      safesearch_enabled:
+        type: boolean
+        description: Enforce SafeSearch on search engines
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  FetchResult:
+    description: Result of fetching content from a URL
+    properties:
+      url:
+        type: string
+        required: true
+      success:
+        type: boolean
+        required: true
+      content:
+        type: string
+        description: Extracted text content
+      title:
+        type: string
+        description: Page title
+      description:
+        type: string
+        description: Meta description
+      strategy_used:
+        type: FetchStrategy
+        required: true
+      error:
+        type: string
+        description: Error message if failed
+      fetch_time_ms:
+        type: integer
+        description: Time taken to fetch
+
+enums:
+
+  ContentCategory:
+    description: Content category for classification
+    values:
+      - educational     # Learning, schools, tutorials
+      - news            # News and journalism
+      - business        # Corporate, B2B
+      - technology      # Tech, programming, software
+      - social_media    # Social networking
+      - streaming       # Video/music streaming
+      - gaming          # Video games, esports
+      - shopping        # E-commerce, retail
+      - adult           # Adult/explicit content
+      - gambling        # Casinos, betting
+      - finance         # Banking, investing
+      - health          # Medical, healthcare
+      - reference       # Encyclopedias, dictionaries
+      - search_engine   # Search engines
+      - email           # Webmail services
+      - productivity    # Office tools, collaboration
+      - forums          # Discussion boards
+      - dating          # Dating sites
+      - malware         # Malicious sites
+      - phishing        # Phishing/scam sites
+      - piracy          # Illegal downloads
+      - unknown         # Unclassified
+
+  ValidationPolicyType:
+    description: Predefined policy types
+    values:
+      - none            # No filtering
+      - security        # Block malware/phishing only
+      - family          # Family-safe (no adult, gambling, etc.)
+      - school          # Educational focus (strict)
+      - work            # Productivity focus
+      - strict          # Maximum filtering
+      - custom          # User-defined
+
+  ListType:
+    description: Type of domain list
+    values:
+      - whitelist       # Always allow
+      - blacklist       # Always block
+
+  FetchStrategy:
+    description: Strategy for fetching web content
+    values:
+      - httpx           # Fast, lightweight HTTP
+      - playwright      # Full browser (handles JS)
+      - brave           # Brave Search API
+      - firecrawl       # Firecrawl API
+
+  ValidatorType:
+    description: Type of validator used
+    values:
+      - rule_based      # Local rules and patterns
+      - llm             # LLM-based analysis (Claude, GPT)
+      - embedding       # Semantic embedding classification
+      - content         # Full content fetch + analysis
+      - url             # URL-level inspection
+      - safesearch      # Google SafeSearch check
+      - chain           # Multiple validators combined
+      - cached          # Wrapper with caching
+
+actions:
+
+  ValidateDomain:
+    description: Validate a domain for access
+    parameters:
+      domain:
+        type: string
+        required: true
+      policy:
+        type: ValidationPolicyType
+        required: true
+      force_recheck:
+        type: boolean
+        description: Skip cache and revalidate
+    result:
+      type: ValidationResult
+
+  ValidateURL:
+    description: Validate a full URL (includes path/query inspection)
+    parameters:
+      url:
+        type: string
+        required: true
+      policy:
+        type: ValidationPolicyType
+        required: true
+    result:
+      type: ValidationResult
+
+  AddToWhitelist:
+    description: Add domain to whitelist
+    parameters:
+      domain:
+        type: string
+        required: true
+      reason:
+        type: string
+      category:
+        type: ContentCategory
+      added_by:
+        type: string
+    result:
+      type: DomainEntry
+
+  AddToBlacklist:
+    description: Add domain to blacklist
+    parameters:
+      domain:
+        type: string
+        required: true
+      reason:
+        type: string
+      category:
+        type: ContentCategory
+      added_by:
+        type: string
+    result:
+      type: DomainEntry
+
+  ImportBlocklist:
+    description: Import domains from external blocklist
+    parameters:
+      source_url:
+        type: string
+        required: true
+        description: URL of blocklist (Pi-hole format, hosts file, etc.)
+      list_type:
+        type: ListType
+        required: true
+      merge:
+        type: boolean
+        description: Merge with existing or replace
+    result:
+      type: object
+      properties:
+        imported_count:
+          type: integer
+        skipped_count:
+          type: integer
+
+  RecheckExpired:
+    description: Revalidate expired cache entries
+    parameters:
+      max_domains:
+        type: integer
+        description: Maximum domains to recheck
+    result:
+      type: array
+      items: ValidationResult
+
+  GetStats:
+    description: Get validator statistics
+    result:
+      type: object
+      properties:
+        whitelist_count:
+          type: integer
+        blacklist_count:
+          type: integer
+        cache_count:
+          type: integer
+        cache_expired_count:
+          type: integer
+        policy:
+          type: string

@@ -1,0 +1,503 @@
+# Waitlist Domain Model
+# Queue management for scarce resources
+# Handles FIFO, priority, lottery, and promotion to confirmed
+
+domain:
+  name: waitlist
+  version: "1.0.0"
+  description: Queue management for scarce resources with multiple policies, priorities, and promotion workflows
+  dependencies: [core, capacity, notification]
+  use_case: Gym class waitlists, restaurant waitlists, product launch waitlists, event overflow
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  # ============================================
+  # WAITLIST CONFIGURATION
+  # ============================================
+
+  Waitlist:
+    description: A queue for a scarce resource
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      # Resource reference
+      resourceType: { type: string, required: true }
+      resourceId: { type: string, required: true }
+      capacityPoolId: { type: uuid, description: "FK to capacity:CapacityPool" }
+      # Configuration
+      policy: { type: WaitlistPolicy, required: true, default: fifo }
+      maxSize: { type: integer, description: "Max entries, null = unlimited" }
+      allowDuplicates: { type: boolean, default: false }
+      # Timing
+      openAt: { type: datetime, description: "When waitlist opens" }
+      closeAt: { type: datetime, description: "When waitlist closes" }
+      # Offer settings
+      offerDurationSeconds: { type: integer, required: true, default: 3600 }
+      autoPromote: { type: boolean, required: true, default: true }
+      maxSimultaneousOffers: { type: integer, default: 1 }
+      # Notifications
+      notifyOnJoin: { type: boolean, default: true }
+      notifyOnPositionChange: { type: boolean, default: false }
+      positionChangeThreshold: { type: integer, default: 5 }
+      # Status
+      status: { type: WaitlistStatus, required: true, default: active }
+      currentSize: { type: integer, required: true, default: 0 }
+      totalPromoted: { type: integer, required: true, default: 0 }
+      # Metadata
+      tags: { type: array, items: string }
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  WaitlistConfig:
+    description: Detailed configuration for a waitlist
+    properties:
+      id: { type: uuid, required: true }
+      waitlistId: { type: uuid, required: true }
+      # Priority rules
+      priorityRules: { type: array, items: PriorityRule }
+      # Lottery settings (if policy = lottery)
+      lotteryWeights: { type: array, items: LotteryWeight }
+      lotteryDrawTime: { type: datetime }
+      lotteryDrawSize: { type: integer }
+      # Fairness settings
+      maxWaitDays: { type: integer, description: "Auto-remove after N days" }
+      priorityBoostPerDay: { type: integer, description: "Priority increase per day waiting" }
+      # Grouping
+      allowGroupEntry: { type: boolean, default: false }
+      maxGroupSize: { type: integer, default: 1 }
+      groupMustPromoteTogether: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PriorityRule:
+    description: Rule for calculating priority score
+    properties:
+      id: { type: uuid, required: true }
+      configId: { type: uuid, required: true }
+      attribute: { type: string, required: true, description: "member_tier, join_date, etc." }
+      operator: { type: ComparisonOperator, required: true }
+      value: { type: string, required: true }
+      priorityBoost: { type: integer, required: true }
+      sortOrder: { type: integer, required: true }
+
+  LotteryWeight:
+    description: Weight for lottery selection
+    properties:
+      id: { type: uuid, required: true }
+      configId: { type: uuid, required: true }
+      attribute: { type: string, required: true }
+      attributeValue: { type: string, required: true }
+      weight: { type: number, required: true, minimum: 0 }
+
+  # ============================================
+  # WAITLIST ENTRIES
+  # ============================================
+
+  WaitlistEntry:
+    description: A person/entity on a waitlist
+    properties:
+      id: { type: uuid, required: true }
+      waitlistId: { type: uuid, required: true }
+      # Entrant
+      entrantId: { type: string, required: true }
+      entrantType: { type: EntrantType, required: true }
+      entrantName: { type: string }
+      entrantEmail: { type: string }
+      entrantPhone: { type: string }
+      # Request
+      requestedQuantity: { type: integer, required: true, default: 1 }
+      preferences: { type: object, description: "Preferred time, location, etc." }
+      # Group
+      groupId: { type: uuid, description: "FK to WaitlistGroup" }
+      isGroupLeader: { type: boolean, default: false }
+      # Position
+      position: { type: integer, required: true }
+      originalPosition: { type: integer, required: true }
+      # Priority
+      priorityScore: { type: integer, default: 0 }
+      priorityReason: { type: string }
+      # State
+      status: { type: EntryStatus, required: true, default: waiting }
+      joinedAt: { type: datetime, required: true }
+      # Offer
+      currentOfferId: { type: uuid, description: "FK to active WaitlistOffer" }
+      lastOfferedAt: { type: datetime }
+      offerCount: { type: integer, default: 0 }
+      # Exit
+      exitedAt: { type: datetime }
+      exitReason: { type: ExitReason }
+      # Promotion
+      promotedAt: { type: datetime }
+      promotedToId: { type: string, description: "Resulting reservation/booking ID" }
+      # Metadata
+      notes: { type: string }
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  WaitlistGroup:
+    description: A group of entries that must be promoted together
+    properties:
+      id: { type: uuid, required: true }
+      waitlistId: { type: uuid, required: true }
+      leaderId: { type: uuid, required: true, description: "FK to leader WaitlistEntry" }
+      name: { type: string }
+      totalQuantity: { type: integer, required: true }
+      memberCount: { type: integer, required: true }
+      status: { type: GroupStatus, required: true, default: active }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # OFFERS & PROMOTIONS
+  # ============================================
+
+  WaitlistOffer:
+    description: Offer to promote from waitlist
+    properties:
+      id: { type: uuid, required: true }
+      waitlistId: { type: uuid, required: true }
+      entryId: { type: uuid, required: true }
+      groupId: { type: uuid, description: "FK to WaitlistGroup if group offer" }
+      # Offer details
+      offeredQuantity: { type: integer, required: true }
+      resourceDetails: { type: object, description: "Specific slot/item being offered" }
+      # Timing
+      offeredAt: { type: datetime, required: true }
+      expiresAt: { type: datetime, required: true }
+      respondedAt: { type: datetime }
+      # Response
+      status: { type: OfferStatus, required: true, default: pending }
+      response: { type: OfferResponse }
+      declineReason: { type: string }
+      # Result
+      resultingReservationId: { type: string }
+      # Notifications
+      notificationsSent: { type: array, items: uuid }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Promotion:
+    description: Record of successful promotion from waitlist
+    properties:
+      id: { type: uuid, required: true }
+      waitlistId: { type: uuid, required: true }
+      entryId: { type: uuid, required: true }
+      offerId: { type: uuid }
+      # Result
+      promotedAt: { type: datetime, required: true }
+      reservationType: { type: string, required: true }
+      reservationId: { type: string, required: true }
+      # Stats
+      waitDurationSeconds: { type: integer, required: true }
+      originalPosition: { type: integer }
+      positionAtPromotion: { type: integer }
+      offersReceived: { type: integer }
+      offersDeclined: { type: integer }
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # WAITLIST EVENTS & ANALYTICS
+  # ============================================
+
+  WaitlistEvent:
+    description: Event log for waitlist activity
+    properties:
+      id: { type: uuid, required: true }
+      waitlistId: { type: uuid, required: true }
+      entryId: { type: uuid }
+      eventType: { type: WaitlistEventType, required: true }
+      # Details
+      previousState: { type: object }
+      newState: { type: object }
+      actorId: { type: string }
+      actorType: { type: string }
+      reason: { type: string }
+      metadata: { type: object }
+      occurredAt: { type: datetime, required: true }
+
+  WaitlistSnapshot:
+    description: Point-in-time snapshot for analytics
+    properties:
+      id: { type: uuid, required: true }
+      waitlistId: { type: uuid, required: true }
+      snapshotTime: { type: datetime, required: true }
+      # Counts
+      totalEntries: { type: integer, required: true }
+      activeEntries: { type: integer, required: true }
+      offeredEntries: { type: integer, required: true }
+      # Metrics
+      averageWaitSeconds: { type: integer }
+      medianPosition: { type: integer }
+      promotionRate: { type: number }
+      declineRate: { type: number }
+      dropoutRate: { type: number }
+      createdAt: { type: datetime, required: true }
+
+enums:
+
+  WaitlistPolicy:
+    values:
+      - fifo              # First in, first out
+      - lifo              # Last in, first out (rare)
+      - priority          # By priority score
+      - lottery           # Random selection
+      - weighted_lottery  # Random weighted by attributes
+      - round_robin       # Cycle through entrants
+      - fair_share        # Balance across segments
+      - hybrid            # FIFO with priority exceptions
+
+  WaitlistStatus:
+    values:
+      - draft         # Not yet active
+      - active        # Accepting entries
+      - paused        # Temporarily not accepting
+      - closed        # No longer accepting entries
+      - promoting     # Only processing promotions
+      - completed     # All done
+      - archived      # Historical
+
+  EntrantType:
+    values:
+      - user          # Registered user
+      - guest         # Guest with email
+      - member        # Member of organization
+      - vip           # VIP entrant
+      - employee      # Staff/employee
+      - partner       # Partner organization
+
+  EntryStatus:
+    values:
+      - waiting       # In queue
+      - offered       # Has active offer
+      - accepted      # Accepted offer, pending confirmation
+      - promoted      # Successfully promoted
+      - declined      # Declined offer
+      - expired       # Offer expired
+      - cancelled     # Cancelled by entrant
+      - removed       # Removed by admin
+      - no_show       # Didn't show up
+
+  ExitReason:
+    values:
+      - promoted          # Got the resource
+      - cancelled         # Self-cancelled
+      - expired_offer     # Didn't respond to offer
+      - declined_all      # Declined too many offers
+      - max_wait          # Hit max wait time
+      - removed_admin     # Admin removed
+      - removed_duplicate # Duplicate entry
+      - waitlist_closed   # Waitlist was closed
+      - no_show           # Got resource but didn't show
+
+  GroupStatus:
+    values:
+      - active        # Group is active
+      - partial       # Some members left
+      - promoted      # All promoted
+      - cancelled     # Group cancelled
+      - dissolved     # Group broken up
+
+  OfferStatus:
+    values:
+      - pending       # Awaiting response
+      - accepted      # Offer accepted
+      - declined      # Offer declined
+      - expired       # No response in time
+      - cancelled     # Offer cancelled
+      - superseded    # Replaced by better offer
+
+  OfferResponse:
+    values:
+      - accept
+      - decline
+      - defer         # Ask for next available
+      - negotiate     # Request different option
+
+  WaitlistEventType:
+    values:
+      - created         # Waitlist created
+      - opened          # Opened for entries
+      - closed          # Closed to entries
+      - entry_joined    # New entry joined
+      - entry_cancelled # Entry cancelled
+      - entry_removed   # Entry removed
+      - position_changed # Position shifted
+      - offer_sent      # Offer extended
+      - offer_accepted  # Offer accepted
+      - offer_declined  # Offer declined
+      - offer_expired   # Offer timed out
+      - promoted        # Entry promoted
+      - lottery_drawn   # Lottery executed
+      - config_changed  # Settings changed
+
+  ComparisonOperator:
+    values:
+      - equals
+      - not_equals
+      - greater_than
+      - less_than
+      - greater_or_equal
+      - less_or_equal
+      - contains
+      - in
+      - not_in
+
+actions:
+
+  # Waitlist management
+  CreateWaitlist:
+    description: Create a new waitlist
+    parameters:
+      name: { type: string, required: true }
+      resourceType: { type: string, required: true }
+      resourceId: { type: string, required: true }
+      policy: { type: WaitlistPolicy, required: true }
+      maxSize: { type: integer }
+      offerDurationSeconds: { type: integer }
+    result: Waitlist
+    idempotent: false
+
+  OpenWaitlist:
+    description: Open waitlist for entries
+    parameters:
+      waitlistId: { type: uuid, required: true }
+    result: Waitlist
+    idempotent: true
+
+  CloseWaitlist:
+    description: Close waitlist to new entries
+    parameters:
+      waitlistId: { type: uuid, required: true }
+      reason: { type: string }
+    result: Waitlist
+    idempotent: true
+
+  # Entry operations
+  JoinWaitlist:
+    description: Join a waitlist
+    parameters:
+      waitlistId: { type: uuid, required: true }
+      entrantId: { type: string, required: true }
+      entrantType: { type: EntrantType, required: true }
+      entrantEmail: { type: string }
+      requestedQuantity: { type: integer }
+      preferences: { type: object }
+      groupId: { type: uuid }
+    result: WaitlistEntry
+    idempotent: false
+
+  LeaveWaitlist:
+    description: Leave a waitlist
+    parameters:
+      entryId: { type: uuid, required: true }
+      reason: { type: string }
+    result: WaitlistEntry
+    idempotent: true
+
+  UpdateEntryPreferences:
+    description: Update entry preferences
+    parameters:
+      entryId: { type: uuid, required: true }
+      preferences: { type: object, required: true }
+    result: WaitlistEntry
+    idempotent: true
+
+  # Offer operations
+  CreateOffer:
+    description: Create an offer for a waitlist entry
+    parameters:
+      entryId: { type: uuid, required: true }
+      offeredQuantity: { type: integer, required: true }
+      resourceDetails: { type: object }
+      expiresInSeconds: { type: integer }
+    result: WaitlistOffer
+    idempotent: false
+
+  RespondToOffer:
+    description: Respond to a waitlist offer
+    parameters:
+      offerId: { type: uuid, required: true }
+      response: { type: OfferResponse, required: true }
+      declineReason: { type: string }
+    result: WaitlistOffer
+    idempotent: true
+
+  # Promotion
+  PromoteEntry:
+    description: Promote entry to confirmed reservation
+    parameters:
+      entryId: { type: uuid, required: true }
+      reservationType: { type: string, required: true }
+      reservationId: { type: string, required: true }
+    result: Promotion
+    idempotent: true
+
+  # Lottery
+  DrawLottery:
+    description: Execute lottery draw for waitlist
+    parameters:
+      waitlistId: { type: uuid, required: true }
+      drawSize: { type: integer, required: true }
+    result: { type: array, items: WaitlistEntry }
+    idempotent: false
+
+  # Queries
+  GetWaitlistPosition:
+    description: Get current position in waitlist
+    parameters:
+      entryId: { type: uuid, required: true }
+    result: { type: object, description: "Position and estimated wait" }
+    idempotent: true
+
+  GetWaitlistEntries:
+    description: Get entries for a waitlist
+    parameters:
+      waitlistId: { type: uuid, required: true }
+      status: { type: EntryStatus }
+      limit: { type: integer }
+      offset: { type: integer }
+    result: { type: array, items: WaitlistEntry }
+    idempotent: true
+
+relationships:
+  - type: one_to_many
+    from: Waitlist
+    to: WaitlistEntry
+    foreign_key: waitlistId
+    description: A waitlist has many entries
+
+  - type: one_to_one
+    from: Waitlist
+    to: WaitlistConfig
+    foreign_key: waitlistId
+    description: A waitlist has one config
+
+  - type: one_to_many
+    from: WaitlistEntry
+    to: WaitlistOffer
+    foreign_key: entryId
+    description: An entry can receive multiple offers
+
+  - type: many_to_one
+    from: WaitlistEntry
+    to: WaitlistGroup
+    foreign_key: groupId
+    description: Entries can belong to a group
+
+  - type: one_to_one
+    from: WaitlistEntry
+    to: Promotion
+    foreign_key: entryId
+    description: An entry may result in a promotion
+
+  - type: one_to_many
+    from: Waitlist
+    to: WaitlistEvent
+    foreign_key: waitlistId
+    description: A waitlist has many events

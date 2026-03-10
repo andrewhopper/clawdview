@@ -1,0 +1,375 @@
+# Best-in-Class Executive Brief Examples
+# Harvested from domain-specific templates and real-world patterns
+
+version: "1.0.0"
+updated_at: "2025-11-25"
+curator: "artifact-library-harvester"
+
+examples:
+  # -----------------------------------------
+  # ACADEMIC RESEARCH
+  # -----------------------------------------
+  - id: academic-research-brief
+    file: academic-research-brief.md
+    name: "Research Brief: AI-Assisted Tutoring Impact Study"
+    domain: academic_research
+    category: research_brief
+    harvested_at: "2025-11-25"
+    source_pattern: "DOL Research Brief Template"
+    source_url: "https://www.dol.gov/agencies/ilab/research-brief-template-researchers"
+    quality_score: 0.94
+    word_count: 1850
+    sections:
+      - executive_summary
+      - research_question
+      - background_context
+      - methodology
+      - key_findings
+      - implications
+      - recommendations
+      - references
+    strengths:
+      - Clear quantified outcomes with statistical significance
+      - Structured methodology section
+      - Actionable recommendations for multiple stakeholders
+      - Transparent limitations
+    tags: [education, research, STEM, AI, tutoring]
+
+  # -----------------------------------------
+  # INVESTMENT / VENTURE CAPITAL
+  # -----------------------------------------
+  - id: investment-memo-fintech
+    file: investment-memo-fintech.md
+    name: "Investment Memo: PayFlow Series A"
+    domain: investment
+    category: investment_memo
+    harvested_at: "2025-11-25"
+    source_pattern: "Bessemer Venture Partners Shopify Memo"
+    source_url: "https://www.bvp.com/memos/shopify"
+    quality_score: 0.96
+    word_count: 2100
+    sections:
+      - deal_summary
+      - investment_thesis
+      - market_opportunity
+      - product_technology
+      - customers_growth
+      - team
+      - financials
+      - deal_terms
+      - risks_mitigations
+      - returns_analysis
+      - recommendation
+    strengths:
+      - Follows proven Bessemer VC memo structure
+      - Every claim backed by specific metrics
+      - Clear risk assessment with mitigations
+      - Scenario-based returns modeling
+    tags: [fintech, payments, SaaS, venture_capital, series_a]
+
+  # -----------------------------------------
+  # INSURANCE
+  # -----------------------------------------
+  - id: insurance-policy-summary
+    file: insurance-policy-summary.md
+    name: "Commercial Insurance Policy Summary: TechStart Manufacturing"
+    domain: insurance
+    category: policy_summary
+    harvested_at: "2025-11-25"
+    source_pattern: "PandaDoc Commercial Insurance Template"
+    source_url: "https://www.pandadoc.com/insurance-proposal-template/"
+    quality_score: 0.92
+    word_count: 1650
+    sections:
+      - policy_overview
+      - executive_summary
+      - coverage_summary
+      - premium_summary
+      - locations_schedule
+      - exclusions_limitations
+      - loss_history
+      - recommendations
+      - next_steps
+    strengths:
+      - Complete coverage picture with all lines
+      - Decision-ready payment options
+      - Gap analysis with recommendations
+      - Clear exclusions section
+    tags: [insurance, commercial, manufacturing, workers_comp, liability]
+
+  # -----------------------------------------
+  # AUTOMOTIVE
+  # -----------------------------------------
+  - id: automotive-business-case
+    file: automotive-business-case.md
+    name: "Business Case: EV Battery Swapping Network"
+    domain: automotive
+    category: business_case
+    harvested_at: "2025-11-25"
+    source_pattern: "Center for Automotive Research Product Planning"
+    source_url: "https://www.cargroup.org/"
+    quality_score: 0.95
+    word_count: 2400
+    sections:
+      - executive_summary
+      - strategic_opportunity
+      - market_analysis
+      - technical_approach
+      - financial_analysis
+      - risk_assessment
+      - strategic_alignment
+      - recommendation
+    strengths:
+      - Automotive industry standard format
+      - Stage-gated investment approach
+      - Comprehensive financial modeling
+      - Sensitivity analysis included
+    tags: [automotive, EV, infrastructure, business_case, strategy]
+
+  # -----------------------------------------
+  # CONSTRUCTION / CONTRACTING
+  # -----------------------------------------
+  - id: contracting-proposal
+    file: contracting-proposal.md
+    name: "Construction Proposal: Meridian Office Renovation"
+    domain: contracting
+    category: contractor_proposal
+    harvested_at: "2025-11-25"
+    source_pattern: "Smartsheet + Proposify Templates"
+    source_urls:
+      - "https://www.smartsheet.com/content/construction-proposal-templates"
+      - "https://www.proposify.com/proposal-templates/contractor-proposal-template"
+    quality_score: 0.93
+    word_count: 2200
+    sections:
+      - cover_summary
+      - executive_summary
+      - about_company
+      - scope_of_work
+      - project_schedule
+      - investment_summary
+      - payment_schedule
+      - terms_conditions
+      - acceptance
+    strengths:
+      - Detailed scope with inclusions AND exclusions
+      - Transparent line-item pricing
+      - Value engineering options
+      - Clear milestone payment schedule
+    tags: [construction, contracting, renovation, commercial, proposal]
+
+  # -----------------------------------------
+  # PRODUCT DESIGN / UX
+  # -----------------------------------------
+  - id: design-brief-ux
+    file: design-brief-ux.md
+    name: "Design Brief: Mobile Banking App Redesign"
+    domain: product_design
+    category: design_brief
+    harvested_at: "2025-11-25"
+    source_pattern: "UXPin + Interaction Design Foundation Templates"
+    source_urls:
+      - "https://www.uxpin.com/studio/blog/design-brief/"
+      - "https://www.interaction-design.org/literature/topics/design-briefs"
+    quality_score: 0.95
+    word_count: 2800
+    sections:
+      - project_summary
+      - executive_summary
+      - background_context
+      - target_audience
+      - project_goals
+      - design_requirements
+      - existing_research
+      - deliverables
+      - timeline_milestones
+      - budget_allocation
+      - success_criteria
+      - risks_mitigations
+      - team_contacts
+    strengths:
+      - Comprehensive scope from research to handoff
+      - Measurable goals with baselines and targets
+      - Clear technical constraints and non-goals
+      - Structured timeline with defined milestones
+    tags: [UX, design, mobile, banking, fintech, redesign]
+
+  # -----------------------------------------
+  # SOFTWARE ARCHITECTURE
+  # -----------------------------------------
+  - id: architecture-rfc
+    file: architecture-rfc.md
+    name: "RFC: Event-Driven Architecture Migration"
+    domain: software_engineering
+    category: architecture_rfc
+    harvested_at: "2025-11-25"
+    source_pattern: "HashiCorp + Pragmatic Engineer RFC Templates"
+    source_urls:
+      - "https://works.hashicorp.com/articles/rfc-template"
+      - "https://newsletter.pragmaticengineer.com/p/software-engineering-rfc-and-design"
+    quality_score: 0.96
+    word_count: 3100
+    sections:
+      - document_metadata
+      - summary
+      - background
+      - proposal
+      - alternatives_considered
+      - risks_mitigations
+      - security_considerations
+      - observability
+      - resource_requirements
+      - success_criteria
+      - timeline
+      - open_questions
+      - decision
+    strengths:
+      - Follows proven RFC format from top tech companies
+      - Executive summary first for decision-makers
+      - Alternatives explored with comparison tables
+      - Explicit rollback plan and kill criteria
+    tags: [architecture, kafka, event-driven, migration, RFC, engineering]
+
+  # -----------------------------------------
+  # NEW INITIATIVE / PR-FAQ
+  # -----------------------------------------
+  - id: initiative-prfaq
+    file: initiative-prfaq.md
+    name: "PR/FAQ: AI-Powered Customer Support Assistant"
+    domain: product_initiative
+    category: prfaq
+    harvested_at: "2025-11-25"
+    source_pattern: "Amazon Working Backwards PR/FAQ"
+    source_urls:
+      - "https://workingbackwards.com/resources/working-backwards-pr-faq/"
+      - "https://coda.io/@colin-bryar/working-backwards-how-write-an-amazon-pr-faq"
+    quality_score: 0.97
+    word_count: 3400
+    sections:
+      - press_release
+      - customer_faqs
+      - internal_faqs
+      - business_case
+      - technical_challenges
+      - risks
+      - competitive_landscape
+      - timeline
+      - success_metrics
+      - appendices
+    strengths:
+      - Customer-first press release perspective
+      - Concrete benefits with specific metrics
+      - Comprehensive FAQ addressing all stakeholders
+      - Honest risk acknowledgment with kill criteria
+    tags: [product, initiative, AI, customer_support, prfaq, amazon]
+
+  # -----------------------------------------
+  # ROOT CAUSE ANALYSIS
+  # -----------------------------------------
+  - id: five-whys-analysis
+    file: five-whys-analysis.md
+    name: "5 Whys Analysis: Production Payment Processing Outage"
+    domain: operations
+    category: root_cause_analysis
+    harvested_at: "2025-11-25"
+    source_pattern: "Toyota Production System, Lean Six Sigma"
+    quality_score: 0.94
+    word_count: 1950
+    sections:
+      - incident_summary
+      - problem_statement
+      - five_whys
+      - root_cause
+      - corrective_actions
+      - prevention_checklist
+      - timeline
+      - metrics
+      - lessons_learned
+    strengths:
+      - Evidence-based answers at each level
+      - Reaches systemic root cause not human error
+      - Specific actions with owners and deadlines
+      - Blameless tone throughout
+    tags: [incident, root_cause, 5_whys, postmortem, operations, SRE]
+
+  # -----------------------------------------
+  # AGILE / TEAM PROCESS
+  # -----------------------------------------
+  - id: sprint-retrospective
+    file: sprint-retrospective.md
+    name: "Sprint Retrospective: Checkout Redesign (Sprint 14)"
+    domain: agile
+    category: retrospective
+    harvested_at: "2025-11-25"
+    source_pattern: "Agile Retrospectives (Derby & Larsen), Spotify Retro Format"
+    quality_score: 0.93
+    word_count: 2100
+    sections:
+      - retrospective_summary
+      - sprint_metrics
+      - what_went_well
+      - what_didnt_go_well
+      - action_items
+      - kudos_recognition
+      - team_health_check
+      - experiments
+      - looking_ahead
+    strengths:
+      - Data-driven with metrics before opinions
+      - Balanced celebration and problem-solving
+      - Experiment mindset for process changes
+      - Team health monitoring built-in
+    tags: [agile, scrum, retrospective, sprint, team, continuous_improvement]
+
+  # -----------------------------------------
+  # ARCHITECTURE DECISION RECORD
+  # -----------------------------------------
+  - id: decision-record-adr
+    file: decision-record-adr.md
+    name: "ADR-0023: Adopt PostgreSQL for Primary Data Store"
+    domain: software_engineering
+    category: adr
+    harvested_at: "2025-11-25"
+    source_pattern: "Michael Nygard ADR Format, GitHub ADR Organization"
+    source_urls:
+      - "https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions"
+      - "https://adr.github.io/"
+    quality_score: 0.96
+    word_count: 2400
+    sections:
+      - metadata
+      - context
+      - decision
+      - rationale
+      - consequences
+      - implementation
+      - compliance_notes
+      - related_decisions
+      - references
+      - changelog
+    strengths:
+      - Complete context with clear constraints
+      - Weighted scoring of alternatives
+      - Honest trade-offs documented
+      - Living document with changelog
+    tags: [architecture, ADR, database, PostgreSQL, decision, engineering]
+
+# -----------------------------------------
+# COLLECTION STATISTICS
+# -----------------------------------------
+collection_stats:
+  total_examples: 11
+  domains_covered:
+    - academic_research
+    - investment
+    - insurance
+    - automotive
+    - contracting
+    - product_design
+    - software_engineering
+    - product_initiative
+    - operations
+    - agile
+  avg_quality_score: 0.95
+  avg_word_count: 2350
+  last_harvested: "2025-11-25"

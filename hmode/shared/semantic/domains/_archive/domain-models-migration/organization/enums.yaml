@@ -1,0 +1,101 @@
+# enums.yaml - Organization Domain Enumerations
+# Generated: 2025-11-24
+# Status: PENDING APPROVAL
+
+enums:
+  OrganizationType:
+    description: "Legal/structural type of organization"
+    values:
+      - corporation          # Public or private corporation
+      - llc                  # Limited liability company
+      - partnership          # Partnership
+      - sole_proprietorship  # Individual ownership
+      - non_profit           # Non-profit organization
+      - government           # Government entity
+      - educational          # School, university
+      - startup              # Early-stage company
+      - other                # Other type
+
+  Industry:
+    description: "Primary business sector"
+    values:
+      - technology           # Software, IT, cloud
+      - financial_services   # Banking, insurance, fintech
+      - healthcare           # Medical, pharma, biotech
+      - retail               # E-commerce, brick-and-mortar
+      - manufacturing        # Industrial manufacturing
+      - energy               # Oil, gas, renewable energy
+      - telecommunications   # Telecom, ISP
+      - media                # Publishing, entertainment
+      - education            # Schools, training
+      - consulting           # Professional services
+      - government           # Public sector
+      - non_profit           # Charitable organizations
+      - real_estate          # Property, construction
+      - transportation       # Logistics, shipping
+      - hospitality          # Hotels, restaurants
+      - agriculture          # Farming, food production
+      - other                # Other industry
+
+  OrganizationSize:
+    description: "Organization size classification"
+    values:
+      - startup              # 1-10 employees
+      - small                # 11-50 employees
+      - medium               # 51-250 employees
+      - large                # 251-1000 employees
+      - enterprise           # 1000+ employees
+
+  OrganizationStatus:
+    description: "Current status of organization"
+    values:
+      - active               # Operating normally
+      - inactive             # Not currently operating
+      - acquired             # Acquired by another company
+      - merged               # Merged with another company
+      - bankrupt             # Filed bankruptcy
+      - dissolved            # Officially dissolved
+
+  AddressType:
+    description: "Type of physical address"
+    values:
+      - headquarters         # Main office
+      - branch               # Branch office
+      - mailing              # Mailing address
+      - billing              # Billing address
+      - warehouse            # Warehouse/distribution
+      - other                # Other type
+
+  ContactType:
+    description: "Type of contact method"
+    values:
+      - email                # Email address
+      - phone                # Phone number
+      - fax                  # Fax number
+      - linkedin             # LinkedIn profile
+      - twitter              # Twitter/X handle
+      - facebook             # Facebook page
+      - website              # Website URL
+      - other                # Other contact method
+
+  RelationshipType:
+    description: "Type of business relationship"
+    values:
+      - customer             # Customer relationship
+      - vendor               # Vendor/supplier
+      - partner              # Business partner
+      - competitor           # Competitor
+      - subsidiary           # Subsidiary company
+      - parent               # Parent company
+      - investor             # Investment relationship
+      - reseller             # Reseller/distributor
+      - affiliate            # Affiliate relationship
+      - other                # Other relationship
+
+  RelationshipStatus:
+    description: "Status of business relationship"
+    values:
+      - active               # Active relationship
+      - inactive             # Inactive but not terminated
+      - pending              # Pending/prospective
+      - terminated           # Ended relationship

@@ -1,0 +1,57 @@
+# Secrets and environment
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+credentials.json
+
+# Deployment history (optional - can be large)
+# Comment out if you want to track deployment history in git
+infra/deploys/releases/
+!infra/deploys/releases/.gitkeep
+
+# Keep current symlink for quick reference
+!infra/deploys/current
+
+# CDK artifacts
+cdk.out/
+dist/
+*.js
+*.d.ts
+*.js.map
+!vitest.config.ts
+!jest.config.js
+cdk.context.json
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+tmp/
+temp/

@@ -1,0 +1,45 @@
+{
+  "domain": "voice",
+  "version": "1.0.0",
+  "description": "Voice calls, conferencing, recording, and transcription",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - extracted from mobile domain"
+  },
+  "entities": [
+    "Call",
+    "CallRecording",
+    "Transcription",
+    "TranscriptionWord",
+    "Conference",
+    "ConferenceParticipant",
+    "Voicemail"
+  ],
+  "enums": [
+    "CallStatus",
+    "CallDirection",
+    "AnsweredBy",
+    "RecordingSource",
+    "RecordingStatus",
+    "AudioFormat",
+    "TranscriptionStatus",
+    "ConferenceStatus",
+    "ConferenceEndReason",
+    "ParticipantStatus"
+  ],
+  "actions": [
+    "MakeCall",
+    "GetCall",
+    "UpdateCall",
+    "EndCall",
+    "CreateConference",
+    "AddParticipant",
+    "MuteParticipant",
+    "StartRecording",
+    "StopRecording",
+    "TranscribeRecording"
+  ],
+  "dependencies": ["core"],
+  "extracted_from": ["mobile/call.yaml"],
+  "source": "Twilio Programmable Voice API"
+}

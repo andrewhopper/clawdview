@@ -1,0 +1,66 @@
+# ===========================================
+# Work Context - Development Stage
+# ===========================================
+
+# AWS Account & Region
+account: "123456789012"  # Replace with your AWS account ID
+region: "us-east-1"
+
+# Project Settings
+projectName: "my-app"
+stackPrefix: "myapp"  # Optional: defaults to projectName
+
+# ===========================================
+# Domain Configuration
+# ===========================================
+domain:
+  rootDomain: "dev.example.com"
+  subdomain: "api"
+  # hostedZoneId: "Z1234567890ABC"  # Uncomment if using existing zone
+  # certificateArn: "arn:aws:acm:..."  # Uncomment if using existing cert
+
+# ===========================================
+# Notification Configuration
+# ===========================================
+notifications:
+  adminEmail: "admin@example.com"
+  supportEmail: "support@example.com"
+  # sesDomain: "example.com"  # For sending emails
+
+# ===========================================
+# Database Configuration
+# ===========================================
+database:
+  instanceClass: "t3.micro"
+  allocatedStorage: 20
+  multiAz: false
+  deletionProtection: false
+  backupRetentionDays: 7
+
+# ===========================================
+# Compute Configuration
+# ===========================================
+compute:
+  lambdaMemory: 256
+  lambdaTimeout: 30
+  taskCpu: 256
+  taskMemory: 512
+  desiredCount: 1
+  minCount: 1
+  maxCount: 2
+
+# ===========================================
+# Monitoring Configuration
+# ===========================================
+monitoring:
+  enableDashboards: false
+  enableTracing: false
+  logRetentionDays: 7
+  alarmEvaluationPeriods: 3
+
+# ===========================================
+# Resource Tags
+# ===========================================
+tags:
+  Team: "Platform"
+  CostCenter: "Engineering"

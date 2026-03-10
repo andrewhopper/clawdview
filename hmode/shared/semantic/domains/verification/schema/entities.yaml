@@ -1,0 +1,175 @@
+# Verification Domain - Entities
+# Atomic decomposition: Rule = Eval + metadata
+
+entities:
+
+  # ============================================
+  # PRIMITIVE: EVAL (true/false)
+  # ============================================
+
+  Eval:
+    description: Something that evaluates to true/false
+    abstract: true
+
+  PatternEval:
+    extends: Eval
+    description: Regex pattern matches target
+    properties:
+      pattern:
+        type: string
+        required: true
+      target:
+        type: EvalTarget
+        required: true
+      invert:
+        type: boolean
+        default: false
+        description: "true = pattern should NOT match"
+
+  ExistsEval:
+    extends: Eval
+    description: File or directory exists
+    properties:
+      paths:
+        type: string[]
+        required: true
+        description: "Glob patterns"
+      kind:
+        type: ExistsKind
+        default: file
+
+  FieldEval:
+    extends: Eval
+    description: JSON/YAML field matches value
+    properties:
+      file:
+        type: string
+        required: true
+      field:
+        type: string
+        required: true
+        description: "Dot-notation path"
+      value:
+        type: any
+      pattern:
+        type: string
+        description: "Regex if value not exact"
+
+  ContainsEval:
+    extends: Eval
+    description: File contains pattern(s)
+    properties:
+      file:
+        type: string
+        required: true
+      patterns:
+        type: string[]
+        required: true
+
+  CompoundEval:
+    extends: Eval
+    description: Combine evals with AND/OR
+    properties:
+      operator:
+        type: LogicOperator
+        required: true
+      evals:
+        type: Eval[]
+        required: true
+
+  ConditionalEval:
+    extends: Eval
+    description: If condition then check
+    properties:
+      if:
+        type: Eval
+        required: true
+      then:
+        type: Eval
+        required: true
+
+  # ============================================
+  # RULE = EVAL + METADATA
+  # ============================================
+
+  Rule:
+    extends: core.Entity
+    description: An eval with metadata
+    properties:
+      id:
+        type: uuid
+        required: true
+      code:
+        type: string
+        description: "Short code for humans (ERR-001)"
+      eval:
+        type: Eval
+        required: true
+      category:
+        type: RuleCategory
+        required: true
+      severity:
+        type: Severity
+        required: true
+      appliesTo:
+        type: TechStack[]
+        default: [all]
+      fix:
+        type: string
+      enabled:
+        type: boolean
+        default: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ============================================
+  # RESULTS
+  # ============================================
+
+  EvalResult:
+    description: Result of evaluating an Eval
+    properties:
+      passed:
+        type: boolean
+        required: true
+      message:
+        type: string
+      matches:
+        type: string[]
+
+  RuleResult:
+    extends: EvalResult
+    properties:
+      ruleId:
+        type: uuid
+        required: true
+      severity:
+        type: Severity
+        required: true
+
+  Report:
+    extends: core.Entity
+    description: Collection of rule results
+    properties:
+      id:
+        type: uuid
+        required: true
+      projectPath:
+        type: string
+        required: true
+      results:
+        type: RuleResult[]
+        required: true
+      score:
+        type: integer
+        min: 0
+        max: 100
+      grade:
+        type: Grade
+      created_at:
+        type: datetime
+        required: true

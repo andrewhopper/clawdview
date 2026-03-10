@@ -1,0 +1,438 @@
+@prefix hd: <http://hopperlabs.ai/ontology/human-drives#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================
+# Human Drives SHACL Validation Rules
+# ============================================
+
+# ================================================================================
+# 1. MEANING DOMAIN VALIDATION
+# ================================================================================
+
+hd:MeaningSourceShape a sh:NodeShape ;
+    sh:targetClass hd:MeaningSource ;
+    sh:property [
+        sh:path hd:sourceType ;
+        sh:minCount 1 ;
+        sh:class hd:MeaningSourceType ;
+        sh:message "sourceType is required and must be a valid MeaningSourceType"
+    ] ;
+    sh:property [
+        sh:path hd:description ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "description must be a non-empty string"
+    ] ;
+    sh:property [
+        sh:path hd:strength ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "strength must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:stability ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "stability must be between 0.0 and 1.0"
+    ] .
+
+hd:WillToMeaningShape a sh:NodeShape ;
+    sh:targetClass hd:WillToMeaning ;
+    sh:property [
+        sh:path hd:intensity ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "intensity must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:frustrationLevel ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "frustrationLevel must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:fulfillment ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "fulfillment must be between 0.0 and 1.0"
+    ] .
+
+hd:ExistentialVacuumShape a sh:NodeShape ;
+    sh:targetClass hd:ExistentialVacuum ;
+    sh:property [
+        sh:path hd:severity ;
+        sh:minCount 1 ;
+        sh:class hd:Severity ;
+        sh:message "severity is required"
+    ] ;
+    sh:property [
+        sh:path hd:duration ;
+        sh:minCount 1 ;
+        sh:message "duration is required"
+    ] .
+
+# ================================================================================
+# 2. PURPOSE DOMAIN VALIDATION
+# ================================================================================
+
+hd:IkigaiShape a sh:NodeShape ;
+    sh:targetClass hd:Ikigai ;
+    sh:property [
+        sh:path hd:alignmentScore ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "alignmentScore must be between 0.0 and 1.0"
+    ] .
+
+hd:LifePurposeShape a sh:NodeShape ;
+    sh:targetClass hd:LifePurpose ;
+    sh:property [
+        sh:path hd:description ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:minLength 1 ;
+        sh:message "description is required and must be non-empty"
+    ] ;
+    sh:property [
+        sh:path hd:clarity ;
+        sh:class hd:PurposeClarity ;
+        sh:message "clarity must be a valid PurposeClarity value"
+    ] ;
+    sh:property [
+        sh:path hd:commitment ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "commitment must be between 0.0 and 1.0"
+    ] .
+
+hd:IkigaiDimensionShape a sh:NodeShape ;
+    sh:targetClass hd:IkigaiDimension ;
+    sh:property [
+        sh:path hd:dimensionType ;
+        sh:minCount 1 ;
+        sh:class hd:IkigaiDimensionType ;
+        sh:message "dimensionType is required"
+    ] ;
+    sh:property [
+        sh:path hd:score ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "score must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:satisfaction ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "satisfaction must be between 0.0 and 1.0"
+    ] .
+
+# ================================================================================
+# 3. JOY/WELLBEING DOMAIN VALIDATION
+# ================================================================================
+
+hd:HedonicWellbeingShape a sh:NodeShape ;
+    sh:targetClass hd:HedonicWellbeing ;
+    sh:property [
+        sh:path hd:positiveAffect ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "positiveAffect must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:lifeSatisfaction ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "lifeSatisfaction must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:vitality ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "vitality must be between 0.0 and 1.0"
+    ] .
+
+hd:EudaimonicWellbeingShape a sh:NodeShape ;
+    sh:targetClass hd:EudaimonicWellbeing ;
+    sh:property [
+        sh:path hd:selfRealization ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "selfRealization must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:personalGrowth ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "personalGrowth must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:mastery ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "mastery must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:autonomy ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "autonomy must be between 0.0 and 1.0"
+    ] .
+
+hd:FlourishingShape a sh:NodeShape ;
+    sh:targetClass hd:Flourishing ;
+    sh:property [
+        sh:path hd:hedonicScore ;
+        sh:datatype xsd:decimal ;
+        sh:minCount 1 ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "hedonicScore is required and must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:eudaimonicScore ;
+        sh:datatype xsd:decimal ;
+        sh:minCount 1 ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "eudaimonicScore is required and must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:balance ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "balance must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:thriving ;
+        sh:datatype xsd:boolean ;
+        sh:message "thriving must be boolean"
+    ] .
+
+# ================================================================================
+# 4. AFFILIATION DOMAIN VALIDATION
+# ================================================================================
+
+hd:SocialConnectionShape a sh:NodeShape ;
+    sh:targetClass hd:SocialConnection ;
+    sh:property [
+        sh:path hd:connectionType ;
+        sh:minCount 1 ;
+        sh:class hd:ConnectionType ;
+        sh:message "connectionType is required"
+    ] ;
+    sh:property [
+        sh:path hd:strength ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "strength must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:quality ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "quality must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:reciprocity ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "reciprocity must be between 0.0 and 1.0"
+    ] .
+
+hd:BelongingNeedShape a sh:NodeShape ;
+    sh:targetClass hd:BelongingNeed ;
+    sh:property [
+        sh:path hd:intensity ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "intensity must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:satisfaction ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "satisfaction must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:deficit ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "deficit must be between 0.0 and 1.0"
+    ] .
+
+hd:TribalIdentityShape a sh:NodeShape ;
+    sh:targetClass hd:TribalIdentity ;
+    sh:property [
+        sh:path hd:group ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:minLength 1 ;
+        sh:message "group is required and must be non-empty"
+    ] ;
+    sh:property [
+        sh:path hd:identityStrength ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "identityStrength must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:loyalty ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "loyalty must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:status ;
+        sh:class hd:TribalRole ;
+        sh:message "status must be a valid TribalRole"
+    ] .
+
+hd:CoalitionShape a sh:NodeShape ;
+    sh:targetClass hd:Coalition ;
+    sh:property [
+        sh:path hd:purpose ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "purpose must be non-empty"
+    ] ;
+    sh:property [
+        sh:path hd:strength ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "strength must be between 0.0 and 1.0"
+    ] .
+
+# ================================================================================
+# 5. PROCREATION/MATING DOMAIN VALIDATION
+# ================================================================================
+
+hd:MatingStrategyShape a sh:NodeShape ;
+    sh:targetClass hd:MatingStrategy ;
+    sh:property [
+        sh:path hd:strategyType ;
+        sh:minCount 1 ;
+        sh:class hd:MatingStrategyType ;
+        sh:message "strategyType is required"
+    ] ;
+    sh:property [
+        sh:path hd:investmentLevel ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "investmentLevel must be between 0.0 and 1.0"
+    ] .
+
+hd:MatePreferenceShape a sh:NodeShape ;
+    sh:targetClass hd:MatePreference ;
+    sh:property [
+        sh:path hd:trait ;
+        sh:minCount 1 ;
+        sh:class hd:MateSelectionCriterion ;
+        sh:message "trait is required"
+    ] ;
+    sh:property [
+        sh:path hd:importance ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "importance must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:flexibility ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "flexibility must be between 0.0 and 1.0"
+    ] .
+
+hd:ReproductiveFitnessShape a sh:NodeShape ;
+    sh:targetClass hd:ReproductiveFitness ;
+    sh:property [
+        sh:path hd:health ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "health must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:resources ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "resources must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:genetics ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "genetics must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:parentalAbility ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "parentalAbility must be between 0.0 and 1.0"
+    ] .
+
+hd:PairBondShape a sh:NodeShape ;
+    sh:targetClass hd:PairBond ;
+    sh:property [
+        sh:path hd:bondStrength ;
+        sh:datatype xsd:decimal ;
+        sh:minCount 1 ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "bondStrength is required and must be between 0.0 and 1.0"
+    ] ;
+    sh:property [
+        sh:path hd:commitment ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "commitment must be between 0.0 and 1.0"
+    ] .
+
+hd:ParentalInvestmentShape a sh:NodeShape ;
+    sh:targetClass hd:ParentalInvestment ;
+    sh:property [
+        sh:path hd:investmentType ;
+        sh:minCount 1 ;
+        sh:class hd:InvestmentType ;
+        sh:message "investmentType is required"
+    ] ;
+    sh:property [
+        sh:path hd:amount ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "amount must be between 0.0 and 1.0"
+    ] .

@@ -1,0 +1,67 @@
+# Mobile Domain Model
+# DEPRECATED - Use messaging, voice, notification domains instead
+
+domain:
+  name: mobile
+  version: "2.0.0"
+  status: deprecated
+  description: "[DEPRECATED] Mobile communications - split into messaging, voice, notification"
+  deprecation_notice: "This domain has been split into three focused domains for better reusability"
+  created_at: "2025-11-22"
+  updated_at: "2025-11-22"
+
+# This domain now re-exports from the new focused domains
+imports:
+  - from: messaging
+    description: SMS, MMS, and chat messaging
+    entities: [Message, MessageMedia, MessagingService, PhoneNumber, Conversation]
+    actions: [SendMessage, GetMessage, ListMessages]
+
+  - from: voice
+    description: Voice calls, conferencing, recording
+    entities: [Call, CallRecording, Conference, ConferenceParticipant, Transcription]
+    actions: [MakeCall, EndCall, CreateConference, StartRecording, TranscribeRecording]
+
+  - from: notification
+    description: Push notifications and device management
+    entities: [Notification, DeviceBinding, Device, UserNotificationPreferences]
+    actions: [SendNotification, RegisterDevice, CreateBinding, UpdatePreferences]
+
+migration_guide: |
+  ## Migration Guide
+
+  The mobile domain has been split into three focused domains:
+
+  ### Before (mobile)
+  ```yaml
+  dependencies: [mobile]
+  ```
+
+  ### After
+  ```yaml
+  # Choose only what you need:
+  dependencies: [messaging]      # For SMS/MMS/chat
+  dependencies: [voice]          # For calls/conferencing
+  dependencies: [notification]   # For push notifications
+  ```
+
+  ### Entity Mapping
+  | Old (mobile)     | New Domain    | New Entity           |
+  |------------------|---------------|----------------------|
+  | Message          | messaging     | Message              |
+  | MessageMedia     | messaging     | MessageMedia         |
+  | PhoneNumber      | messaging     | PhoneNumber          |
+  | Call             | voice         | Call                 |
+  | CallRecording    | voice         | CallRecording        |
+  | Notification     | notification  | Notification         |
+  | Binding          | notification  | DeviceBinding        |
+  | Device           | notification  | Device               |
+  | Credential       | notification  | PushCredential       |
+  | UserPreferences  | notification  | UserNotificationPreferences |
+
+archived_files:
+  - _archive/mobile-original/schema/message.yaml
+  - _archive/mobile-original/schema/call.yaml
+  - _archive/mobile-original/schema/notification.yaml
+  - _archive/mobile-original/schema/device.yaml
+  - _archive/mobile-original/schema/index.yaml

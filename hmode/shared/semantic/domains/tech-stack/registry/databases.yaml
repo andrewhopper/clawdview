@@ -1,0 +1,247 @@
+# Database Technologies Registry
+
+technologies:
+
+  # Relational
+
+  postgresql:
+    name: PostgreSQL
+    description: The World's Most Advanced Open Source Relational Database
+    category: database
+    subcategory: relational
+    author: PostgreSQL Global Development Group
+    website: https://postgresql.org
+    repository: https://github.com/postgres/postgres
+    documentation: https://postgresql.org/docs
+    license: PostgreSQL License
+    first_release: "1996-07-08"
+    tags: [sql, relational, acid, extensions, json]
+    detection_rules:
+      - { type: npm_dependency, pattern: "pg" }
+      - { type: npm_dependency, pattern: "postgres" }
+      - { type: pypi_dependency, pattern: "psycopg2" }
+      - { type: pypi_dependency, pattern: "psycopg" }
+      - { type: pypi_dependency, pattern: "asyncpg" }
+    alternative_to: [mysql, sqlite]
+
+  mysql:
+    name: MySQL
+    description: The world's most popular open source database
+    category: database
+    subcategory: relational
+    author: Oracle Corporation
+    website: https://mysql.com
+    repository: https://github.com/mysql/mysql-server
+    documentation: https://dev.mysql.com/doc
+    license: GPL-2.0
+    first_release: "1995-05-23"
+    tags: [sql, relational, acid]
+    detection_rules:
+      - { type: npm_dependency, pattern: "mysql2" }
+      - { type: npm_dependency, pattern: "mysql" }
+      - { type: pypi_dependency, pattern: "pymysql" }
+      - { type: pypi_dependency, pattern: "mysqlclient" }
+    alternative_to: [postgresql, mariadb]
+
+  sqlite:
+    name: SQLite
+    description: Small, fast, self-contained SQL database engine
+    category: database
+    subcategory: relational
+    author: D. Richard Hipp
+    website: https://sqlite.org
+    documentation: https://sqlite.org/docs.html
+    license: Public Domain
+    first_release: "2000-08-17"
+    tags: [sql, embedded, serverless, file-based]
+    detection_rules:
+      - { type: npm_dependency, pattern: "sqlite3" }
+      - { type: npm_dependency, pattern: "better-sqlite3" }
+      - { type: file_extension, pattern: "*.db" }
+      - { type: file_extension, pattern: "*.sqlite" }
+    alternative_to: [postgresql]
+
+  # Document
+
+  mongodb:
+    name: MongoDB
+    description: The developer data platform
+    category: database
+    subcategory: document
+    author: MongoDB Inc
+    website: https://mongodb.com
+    repository: https://github.com/mongodb/mongo
+    documentation: https://docs.mongodb.com
+    license: SSPL
+    first_release: "2009-02-11"
+    tags: [nosql, document, json, scalable]
+    detection_rules:
+      - { type: npm_dependency, pattern: "mongodb" }
+      - { type: npm_dependency, pattern: "mongoose" }
+      - { type: pypi_dependency, pattern: "pymongo" }
+      - { type: pypi_dependency, pattern: "motor" }
+    alternative_to: [dynamodb, firestore]
+
+  dynamodb:
+    name: Amazon DynamoDB
+    description: Fast, flexible NoSQL database service for single-digit millisecond performance
+    category: database
+    subcategory: document
+    author: Amazon Web Services
+    website: https://aws.amazon.com/dynamodb
+    documentation: https://docs.aws.amazon.com/dynamodb
+    tags: [nosql, key-value, aws, serverless, scalable]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@aws-sdk/client-dynamodb" }
+      - { type: npm_dependency, pattern: "dynamodb-toolbox" }
+      - { type: file_content, pattern: "dynamodb" }
+    alternative_to: [mongodb]
+
+  # Key-Value
+
+  redis:
+    name: Redis
+    description: The open source, in-memory data store
+    category: database
+    subcategory: key-value
+    author: Redis Ltd
+    website: https://redis.io
+    repository: https://github.com/redis/redis
+    documentation: https://redis.io/docs
+    license: BSD-3-Clause
+    first_release: "2009-05-10"
+    tags: [nosql, cache, pub-sub, in-memory]
+    detection_rules:
+      - { type: npm_dependency, pattern: "redis" }
+      - { type: npm_dependency, pattern: "ioredis" }
+      - { type: pypi_dependency, pattern: "redis" }
+    alternative_to: [memcached, valkey]
+
+  # ORMs
+
+  prisma:
+    name: Prisma
+    description: Next-generation Node.js and TypeScript ORM
+    category: library
+    subcategory: orm
+    author: Prisma
+    website: https://prisma.io
+    repository: https://github.com/prisma/prisma
+    documentation: https://prisma.io/docs
+    npm_package: prisma
+    license: Apache-2.0
+    first_release: "2019-06-19"
+    language: TypeScript
+    runtime: node
+    tags: [orm, type-safe, migrations, schema]
+    detection_rules:
+      - { type: npm_dependency, pattern: "prisma" }
+      - { type: npm_dependency, pattern: "@prisma/client" }
+      - { type: file_exists, pattern: "prisma/schema.prisma" }
+    alternative_to: [drizzle, typeorm]
+
+  drizzle:
+    name: Drizzle ORM
+    description: TypeScript ORM that feels like writing SQL
+    category: library
+    subcategory: orm
+    author: Drizzle Team
+    website: https://orm.drizzle.team
+    repository: https://github.com/drizzle-team/drizzle-orm
+    documentation: https://orm.drizzle.team/docs
+    npm_package: drizzle-orm
+    license: Apache-2.0
+    first_release: "2022-09-01"
+    language: TypeScript
+    runtime: node
+    tags: [orm, type-safe, sql-like, lightweight]
+    detection_rules:
+      - { type: npm_dependency, pattern: "drizzle-orm" }
+      - { type: file_exists, pattern: "drizzle.config.ts" }
+    alternative_to: [prisma, typeorm]
+
+  sqlalchemy:
+    name: SQLAlchemy
+    description: The Python SQL Toolkit and Object Relational Mapper
+    category: library
+    subcategory: orm
+    author: Mike Bayer
+    website: https://sqlalchemy.org
+    repository: https://github.com/sqlalchemy/sqlalchemy
+    documentation: https://docs.sqlalchemy.org
+    pypi_package: sqlalchemy
+    license: MIT
+    first_release: "2006-02-14"
+    language: Python
+    runtime: python
+    tags: [orm, sql, python, flexible]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "sqlalchemy" }
+    alternative_to: [django-orm, sqlmodel]
+
+  # DBaaS
+
+  supabase:
+    name: Supabase
+    description: The open source Firebase alternative
+    category: cloud_service
+    subcategory: dbaas
+    author: Supabase Inc
+    website: https://supabase.com
+    repository: https://github.com/supabase/supabase
+    documentation: https://supabase.com/docs
+    npm_package: "@supabase/supabase-js"
+    pypi_package: supabase
+    license: Apache-2.0
+    first_release: "2020-01-09"
+    tags: [postgres, auth, storage, realtime, serverless]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@supabase/supabase-js" }
+      - { type: pypi_dependency, pattern: "supabase" }
+    alternative_to: [firebase, planetscale]
+
+  planetscale:
+    name: PlanetScale
+    description: The MySQL-compatible serverless database platform
+    category: cloud_service
+    subcategory: dbaas
+    author: PlanetScale Inc
+    website: https://planetscale.com
+    documentation: https://planetscale.com/docs
+    npm_package: "@planetscale/database"
+    tags: [mysql, serverless, branching, vitess]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@planetscale/database" }
+    alternative_to: [supabase, neon]
+
+  neon:
+    name: Neon
+    description: Serverless Postgres with branching
+    category: cloud_service
+    subcategory: dbaas
+    author: Neon Inc
+    website: https://neon.tech
+    repository: https://github.com/neondatabase/neon
+    documentation: https://neon.tech/docs
+    npm_package: "@neondatabase/serverless"
+    license: Apache-2.0
+    tags: [postgres, serverless, branching]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@neondatabase/serverless" }
+    alternative_to: [supabase, planetscale]
+
+  turso:
+    name: Turso
+    description: SQLite for Production - edge database
+    category: cloud_service
+    subcategory: dbaas
+    author: Turso
+    website: https://turso.tech
+    repository: https://github.com/tursodatabase/libsql
+    documentation: https://docs.turso.tech
+    npm_package: "@libsql/client"
+    license: MIT
+    tags: [sqlite, edge, serverless, libsql]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@libsql/client" }
+    alternative_to: [sqlite, d1]

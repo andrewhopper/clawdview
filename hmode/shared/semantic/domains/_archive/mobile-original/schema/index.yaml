@@ -1,0 +1,24 @@
+# Mobile Domain Schema Index
+# Phone interactions and push notifications
+# Inspired by Twilio APIs
+
+domain: mobile
+version: 1.0.0
+description: Mobile communications - SMS, MMS, voice calls, and push notifications
+namespace: http://protoflow.ai/ontology/mobile#
+dependencies:
+  - core
+
+imports:
+  - message.yaml      # SMS, MMS
+  - call.yaml         # Voice calls
+  - notification.yaml # Push notifications
+  - device.yaml       # Device bindings
+
+# Type mappings for code generation
+types:
+  string: { ts: string, py: str, rust: String }
+  integer: { ts: number, py: int, rust: i32 }
+  datetime: { ts: string, py: "datetime", rust: "DateTime<Utc>" }
+  uri: { ts: string, py: str, rust: String }
+  boolean: { ts: boolean, py: bool, rust: bool }

@@ -1,0 +1,222 @@
+# File UUID: a3f7ab18-ea7e-4870-abe3-642bba5f51a8
+# Data Model Review Document
+# Category: review
+# Complexity: moderate
+
+id: data-model-review
+name: Data Model Review
+version: "1.0.0"
+description: Evaluation of data model design, normalization, and integrity
+category: review
+complexity: moderate
+created_at: "2025-12-10"
+updated_at: "2025-12-10"
+
+# -----------------------------------------
+# SDLC GATE ASSOCIATION
+# -----------------------------------------
+sdlc_gate:
+  phase: 6  # Design phase
+  gate_name: Domain Models Gate
+  purpose: Validate data model design before implementation
+  approval_required: true
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: executive-summary
+      name: Executive Summary
+      description: Data model assessment verdict and key findings
+      required: true
+      format: prose
+      word_limit: 150
+
+    - id: model-overview
+      name: Model Overview
+      description: Description of the data model being reviewed
+      required: true
+      format: prose
+      word_limit: 250
+
+    - id: entities-review
+      name: Entities Review
+      description: Assessment of each entity
+      required: true
+      format: table
+      columns:
+        - Entity
+        - Purpose
+        - Fields
+        - Assessment
+
+    - id: relationships-review
+      name: Relationships Review
+      description: Assessment of entity relationships
+      required: true
+      format: table
+      columns:
+        - Relationship
+        - Type
+        - Cardinality
+        - Assessment
+
+    - id: normalization
+      name: Normalization Assessment
+      description: Evaluation of normalization level and trade-offs
+      required: true
+      format: prose
+      word_limit: 300
+
+    - id: data-integrity
+      name: Data Integrity
+      description: Constraints, validations, and referential integrity
+      required: true
+      format: bullets
+
+    - id: indexing-performance
+      name: Indexing & Performance
+      description: Index strategy and performance considerations
+      required: true
+      format: bullets
+
+    - id: concerns
+      name: Concerns
+      description: Issues that need attention
+      required: true
+      format: table
+      columns:
+        - Concern
+        - Severity
+        - Impact
+        - Recommendation
+
+    - id: recommendations
+      name: Recommendations
+      description: Prioritized improvements
+      required: true
+      format: numbered
+
+    - id: verdict
+      name: Verdict
+      description: Approved / Approved with conditions / Not approved
+      required: true
+      format: prose
+
+    - id: approval
+      name: Approval
+      description: Sign-off section
+      required: true
+      format: table
+      columns:
+        - Role
+        - Name
+        - Date
+        - Decision
+
+  required_inputs:
+    - name: model_name
+      type: string
+      description: Name of the data model or domain
+      required: true
+    - name: model_definition
+      type: text
+      description: Entity definitions, relationships, schema
+      required: true
+    - name: use_cases
+      type: text
+      description: How the data will be queried and used
+      required: false
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a data architect reviewing a data model design.
+
+    Your evaluation approach:
+    - Assess normalization level and appropriateness
+    - Evaluate relationship modeling
+    - Check for data integrity issues
+    - Consider query patterns and performance
+    - Identify potential data quality issues
+
+    Writing style:
+    - Technical but accessible
+    - Evidence-based concerns
+    - Actionable recommendations
+    - Clear severity ratings
+
+  task: |
+    Generate a Data Model Review document for {{MODEL_NAME}}.
+
+    Model definition:
+    {{MODEL_DEFINITION}}
+
+    Use cases:
+    {{USE_CASES}}
+
+    Structure the document with:
+    1. **Executive Summary** - Overall verdict
+    2. **Model Overview** - What the model represents
+    3. **Entities Review** - Assessment of each entity
+    4. **Relationships Review** - Assessment of relationships
+    5. **Normalization Assessment** - Is it properly normalized?
+    6. **Data Integrity** - Constraints and validations
+    7. **Indexing & Performance** - Performance considerations
+    8. **Concerns** - Issues with severity
+    9. **Recommendations** - Prioritized improvements
+    10. **Verdict** - Approved / Approved with conditions / Not approved
+    11. **Approval** - Sign-off table
+
+    Total length: 800-2000 words.
+
+  tone: professional
+  reading_level: technical
+  density: standard
+
+# -----------------------------------------
+# VALIDATORS
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 800
+      max: 2000
+    severity: error
+    message: "Data model review must be 800-2000 words"
+
+  - id: has-verdict
+    name: Clear Verdict
+    type: regex
+    rule:
+      pattern: "(Approved|Not approved|Approved with conditions)"
+      should_match: true
+    severity: error
+    message: "Must include clear verdict"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 800
+  max_words: 2000
+  reading_level: technical
+  density: standard
+  output_formats:
+    - markdown
+    - docx
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - data-model
+  - review
+  - database
+  - schema
+  - sdlc-gate

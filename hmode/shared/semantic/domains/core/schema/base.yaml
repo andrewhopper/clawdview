@@ -1,0 +1,37 @@
+# Base Entities
+# Foundation classes for all domain models
+
+entities:
+
+  Entity:
+    description: Base class for all identifiable things
+    properties:
+      id:
+        type: string
+        required: true
+        description: Unique identifier
+      name:
+        type: string
+        description: Human-readable name
+      description:
+        type: string
+        description: Detailed description
+
+  AuditInfo:
+    description: Tracking information for entity lifecycle
+    properties:
+      createdAt:
+        type: datetime
+        description: When created
+      updatedAt:
+        type: datetime
+        description: When last modified
+      createdBy:
+        type: string
+        description: ID of creator
+      updatedBy:
+        type: string
+        description: ID of last modifier
+      version:
+        type: integer
+        description: Optimistic locking version

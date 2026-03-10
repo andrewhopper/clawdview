@@ -1,0 +1,456 @@
+# Capacity Domain Model
+# Finite resource management with constraints, holds, and overbooking
+# Foundation primitive for all scarce-resource scenarios
+
+domain:
+  name: capacity
+  version: "1.0.0"
+  description: Finite resource pools with availability tracking, holds, blocks, and overbooking policies
+  dependencies: [core]
+  use_case: Hotels, flights, gym classes, compute instances, restaurant tables, event venues
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  # ============================================
+  # CAPACITY POOL
+  # ============================================
+
+  CapacityPool:
+    description: A finite pool of resources with availability tracking
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true, maxLength: 100 }
+      description: { type: string }
+      resourceType: { type: string, required: true, description: "Type of resource (room, seat, instance, etc.)" }
+      # Capacity counts
+      totalCapacity: { type: integer, required: true, minimum: 0 }
+      availableCapacity: { type: integer, required: true, minimum: 0 }
+      reservedCapacity: { type: integer, required: true, minimum: 0, description: "Confirmed bookings" }
+      heldCapacity: { type: integer, required: true, minimum: 0, description: "Temporary holds" }
+      blockedCapacity: { type: integer, required: true, minimum: 0, description: "Maintenance, VIP blocks, etc." }
+      # Overbooking
+      overbookingPolicy: { type: OverbookingPolicy }
+      effectiveCapacity: { type: integer, description: "totalCapacity + overbooking allowance" }
+      # Time scope
+      validFrom: { type: datetime, description: "When this capacity becomes available" }
+      validUntil: { type: datetime, description: "When this capacity expires" }
+      timezone: { type: string, description: "IANA timezone for time-based capacity" }
+      # Hierarchy
+      parentPoolId: { type: uuid, description: "FK to parent CapacityPool for nested resources" }
+      # Metadata
+      tags: { type: array, items: string }
+      attributes: { type: object, description: "Custom key-value pairs" }
+      status: { type: PoolStatus, required: true, default: active }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+    invariants:
+      - "availableCapacity + reservedCapacity + heldCapacity + blockedCapacity <= effectiveCapacity"
+      - "availableCapacity >= 0"
+
+  CapacityUnit:
+    description: A single countable unit within a capacity pool
+    properties:
+      id: { type: uuid, required: true }
+      poolId: { type: uuid, required: true, description: "FK to CapacityPool" }
+      identifier: { type: string, required: true, description: "Room 101, Seat A1, Instance i-abc123" }
+      name: { type: string }
+      description: { type: string }
+      unitType: { type: string, description: "Subtype within pool (king room, standard seat)" }
+      # State
+      status: { type: UnitStatus, required: true, default: available }
+      currentHoldId: { type: uuid, description: "FK to CapacityHold if held" }
+      currentReservationId: { type: uuid, description: "FK to external reservation" }
+      # Attributes
+      attributes: { type: object, description: "Unit-specific attributes (floor, view, specs)" }
+      tags: { type: array, items: string }
+      # Position (for seated venues)
+      section: { type: string }
+      row: { type: string }
+      position: { type: integer }
+      coordinates: { type: object, description: "{x, y} for venue maps" }
+      # Constraints
+      constraints: { type: array, items: UnitConstraint }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  UnitConstraint:
+    description: Constraint on when/how a unit can be used
+    properties:
+      id: { type: uuid, required: true }
+      unitId: { type: uuid, required: true }
+      constraintType: { type: ConstraintType, required: true }
+      description: { type: string }
+      # Time-based
+      validFrom: { type: datetime }
+      validUntil: { type: datetime }
+      daysOfWeek: { type: array, items: string }
+      # Rule-based
+      condition: { type: string, description: "Expression for complex constraints" }
+      # Effect
+      effect: { type: ConstraintEffect, required: true }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # CAPACITY HOLDS
+  # ============================================
+
+  CapacityHold:
+    description: Temporary lock on capacity units
+    properties:
+      id: { type: uuid, required: true }
+      poolId: { type: uuid, required: true }
+      # What's held
+      quantity: { type: integer, required: true, minimum: 1 }
+      unitIds: { type: array, items: uuid, description: "Specific units if applicable" }
+      # Who's holding
+      holderId: { type: string, required: true, description: "User, session, or system ID" }
+      holderType: { type: HolderType, required: true }
+      # Time bounds
+      createdAt: { type: datetime, required: true }
+      expiresAt: { type: datetime, required: true }
+      extendedCount: { type: integer, default: 0 }
+      maxExtensions: { type: integer, default: 0 }
+      # State
+      status: { type: HoldStatus, required: true, default: active }
+      convertedAt: { type: datetime, description: "When converted to reservation" }
+      releasedAt: { type: datetime }
+      releaseReason: { type: ReleaseReason }
+      # Reference
+      externalReference: { type: string, description: "Booking ID, cart ID, etc." }
+      metadata: { type: object }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # CAPACITY BLOCKS
+  # ============================================
+
+  CapacityBlock:
+    description: Capacity blocked for maintenance, VIP, or other reasons
+    properties:
+      id: { type: uuid, required: true }
+      poolId: { type: uuid, required: true }
+      # What's blocked
+      quantity: { type: integer, minimum: 1, description: "If blocking count" }
+      unitIds: { type: array, items: uuid, description: "Specific units if applicable" }
+      # Time bounds
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      # Reason
+      blockType: { type: BlockType, required: true }
+      reason: { type: string, required: true }
+      requestedBy: { type: string }
+      approvedBy: { type: string }
+      # State
+      status: { type: BlockStatus, required: true, default: active }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # OVERBOOKING
+  # ============================================
+
+  OverbookingPolicy:
+    description: Policy for intentional overselling with probability models
+    properties:
+      id: { type: uuid, required: true }
+      poolId: { type: uuid, required: true }
+      enabled: { type: boolean, required: true, default: false }
+      # Limits
+      maxOverbookingPercent: { type: number, minimum: 0, maximum: 100 }
+      maxOverbookingAbsolute: { type: integer, minimum: 0 }
+      # Model
+      noShowRate: { type: number, minimum: 0, maximum: 1, description: "Historical no-show probability" }
+      cancellationRate: { type: number, minimum: 0, maximum: 1 }
+      # Compensation
+      compensationPolicy: { type: string, description: "FK to penalty domain policy" }
+      # Time-based adjustments
+      adjustments: { type: array, items: OverbookingAdjustment }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  OverbookingAdjustment:
+    description: Time or condition based overbooking adjustment
+    properties:
+      id: { type: uuid, required: true }
+      policyId: { type: uuid, required: true }
+      condition: { type: string, required: true, description: "day_of_week, season, event, etc." }
+      conditionValue: { type: string, required: true }
+      adjustmentPercent: { type: number, description: "Modify overbooking by this %" }
+
+  # ============================================
+  # CAPACITY SNAPSHOT & HISTORY
+  # ============================================
+
+  CapacitySnapshot:
+    description: Point-in-time snapshot of capacity state
+    properties:
+      id: { type: uuid, required: true }
+      poolId: { type: uuid, required: true }
+      snapshotTime: { type: datetime, required: true }
+      # Counts at snapshot time
+      totalCapacity: { type: integer, required: true }
+      availableCapacity: { type: integer, required: true }
+      reservedCapacity: { type: integer, required: true }
+      heldCapacity: { type: integer, required: true }
+      blockedCapacity: { type: integer, required: true }
+      # Utilization
+      utilizationPercent: { type: number }
+      createdAt: { type: datetime, required: true }
+
+  CapacityEvent:
+    description: Event log of capacity changes
+    properties:
+      id: { type: uuid, required: true }
+      poolId: { type: uuid, required: true }
+      unitId: { type: uuid }
+      eventType: { type: CapacityEventType, required: true }
+      # Change details
+      previousStatus: { type: string }
+      newStatus: { type: string }
+      quantityChange: { type: integer }
+      # Actor
+      actorId: { type: string }
+      actorType: { type: string }
+      # Reference
+      referenceType: { type: string, description: "hold, block, reservation" }
+      referenceId: { type: uuid }
+      # Metadata
+      reason: { type: string }
+      metadata: { type: object }
+      occurredAt: { type: datetime, required: true }
+
+enums:
+
+  PoolStatus:
+    values:
+      - active        # Pool is operational
+      - inactive      # Temporarily disabled
+      - archived      # No longer in use
+      - maintenance   # Under maintenance
+
+  UnitStatus:
+    values:
+      - available     # Ready for reservation
+      - held          # Temporarily held
+      - reserved      # Confirmed reservation
+      - occupied      # Currently in use
+      - blocked       # Blocked (maintenance, VIP, etc.)
+      - out_of_service # Not operational
+
+  HolderType:
+    values:
+      - user          # End user
+      - session       # Anonymous session
+      - system        # System process
+      - agent         # Booking agent
+      - partner       # Partner system
+
+  HoldStatus:
+    values:
+      - active        # Hold is active
+      - converted     # Converted to reservation
+      - expired       # Timed out
+      - released      # Manually released
+      - cancelled     # Cancelled by holder
+
+  ReleaseReason:
+    values:
+      - expired       # Hold timed out
+      - converted     # Converted to booking
+      - cancelled     # User cancelled
+      - system        # System released
+      - displaced     # Higher priority took it
+      - payment_failed # Payment didn't go through
+
+  BlockType:
+    values:
+      - maintenance   # Scheduled maintenance
+      - emergency     # Emergency block
+      - vip           # Reserved for VIP
+      - group         # Group/corporate block
+      - seasonal      # Seasonal closure
+      - regulatory    # Regulatory requirement
+      - other         # Other reason
+
+  BlockStatus:
+    values:
+      - pending       # Scheduled but not started
+      - active        # Currently blocked
+      - completed     # Block period ended
+      - cancelled     # Block was cancelled
+
+  ConstraintType:
+    values:
+      - time_window   # Only available certain times
+      - day_of_week   # Only certain days
+      - minimum_stay  # Minimum duration required
+      - maximum_stay  # Maximum duration allowed
+      - advance_booking # Must book N days ahead
+      - same_day      # Same-day only
+      - member_only   # Members only
+      - age_restricted # Age requirements
+      - custom        # Custom rule
+
+  ConstraintEffect:
+    values:
+      - block         # Cannot be booked
+      - restrict      # Limited availability
+      - surcharge     # Additional fee applies
+      - discount      # Discount applies
+      - require_approval # Needs approval
+
+  CapacityEventType:
+    values:
+      - created       # Pool/unit created
+      - updated       # Attributes updated
+      - held          # Capacity held
+      - hold_extended # Hold extended
+      - hold_released # Hold released
+      - hold_converted # Hold → reservation
+      - reserved      # Capacity reserved
+      - released      # Reservation released
+      - blocked       # Capacity blocked
+      - unblocked     # Block removed
+      - check_in      # Guest checked in
+      - check_out     # Guest checked out
+      - status_changed # Status changed
+      - capacity_adjusted # Total capacity changed
+
+actions:
+
+  # Pool management
+  CreateCapacityPool:
+    description: Create a new capacity pool
+    parameters:
+      name: { type: string, required: true }
+      resourceType: { type: string, required: true }
+      totalCapacity: { type: integer, required: true }
+      timezone: { type: string }
+      overbookingEnabled: { type: boolean }
+    result: CapacityPool
+    idempotent: false
+
+  AdjustCapacity:
+    description: Adjust total capacity of a pool
+    parameters:
+      poolId: { type: uuid, required: true }
+      newCapacity: { type: integer, required: true }
+      reason: { type: string, required: true }
+    result: CapacityPool
+    idempotent: true
+
+  # Hold operations
+  CreateHold:
+    description: Create a temporary hold on capacity
+    parameters:
+      poolId: { type: uuid, required: true }
+      quantity: { type: integer, required: true }
+      unitIds: { type: array, items: uuid }
+      holderId: { type: string, required: true }
+      holderType: { type: HolderType, required: true }
+      durationSeconds: { type: integer, required: true }
+      externalReference: { type: string }
+    result: CapacityHold
+    idempotent: false
+
+  ExtendHold:
+    description: Extend an existing hold
+    parameters:
+      holdId: { type: uuid, required: true }
+      additionalSeconds: { type: integer, required: true }
+    result: CapacityHold
+    idempotent: true
+
+  ReleaseHold:
+    description: Release a hold back to available
+    parameters:
+      holdId: { type: uuid, required: true }
+      reason: { type: ReleaseReason, required: true }
+    result: CapacityHold
+    idempotent: true
+
+  ConvertHold:
+    description: Convert hold to confirmed reservation
+    parameters:
+      holdId: { type: uuid, required: true }
+      reservationId: { type: string, required: true }
+    result: CapacityHold
+    idempotent: true
+
+  # Block operations
+  CreateBlock:
+    description: Block capacity for maintenance/VIP/etc.
+    parameters:
+      poolId: { type: uuid, required: true }
+      unitIds: { type: array, items: uuid }
+      quantity: { type: integer }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      blockType: { type: BlockType, required: true }
+      reason: { type: string, required: true }
+    result: CapacityBlock
+    idempotent: false
+
+  CancelBlock:
+    description: Cancel a capacity block
+    parameters:
+      blockId: { type: uuid, required: true }
+      reason: { type: string }
+    result: CapacityBlock
+    idempotent: true
+
+  # Queries
+  GetAvailability:
+    description: Get available capacity for a time range
+    parameters:
+      poolId: { type: uuid, required: true }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      quantity: { type: integer, default: 1 }
+    result: { type: object, description: "Availability by time slot" }
+    idempotent: true
+
+  FindAvailableUnits:
+    description: Find specific available units matching criteria
+    parameters:
+      poolId: { type: uuid, required: true }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      quantity: { type: integer, required: true }
+      attributes: { type: object, description: "Filter by attributes" }
+      tags: { type: array, items: string }
+    result: { type: array, items: CapacityUnit }
+    idempotent: true
+
+relationships:
+  - type: one_to_many
+    from: CapacityPool
+    to: CapacityUnit
+    foreign_key: poolId
+    description: A pool contains many units
+
+  - type: one_to_many
+    from: CapacityPool
+    to: CapacityHold
+    foreign_key: poolId
+    description: A pool has many holds
+
+  - type: one_to_many
+    from: CapacityPool
+    to: CapacityBlock
+    foreign_key: poolId
+    description: A pool has many blocks
+
+  - type: one_to_many
+    from: CapacityPool
+    to: CapacityPool
+    foreign_key: parentPoolId
+    description: Pools can be nested (venue > section > row)
+
+  - type: one_to_one
+    from: CapacityPool
+    to: OverbookingPolicy
+    foreign_key: poolId
+    description: A pool has one overbooking policy

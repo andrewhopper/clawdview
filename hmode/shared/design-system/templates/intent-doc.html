@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<!-- File UUID: 039d416e-f08c-46d0-8610-43878a0a6aed -->
+<html lang="en" class="dark">
+<head>
+  <!--
+    Asset: Commander's Intent Report Template
+    Project: Design System - Templates
+    Asset ID: ci-tpl-7a3f2e9d.v1
+    Date: 2026-02-17
+    Design System: shared/design-system
+
+    Atomic Level: template
+
+    Tokens Used:
+    - Colors: --background, --foreground, --primary, --secondary, --muted, --muted-foreground, --border, --card, --accent
+    - Spacing: p-4, p-6, gap-4, gap-6, space-y-4, space-y-6
+    - Typography: text-sm, text-base, text-lg, text-xl, text-2xl, text-3xl
+    - Borders: rounded-md, rounded-lg
+  -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commander's Intent: Meeting Buddy</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --primary-foreground: 0 0% 98%;
+      --secondary: 240 4.8% 95.9%;
+      --secondary-foreground: 240 5.9% 10%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --accent: 240 4.8% 95.9%;
+      --accent-foreground: 240 5.9% 10%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 5.9% 90%;
+      --input: 240 5.9% 90%;
+      --ring: 240 5.9% 10%;
+      --radius: 0.5rem;
+    }
+    .dark {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --popover: 240 10% 3.9%;
+      --popover-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      --secondary: 240 3.7% 15.9%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+    }
+    * { border-color: hsl(var(--border)); }
+    body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
+
+    /* Button component styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      padding: 0.5rem 1rem;
+      height: 2.5rem;
+      cursor: pointer;
+    }
+    .btn:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+    .btn:disabled { pointer-events: none; opacity: 0.5; }
+    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+    .btn-secondary:hover { opacity: 0.8; }
+    .btn-outline { border: 1px solid hsl(var(--input)); background: hsl(var(--background)); }
+    .btn-outline:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+    .btn-ghost:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+    .btn-sm { height: 2rem; padding: 0 0.75rem; font-size: 0.75rem; }
+
+    /* Card component styles */
+    .card { border-radius: var(--radius); border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--card-foreground)); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card-header { display: flex; flex-direction: column; gap: 0.375rem; padding: 1.5rem; }
+    .card-title { font-size: 1.5rem; font-weight: 600; line-height: 1; letter-spacing: -0.025em; }
+    .card-description { font-size: 0.875rem; color: hsl(var(--muted-foreground)); }
+    .card-content { padding: 1.5rem; padding-top: 0; }
+
+    /* Badge component styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 9999px;
+      border: 1px solid transparent;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-default { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .badge-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+    .badge-accent { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+
+    /* Section collapsible styles */
+    .section-header {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-header:hover {
+      color: hsl(var(--primary));
+    }
+    .chevron {
+      transition: transform 0.2s;
+      display: inline-block;
+    }
+    .collapsed .chevron {
+      transform: rotate(-90deg);
+    }
+    .section-content {
+      max-height: 2000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .collapsed .section-content {
+      max-height: 0;
+    }
+
+    /* Checkbox styles */
+    input[type="checkbox"] {
+      width: 1rem;
+      height: 1rem;
+      border-radius: 0.25rem;
+      border: 1px solid hsl(var(--border));
+      cursor: pointer;
+    }
+
+    /* Copy button styles */
+    .copy-btn {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .task-item:hover .copy-btn {
+      opacity: 1;
+    }
+
+    /* Print styles */
+    @media print {
+      .no-print { display: none !important; }
+      .card { box-shadow: none; page-break-inside: avoid; }
+      body { background: white; color: black; }
+      .section-content { max-height: none !important; }
+    }
+
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="min-h-screen bg-background font-sans antialiased">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div class="container mx-auto flex h-14 items-center justify-between px-4">
+      <div class="flex items-center gap-4">
+        <h1 class="text-lg font-bold">Commander's Intent</h1>
+      </div>
+      <div class="flex items-center gap-2 no-print">
+        <div class="text-sm text-muted-foreground">
+          Progress: <span id="progress-percentage" class="font-semibold text-primary">0%</span>
+        </div>
+        <button id="theme-toggle" class="btn btn-ghost btn-sm" title="Toggle dark/light mode">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+        <button onclick="window.print()" class="btn btn-outline btn-sm">Print</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto py-6 px-4 max-w-5xl">
+    <div class="flex flex-col gap-6">
+
+      <!-- Project Header -->
+      <div class="card">
+        <div class="card-header">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="card-title">Meeting Buddy</div>
+              <div class="card-description">Created: 2026-02-13</div>
+            </div>
+            <span class="badge badge-accent">Planning</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purpose Section -->
+      <div class="card">
+        <div class="card-header section-header" onclick="toggleSection(this)">
+          <span class="chevron">▼</span>
+          <div class="card-title">Purpose</div>
+        </div>
+        <div class="card-content section-content">
+          <p class="text-base">Create shared technical understanding between customers and sales teams through real-time visual architecture diagrams</p>
+        </div>
+      </div>
+
+      <!-- Key Tasks Section -->
+      <div class="card">
+        <div class="card-header section-header" onclick="toggleSection(this)">
+          <span class="chevron">▼</span>
+          <div class="card-title">Key Tasks</div>
+        </div>
+        <div class="card-content section-content">
+          <div class="space-y-4">
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="kt-1" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#kt-1" id="kt-1-anchor" class="text-sm font-semibold text-primary hover:underline">KT-1</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('kt-1')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Technical entities are detected accurately from conversation audio</p>
+                <p class="text-xs text-muted-foreground mt-1"><strong>Expected Result:</strong> >90% accuracy on AWS service names (e.g., "ECS", "Load Balancer", "RDS") from audio transcription</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="kt-2" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#kt-2" id="kt-2-anchor" class="text-sm font-semibold text-primary hover:underline">KT-2</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('kt-2')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Users can confirm or correct low-confidence entity detections</p>
+                <p class="text-xs text-muted-foreground mt-1"><strong>Expected Result:</strong> UI presents ambiguous entities for confirmation; user can accept/reject/modify within 2 seconds</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="kt-3" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#kt-3" id="kt-3-anchor" class="text-sm font-semibold text-primary hover:underline">KT-3</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('kt-3')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Diagram history is preserved with ability to rewind to previous states</p>
+                <p class="text-xs text-muted-foreground mt-1"><strong>Expected Result:</strong> Event-sourced architecture allows stepping backward through conversation timeline; diagram updates reflect historical state</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="kt-4" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#kt-4" id="kt-4-anchor" class="text-sm font-semibold text-primary hover:underline">KT-4</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('kt-4')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">System predicts likely architecture connections (e.g., Load Balancer → ECS more probable than Load Balancer → RDS)</p>
+                <p class="text-xs text-muted-foreground mt-1"><strong>Expected Result:</strong> Edge suggestions based on AWS best practices; system proposes next likely component with confidence score</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="kt-5" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#kt-5" id="kt-5-anchor" class="text-sm font-semibold text-primary hover:underline">KT-5</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('kt-5')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Architecture diagrams render in real-time as conversation progresses</p>
+                <p class="text-xs text-muted-foreground mt-1"><strong>Expected Result:</strong> Diagram updates within 1-2 seconds of entity detection; smooth animation for new nodes/edges</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="kt-6" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#kt-6" id="kt-6-anchor" class="text-sm font-semibold text-primary hover:underline">KT-6</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('kt-6')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Diagrams can be securely shared with meeting participants</p>
+                <p class="text-xs text-muted-foreground mt-1"><strong>Expected Result:</strong> Shareable link with access controls; participants see synchronized diagram view during meeting</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="kt-7" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#kt-7" id="kt-7-anchor" class="text-sm font-semibold text-primary hover:underline">KT-7</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('kt-7')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Users can manually edit diagram data and structure</p>
+                <p class="text-xs text-muted-foreground mt-1"><strong>Expected Result:</strong> Click-to-edit nodes/edges; changes persist and sync across all viewers in real-time</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- End State Section -->
+      <div class="card">
+        <div class="card-header section-header" onclick="toggleSection(this)">
+          <span class="chevron">▼</span>
+          <div class="card-title">End State</div>
+        </div>
+        <div class="card-content section-content">
+          <div class="space-y-3">
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="es-1" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#es-1" id="es-1-anchor" class="text-sm font-semibold text-primary hover:underline">ES-1</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('es-1')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Can conduct a customer meeting with real-time architecture visualization</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="es-2" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#es-2" id="es-2-anchor" class="text-sm font-semibold text-primary hover:underline">ES-2</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('es-2')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Both salesperson and customer see the same diagram simultaneously during the meeting</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="es-3" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#es-3" id="es-3-anchor" class="text-sm font-semibold text-primary hover:underline">ES-3</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('es-3')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Diagram accurately reflects the technical architecture discussed</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="es-4" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#es-4" id="es-4-anchor" class="text-sm font-semibold text-primary hover:underline">ES-4</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('es-4')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Meeting participants can export/share the final diagram after the meeting</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="es-5" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#es-5" id="es-5-anchor" class="text-sm font-semibold text-primary hover:underline">ES-5</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('es-5')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Audio transcription captures technical terms accurately (>90% accuracy on AWS service names)</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="es-6" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#es-6" id="es-6-anchor" class="text-sm font-semibold text-primary hover:underline">ES-6</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('es-6')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Zero audio data leaves secure boundary (customer privacy maintained)</p>
+              </div>
+            </div>
+
+            <div class="task-item flex items-start gap-3 p-3 rounded-md hover:bg-muted/50">
+              <input type="checkbox" id="es-7" onchange="updateProgress()">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <a href="#es-7" id="es-7-anchor" class="text-sm font-semibold text-primary hover:underline">ES-7</a>
+                  <button class="copy-btn btn btn-ghost btn-sm" onclick="copyLink('es-7')">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm mt-1">Diagram rewind function works correctly (can step back through conversation history)</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Constraints Section -->
+      <div class="card">
+        <div class="card-header section-header" onclick="toggleSection(this)">
+          <span class="chevron">▼</span>
+          <div class="card-title">Constraints</div>
+        </div>
+        <div class="card-content section-content">
+          <div class="space-y-6">
+
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-foreground">Proscriptive (Must Do)</h3>
+              <ul class="space-y-2 text-sm">
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Must be secure (customer audio/data privacy)</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Must run on AWS infrastructure OR locally</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-foreground">Prohibitive (Cannot Do)</h3>
+              <p class="text-sm text-muted-foreground">None specified</p>
+            </div>
+
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-foreground">Resource</h3>
+              <ul class="space-y-2 text-sm">
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span><strong>Budget:</strong> Flexible</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span><strong>Team:</strong> Not specified</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span><strong>Infrastructure:</strong> AWS or local deployment</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-foreground">Temporal</h3>
+              <p class="text-sm text-muted-foreground">None beyond general availability goal</p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Decision Authority Section -->
+      <div class="card">
+        <div class="card-header section-header" onclick="toggleSection(this)">
+          <span class="chevron">▼</span>
+          <div class="card-title">Decision Authority</div>
+        </div>
+        <div class="card-content section-content">
+          <div class="space-y-6">
+
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-foreground">Autonomous (You Decide)</h3>
+              <ul class="space-y-2 text-sm">
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Implementation details and coding approaches</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Feature prioritization and sequencing</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Testing strategies</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Deployment timing</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-foreground">Requires Approval/Help</h3>
+              <ul class="space-y-2 text-sm">
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Tech stack selections (defer to <code class="text-xs bg-muted px-1 py-0.5 rounded">.guardrails/tech-preferences/</code>)</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Visual design and UI patterns (defer to <code class="text-xs bg-muted px-1 py-0.5 rounded">shared/design-system/</code>)</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Architecture decisions outside established patterns</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-primary">•</span>
+                  <span>Customer-facing features or workflows</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t py-6 mt-12 no-print">
+    <div class="container mx-auto px-4 text-center">
+      <p class="text-sm text-muted-foreground">
+        Pattern Source: <code class="text-xs bg-muted px-1 py-0.5 rounded">.claude/docs/patterns/COMMANDER_INTENT.md</code>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+
+    // Load saved theme preference
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    html.classList.toggle('dark', savedTheme === 'dark');
+
+    themeToggle.addEventListener('click', () => {
+      const isDark = html.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    // Section collapse/expand
+    function toggleSection(header) {
+      const card = header.closest('.card');
+      card.classList.toggle('collapsed');
+
+      // Save collapse state
+      const sectionTitle = header.querySelector('.card-title').textContent;
+      const isCollapsed = card.classList.contains('collapsed');
+      const collapsedSections = JSON.parse(localStorage.getItem('collapsedSections') || '[]');
+
+      if (isCollapsed) {
+        if (!collapsedSections.includes(sectionTitle)) {
+          collapsedSections.push(sectionTitle);
+        }
+      } else {
+        const index = collapsedSections.indexOf(sectionTitle);
+        if (index > -1) {
+          collapsedSections.splice(index, 1);
+        }
+      }
+
+      localStorage.setItem('collapsedSections', JSON.stringify(collapsedSections));
+    }
+
+    // Restore collapsed sections
+    const collapsedSections = JSON.parse(localStorage.getItem('collapsedSections') || '[]');
+    document.querySelectorAll('.card-title').forEach(title => {
+      if (collapsedSections.includes(title.textContent)) {
+        title.closest('.card').classList.add('collapsed');
+      }
+    });
+
+    // Progress tracking
+    function updateProgress() {
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+      const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+      const total = checkboxes.length;
+      const percentage = total > 0 ? Math.round((checked / total) * 100) : 0;
+
+      document.getElementById('progress-percentage').textContent = percentage + '%';
+
+      // Save checkbox states
+      const states = {};
+      checkboxes.forEach(cb => {
+        states[cb.id] = cb.checked;
+      });
+      localStorage.setItem('checkboxStates', JSON.stringify(states));
+    }
+
+    // Restore checkbox states
+    const savedStates = JSON.parse(localStorage.getItem('checkboxStates') || '{}');
+    Object.keys(savedStates).forEach(id => {
+      const checkbox = document.getElementById(id);
+      if (checkbox) {
+        checkbox.checked = savedStates[id];
+      }
+    });
+    updateProgress();
+
+    // Copy link functionality
+    function copyLink(id) {
+      const url = window.location.origin + window.location.pathname + '#' + id;
+      navigator.clipboard.writeText(url).then(() => {
+        // Show brief feedback
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span class="text-xs">Copied!</span>';
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+        }, 1500);
+      });
+    }
+
+    // Smooth scroll to anchor on page load
+    if (window.location.hash) {
+      setTimeout(() => {
+        const element = document.querySelector(window.location.hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  </script>
+</body>
+</html>

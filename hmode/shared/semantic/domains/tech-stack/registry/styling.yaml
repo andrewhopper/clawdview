@@ -1,0 +1,209 @@
+# Styling & UI Libraries Registry
+
+technologies:
+
+  # CSS Frameworks
+
+  tailwind:
+    name: Tailwind CSS
+    description: A utility-first CSS framework for rapid UI development
+    category: library
+    subcategory: css-framework
+    author: Tailwind Labs
+    website: https://tailwindcss.com
+    repository: https://github.com/tailwindlabs/tailwindcss
+    documentation: https://tailwindcss.com/docs
+    npm_package: tailwindcss
+    license: MIT
+    first_release: "2017-11-01"
+    language: CSS
+    tags: [css, utility-first, responsive, customizable]
+    detection_rules:
+      - { type: npm_dependency, pattern: "tailwindcss" }
+      - { type: file_exists, pattern: "tailwind.config.js" }
+      - { type: file_exists, pattern: "tailwind.config.ts" }
+    alternative_to: [bootstrap, bulma]
+
+  bootstrap:
+    name: Bootstrap
+    description: The most popular HTML, CSS, and JS library
+    category: library
+    subcategory: css-framework
+    author: Twitter / Bootstrap Team
+    website: https://getbootstrap.com
+    repository: https://github.com/twbs/bootstrap
+    documentation: https://getbootstrap.com/docs
+    npm_package: bootstrap
+    license: MIT
+    first_release: "2011-08-19"
+    language: CSS
+    tags: [css, components, responsive, grid]
+    detection_rules:
+      - { type: npm_dependency, pattern: "bootstrap" }
+    alternative_to: [tailwind, bulma]
+
+  # UI Component Libraries
+
+  shadcn-ui:
+    name: shadcn/ui
+    description: Beautifully designed components built with Radix and Tailwind
+    category: library
+    subcategory: ui-components
+    author: shadcn
+    website: https://ui.shadcn.com
+    repository: https://github.com/shadcn-ui/ui
+    documentation: https://ui.shadcn.com/docs
+    license: MIT
+    language: TypeScript
+    tags: [ui, components, react, radix, tailwind, copy-paste]
+    detection_rules:
+      - { type: file_exists, pattern: "components.json" }
+    extends: radix
+    related_to: [tailwind, react]
+
+  radix:
+    name: Radix UI
+    description: Unstyled, accessible components for building design systems
+    category: library
+    subcategory: ui-primitives
+    author: WorkOS
+    website: https://radix-ui.com
+    repository: https://github.com/radix-ui/primitives
+    documentation: https://radix-ui.com/docs/primitives
+    npm_package: "@radix-ui/react-dialog"
+    license: MIT
+    language: TypeScript
+    tags: [ui, headless, accessible, primitives]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@radix-ui/react-*" }
+      - { type: npm_dependency, pattern: "@radix-ui/themes" }
+    alternative_to: [headless-ui]
+
+  chakra-ui:
+    name: Chakra UI
+    description: Simple, modular and accessible component library
+    category: library
+    subcategory: ui-components
+    author: Segun Adebayo
+    website: https://chakra-ui.com
+    repository: https://github.com/chakra-ui/chakra-ui
+    documentation: https://chakra-ui.com/docs
+    npm_package: "@chakra-ui/react"
+    license: MIT
+    first_release: "2019-12-09"
+    language: TypeScript
+    tags: [ui, components, react, accessible, styled-system]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@chakra-ui/react" }
+    alternative_to: [mantine, mui]
+
+  mui:
+    name: Material UI
+    description: React components that implement Google's Material Design
+    category: library
+    subcategory: ui-components
+    author: MUI
+    website: https://mui.com
+    repository: https://github.com/mui/material-ui
+    documentation: https://mui.com/material-ui
+    npm_package: "@mui/material"
+    license: MIT
+    first_release: "2014-08-18"
+    language: TypeScript
+    tags: [ui, components, react, material-design]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@mui/material" }
+      - { type: npm_dependency, pattern: "@mui/joy" }
+    alternative_to: [chakra-ui, ant-design]
+
+  mantine:
+    name: Mantine
+    description: A fully featured React components library
+    category: library
+    subcategory: ui-components
+    author: Vitaly Rtishchev
+    website: https://mantine.dev
+    repository: https://github.com/mantinedev/mantine
+    documentation: https://mantine.dev/getting-started
+    npm_package: "@mantine/core"
+    license: MIT
+    first_release: "2021-01-07"
+    language: TypeScript
+    tags: [ui, components, react, hooks, forms]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@mantine/core" }
+    alternative_to: [chakra-ui, mui]
+
+  ant-design:
+    name: Ant Design
+    description: Enterprise-class UI design language and React UI library
+    category: library
+    subcategory: ui-components
+    author: Ant Group
+    website: https://ant.design
+    repository: https://github.com/ant-design/ant-design
+    documentation: https://ant.design/docs/react/introduce
+    npm_package: antd
+    license: MIT
+    first_release: "2015-04-24"
+    language: TypeScript
+    tags: [ui, components, react, enterprise, design-system]
+    detection_rules:
+      - { type: npm_dependency, pattern: "antd" }
+    alternative_to: [mui, chakra-ui]
+
+  headless-ui:
+    name: Headless UI
+    description: Completely unstyled, accessible UI components
+    category: library
+    subcategory: ui-primitives
+    author: Tailwind Labs
+    website: https://headlessui.com
+    repository: https://github.com/tailwindlabs/headlessui
+    documentation: https://headlessui.com
+    npm_package: "@headlessui/react"
+    license: MIT
+    language: TypeScript
+    tags: [ui, headless, accessible, tailwind]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@headlessui/react" }
+      - { type: npm_dependency, pattern: "@headlessui/vue" }
+    alternative_to: [radix]
+
+  # Icons
+
+  lucide:
+    name: Lucide
+    description: Beautiful & consistent icon toolkit made by the community
+    category: library
+    subcategory: icons
+    author: Lucide Contributors
+    website: https://lucide.dev
+    repository: https://github.com/lucide-icons/lucide
+    documentation: https://lucide.dev/guide
+    npm_package: lucide-react
+    license: ISC
+    language: TypeScript
+    tags: [icons, svg, react, vue, svelte]
+    detection_rules:
+      - { type: npm_dependency, pattern: "lucide-react" }
+      - { type: npm_dependency, pattern: "lucide-vue-next" }
+      - { type: npm_dependency, pattern: "lucide-svelte" }
+    alternative_to: [heroicons, fontawesome]
+
+  heroicons:
+    name: Heroicons
+    description: Beautiful hand-crafted SVG icons by the makers of Tailwind CSS
+    category: library
+    subcategory: icons
+    author: Tailwind Labs
+    website: https://heroicons.com
+    repository: https://github.com/tailwindlabs/heroicons
+    npm_package: "@heroicons/react"
+    license: MIT
+    language: TypeScript
+    tags: [icons, svg, tailwind]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@heroicons/react" }
+      - { type: npm_dependency, pattern: "@heroicons/vue" }
+    alternative_to: [lucide, fontawesome]
