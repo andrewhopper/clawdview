@@ -1,0 +1,19 @@
+/* QuickView CSS Fixture */
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+h1 {
+  color: #4f46e5;
+  border-bottom: 2px solid #4f46e5;
+  padding-bottom: 8px;
+}

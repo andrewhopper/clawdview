@@ -1,4 +1,4 @@
-# 🚀 QuickView - Universal Rapid Prototyping Tool
+# 🚀 ClawdView - Universal Rapid Prototyping Tool
 
 A rapid prototyping tool for Mac, ideal for users who enjoy Anthropic's artifact viewer on claude.ai. This tool provides instant preview and execution of code files with live reload capabilities, allowing you to use claude code to prototype with visual feedback, along with having an enviorment where you  ChatGPT or Cursor can do the same.  
 

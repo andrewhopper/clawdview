@@ -75,3 +75,14 @@ coverage/
 # Build output
 dist/
 build/
+
+# Generated prototype artifacts (created by quickview/Claude during sessions)
+artifact-*.html
+artifact-*.jsx
+component-*.jsx
+script-*.py
+style-*.css
+data-*.json
+graphic-*.svg
+doc-*.md
+demo-*.js
