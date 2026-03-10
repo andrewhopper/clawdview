@@ -1,0 +1,11 @@
+# Heroku Procfile
+# Copy to project root as Procfile
+
+# Web process (required for HTTP apps)
+web: npm start
+
+# Worker process (background jobs)
+# worker: npm run worker
+
+# Release phase (runs during deploy)
+# release: npm run migrate

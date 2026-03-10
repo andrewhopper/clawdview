@@ -1,0 +1,1 @@
+Triage my recent emails using the email-triage skill. Categorize them (Action Required, FYI, Newsletter, Ignore) and only draft replies for emails that require action. Show me a summary with clear categories and approval options for any drafted replies.

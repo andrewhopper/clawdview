@@ -1,0 +1,400 @@
+# Voice Call Domain Model
+# Inspired by Twilio Programmable Voice API
+# https://www.twilio.com/docs/voice/api/call-resource
+
+entities:
+
+  Call:
+    description: Voice call resource
+    extends: Entity
+    properties:
+      sid:
+        type: string
+        required: true
+        description: Unique call identifier
+      accountSid:
+        type: string
+        required: true
+      parentCallSid:
+        type: string
+        description: Parent call SID (for child legs)
+      from:
+        type: string
+        required: true
+        description: Caller phone number (E.164)
+      to:
+        type: string
+        required: true
+        description: Callee phone number (E.164)
+      fromFormatted:
+        type: string
+        description: Human-readable caller number
+      toFormatted:
+        type: string
+        description: Human-readable callee number
+      status:
+        type: CallStatus
+        required: true
+      direction:
+        type: CallDirection
+        required: true
+      answeredBy:
+        type: AnsweredBy
+        description: Who/what answered (human, machine, etc.)
+      duration:
+        type: integer
+        description: Call duration in seconds
+      price:
+        type: decimal
+        description: Cost of the call
+      priceUnit:
+        type: string
+        description: Currency code
+      callerName:
+        type: string
+        description: Caller ID name (CNAM)
+      forwardedFrom:
+        type: string
+        description: Original number if forwarded
+      queueTime:
+        type: integer
+        description: Time spent in queue (ms)
+      trunkSid:
+        type: string
+        description: SIP trunk used
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+      startTime:
+        type: datetime
+        description: When call started
+      endTime:
+        type: datetime
+        description: When call ended
+
+  CallRecording:
+    description: Recording of a call
+    properties:
+      sid:
+        type: string
+        required: true
+      accountSid:
+        type: string
+        required: true
+      callSid:
+        type: string
+        required: true
+      conferenceSid:
+        type: string
+        description: Conference if recording a conference
+      duration:
+        type: integer
+        description: Recording duration in seconds
+      channels:
+        type: integer
+        description: Number of audio channels
+      source:
+        type: RecordingSource
+      status:
+        type: RecordingStatus
+      errorCode:
+        type: integer
+      uri:
+        type: uri
+        description: URL to fetch recording
+      price:
+        type: decimal
+      priceUnit:
+        type: string
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+      startTime:
+        type: datetime
+
+  Transcription:
+    description: Transcription of a call recording
+    properties:
+      sid:
+        type: string
+        required: true
+      accountSid:
+        type: string
+        required: true
+      recordingSid:
+        type: string
+        required: true
+      status:
+        type: TranscriptionStatus
+      transcriptionText:
+        type: string
+        description: Full transcription text
+      duration:
+        type: integer
+        description: Audio duration in seconds
+      price:
+        type: decimal
+      priceUnit:
+        type: string
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  Conference:
+    description: Multi-party conference call
+    properties:
+      sid:
+        type: string
+        required: true
+      accountSid:
+        type: string
+        required: true
+      friendlyName:
+        type: string
+        required: true
+        description: Conference room name
+      status:
+        type: ConferenceStatus
+      region:
+        type: string
+        description: Twilio region hosting conference
+      reasonConferenceEnded:
+        type: ConferenceEndReason
+      callSidEndingConference:
+        type: string
+        description: Call that ended the conference
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  ConferenceParticipant:
+    description: Participant in a conference call
+    properties:
+      callSid:
+        type: string
+        required: true
+        description: Call SID of participant
+      conferenceSid:
+        type: string
+        required: true
+      accountSid:
+        type: string
+        required: true
+      muted:
+        type: boolean
+        description: Is participant muted
+      hold:
+        type: boolean
+        description: Is participant on hold
+      coaching:
+        type: boolean
+        description: Is in coaching mode
+      callSidToCoach:
+        type: string
+        description: Call being coached
+      status:
+        type: ParticipantStatus
+      startConferenceOnEnter:
+        type: boolean
+      endConferenceOnExit:
+        type: boolean
+      label:
+        type: string
+        description: Custom label for participant
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+enums:
+
+  CallStatus:
+    description: Status of a voice call
+    values:
+      - queued      # Call is queued
+      - ringing     # Call is ringing
+      - in-progress # Call connected and active
+      - completed   # Call ended normally
+      - busy        # Callee was busy
+      - failed      # Call failed
+      - no-answer   # No answer
+      - canceled    # Call was canceled
+
+  CallDirection:
+    values:
+      - inbound          # Incoming call
+      - outbound-api     # Initiated via REST API
+      - outbound-dial    # Initiated via <Dial>
+
+  AnsweredBy:
+    description: Detection of who answered
+    values:
+      - human          # Human answered
+      - machine_start  # Answering machine (early detection)
+      - machine_end_beep # Machine after beep
+      - machine_end_silence # Machine with silence
+      - machine_end_other # Machine, other
+      - fax            # Fax machine
+      - unknown        # Could not determine
+
+  RecordingSource:
+    values:
+      - DialVerb
+      - Conference
+      - OutboundAPI
+      - Trunking
+      - RecordVerb
+      - StartCallRecordingAPI
+
+  RecordingStatus:
+    values:
+      - processing  # Being processed
+      - completed   # Available for download
+      - absent      # Recording not available
+      - deleted     # Recording deleted
+
+  TranscriptionStatus:
+    values:
+      - in-progress
+      - completed
+      - failed
+
+  ConferenceStatus:
+    values:
+      - init         # Conference initialized
+      - in-progress  # Conference active
+      - completed    # Conference ended
+
+  ConferenceEndReason:
+    values:
+      - last-participant-left
+      - conference-ended-via-api
+      - participant-with-end-conference-on-exit-left
+
+  ParticipantStatus:
+    values:
+      - queued
+      - connecting
+      - ringing
+      - connected
+      - complete
+      - failed
+
+actions:
+
+  MakeCallAction:
+    description: Initiate an outbound call
+    parameters:
+      to:
+        type: string
+        required: true
+        description: Number to call (E.164)
+      from:
+        type: string
+        required: true
+        description: Caller ID (E.164)
+      url:
+        type: uri
+        description: TwiML URL for call instructions
+      twiml:
+        type: string
+        description: Inline TwiML instructions
+      statusCallback:
+        type: uri
+        description: Webhook for status updates
+      statusCallbackEvent:
+        type: array
+        items: string
+        description: Events to receive (initiated, ringing, answered, completed)
+      timeout:
+        type: integer
+        description: Seconds to wait for answer (default 60)
+      record:
+        type: boolean
+        description: Record the call
+      machineDetection:
+        type: string
+        description: "Enable" or "DetectMessageEnd"
+      asyncAmd:
+        type: boolean
+        description: Async answering machine detection
+    result:
+      type: Call
+
+  ModifyCallAction:
+    description: Modify an in-progress call
+    parameters:
+      sid:
+        type: string
+        required: true
+      status:
+        type: string
+        description: Set to "completed" to end call
+      url:
+        type: uri
+        description: New TwiML URL
+      twiml:
+        type: string
+        description: New TwiML
+    result:
+      type: Call
+
+  FetchCallAction:
+    description: Get call details
+    parameters:
+      sid:
+        type: string
+        required: true
+    result:
+      type: Call
+
+  CreateConferenceAction:
+    description: Create a conference
+    parameters:
+      friendlyName:
+        type: string
+        required: true
+      statusCallback:
+        type: uri
+      statusCallbackEvent:
+        type: array
+        items: string
+      record:
+        type: boolean
+    result:
+      type: Conference
+
+  AddParticipantAction:
+    description: Add participant to conference
+    parameters:
+      conferenceSid:
+        type: string
+        required: true
+      from:
+        type: string
+        required: true
+      to:
+        type: string
+        required: true
+      muted:
+        type: boolean
+      startConferenceOnEnter:
+        type: boolean
+      endConferenceOnExit:
+        type: boolean
+    result:
+      type: ConferenceParticipant

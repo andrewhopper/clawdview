@@ -1,0 +1,127 @@
+# =============================================================================
+# Process Net - Level 1: Net Structures
+# Petri net composition and workflow nets
+# =============================================================================
+
+schema_version: "1.0.0"
+layer: structure
+imports:
+  - ./primitives.yaml
+
+entities:
+
+  Net:
+    description: |
+      A Petri net: bipartite graph of places and transitions
+      connected by arcs.
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      version: { type: string }
+      places: { type: array, items: Place, required: true }
+      transitions: { type: array, items: Transition, required: true }
+      arcs: { type: array, items: Arc, required: true }
+      guards: { type: array, items: Guard }
+      inhibitors: { type: array, items: Inhibitor }
+      initial_marking: { type: Marking }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  WorkflowNet:
+    description: |
+      A sound workflow net (WF-net): Petri net with single source
+      place (i), single sink place (o), and all nodes on path from i to o.
+      Guarantees: k tokens at i -> k tokens at o (soundness property).
+    extends: Net
+    properties:
+      source_place_id: { type: string, required: true, description: "Single entry point (i)" }
+      sink_place_id: { type: string, required: true, description: "Single exit point (o)" }
+      is_sound: { type: boolean, description: "Verified soundness property" }
+      soundness_verified_at: { type: datetime }
+
+  Case:
+    description: |
+      A single execution instance of a net.
+      Like a "traveler" in manufacturing - tracks one item through process.
+    properties:
+      id: { type: string, required: true }
+      net_id: { type: string, required: true }
+      net_version: { type: string }
+
+      # Token state
+      tokens: { type: array, items: Token }
+      current_marking: { type: Marking }
+
+      # Attributes (colored token data)
+      attributes: { type: object }
+
+      # Lineage
+      parent_case_id: { type: string, description: "If forked from another case" }
+      forked_at_sequence: { type: integer }
+
+      # Status
+      status: { type: CaseStatus, required: true }
+      started_at: { type: datetime, required: true }
+      completed_at: { type: datetime }
+
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Firing:
+    description: |
+      Record of a transition firing. The atomic event in the event log.
+      Captures: which transition, which tokens consumed/produced, when, by whom.
+      This is the event sourcing primitive.
+    properties:
+      id: { type: string, required: true }
+      case_id: { type: string, required: true }
+      transition_id: { type: string, required: true }
+      sequence: { type: integer, required: true, description: "Monotonic sequence number" }
+
+      # Token movement
+      consumed_tokens: { type: array, items: string, description: "Token IDs consumed" }
+      produced_tokens: { type: array, items: string, description: "Token IDs produced" }
+
+      # Marking change
+      marking_before: { type: Marking }
+      marking_after: { type: Marking }
+
+      # Execution context
+      actor_id: { type: string }
+      actor_type: { type: ActorType }
+      duration_ms: { type: integer }
+
+      # Guard evaluation
+      guards_evaluated: { type: array, items: GuardResult }
+
+      # Correlation
+      correlation_id: { type: string }
+      causation_id: { type: string, description: "ID of firing that caused this one" }
+
+      timestamp: { type: datetime, required: true }
+
+  GuardResult:
+    description: Result of evaluating a guard condition
+    properties:
+      guard_id: { type: string, required: true }
+      expression: { type: string }
+      result: { type: boolean, required: true }
+      evaluated_value: { type: any }
+      error: { type: string }
+
+enums:
+
+  CaseStatus:
+    values:
+      - active        # Tokens in flight
+      - completed     # All tokens at sink
+      - suspended     # Paused by actor
+      - deadlocked    # No enabled transitions (error state)
+      - failed        # Unrecoverable error
+
+  ActorType:
+    values:
+      - human
+      - system
+      - ai_agent
+      - external

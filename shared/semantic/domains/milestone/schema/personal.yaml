@@ -1,0 +1,88 @@
+# Milestone Domain - Personal Entities
+# Personal milestones and life planning entities
+
+entities:
+
+  PersonalMilestone:
+    description: Individual life or personal milestone
+    extends: Milestone
+    properties:
+      category:
+        type: PersonalMilestoneCategory
+        required: true
+      lifeArea:
+        type: LifeArea
+        description: Area of life this impacts
+      alignsWithVision:
+        type: boolean
+        description: Whether aligned with personal vision
+      visionReference:
+        type: PersonalVision
+        description: Reference to personal vision
+      emotionalSignificance:
+        type: integer
+        description: Emotional importance (1-10)
+      accountability:
+        type: core.Person
+        description: Accountability partner
+
+  PersonalVision:
+    description: Individual's personal vision for life
+    extends: Vision
+    properties:
+      lifeAreas:
+        type: array
+        items: LifeAreaVision
+        description: Vision broken down by life area
+      legacyStatement:
+        type: string
+        description: How I want to be remembered
+      coreIdentity:
+        type: string
+        description: Who I am at my core
+      peakExperiences:
+        type: array
+        items: string
+        description: Experiences that define my best life
+      avoidList:
+        type: array
+        items: string
+        description: What I want to avoid/eliminate
+
+  LifeArea:
+    description: Domain of life for personal planning
+    extends: core.Entity
+    properties:
+      area:
+        type: LifeAreaType
+        required: true
+      currentSatisfaction:
+        type: integer
+        description: Current satisfaction (1-10)
+      targetSatisfaction:
+        type: integer
+        description: Target satisfaction (1-10)
+      notes:
+        type: string
+
+  LifeAreaVision:
+    description: Vision for a specific area of life
+    properties:
+      area:
+        type: LifeAreaType
+        required: true
+      vision:
+        type: string
+        required: true
+      milestones:
+        type: array
+        items: PersonalMilestone
+
+# =============================================================================
+# Relationships
+# =============================================================================
+
+relationships:
+  - PersonalMilestone belongsToArea LifeArea
+  - PersonalMilestone alignsWith PersonalVision
+  - PersonalVision coversArea LifeAreaVision

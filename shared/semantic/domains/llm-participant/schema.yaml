@@ -1,0 +1,138 @@
+# LLM Participant Domain Model
+# Actors in human-LLM interactions: humans, assistants, agents, systems
+# Source: RAISE paper, Open Message Format, Anthropic/OpenAI API schemas
+
+domain:
+  name: llm-participant
+  version: "1.0.0"
+  description: Actor types participating in LLM interactions - humans, assistants, agents, systems
+  dependencies: [core]
+  sources:
+    - "RAISE: arxiv.org/abs/2401.02777"
+    - "Open Message Format: github.com/open-llm-initiative/open-message-format"
+    - "Anthropic API documentation"
+    - "OpenAI Chat Completions API"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  Participant:
+    description: Any actor in an LLM interaction (human, assistant, agent, or system)
+    properties:
+      id: { type: string, required: true }
+      type: { type: ParticipantType, required: true }
+      name: { type: string }
+      metadata: { type: object, description: "Arbitrary participant metadata" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  HumanParticipant:
+    extends: Participant
+    description: A human user interacting with the LLM
+    properties:
+      userId: { type: string, description: "External user identifier" }
+      persona: { type: string, description: "User persona or profile name" }
+      preferences: { type: UserPreferences }
+      sessionCount: { type: integer, description: "Total sessions with this user" }
+
+  AssistantParticipant:
+    extends: Participant
+    description: An LLM assistant responding to queries
+    properties:
+      modelId: { type: string, required: true, description: "Reference to llm-model domain" }
+      systemPromptId: { type: string, description: "Reference to system prompt" }
+      capabilities: { type: array, items: string, description: "Enabled capabilities" }
+      temperature: { type: decimal, description: "Generation temperature setting" }
+
+  AgentParticipant:
+    extends: Participant
+    description: An autonomous agent that can use tools and make decisions
+    properties:
+      agentType: { type: AgentType, required: true }
+      modelId: { type: string, required: true }
+      toolIds: { type: array, items: string, description: "Available tool IDs" }
+      maxIterations: { type: integer, description: "Max tool-use loops" }
+      autonomyLevel: { type: AutonomyLevel }
+
+  SystemParticipant:
+    extends: Participant
+    description: System-level actor injecting context or instructions
+    properties:
+      source: { type: SystemSource, required: true }
+      priority: { type: integer, description: "Injection priority order" }
+      isVisible: { type: boolean, default: false, description: "Visible to user" }
+
+  UserPreferences:
+    description: User-specific preferences for LLM interactions
+    properties:
+      preferredLanguage: { type: string, description: "ISO 639-1 code" }
+      verbosityLevel: { type: VerbosityLevel }
+      responseFormat: { type: string, description: "Preferred output format" }
+      timezone: { type: string, description: "IANA timezone" }
+
+  ParticipantSession:
+    description: A participant's involvement in a specific session
+    properties:
+      participantId: { type: string, required: true }
+      sessionId: { type: string, required: true }
+      role: { type: SessionRole, required: true }
+      joinedAt: { type: datetime, required: true }
+      leftAt: { type: datetime }
+      messageCount: { type: integer, default: 0 }
+
+enums:
+
+  ParticipantType:
+    description: Type of actor in the interaction
+    values:
+      - Human      # End user
+      - Assistant  # LLM responding
+      - Agent      # Autonomous LLM with tools
+      - System     # System-level injector
+      - Orchestrator  # Multi-agent coordinator
+
+  AgentType:
+    description: Classification of autonomous agents
+    values:
+      - ReAct       # Reason + Act pattern
+      - RAISE       # ReAct with memory (arxiv:2401.02777)
+      - CoT         # Chain of Thought
+      - ToT         # Tree of Thought
+      - Reflexion   # Self-reflection agent
+      - AutoGPT     # Fully autonomous
+      - SubAgent    # Child agent in multi-agent system
+
+  AutonomyLevel:
+    description: Degree of agent autonomy
+    values:
+      - Supervised    # Human approval for each action
+      - SemiAutonomous  # Human approval for critical actions
+      - Autonomous    # Full autonomy within guardrails
+      - Unrestricted  # No guardrails (dangerous)
+
+  SystemSource:
+    description: Source of system-level injection
+    values:
+      - Platform      # Platform-level instructions
+      - Organization  # Org-level policies
+      - Application   # App-specific context
+      - Session       # Session-specific rules
+      - Hook          # Pre/post hooks
+
+  SessionRole:
+    description: Role in a conversation session
+    values:
+      - Initiator   # Started the session
+      - Responder   # Responding to queries
+      - Observer    # Read-only participant
+      - Moderator   # Can intervene/override
+
+  VerbosityLevel:
+    description: Preferred response verbosity
+    values:
+      - Terse       # Minimal, direct answers
+      - Concise     # Brief but complete
+      - Standard    # Normal verbosity
+      - Detailed    # Comprehensive explanations
+      - Verbose     # Maximum detail

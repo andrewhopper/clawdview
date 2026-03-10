@@ -1,0 +1,644 @@
+# Routing Domain: Navigation & Guidance
+# Turn-by-turn navigation, real-time guidance, ETA
+# Version: 1.0.0
+
+domain: routing-navigation
+version: "1.0.0"
+status: production
+description: Real-time navigation, turn-by-turn guidance, and ETA tracking
+dependencies:
+  - geo-point
+  - routing-route
+  - routing-waypoint
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Navigation Session
+  # ---------------------------------------------------------------------------
+
+  NavigationSession:
+    description: Active navigation session
+    fields:
+      id:
+        type: string
+        required: true
+      route:
+        type: Route
+        required: true
+        description: Planned route
+      status:
+        type: NavigationStatus
+        required: true
+      started_at:
+        type: datetime
+        required: true
+      current_position:
+        type: NavigationPosition
+        required: false
+      next_maneuver:
+        type: UpcomingManeuver
+        required: false
+      upcoming_maneuvers:
+        type: array
+        items:
+          type: UpcomingManeuver
+        required: false
+        constraints:
+          max_length: 5
+      current_leg_index:
+        type: integer
+        required: false
+        default: 0
+      current_step_index:
+        type: integer
+        required: false
+        default: 0
+      eta:
+        type: ETAEstimate
+        required: false
+      progress:
+        type: RouteProgress
+        required: false
+      deviation_count:
+        type: integer
+        required: false
+        default: 0
+      settings:
+        type: NavigationSettings
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Current Position in Navigation
+  # ---------------------------------------------------------------------------
+
+  NavigationPosition:
+    description: Current position relative to route
+    fields:
+      location:
+        type: Point
+        required: true
+        description: Current GPS position
+      timestamp:
+        type: datetime
+        required: true
+      speed_mps:
+        type: float
+        required: false
+        description: Speed in meters per second
+      heading:
+        type: float
+        required: false
+        constraints:
+          min: 0
+          max: 360
+        description: Current heading (degrees)
+      accuracy_meters:
+        type: float
+        required: false
+      on_route:
+        type: boolean
+        required: false
+        default: true
+      snapped_location:
+        type: Point
+        required: false
+        description: Position snapped to route
+      distance_from_route_meters:
+        type: float
+        required: false
+        description: Distance off-route
+      matched_road:
+        type: string
+        required: false
+        description: Name of matched road
+
+  # ---------------------------------------------------------------------------
+  # Upcoming Maneuver
+  # ---------------------------------------------------------------------------
+
+  UpcomingManeuver:
+    description: Next navigation instruction
+    fields:
+      maneuver:
+        type: Maneuver
+        required: true
+      distance_meters:
+        type: float
+        required: true
+        description: Distance to maneuver
+      duration_seconds:
+        type: float
+        required: false
+        description: Time to maneuver
+      instruction:
+        type: string
+        required: true
+        description: Human-readable instruction
+      voice_instruction:
+        type: VoiceInstruction
+        required: false
+      banner:
+        type: BannerInstruction
+        required: false
+      lane_guidance:
+        type: LaneGuidance
+        required: false
+
+  VoiceInstruction:
+    description: Voice prompt for navigation
+    fields:
+      text:
+        type: string
+        required: true
+        description: Text-to-speech content
+      ssml:
+        type: string
+        required: false
+        description: SSML markup for better TTS
+      trigger_distance_meters:
+        type: float
+        required: false
+        description: Distance at which to announce
+      language:
+        type: string
+        required: false
+        default: "en"
+
+  BannerInstruction:
+    description: Visual instruction for display
+    fields:
+      primary_text:
+        type: string
+        required: true
+        description: Main instruction
+      secondary_text:
+        type: string
+        required: false
+        description: Additional info
+      distance_text:
+        type: string
+        required: false
+        description: Formatted distance
+      maneuver_icon:
+        type: string
+        required: false
+        description: Icon identifier
+      road_shield:
+        type: RoadShield
+        required: false
+
+  RoadShield:
+    description: Highway/road shield display
+    fields:
+      type:
+        type: RoadShieldType
+        required: true
+      text:
+        type: string
+        required: true
+        description: Shield number/text
+      display_ref:
+        type: string
+        required: false
+        description: Reference to display
+
+  LaneGuidance:
+    description: Lane-level navigation guidance
+    fields:
+      lanes:
+        type: array
+        items:
+          type: Lane
+        required: true
+      current_lane:
+        type: integer
+        required: false
+        description: Recommended lane (0-indexed from left)
+
+  Lane:
+    description: Single lane information
+    fields:
+      valid:
+        type: boolean
+        required: true
+        description: Can use this lane for maneuver
+      active:
+        type: boolean
+        required: false
+        description: Recommended lane
+      directions:
+        type: array
+        items:
+          type: LaneDirection
+        required: false
+        description: Allowed directions from this lane
+
+  # ---------------------------------------------------------------------------
+  # ETA Estimation
+  # ---------------------------------------------------------------------------
+
+  ETAEstimate:
+    description: Estimated time of arrival
+    fields:
+      arrival_time:
+        type: datetime
+        required: true
+        description: Predicted arrival time
+      remaining_distance_meters:
+        type: float
+        required: true
+      remaining_duration_seconds:
+        type: float
+        required: true
+      remaining_duration_in_traffic:
+        type: float
+        required: false
+        description: With live traffic
+      delay_seconds:
+        type: float
+        required: false
+        description: Delay vs original estimate
+      confidence:
+        type: ETAConfidence
+        required: false
+      factors:
+        type: array
+        items:
+          type: ETAFactor
+        required: false
+        description: Factors affecting ETA
+
+  ETAFactor:
+    description: Factor affecting ETA calculation
+    fields:
+      type:
+        type: ETAFactorType
+        required: true
+      impact_seconds:
+        type: float
+        required: false
+        description: Time impact (+ = delay, - = faster)
+      description:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Route Progress
+  # ---------------------------------------------------------------------------
+
+  RouteProgress:
+    description: Progress along the route
+    fields:
+      distance_traveled_meters:
+        type: float
+        required: true
+      distance_remaining_meters:
+        type: float
+        required: true
+      percent_complete:
+        type: float
+        required: true
+        constraints:
+          min: 0
+          max: 100
+      duration_elapsed_seconds:
+        type: float
+        required: false
+      duration_remaining_seconds:
+        type: float
+        required: false
+      legs_completed:
+        type: integer
+        required: false
+      current_leg_progress:
+        type: float
+        required: false
+        description: Percent of current leg complete
+      waypoints_remaining:
+        type: integer
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Navigation Settings
+  # ---------------------------------------------------------------------------
+
+  NavigationSettings:
+    description: User preferences for navigation
+    fields:
+      voice_enabled:
+        type: boolean
+        required: false
+        default: true
+      voice_language:
+        type: string
+        required: false
+        default: "en"
+      voice_gender:
+        type: VoiceGender
+        required: false
+      distance_units:
+        type: DistanceUnits
+        required: false
+        default: METRIC
+      avoid_highways:
+        type: boolean
+        required: false
+        default: false
+      avoid_tolls:
+        type: boolean
+        required: false
+        default: false
+      speed_limit_alerts:
+        type: boolean
+        required: false
+        default: true
+      speed_camera_alerts:
+        type: boolean
+        required: false
+        default: true
+      reroute_automatically:
+        type: boolean
+        required: false
+        default: true
+      off_route_threshold_meters:
+        type: float
+        required: false
+        default: 50
+
+  # ---------------------------------------------------------------------------
+  # Navigation Event
+  # ---------------------------------------------------------------------------
+
+  NavigationEvent:
+    description: Event during navigation
+    fields:
+      timestamp:
+        type: datetime
+        required: true
+      type:
+        type: NavigationEventType
+        required: true
+      location:
+        type: Point
+        required: false
+      details:
+        type: object
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Speed Alert
+  # ---------------------------------------------------------------------------
+
+  SpeedAlert:
+    description: Speed limit or camera alert
+    fields:
+      location:
+        type: Point
+        required: true
+      alert_type:
+        type: SpeedAlertType
+        required: true
+      speed_limit_kmh:
+        type: float
+        required: false
+      speed_limit_mph:
+        type: float
+        required: false
+      current_speed:
+        type: float
+        required: false
+      distance_meters:
+        type: float
+        required: false
+        description: Distance to camera/limit change
+
+  # ---------------------------------------------------------------------------
+  # Traffic Incident
+  # ---------------------------------------------------------------------------
+
+  TrafficIncident:
+    description: Traffic incident on or near route
+    fields:
+      id:
+        type: string
+        required: false
+      location:
+        type: Point
+        required: true
+      type:
+        type: TrafficIncidentType
+        required: true
+      severity:
+        type: IncidentSeverity
+        required: false
+      description:
+        type: string
+        required: false
+      road_name:
+        type: string
+        required: false
+      distance_from_route_meters:
+        type: float
+        required: false
+      delay_seconds:
+        type: float
+        required: false
+      start_time:
+        type: datetime
+        required: false
+      end_time:
+        type: datetime
+        required: false
+      affecting_route:
+        type: boolean
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Reroute
+  # ---------------------------------------------------------------------------
+
+  Reroute:
+    description: Route recalculation event
+    fields:
+      timestamp:
+        type: datetime
+        required: true
+      reason:
+        type: RerouteReason
+        required: true
+      trigger_location:
+        type: Point
+        required: false
+      old_route:
+        type: Route
+        required: false
+      new_route:
+        type: Route
+        required: false
+      time_saved_seconds:
+        type: float
+        required: false
+      distance_change_meters:
+        type: float
+        required: false
+      user_initiated:
+        type: boolean
+        required: false
+        default: false
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  NavigationStatus:
+    description: Status of navigation session
+    values:
+      - INITIALIZING    # Loading route
+      - NAVIGATING      # Active navigation
+      - PAUSED          # User paused
+      - REROUTING       # Calculating new route
+      - ARRIVING        # Approaching destination
+      - ARRIVED         # At destination
+      - OFF_ROUTE       # User went off route
+      - COMPLETED       # Navigation finished
+      - CANCELLED       # User cancelled
+
+  ETAConfidence:
+    description: Confidence level in ETA estimate
+    values:
+      - HIGH            # Live traffic, good GPS
+      - MEDIUM          # Historical data
+      - LOW             # Limited data
+
+  ETAFactorType:
+    description: Factors affecting ETA
+    values:
+      - TRAFFIC         # Current traffic
+      - WEATHER         # Weather conditions
+      - CONSTRUCTION    # Road construction
+      - ACCIDENT        # Traffic accident
+      - EVENT           # Special event
+      - BORDER          # Border crossing
+      - FERRY           # Ferry schedule
+      - STOP            # Scheduled stop
+
+  NavigationEventType:
+    description: Types of navigation events
+    values:
+      - SESSION_START
+      - SESSION_END
+      - MANEUVER_APPROACHED
+      - MANEUVER_COMPLETED
+      - WAYPOINT_REACHED
+      - REROUTE_STARTED
+      - REROUTE_COMPLETED
+      - OFF_ROUTE
+      - BACK_ON_ROUTE
+      - SPEED_EXCEEDED
+      - SPEED_CAMERA_AHEAD
+      - TRAFFIC_AHEAD
+      - INCIDENT_AHEAD
+      - ARRIVAL
+
+  SpeedAlertType:
+    description: Type of speed alert
+    values:
+      - SPEED_LIMIT_EXCEEDED
+      - SPEED_CAMERA_AHEAD
+      - SPEED_CAMERA_AT_LOCATION
+      - RED_LIGHT_CAMERA
+      - SPEED_LIMIT_CHANGE
+      - SCHOOL_ZONE
+
+  TrafficIncidentType:
+    description: Type of traffic incident
+    values:
+      - ACCIDENT
+      - CONGESTION
+      - CONSTRUCTION
+      - DISABLED_VEHICLE
+      - ROAD_CLOSURE
+      - LANE_CLOSURE
+      - HAZARD
+      - WEATHER
+      - EVENT
+      - POLICE_ACTIVITY
+
+  IncidentSeverity:
+    description: Severity of traffic incident
+    values:
+      - MINOR           # Minimal impact
+      - MODERATE        # Some delay
+      - MAJOR           # Significant delay
+      - CRITICAL        # Severe impact/closure
+
+  RerouteReason:
+    description: Reason for route recalculation
+    values:
+      - OFF_ROUTE       # User deviated
+      - TRAFFIC         # Traffic changed
+      - INCIDENT        # New incident
+      - ROAD_CLOSURE    # Road closed
+      - USER_REQUEST    # User requested
+      - WAYPOINT_CHANGE # Waypoints changed
+      - BETTER_ROUTE    # Better route found
+      - PREFERENCES_CHANGED # Options changed
+
+  LaneDirection:
+    description: Allowed lane directions
+    values:
+      - STRAIGHT
+      - LEFT
+      - SLIGHT_LEFT
+      - SHARP_LEFT
+      - RIGHT
+      - SLIGHT_RIGHT
+      - SHARP_RIGHT
+      - UTURN
+      - MERGE_LEFT
+      - MERGE_RIGHT
+
+  RoadShieldType:
+    description: Type of road shield
+    values:
+      - INTERSTATE      # US Interstate
+      - US_HIGHWAY      # US Highway
+      - STATE_ROUTE     # US State Route
+      - COUNTY          # County road
+      - MOTORWAY        # European motorway
+      - A_ROAD          # UK A-road
+      - B_ROAD          # UK B-road
+      - NATIONAL        # National route
+      - DEFAULT         # Generic
+
+  VoiceGender:
+    description: Voice gender preference
+    values:
+      - MALE
+      - FEMALE
+      - NEUTRAL
+
+  DistanceUnits:
+    description: Distance unit system
+    values:
+      - METRIC          # km, m
+      - IMPERIAL        # miles, feet
+      - UK              # miles, yards
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "Google Navigation SDK"
+  - "Mapbox Navigation SDK: https://docs.mapbox.com/android/navigation/"
+  - "Apple MapKit Navigation"
+  - "HERE SDK Navigation"
+  - "TomTom Navigation API"

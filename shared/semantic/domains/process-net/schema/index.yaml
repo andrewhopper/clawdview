@@ -1,0 +1,129 @@
+# =============================================================================
+# Process Net Domain - Index
+# =============================================================================
+
+domain:
+  name: process-net
+  version: "0.1.0"
+  status: development
+  description: |
+    Petri net primitives for deterministic, verifiable process execution.
+    Foundation layer for workflow, manufacturing, and agent orchestration.
+
+    Based on formal Petri net semantics with workflow net extensions for
+    soundness verification. Supports event sourcing for full replay/rewind.
+
+  owner: platform
+  dependencies: [core]
+
+  sources:
+    - name: "Petri Net Theory"
+      author: "Carl Adam Petri"
+      year: 1962
+      description: "Original dissertation on Kommunikation mit Automaten"
+
+    - name: "Workflow Nets"
+      author: "Wil van der Aalst"
+      year: 1998
+      url: "https://users.cs.northwestern.edu/~robby/courses/395-495-2017-winter/Van%20Der%20Aalst%201998%20The%20Application%20of%20Petri%20Nets%20to%20Workflow%20Management.pdf"
+
+    - name: "BPMN 2.0 Specification"
+      author: "OMG"
+      year: 2011
+      url: "https://www.omg.org/spec/BPMN/2.0.2/PDF/"
+
+    - name: "Workflow Patterns"
+      author: "van der Aalst et al."
+      url: "http://www.workflowpatterns.com/patterns/control/"
+
+  created_at: "2025-12-02"
+  updated_at: "2025-12-02"
+
+schema_files:
+  - path: ./primitives.yaml
+    layer: 0
+    description: Mathematical primitives (Place, Transition, Arc, Token, Marking, Guard)
+
+  - path: ./structure.yaml
+    layer: 1
+    description: Net structures (Net, WorkflowNet, Case, Firing)
+
+  - path: ./patterns.yaml
+    layer: 2
+    description: Workflow patterns (XOR-split, AND-join, loops, etc.)
+
+  - path: ./execution.yaml
+    layer: 3
+    description: Execution semantics (EnabledSet, Fire, Replay, Fork)
+
+# Summary of exports
+exports:
+
+  primitives:
+    - Place
+    - Transition
+    - Arc
+    - Token
+    - Marking
+    - Guard
+    - Inhibitor
+
+  entities:
+    - Net
+    - WorkflowNet
+    - Case
+    - Firing
+    - GuardResult
+
+  queries:
+    - EnabledTransition
+    - EnabledSet
+    - PlaceTokenStatus
+    - PriorityFactor
+
+  actions:
+    - CreateNet
+    - CreateWorkflowNet
+    - VerifySoundness
+    - StartCase
+    - GetEnabledTransitions
+    - Fire
+    - SuspendCase
+    - ResumeCase
+    - GetFirings
+    - ReplayTo
+    - ForkCase
+
+  events:
+    - CaseStartedEvent
+    - TransitionFiredEvent
+    - CaseSuspendedEvent
+    - CaseResumedEvent
+    - CaseCompletedEvent
+    - CaseForkedEvent
+
+  enums:
+    - NodeType
+    - CaseStatus
+    - ActorType
+    - ActionType
+
+  patterns:
+    - Sequence
+    - ExclusiveChoice
+    - ParallelSplit
+    - MultiChoice
+    - SimpleMerge
+    - Synchronization
+    - StructuredDiscriminator
+    - ArbitraryLoop
+    - DeferredChoice
+    - MilestonePattern
+
+# Use cases
+use_cases:
+  - "Deterministic agent orchestration"
+  - "SOP/protocol execution"
+  - "Manufacturing work order tracking"
+  - "Approval workflows with replay"
+  - "Event-sourced process execution"

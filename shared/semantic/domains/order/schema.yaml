@@ -1,0 +1,498 @@
+# Order Domain
+# Cart, orders, order items, fulfillment for e-commerce and restaurant ordering
+# Version: 1.0.0
+# Status: PENDING APPROVAL
+
+domain:
+  name: order
+  version: "1.0.0"
+  status: draft
+  description: Cart and order management with fulfillment tracking
+  dependencies: [core, auth, product, finance]
+  use_case: E-commerce checkout, restaurant ordering, food delivery
+  created_at: "2026-02-02"
+  updated_at: "2026-02-02"
+
+entities:
+
+  Cart:
+    description: Ephemeral shopping cart before order placement
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # Owner
+      user_id:
+        type: uuid
+        description: FK to User (null for guest carts)
+      session_id:
+        type: string
+        description: Anonymous session identifier
+
+      # Items
+      items:
+        type: array
+        items: CartItem
+
+      # Pricing summary
+      subtotal:
+        type: Money
+        description: Sum of all item prices
+      tax:
+        type: Money
+        description: Calculated tax
+      tip:
+        type: Money
+        description: Optional tip
+      discount:
+        type: Money
+        description: Total discounts applied
+      total:
+        type: Money
+        description: Final total
+
+      # Applied promotions
+      discount_codes:
+        type: array
+        items: string
+        description: Applied discount/promo codes
+
+      # Expiration
+      expires_at:
+        type: datetime
+        description: When cart expires (typically 30 min)
+
+      # Metadata
+      metadata:
+        type: object
+        description: Additional key-value data
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  CartItem:
+    description: Single item in shopping cart
+    properties:
+      id:
+        type: uuid
+        required: true
+      cart_id:
+        type: uuid
+        required: true
+        description: FK to Cart
+
+      # Product reference
+      product_id:
+        type: uuid
+        required: true
+        description: FK to Product or MenuItem
+
+      # Quantity
+      quantity:
+        type: integer
+        required: true
+        default: 1
+
+      # Customization (for food/beverage)
+      selected_size_id:
+        type: uuid
+        description: FK to Size (if applicable)
+      selected_modifiers:
+        type: array
+        items: SelectedModifier
+        description: Applied modifiers with quantities
+
+      # Pricing (captured at add-to-cart time)
+      unit_price:
+        type: Money
+        required: true
+        description: Base price per unit
+      modifiers_price:
+        type: Money
+        description: Total modifier price adjustments
+      line_total:
+        type: Money
+        required: true
+        description: (unit_price + modifiers_price) * quantity
+
+      # Special instructions
+      special_instructions:
+        type: string
+        description: Customer notes
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  SelectedModifier:
+    description: Modifier selected by customer on cart/order item
+    properties:
+      modifier_id:
+        type: uuid
+        required: true
+        description: FK to Modifier
+      modifier_name:
+        type: string
+        required: true
+        description: Denormalized name for order history
+      quantity:
+        type: integer
+        default: 1
+      price_adjustment:
+        type: Money
+        description: Price impact per unit
+
+  Order:
+    description: Confirmed order with payment and fulfillment tracking
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # Order identification
+      order_number:
+        type: string
+        required: true
+        description: Human-readable order number (e.g., "ORD-12345")
+      confirmation_number:
+        type: string
+        description: Customer-facing confirmation code
+
+      # Customer
+      user_id:
+        type: uuid
+        description: FK to User (null for guest orders)
+      customer_name:
+        type: string
+        required: true
+      customer_email:
+        type: string
+      customer_phone:
+        type: string
+
+      # Items
+      items:
+        type: array
+        items: OrderItem
+
+      # Pricing (immutable after order creation)
+      subtotal:
+        type: Money
+        required: true
+      tax:
+        type: Money
+        required: true
+      tip:
+        type: Money
+      discount:
+        type: Money
+      total:
+        type: Money
+        required: true
+
+      # Applied discounts
+      discount_codes:
+        type: array
+        items: string
+
+      # Status tracking (dual-state model)
+      payment_status:
+        type: PaymentStatus
+        required: true
+        default: pending
+      fulfillment_status:
+        type: FulfillmentStatus
+        required: true
+        default: pending
+
+      # Fulfillment details
+      fulfillment_type:
+        type: FulfillmentType
+        required: true
+      fulfillment_details:
+        type: FulfillmentDetails
+
+      # Payment reference
+      payment_id:
+        type: uuid
+        description: FK to Payment (from finance domain)
+      payment_method:
+        type: string
+        description: "Card, Cash, ApplePay, etc."
+
+      # Timestamps
+      ordered_at:
+        type: datetime
+        required: true
+        description: When order was placed
+      paid_at:
+        type: datetime
+        description: When payment completed
+      confirmed_at:
+        type: datetime
+        description: When order was confirmed by merchant
+      ready_at:
+        type: datetime
+        description: When order ready for pickup/delivery
+      completed_at:
+        type: datetime
+        description: When order fulfilled
+      cancelled_at:
+        type: datetime
+        description: When order was cancelled
+
+      # Cancellation
+      cancellation_reason:
+        type: string
+      cancelled_by:
+        type: uuid
+        description: FK to User who cancelled
+
+      # Metadata
+      metadata:
+        type: object
+        description: Additional key-value data
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  OrderItem:
+    description: Single item in confirmed order (immutable)
+    properties:
+      id:
+        type: uuid
+        required: true
+      order_id:
+        type: uuid
+        required: true
+        description: FK to Order
+
+      # Product reference (denormalized for history)
+      product_id:
+        type: uuid
+        required: true
+      product_name:
+        type: string
+        required: true
+        description: Denormalized name
+      product_image_url:
+        type: string
+
+      # Quantity
+      quantity:
+        type: integer
+        required: true
+
+      # Customization (denormalized for order history)
+      selected_size_name:
+        type: string
+        description: Size name captured at order time
+      selected_modifiers:
+        type: array
+        items: SelectedModifier
+
+      # Pricing (immutable)
+      unit_price:
+        type: Money
+        required: true
+      modifiers_price:
+        type: Money
+      line_total:
+        type: Money
+        required: true
+
+      # Special instructions
+      special_instructions:
+        type: string
+
+      # Item-level fulfillment
+      fulfillment_status:
+        type: FulfillmentStatus
+        description: Track individual item status
+
+      created_at:
+        type: datetime
+        required: true
+
+  FulfillmentDetails:
+    description: Details for order fulfillment
+    properties:
+      # Pickup details
+      pickup_location_id:
+        type: uuid
+        description: FK to Location
+      pickup_location_name:
+        type: string
+      pickup_instructions:
+        type: string
+      estimated_ready_time:
+        type: datetime
+
+      # Delivery details
+      delivery_address:
+        type: Address
+        description: From core domain
+      delivery_instructions:
+        type: string
+      estimated_delivery_time:
+        type: datetime
+
+      # Tracking
+      tracking_url:
+        type: string
+      delivery_provider:
+        type: string
+        description: "DoorDash, UberEats, Internal"
+
+  OrderStatusHistory:
+    description: Audit trail of order status changes
+    properties:
+      id:
+        type: uuid
+        required: true
+      order_id:
+        type: uuid
+        required: true
+        description: FK to Order
+
+      # Status change
+      status_type:
+        type: StatusType
+        required: true
+      old_status:
+        type: string
+        required: true
+      new_status:
+        type: string
+        required: true
+
+      # Context
+      changed_by:
+        type: uuid
+        description: FK to User
+      reason:
+        type: string
+      notes:
+        type: string
+
+      created_at:
+        type: datetime
+        required: true
+
+enums:
+
+  PaymentStatus:
+    values:
+      - pending           # Awaiting payment
+      - processing        # Payment in progress
+      - authorized        # Payment authorized (not captured)
+      - paid              # Payment completed
+      - partially_paid    # Partial payment received
+      - refunded          # Fully refunded
+      - partially_refunded # Partially refunded
+      - failed            # Payment failed
+      - voided            # Payment voided
+
+  FulfillmentStatus:
+    values:
+      - pending           # Order received, not started
+      - confirmed         # Order confirmed by merchant
+      - preparing         # Being prepared
+      - ready             # Ready for pickup/delivery
+      - in_transit        # Out for delivery
+      - delivered         # Delivered to customer
+      - picked_up         # Customer picked up
+      - completed         # Fulfillment complete
+      - cancelled         # Order cancelled
+      - refunded          # Order refunded
+
+  FulfillmentType:
+    values:
+      - pickup            # Customer pickup
+      - delivery          # Delivery to customer
+      - dine_in           # Dine in at restaurant
+      - curbside          # Curbside pickup
+      - drive_thru        # Drive-through pickup
+
+  StatusType:
+    values:
+      - payment           # Payment status change
+      - fulfillment       # Fulfillment status change
+
+examples:
+
+  cart_example:
+    user_id: "user-123-uuid"
+    subtotal: { amount: 12.45, currency: "USD" }
+    tax: { amount: 1.09, currency: "USD" }
+    tip: { amount: 2.00, currency: "USD" }
+    discount: { amount: 0.00, currency: "USD" }
+    total: { amount: 15.54, currency: "USD" }
+    expires_at: "2026-02-02T15:30:00Z"
+
+  cart_item_example:
+    product_id: "latte-menu-item-uuid"
+    quantity: 2
+    selected_size_id: "grande-size-uuid"
+    selected_modifiers:
+      - modifier_id: "oat-milk-uuid"
+        modifier_name: "Oat Milk"
+        quantity: 1
+        price_adjustment: { amount: 0.70, currency: "USD" }
+    unit_price: { amount: 4.95, currency: "USD" }
+    modifiers_price: { amount: 0.70, currency: "USD" }
+    line_total: { amount: 11.30, currency: "USD" }
+    special_instructions: "Extra hot, please"
+
+  order_example:
+    order_number: "ORD-20260202-1234"
+    confirmation_number: "ABC123"
+    customer_name: "Alex Chen"
+    customer_email: "alex@example.com"
+    customer_phone: "+14155551234"
+    subtotal: { amount: 12.45, currency: "USD" }
+    tax: { amount: 1.09, currency: "USD" }
+    tip: { amount: 2.00, currency: "USD" }
+    total: { amount: 15.54, currency: "USD" }
+    payment_status: paid
+    fulfillment_status: preparing
+    fulfillment_type: pickup
+    ordered_at: "2026-02-02T14:35:00Z"
+    paid_at: "2026-02-02T14:35:12Z"
+    confirmed_at: "2026-02-02T14:35:30Z"
+
+  fulfillment_details_pickup:
+    pickup_location_name: "Starbucks - Downtown"
+    pickup_instructions: "Order will be ready at mobile order shelf"
+    estimated_ready_time: "2026-02-02T14:45:00Z"
+
+  fulfillment_details_delivery:
+    delivery_address:
+      line1: "123 Main St"
+      line2: "Apt 4B"
+      city: "San Francisco"
+      stateProvince: "CA"
+      postalCode: "94102"
+      country: "US"
+    delivery_instructions: "Ring doorbell twice"
+    estimated_delivery_time: "2026-02-02T15:15:00Z"
+    delivery_provider: "DoorDash"
+
+sources:
+  - "Schema.org Order and OrderItem types"
+  - "Shopify Order API (financial and fulfillment states)"
+  - "Square Order API (ORDER vs LINE_ITEM scoped modifiers, fulfillment types)"
+  - "Enatega multi-vendor delivery system (GitHub, 1.1k stars)"
+  - "E-commerce best practices (cart abandonment, order lifecycle)"

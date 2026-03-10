@@ -1,0 +1,12 @@
+# AWS Lambda Powertools
+aws-lambda-powertools[all]>=3.0.0
+
+# Pydantic for data validation
+pydantic>=2.5.0
+
+# AWS SDK
+boto3>=1.35.0
+botocore>=1.35.0
+
+# X-Ray SDK
+aws-xray-sdk>=2.14.0

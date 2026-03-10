@@ -1,0 +1,226 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-19",
+  "rules": [
+    {
+      "id": "phase-detection-first",
+      "level": "ALWAYS",
+      "category": "workflow",
+      "description": "Read .project file to detect current phase before any action",
+      "context": {
+        "when": ["working in prototype directory", "task requires phase knowledge"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Read .project for phase detection",
+        "message": "Must detect current phase from .project before proceeding"
+      },
+      "rationale": "Phase determines allowed actions, prevents out-of-phase work",
+      "examples": [
+        {
+          "scenario": "User: 'Implement the authentication feature'",
+          "correct": "Read .project first to check if in Phase 8 (implementation allowed)",
+          "incorrect": "Start coding without checking phase (might be in Phase 6 design)"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "no-code-before-phase-8",
+      "level": "NEVER",
+      "category": "workflow",
+      "description": "Never write implementation code before Phase 8",
+      "context": {
+        "when": ["writing production code"],
+        "unless": ["spike exception", "phase is PHASE_8 or later"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "Implementation code before Phase 8",
+        "message": "Cannot write code in {current_phase}. Must reach Phase 8 first."
+      },
+      "rationale": "9-phase SDLC ensures design-first, prevents premature implementation",
+      "examples": [
+        {
+          "scenario": "In Phase 6, user: 'Start coding the API'",
+          "correct": "Explain must complete Phase 6 design, then Phase 7 tests first",
+          "incorrect": "Start writing API code in Phase 6"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "tdd-phase-8",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "Write tests before implementation in Phase 8",
+      "context": {
+        "when": ["implementing features"],
+        "phase": ["PHASE_8_IMPLEMENTATION"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Test-first development (TDD)",
+        "message": "Phase 8: Write tests first, then implementation"
+      },
+      "rationale": "TDD ensures quality, prevents regressions, documents expected behavior",
+      "examples": [
+        {
+          "scenario": "Phase 8, user: 'Implement login feature'",
+          "correct": "Write login tests first (Phase 7 outputs), then implement",
+          "incorrect": "Write login code first, then add tests"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "progressive-content-complex-artifacts",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "Use /progressive-content for complex artifacts",
+      "context": {
+        "when": ["creating detailed presentation", "comprehensive documentation", "strategic documents"],
+        "taskType": ["New Artifact"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "/progressive-content workflow (6 stages)",
+        "message": "Complex artifact detected. Using /progressive-content for stage-gated creation."
+      },
+      "rationale": "Stage-gated creation ensures quality, enables user feedback, prevents wasted effort",
+      "examples": [
+        {
+          "scenario": "User: 'Create a detailed architecture presentation'",
+          "correct": "Invoke /progressive-content, start Stage 0 seeding",
+          "incorrect": "Immediately generate full 20-slide presentation"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "present-plan-multi-step-tasks",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "Present detailed plan for multi-step tasks (3+ operations)",
+      "context": {
+        "when": ["multi-step task", "multiple files involved", "complex workflow"],
+        "taskType": ["Task", "New Script"]
+      },
+      "action": {
+        "directive": "paraphrase",
+        "target": "Multi-step task plan",
+        "message": "Ok, here's my plan:\n1. {step1}\n2. {step2}...\n\nBtw, {details}\n\nLook good? y/n/f"
+      },
+      "rationale": "User sees full approach before execution, can course-correct early",
+      "examples": [
+        {
+          "scenario": "User: 'Refactor all API endpoints to use new error handling'",
+          "correct": "Present plan: 1. Identify endpoints, 2. Create middleware, 3. Update endpoints, 4. Test",
+          "incorrect": "Start refactoring without showing plan"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "confirmation-protocol-complex-tasks",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "Use confirmation protocol for complex/ambiguous tasks",
+      "context": {
+        "when": ["complex task", "ambiguous request", "multiple valid approaches"]
+      },
+      "action": {
+        "directive": "paraphrase",
+        "target": "Confirmation protocol (paraphrase → options → recommend)",
+        "message": "Request: {paraphrase}\n\nOption A: {approach1}\nOption B: {approach2}\n\nRecommend: {choice}\n\nLook good? y/n/f"
+      },
+      "rationale": "Air traffic control readback pattern, prevents wrong interpretation",
+      "examples": [
+        {
+          "scenario": "User: 'Make the docs better'",
+          "correct": "Paraphrase, present options (audit vs add diagrams vs densify), recommend, confirm",
+          "incorrect": "Immediately start editing docs without clarifying approach"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "use-todo-list-complex-tasks",
+      "level": "SHOULD",
+      "category": "workflow",
+      "description": "Use TodoWrite for tracking complex multi-step tasks",
+      "context": {
+        "when": ["task has 3+ steps", "non-trivial task", "user requests todo list"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "TodoWrite tool for task tracking",
+        "alternative": "Skip for single-step trivial tasks"
+      },
+      "rationale": "Demonstrates thoroughness, tracks progress, keeps user informed",
+      "examples": [
+        {
+          "scenario": "User: 'Add dark mode, run tests, and build'",
+          "correct": "Create todo list with 3+ tasks, mark in_progress as working",
+          "incorrect": "Skip todo list for 1-step trivial task"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "complete-todos-immediately",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "Mark todos as completed immediately after finishing",
+      "context": {
+        "when": ["using TodoWrite", "task completed"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Update todo status to completed",
+        "message": "Don't batch completions. Update todo immediately after each task."
+      },
+      "rationale": "Real-time progress tracking, accurate status for user",
+      "examples": [
+        {
+          "scenario": "Just finished task 1 of 3",
+          "correct": "Immediately mark task 1 as completed, move to task 2",
+          "incorrect": "Wait until all 3 tasks done to batch update"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    }
+  ]
+}

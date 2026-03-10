@@ -1,0 +1,45 @@
+# Verification Domain - Actions
+
+actions:
+
+  Evaluate:
+    type: read
+    description: Evaluate an Eval, return true/false
+    operatesOn: Eval
+    idempotent: true
+    params:
+      eval:
+        type: Eval
+        required: true
+      context:
+        type: string
+        description: "Path to evaluate against"
+    returns: EvalResult
+
+  CheckRule:
+    type: read
+    description: Check a rule against a project
+    operatesOn: Rule
+    idempotent: true
+    params:
+      rule:
+        type: Rule
+        required: true
+      projectPath:
+        type: string
+        required: true
+    returns: RuleResult
+
+  Verify:
+    type: read
+    description: Run all rules, produce report
+    operatesOn: Report
+    idempotent: true
+    params:
+      projectPath:
+        type: string
+        required: true
+      filter:
+        type: object
+        description: "{ category?, severity?, techStack? }"
+    returns: Report

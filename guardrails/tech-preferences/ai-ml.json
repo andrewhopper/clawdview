@@ -1,0 +1,413 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Ai Ml",
+  "description": "AI/ML services: ASR, TTS, OCR, LLM, embeddings, image generation",
+  "version": "1.1.0",
+  "lastUpdated": "2025-11-16",
+  "categories": {
+    "asr_speech_recognition": {
+      "description": "Automatic Speech Recognition / Speech-to-Text",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Deepgram",
+          "version": "API",
+          "rationale": "Fast, accurate, real-time streaming, speaker diarization, affordable, great API",
+          "useCases": [
+            "real-time transcription",
+            "high accuracy",
+            "production apps"
+          ],
+          "docsUrl": "https://developers.deepgram.com/docs",
+          "examplesUrl": "https://developers.deepgram.com/docs/getting-started-with-live-streaming-audio"
+        },
+        {
+          "rank": 2,
+          "name": "OpenAI Whisper API",
+          "version": "v1",
+          "rationale": "Excellent accuracy, multilingual, timestamps, affordable, simple API",
+          "useCases": [
+            "batch transcription",
+            "multilingual",
+            "high accuracy"
+          ],
+          "docsUrl": "https://platform.openai.com/docs/guides/speech-to-text",
+          "examplesUrl": "https://platform.openai.com/docs/guides/speech-to-text/quickstart"
+        },
+        {
+          "rank": 3,
+          "name": "Whisper (Self-Hosted)",
+          "version": "large-v3",
+          "rationale": "Open source, no API costs, privacy-first, customizable, multilingual",
+          "useCases": [
+            "cost optimization",
+            "privacy-sensitive",
+            "offline transcription"
+          ]
+        },
+        {
+          "rank": 4,
+          "name": "AWS Transcribe",
+          "version": "AWS",
+          "rationale": "AWS-native, custom vocabularies, speaker diarization, medical/legal variants",
+          "useCases": [
+            "AWS-native apps",
+            "custom vocabulary",
+            "compliance requirements"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/transcribe/",
+          "examplesUrl": "https://docs.aws.amazon.com/transcribe/latest/dg/getting-started.html"
+        }
+      ]
+    },
+    "tts_text_to_speech": {
+      "description": "Text-to-Speech synthesis",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Polly",
+          "version": "Neural",
+          "rationale": "AWS-native, neural voices, SSML support, reliable, pay-as-you-go, no API keys needed",
+          "useCases": [
+            "AWS-native apps",
+            "SSML control",
+            "large-scale generation",
+            "production content"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/polly/",
+          "examplesUrl": "https://docs.aws.amazon.com/polly/latest/dg/get-started-what-next.html"
+        },
+        {
+          "rank": 2,
+          "name": "OpenAI TTS (Nova 2)",
+          "version": "tts-1-hd",
+          "rationale": "High quality, fast, affordable, simple API, multiple voices",
+          "useCases": [
+            "real-time generation",
+            "cost-effective",
+            "conversational AI"
+          ],
+          "docsUrl": "https://platform.openai.com/docs/guides/text-to-speech",
+          "examplesUrl": "https://platform.openai.com/docs/guides/text-to-speech/quickstart"
+        },
+        {
+          "rank": 3,
+          "name": "ElevenLabs",
+          "version": "API",
+          "rationale": "Best quality, natural voices, voice cloning, emotional control, multilingual",
+          "useCases": [
+            "high-quality audio",
+            "voice cloning",
+            "emotional nuance"
+          ],
+          "docsUrl": "https://elevenlabs.io/docs/introduction",
+          "examplesUrl": "https://elevenlabs.io/docs/api-reference/text-to-speech"
+        }
+      ]
+    },
+    "ocr_document_intelligence": {
+      "description": "Optical Character Recognition and document understanding",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Textract + Comprehend",
+          "version": "AWS",
+          "rationale": "Production-ready, forms/tables extraction, entity detection, compliance-ready",
+          "useCases": [
+            "production apps",
+            "forms processing",
+            "compliance requirements"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "Claude Sonnet 4.5 (Multimodal)",
+          "version": "claude-sonnet-4-5-20250929",
+          "rationale": "Excellent vision capabilities, reasoning about images, extract structured data",
+          "useCases": [
+            "complex documents",
+            "reasoning required",
+            "structured extraction"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Mistral OCR (Pixtral)",
+          "version": "self-hosted",
+          "rationale": "Open source, self-hosted, privacy-first, no per-page costs",
+          "useCases": [
+            "cost optimization",
+            "privacy-sensitive",
+            "high-volume processing"
+          ]
+        }
+      ]
+    },
+    "llm_inference": {
+      "description": "Large Language Model inference",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Bedrock (Claude Sonnet 4.5)",
+          "version": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "rationale": "AWS-native, no data retention, enterprise-ready, compliance-friendly, latest Claude model",
+          "useCases": [
+            "AWS apps",
+            "enterprise",
+            "compliance requirements",
+            "production"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/bedrock/latest/userguide/",
+          "examplesUrl": "https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html"
+        },
+        {
+          "rank": 2,
+          "name": "Anthropic API (Claude Sonnet 4.5)",
+          "version": "claude-sonnet-4-5-20250929",
+          "rationale": "Direct API, latest features first, tool use, vision, artifacts, extended thinking",
+          "useCases": [
+            "rapid prototyping",
+            "latest features",
+            "non-AWS environments"
+          ],
+          "docsUrl": "https://docs.anthropic.com/",
+          "examplesUrl": "https://docs.anthropic.com/en/docs/quickstart"
+        },
+        {
+          "rank": 3,
+          "name": "OpenAI API (GPT-4)",
+          "version": "gpt-4-turbo",
+          "rationale": "Strong ecosystem, function calling, vision, affordable GPT-4o-mini",
+          "useCases": [
+            "multi-model comparison",
+            "function calling",
+            "ecosystem integrations"
+          ],
+          "docsUrl": "https://platform.openai.com/docs/overview",
+          "examplesUrl": "https://platform.openai.com/docs/quickstart"
+        }
+      ]
+    },
+    "image_generation": {
+      "description": "AI image generation",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Bedrock (Stable Diffusion)",
+          "version": "stability.stable-diffusion-xl-v1",
+          "rationale": "AWS-native, no data retention, good quality, enterprise-ready",
+          "useCases": [
+            "AWS apps",
+            "production",
+            "compliance requirements"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "DALL-E 3",
+          "version": "dall-e-3",
+          "rationale": "High quality, follows prompts well, simple API, content policy compliant",
+          "useCases": [
+            "high-quality images",
+            "prompt adherence",
+            "safe content"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Stable Diffusion (Self-Hosted)",
+          "version": "SDXL",
+          "rationale": "Open source, no per-image costs, full control, customizable",
+          "useCases": [
+            "cost optimization",
+            "custom models",
+            "high-volume generation"
+          ]
+        }
+      ]
+    },
+    "vector_embeddings": {
+      "description": "Text embedding models for semantic search and RAG",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Bedrock (Titan Embeddings)",
+          "version": "amazon.titan-embed-text-v2:0",
+          "rationale": "AWS-native, 8K context, multilingual, cost-effective, no data retention",
+          "useCases": [
+            "AWS apps",
+            "enterprise compliance",
+            "high-scale RAG",
+            "semantic search"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html",
+          "examplesUrl": "https://docs.aws.amazon.com/bedrock/latest/userguide/embeddings.html"
+        },
+        {
+          "rank": 2,
+          "name": "OpenAI (text-embedding-3)",
+          "version": "text-embedding-3-large",
+          "rationale": "High quality, 8K context, shortening support, cost-effective, simple API",
+          "useCases": [
+            "rapid prototyping",
+            "high-quality embeddings",
+            "non-AWS environments"
+          ],
+          "docsUrl": "https://platform.openai.com/docs/guides/embeddings",
+          "examplesUrl": "https://platform.openai.com/docs/guides/embeddings/what-are-embeddings"
+        },
+        {
+          "rank": 3,
+          "name": "Cohere Embed",
+          "version": "embed-multilingual-v3.0",
+          "rationale": "Multilingual (100+ languages), compression, semantic search optimized",
+          "useCases": [
+            "multilingual applications",
+            "semantic search",
+            "cost optimization"
+          ],
+          "docsUrl": "https://docs.cohere.com/docs/embeddings",
+          "examplesUrl": "https://docs.cohere.com/docs/embed-2-quickstart"
+        },
+        {
+          "rank": 4,
+          "name": "Sentence Transformers (Self-Hosted)",
+          "version": "all-MiniLM-L6-v2",
+          "rationale": "Open source, self-hosted, no API costs, offline capability, customizable",
+          "useCases": [
+            "privacy-sensitive",
+            "offline applications",
+            "cost optimization",
+            "custom fine-tuning"
+          ]
+        }
+      ]
+    },
+    "vector_databases": {
+      "description": "Vector storage and similarity search",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "ChromaDB",
+          "version": "0.4.x+",
+          "rationale": "Zero-config, runs locally or in Docker, perfect for prototyping, simple Python/JS API, excellent for rapid RAG development",
+          "useCases": [
+            "prototypes",
+            "local development",
+            "RAG applications",
+            "testing embeddings",
+            "quick experiments"
+          ],
+          "docsUrl": "https://docs.trychroma.com/",
+          "examplesUrl": "https://docs.trychroma.com/getting-started",
+          "localSetup": "pip install chromadb  # runs in-memory or persistent local storage"
+        },
+        {
+          "rank": 2,
+          "name": "pgvector (PostgreSQL)",
+          "version": "0.5.x",
+          "rationale": "PostgreSQL extension, no new infrastructure, ACID guarantees, mature. Use with PostgreSQL in Docker for local development",
+          "useCases": [
+            "existing PostgreSQL",
+            "production RAG",
+            "local development (Docker)",
+            "simple vector search"
+          ],
+          "docsUrl": "https://github.com/pgvector/pgvector",
+          "examplesUrl": "https://github.com/pgvector/pgvector#getting-started"
+        },
+        {
+          "rank": 3,
+          "name": "Pinecone",
+          "version": "API",
+          "rationale": "Managed, fast, serverless, excellent DX, namespace isolation",
+          "useCases": [
+            "production RAG",
+            "managed service",
+            "high-scale search"
+          ],
+          "docsUrl": "https://docs.pinecone.io/",
+          "examplesUrl": "https://docs.pinecone.io/docs/quickstart"
+        },
+        {
+          "rank": 4,
+          "name": "Weaviate",
+          "version": "latest",
+          "rationale": "Open source, self-hosted or cloud, hybrid search, GraphQL API",
+          "useCases": [
+            "self-hosted",
+            "hybrid search",
+            "complex filtering"
+          ],
+          "docsUrl": "https://weaviate.io/developers/weaviate",
+          "examplesUrl": "https://weaviate.io/developers/weaviate/quickstart"
+        }
+      ]
+    },
+    "llm_orchestration": {
+      "description": "LLM orchestration frameworks and type-safe LLM integrations",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "BAML",
+          "version": "0.x",
+          "rationale": "Type-safe LLM framework, Pydantic integration, compile-time validation, structured outputs",
+          "useCases": [
+            "structured LLM outputs",
+            "type safety",
+            "Pydantic projects",
+            "prompt engineering"
+          ],
+          "docsUrl": "https://docs.boundaryml.com/",
+          "examplesUrl": "https://docs.boundaryml.com/docs/get-started/quickstart",
+          "approvedOn": "2025-11-16T08:30:00Z",
+          "approvedByName": "Andrew Hopper",
+          "approvedByEmail": "hopperab@gmail.com",
+          "approvedInCommit": "b64b6f1823646f0d4c48a58e0e204ff82079bc43"
+        },
+        {
+          "rank": 2,
+          "name": "LangGraph",
+          "version": "0.x",
+          "rationale": "Stateful multi-actor applications, graph-based workflows, LangChain integration, persistence",
+          "useCases": [
+            "agentic workflows",
+            "multi-step reasoning",
+            "stateful agents",
+            "complex decision trees"
+          ],
+          "docsUrl": "https://langchain-ai.github.io/langgraph/",
+          "examplesUrl": "https://langchain-ai.github.io/langgraph/tutorials/"
+        },
+        {
+          "rank": 3,
+          "name": "LangChain",
+          "version": "0.1+",
+          "rationale": "Chains, agents, memory, massive ecosystem, extensive integrations",
+          "useCases": [
+            "complex LLM workflows",
+            "RAG pipelines",
+            "agents with tools",
+            "memory systems"
+          ],
+          "docsUrl": "https://python.langchain.com/docs/get_started/introduction",
+          "examplesUrl": "https://python.langchain.com/docs/use_cases"
+        },
+        {
+          "rank": 4,
+          "name": "Direct SDK",
+          "version": "latest",
+          "rationale": "No abstraction layer, full control, latest features, simple use cases",
+          "useCases": [
+            "simple LLM calls",
+            "API exploration",
+            "no orchestration needed",
+            "lightweight projects"
+          ],
+          "docsUrl": "https://docs.anthropic.com/claude/reference/",
+          "examplesUrl": "https://docs.anthropic.com/claude/docs/quickstart"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,43 @@
+# People & Organizations
+
+entities:
+
+  Individual:
+    extends: Entity
+    description: A single identifiable agent (person, org, or system)
+
+  Person:
+    extends: Individual
+    schemaOrg: Person
+    description: A human individual
+    properties:
+      firstName:
+        type: string
+        maxLength: 100
+      lastName:
+        type: string
+        maxLength: 100
+      fullName:
+        type: string
+        description: Complete display name
+      dateOfBirth:
+        type: date
+        validation:
+          min: "1900-01-01"
+          max: $today
+          message: "Birth date must be between 1900 and today"
+
+  Organization:
+    extends: Individual
+    schemaOrg: Organization
+    description: A company, institution, or group
+    properties:
+      legalName:
+        type: string
+        required: true
+      tradingName:
+        type: string
+        description: DBA or brand name
+      taxId:
+        type: string
+        description: EIN, VAT number, etc.

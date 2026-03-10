@@ -1,0 +1,281 @@
+# Milestone Domain - Core Entities
+# Foundational milestone, mission, vision, value entities
+
+entities:
+
+  # ============================================
+  # MILESTONE BASE
+  # ============================================
+
+  Milestone:
+    description: A significant event or achievement to track toward
+    extends: core.Entity
+    properties:
+      type:
+        type: MilestoneType
+        required: true
+      status:
+        type: MilestoneStatus
+        required: true
+        default: Planned
+      priority:
+        type: MilestonePriority
+        required: true
+        default: Medium
+      targetDate:
+        type: date
+        description: Target date for achievement
+      achievedDate:
+        type: date
+        description: Actual achievement date (if achieved)
+      owner:
+        type: core.Person
+        description: Person responsible for this milestone
+      stakeholders:
+        type: array
+        items: core.Person
+        description: People with interest in this milestone
+      successCriteria:
+        type: array
+        items: SuccessCriterion
+        description: Measurable success criteria
+      dependencies:
+        type: array
+        items: Milestone
+        description: Milestones that must be achieved first
+      blockers:
+        type: array
+        items: Blocker
+        description: Current obstacles
+      notes:
+        type: string
+      timeHorizon:
+        type: TimeHorizon
+      tags:
+        type: array
+        items: string
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  # ============================================
+  # MISSION / VISION / VALUES
+  # ============================================
+
+  Mission:
+    description: Organization's or individual's purpose statement
+    extends: core.Entity
+    properties:
+      statement:
+        type: string
+        required: true
+        description: The mission statement itself
+      shortForm:
+        type: string
+        description: One-sentence summary
+      scope:
+        type: MissionScope
+        required: true
+      owner:
+        type: core.Individual
+        description: Person or org this mission belongs to
+      audience:
+        type: string
+        description: Who this mission serves
+      impact:
+        type: string
+        description: Intended impact on the world
+      timeframe:
+        type: string
+        description: Implicit timeframe (ongoing, generational, etc.)
+      keywords:
+        type: array
+        items: string
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+      approvedBy:
+        type: core.Person
+      approvedDate:
+        type: date
+
+  Vision:
+    description: Future state aspiration (organizational or personal)
+    extends: core.Entity
+    properties:
+      statement:
+        type: string
+        required: true
+        description: The vision statement
+      shortForm:
+        type: string
+        description: One-line aspirational statement
+      scope:
+        type: VisionScope
+        required: true
+      timeHorizon:
+        type: TimeHorizon
+        required: true
+      owner:
+        type: core.Individual
+      targetYear:
+        type: integer
+        description: Year by which to achieve vision
+      successIndicators:
+        type: array
+        items: string
+        description: How we'll know we achieved it
+      keyMilestones:
+        type: array
+        items: Milestone
+        description: Major milestones toward this vision
+      inspiredBy:
+        type: string
+        description: Sources of inspiration
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  Value:
+    description: Core value or principle
+    extends: core.Entity
+    properties:
+      statement:
+        type: string
+        required: true
+        description: The value as a statement
+      keyword:
+        type: string
+        required: true
+        description: Single-word value name
+      category:
+        type: ValueCategory
+        required: true
+      priority:
+        type: integer
+        description: Rank order (1 = highest)
+      behaviors:
+        type: array
+        items: string
+        description: Observable behaviors that demonstrate this value
+      antiBehaviors:
+        type: array
+        items: string
+        description: Behaviors that violate this value
+      decisionGuidance:
+        type: string
+        description: How this value guides decisions
+      owner:
+        type: core.Individual
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  ValueSet:
+    description: Collection of values for an organization or individual
+    extends: core.Entity
+    properties:
+      values:
+        type: array
+        items: Value
+        required: true
+      scope:
+        type: ValueScope
+        required: true
+      owner:
+        type: core.Individual
+        required: true
+      version:
+        type: string
+      effectiveDate:
+        type: date
+      reviewDate:
+        type: date
+        description: Next scheduled review
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  # ============================================
+  # SUPPORTING TYPES
+  # ============================================
+
+  SuccessCriterion:
+    description: Measurable criterion for milestone success
+    properties:
+      metric:
+        type: string
+        required: true
+      targetValue:
+        type: string
+        required: true
+      actualValue:
+        type: string
+      met:
+        type: boolean
+
+  Blocker:
+    description: Obstacle preventing milestone progress
+    properties:
+      description:
+        type: string
+        required: true
+      severity:
+        type: BlockerSeverity
+      owner:
+        type: core.Person
+      resolutionPlan:
+        type: string
+      resolvedDate:
+        type: date
+
+  MilestoneMetric:
+    description: Key metric for tracking milestone progress
+    properties:
+      name:
+        type: string
+        required: true
+      targetValue:
+        type: decimal
+      currentValue:
+        type: decimal
+      unit:
+        type: string
+      trend:
+        type: Trend
+
+  VoteCount:
+    description: Vote tally
+    properties:
+      forVotes:
+        type: integer
+      againstVotes:
+        type: integer
+      abstentions:
+        type: integer
+
+# =============================================================================
+# Relationships
+# =============================================================================
+
+relationships:
+  - Milestone dependsOn Milestone
+  - Milestone alignsWith Vision
+  - Milestone contribuesToMission Mission
+  - Vision guidedByValues ValueSet
+  - ValueSet contains Value

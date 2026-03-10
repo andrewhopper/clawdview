@@ -1,0 +1,159 @@
+# Lean Startup Entities
+# Source: The Lean Startup (Ries, 2011)
+
+entities:
+
+  LeanStartupProcess:
+    description: Build-Measure-Learn feedback loop for validated learning
+    source: "The Lean Startup (Ries, 2011)"
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      vision: { type: Vision, required: true }
+      currentIteration: { type: integer }
+      buildMeasureLearnCycles: { type: array, items: BMLCycle }
+      mvps: { type: array, items: MVP }
+      pivots: { type: array, items: Pivot }
+      innovationAccounting: { type: InnovationAccounting }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Vision:
+    description: True north destination startup wants to reach
+    properties:
+      id: { type: string, required: true }
+      statement: { type: string, required: true }
+      strategy: { type: string }
+      product: { type: string }
+
+  BMLCycle:
+    description: Build-Measure-Learn iteration cycle
+    properties:
+      id: { type: string, required: true }
+      cycleNumber: { type: integer, required: true }
+      startDate: { type: datetime, required: true }
+      endDate: { type: datetime }
+      status: { type: CycleStatus, required: true }
+      hypothesis: { type: Hypothesis, required: true }
+      build: { type: BuildPhase, required: true }
+      measure: { type: MeasurePhase }
+      learn: { type: LearnPhase }
+
+  BuildPhase:
+    description: Build phase of BML cycle - create MVP to test hypothesis
+    properties:
+      id: { type: string, required: true }
+      mvpId: { type: string, required: true }
+      features: { type: array, items: string }
+      timeToComplete: { type: string }
+      status: { type: PhaseStatus, required: true }
+
+  MeasurePhase:
+    description: Measure phase of BML cycle - collect actionable metrics
+    properties:
+      id: { type: string, required: true }
+      metrics: { type: array, items: ActionableMetric }
+      cohortAnalysis: { type: CohortAnalysis }
+      splitTests: { type: array, items: SplitTest }
+      status: { type: PhaseStatus, required: true }
+
+  LearnPhase:
+    description: Learn phase of BML cycle - validated learning from data
+    properties:
+      id: { type: string, required: true }
+      hypothesisValidated: { type: boolean }
+      learnings: { type: array, items: ValidatedLearning }
+      decision: { type: PivotOrPersevere, required: true }
+      nextHypothesis: { type: string }
+      status: { type: PhaseStatus, required: true }
+
+  MVP:
+    description: Minimum Viable Product - smallest thing to test hypothesis
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: MVPType, required: true }
+      hypothesis: { type: string, required: true }
+      features: { type: array, items: string }
+      launchDate: { type: datetime }
+      status: { type: MVPStatus, required: true }
+      results: { type: string }
+
+  ActionableMetric:
+    description: Metric that can lead to informed business decisions
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: MetricCategory, required: true }
+      value: { type: string }
+      baseline: { type: string }
+      target: { type: string }
+      isVanityMetric: { type: boolean, description: "Warning flag if metric is vanity" }
+
+  CohortAnalysis:
+    description: Analysis of user cohorts over time
+    properties:
+      id: { type: string, required: true }
+      cohortDefinition: { type: string, required: true }
+      timeperiod: { type: string }
+      metrics: { type: array, items: CohortMetric }
+
+  CohortMetric:
+    description: Metric tracked per cohort
+    properties:
+      id: { type: string, required: true }
+      cohortId: { type: string, required: true }
+      metricName: { type: string, required: true }
+      values: { type: array, items: decimal }
+
+  SplitTest:
+    description: A/B test to compare variants
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      hypothesis: { type: string, required: true }
+      controlDescription: { type: string, required: true }
+      variantDescription: { type: string, required: true }
+      metric: { type: string, required: true }
+      controlResult: { type: decimal }
+      variantResult: { type: decimal }
+      winner: { type: string }
+      statisticalSignificance: { type: decimal }
+
+  ValidatedLearning:
+    description: Learning backed by empirical data
+    properties:
+      id: { type: string, required: true }
+      learning: { type: string, required: true }
+      evidence: { type: array, items: string }
+      confidence: { type: decimal }
+      impactOnStrategy: { type: string }
+
+  InnovationAccounting:
+    description: Framework for evaluating startup progress
+    properties:
+      id: { type: string, required: true }
+      baselineEstablished: { type: boolean }
+      engineOfGrowth: { type: EngineOfGrowth }
+      growthMetrics: { type: array, items: GrowthMetric }
+      learningMilestones: { type: array, items: LearningMilestone }
+
+  GrowthMetric:
+    description: Metric tracking engine of growth
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: GrowthMetricType }
+      current: { type: decimal }
+      target: { type: decimal }
+      trend: { type: string }
+
+  LearningMilestone:
+    description: Milestone based on validated learning not vanity metrics
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      achieved: { type: boolean }
+      achievedDate: { type: datetime }
+      evidence: { type: string }

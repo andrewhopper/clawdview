@@ -1,0 +1,394 @@
+# ============================================================================
+# .gitignore Template for Brownfield Projects
+# ============================================================================
+# Comprehensive gitignore covering:
+# - Environment files and secrets
+# - Python, Node.js, Rust, Go
+# - IDEs and editors
+# - OS-specific files
+# - Build artifacts
+# ============================================================================
+
+# ============================================================================
+# SECRETS AND CREDENTIALS (CRITICAL)
+# ============================================================================
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Keep example files
+!example.env
+!.env.example
+!.env.sample
+!.env.template
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Credential files
+credentials.json
+credentials.yaml
+secrets.json
+secrets.yaml
+secrets.yml
+service-account*.json
+*.credentials
+*.secret
+
+# Cloud provider configs
+.aws/credentials
+.gcloud/
+.azure/
+
+# SSH
+.ssh/
+
+# GPG
+.gnupg/
+
+# ============================================================================
+# PYTHON
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ruff
+.ruff_cache/
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_meta
+
+# ============================================================================
+# NODE.JS
+# ============================================================================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Next.js
+.next/
+out/
+
+# Nuxt.js
+.nuxt/
+dist/
+
+# Gatsby
+.cache/
+public/
+
+# Vite
+.vite/
+
+# Parcel
+.parcel-cache/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Stores
+.pnp
+.pnp.js
+
+# ============================================================================
+# RUST
+# ============================================================================
+
+target/
+Cargo.lock
+
+# ============================================================================
+# GO
+# ============================================================================
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.dylib
+
+# Test binary
+*.test
+
+# Output of go coverage
+*.out
+
+# Go workspace
+go.work
+
+# ============================================================================
+# RUBY
+# ============================================================================
+
+*.gem
+*.rbc
+.bundle/
+vendor/bundle
+log/
+tmp/
+
+# ============================================================================
+# DATABASE
+# ============================================================================
+
+*.db
+*.sqlite
+*.sqlite3
+*.sql.gz
+dump.sql
+*.dump
+
+# ============================================================================
+# IDEs AND EDITORS
+# ============================================================================
+
+# JetBrains (PyCharm, IntelliJ, WebStorm, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+atlassian-ide-plugin.xml
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+.history/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ============================================================================
+# OS-SPECIFIC
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.lnk
+Desktop.ini
+
+# Linux
+.directory
+.Trash-*
+
+# ============================================================================
+# BUILD ARTIFACTS
+# ============================================================================
+
+# Generic
+build/
+dist/
+out/
+output/
+*.log
+
+# Docker
+.docker/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# ============================================================================
+# MISC
+# ============================================================================
+
+# Local development
+*.local
+.local/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Documentation builds
+docs/_build/
+site/
+
+# Serverless
+.serverless/
+
+# AWS SAM
+.aws-sam/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+htmlcov/
+
+# Profiling
+*.prof
+*.lprof
+
+# ============================================================================
+# PROJECT SPECIFIC (Add your own below)
+# ============================================================================
+
+# Add project-specific ignores here

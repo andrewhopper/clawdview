@@ -1,0 +1,134 @@
+# location.yaml - Organization Location
+# Physical location with geo, hours, capacity
+# Version: 1.0.0
+# Status: PENDING APPROVAL
+
+# Dependencies:
+#   - organization (this domain)
+#   - geo-place (PointOfInterest, Address, OperatingHours, ContactInfo)
+#
+# Relationships (via other domains):
+#   - Services at location: service-catalog.Service.location_ids
+#   - Brands at location: product.OrganizationBrand.location_ids
+
+entities:
+
+  OrganizationLocation:
+    description: "Physical location/branch of an organization"
+    extends: geo-place.PointOfInterest
+    properties:
+      id:
+        type: uuid
+        required: true
+      organization_id:
+        type: uuid
+        required: true
+        references: Organization.id
+
+      # Identity
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Location name (Meredith, Downtown)"
+      code:
+        type: string
+        max_length: 50
+        description: "Internal location code"
+      slug:
+        type: string
+        description: "URL-friendly identifier"
+
+      # Type
+      location_type:
+        type: enum
+        enum_ref: LocationType
+        required: true
+
+      # Inherited from geo-place.PointOfInterest:
+      #   - address: Address
+      #   - contact: ContactInfo
+      #   - hours: OperatingHours
+      #   - location: Point (lat/lng)
+      #   - photos: array<string>
+
+      # Water body (for marinas)
+      water_body_name:
+        type: string
+        description: "Lake Winnipesaukee, Smith Mountain Lake"
+      water_body_type:
+        type: enum
+        enum_ref: geo-place.WaterType
+        description: "LAKE, RIVER, BAY, OCEAN"
+
+      # Capacity
+      slip_count:
+        type: integer
+        description: "Boat slips (marinas)"
+      lot_capacity:
+        type: integer
+        description: "Vehicle lot capacity"
+      square_footage:
+        type: integer
+        description: "Facility size"
+
+      # Seasonality
+      seasonal:
+        type: boolean
+        default: false
+      season_start:
+        type: string
+        description: "MM-DD format"
+      season_end:
+        type: string
+        description: "MM-DD format"
+
+      # Status
+      status:
+        type: enum
+        enum_ref: LocationStatus
+        required: true
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+    indexes:
+      - [organization_id]
+      - [location_type]
+      - [status]
+
+enums:
+
+  LocationType:
+    values:
+      - headquarters
+      - branch
+      - dealership
+      - marina
+      - showroom
+      - service_center
+      - warehouse
+      - rental
+      - retail
+      - office
+      - factory
+      - other
+
+  LocationStatus:
+    values:
+      - active
+      - seasonal_closed
+      - temporary_closed
+      - coming_soon
+      - permanently_closed
+      - relocated
+
+sources:
+  - "Extends geo-place.PointOfInterest"
+  - "Services: query service-catalog.Service where location_ids contains this.id"
+  - "Brands: query product.OrganizationBrand where location_ids contains this.id"

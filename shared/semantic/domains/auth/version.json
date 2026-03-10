@@ -1,0 +1,57 @@
+{
+  "domain": "auth",
+  "version": "0.1.0",
+  "description": "Authentication and authorization domain model",
+  "languages": ["typescript", "python", "rust"],
+  "changelog": {
+    "0.1.0": "Initial development version - User, Principal, Role, Permission, Session, Credential entities with full action set"
+  },
+  "entities": [
+    "User",
+    "ServiceAccount",
+    "Principal",
+    "Role",
+    "Permission",
+    "Policy",
+    "Resource",
+    "Session",
+    "Credential",
+    "PasswordCredential",
+    "TokenCredential",
+    "OAuthCredential",
+    "CertificateCredential",
+    "MFACredential"
+  ],
+  "actions": [
+    "AuthenticateAction",
+    "RefreshSessionAction",
+    "RevokeSessionAction",
+    "RevokeAllSessionsAction",
+    "AuthorizeAction",
+    "AssignRoleAction",
+    "RevokeRoleAction",
+    "CreateUserAction",
+    "DisableUserAction",
+    "ResetPasswordAction"
+  ],
+  "enums": [
+    "AuthMethod",
+    "SessionStatus",
+    "PermissionScope"
+  ],
+  "w3c_standards": ["RDF", "OWL", "SHACL"],
+  "generated": {
+    "typescript": {
+      "file": "generated/typescript/auth.types.ts",
+      "exports": ["User", "Principal", "Role", "Permission", "Session", "Credential", "AuthMethod", "SessionStatus", "PermissionScope"]
+    },
+    "python": {
+      "file": "generated/python/auth.py",
+      "exports": ["User", "Principal", "Role", "Permission", "Session", "Credential", "AuthMethod", "SessionStatus", "PermissionScope"]
+    },
+    "rust": {
+      "file": "generated/rust/auth.rs",
+      "exports": ["User", "Principal", "Role", "Permission", "Session", "Credential", "AuthMethod", "SessionStatus", "PermissionScope"]
+    }
+  }
+}

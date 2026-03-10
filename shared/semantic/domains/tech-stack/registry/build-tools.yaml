@@ -1,0 +1,269 @@
+# Build Tools, Bundlers & Testing Registry
+
+technologies:
+
+  # Bundlers
+
+  vite:
+    name: Vite
+    description: Next Generation Frontend Tooling
+    category: tool
+    subcategory: bundler
+    author: Evan You
+    website: https://vitejs.dev
+    repository: https://github.com/vitejs/vite
+    documentation: https://vitejs.dev/guide
+    npm_package: vite
+    license: MIT
+    first_release: "2020-04-21"
+    language: TypeScript
+    tags: [bundler, dev-server, esm, fast, hmr]
+    detection_rules:
+      - { type: npm_dependency, pattern: "vite" }
+      - { type: file_exists, pattern: "vite.config.ts" }
+      - { type: file_exists, pattern: "vite.config.js" }
+    alternative_to: [webpack, esbuild, parcel]
+
+  esbuild:
+    name: esbuild
+    description: An extremely fast bundler for the web
+    category: tool
+    subcategory: bundler
+    author: Evan Wallace
+    website: https://esbuild.github.io
+    repository: https://github.com/evanw/esbuild
+    documentation: https://esbuild.github.io/api
+    npm_package: esbuild
+    license: MIT
+    first_release: "2020-01-12"
+    language: Go
+    tags: [bundler, minifier, transpiler, fast]
+    detection_rules:
+      - { type: npm_dependency, pattern: "esbuild" }
+    alternative_to: [vite, webpack, swc]
+
+  webpack:
+    name: webpack
+    description: A static module bundler for modern JavaScript applications
+    category: tool
+    subcategory: bundler
+    author: webpack Team
+    website: https://webpack.js.org
+    repository: https://github.com/webpack/webpack
+    documentation: https://webpack.js.org/concepts
+    npm_package: webpack
+    license: MIT
+    first_release: "2012-03-10"
+    language: JavaScript
+    tags: [bundler, module-federation, plugins, loaders]
+    detection_rules:
+      - { type: npm_dependency, pattern: "webpack" }
+      - { type: file_exists, pattern: "webpack.config.js" }
+      - { type: file_exists, pattern: "webpack.config.ts" }
+    alternative_to: [vite, esbuild, parcel]
+
+  # Testing
+
+  playwright:
+    name: Playwright
+    description: Reliable end-to-end testing for modern web apps
+    category: tool
+    subcategory: testing
+    author: Microsoft
+    website: https://playwright.dev
+    repository: https://github.com/microsoft/playwright
+    documentation: https://playwright.dev/docs/intro
+    npm_package: "@playwright/test"
+    pypi_package: playwright
+    license: Apache-2.0
+    first_release: "2020-01-31"
+    language: TypeScript
+    tags: [e2e, testing, browser-automation, cross-browser]
+    detection_rules:
+      - { type: npm_dependency, pattern: "playwright" }
+      - { type: npm_dependency, pattern: "@playwright/test" }
+      - { type: pypi_dependency, pattern: "playwright" }
+      - { type: file_exists, pattern: "playwright.config.ts" }
+    alternative_to: [cypress, puppeteer, selenium]
+
+  cypress:
+    name: Cypress
+    description: Fast, easy and reliable testing for anything that runs in a browser
+    category: tool
+    subcategory: testing
+    author: Cypress.io
+    website: https://cypress.io
+    repository: https://github.com/cypress-io/cypress
+    documentation: https://docs.cypress.io
+    npm_package: cypress
+    license: MIT
+    first_release: "2017-10-09"
+    language: JavaScript
+    tags: [e2e, testing, component-testing, time-travel]
+    detection_rules:
+      - { type: npm_dependency, pattern: "cypress" }
+      - { type: file_exists, pattern: "cypress.config.js" }
+      - { type: file_exists, pattern: "cypress.config.ts" }
+      - { type: file_exists, pattern: "cypress/" }
+    alternative_to: [playwright, puppeteer]
+
+  jest:
+    name: Jest
+    description: Delightful JavaScript Testing
+    category: tool
+    subcategory: testing
+    author: Meta (Facebook)
+    website: https://jestjs.io
+    repository: https://github.com/jestjs/jest
+    documentation: https://jestjs.io/docs/getting-started
+    npm_package: jest
+    license: MIT
+    first_release: "2014-05-14"
+    language: JavaScript
+    tags: [unit-testing, mocking, snapshot-testing, coverage]
+    detection_rules:
+      - { type: npm_dependency, pattern: "jest" }
+      - { type: file_exists, pattern: "jest.config.js" }
+      - { type: file_exists, pattern: "jest.config.ts" }
+    alternative_to: [vitest, mocha]
+
+  vitest:
+    name: Vitest
+    description: Blazing Fast Unit Test Framework powered by Vite
+    category: tool
+    subcategory: testing
+    author: Vitest Team
+    website: https://vitest.dev
+    repository: https://github.com/vitest-dev/vitest
+    documentation: https://vitest.dev/guide
+    npm_package: vitest
+    license: MIT
+    first_release: "2021-12-21"
+    language: TypeScript
+    tags: [unit-testing, vite, esm, fast]
+    detection_rules:
+      - { type: npm_dependency, pattern: "vitest" }
+      - { type: file_exists, pattern: "vitest.config.ts" }
+    alternative_to: [jest, mocha]
+
+  pytest:
+    name: pytest
+    description: The pytest framework makes it easy to write small tests
+    category: tool
+    subcategory: testing
+    author: pytest-dev
+    website: https://pytest.org
+    repository: https://github.com/pytest-dev/pytest
+    documentation: https://docs.pytest.org
+    pypi_package: pytest
+    license: MIT
+    first_release: "2004-01-01"
+    language: Python
+    tags: [unit-testing, fixtures, plugins, python]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "pytest" }
+      - { type: file_exists, pattern: "pytest.ini" }
+      - { type: file_exists, pattern: "conftest.py" }
+    alternative_to: [unittest, nose]
+
+  storybook:
+    name: Storybook
+    description: The UI component explorer for frontend developers
+    category: tool
+    subcategory: testing
+    author: Storybook Team
+    website: https://storybook.js.org
+    repository: https://github.com/storybookjs/storybook
+    documentation: https://storybook.js.org/docs
+    npm_package: "@storybook/react"
+    license: MIT
+    first_release: "2016-04-05"
+    language: TypeScript
+    tags: [ui, component-library, visual-testing, documentation]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@storybook/react" }
+      - { type: npm_dependency, pattern: "@storybook/vue3" }
+      - { type: npm_dependency, pattern: "@storybook/svelte" }
+      - { type: file_exists, pattern: ".storybook/" }
+    related_to: [react, vue, svelte]
+
+  # Linters & Formatters
+
+  eslint:
+    name: ESLint
+    description: Find and fix problems in your JavaScript code
+    category: tool
+    subcategory: linter
+    author: ESLint Team
+    website: https://eslint.org
+    repository: https://github.com/eslint/eslint
+    documentation: https://eslint.org/docs
+    npm_package: eslint
+    license: MIT
+    first_release: "2013-06-30"
+    language: JavaScript
+    tags: [linter, static-analysis, code-quality]
+    detection_rules:
+      - { type: npm_dependency, pattern: "eslint" }
+      - { type: file_exists, pattern: ".eslintrc.js" }
+      - { type: file_exists, pattern: ".eslintrc.json" }
+      - { type: file_exists, pattern: "eslint.config.js" }
+    alternative_to: [biome]
+
+  biome:
+    name: Biome
+    description: One toolchain for your web project - format, lint, and more
+    category: tool
+    subcategory: linter
+    author: Biome Team
+    website: https://biomejs.dev
+    repository: https://github.com/biomejs/biome
+    documentation: https://biomejs.dev/guides
+    npm_package: "@biomejs/biome"
+    license: MIT
+    first_release: "2023-08-29"
+    language: Rust
+    tags: [linter, formatter, fast, all-in-one]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@biomejs/biome" }
+      - { type: file_exists, pattern: "biome.json" }
+    alternative_to: [eslint, prettier]
+
+  prettier:
+    name: Prettier
+    description: Opinionated Code Formatter
+    category: tool
+    subcategory: formatter
+    author: Prettier Team
+    website: https://prettier.io
+    repository: https://github.com/prettier/prettier
+    documentation: https://prettier.io/docs
+    npm_package: prettier
+    license: MIT
+    first_release: "2017-01-10"
+    language: JavaScript
+    tags: [formatter, code-style, opinionated]
+    detection_rules:
+      - { type: npm_dependency, pattern: "prettier" }
+      - { type: file_exists, pattern: ".prettierrc" }
+      - { type: file_exists, pattern: "prettier.config.js" }
+    alternative_to: [biome]
+
+  ruff:
+    name: Ruff
+    description: An extremely fast Python linter and formatter
+    category: tool
+    subcategory: linter
+    author: Astral
+    website: https://docs.astral.sh/ruff
+    repository: https://github.com/astral-sh/ruff
+    documentation: https://docs.astral.sh/ruff
+    pypi_package: ruff
+    license: MIT
+    first_release: "2022-08-30"
+    language: Rust
+    tags: [linter, formatter, python, fast]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "ruff" }
+      - { type: file_exists, pattern: "ruff.toml" }
+    alternative_to: [flake8, black, isort]

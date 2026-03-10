@@ -1,0 +1,47 @@
+{
+  "domain": "expense-report",
+  "version": "2.0.0",
+  "description": "Corporate expense reporting, reimbursement, and approval workflows",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "2.0.0": "Refactored to use finance and workflow domains - removed PaymentMethod (now finance.PaymentMethodType), removed ApprovalStep (now workflow.StepInstance)",
+    "0.1.0": "Initial development version with full entity model and actions"
+  },
+  "entities": [
+    "ExpenseReport",
+    "ExpenseLineItem",
+    "Receipt",
+    "ExpensePolicy",
+    "Reimbursement"
+  ],
+  "actions": [
+    "CreateExpenseReport",
+    "AddLineItem",
+    "AttachReceipt",
+    "SubmitExpenseReport",
+    "ApproveExpenseReport",
+    "RejectExpenseReport",
+    "ProcessReimbursement",
+    "SearchExpenseReports"
+  ],
+  "enums": [
+    "ExpenseReportStatus",
+    "ExpenseCategory",
+    "ReimbursementMethod"
+  ],
+  "dependencies": [
+    "core",
+    "auth",
+    "finance",
+    "workflow"
+  ],
+  "imports": {
+    "finance": ["Payment", "PaymentMethodType", "TransactionStatus"],
+    "workflow": ["WorkflowInstance", "StepInstance", "StepDecision"]
+  },
+  "removed_in_v2": {
+    "entities": ["ApprovalStep"],
+    "enums": ["PaymentMethod"],
+    "reason": "Extracted to finance and workflow domains for reuse"
+  }
+}

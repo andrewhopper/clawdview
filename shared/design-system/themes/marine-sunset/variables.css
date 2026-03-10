@@ -1,0 +1,119 @@
+/**
+ * Marine Sunset Theme for shadcn/ui
+ *
+ * Inspired by ocean sunsets - warm coral and orange tones against deep teal waters
+ *
+ * Color Sources:
+ * - Ocean: #235a5a (Deep Teal), #4a7c99 (Ocean Blue)
+ * - Sunset: #FF773E (Sunset Orange), #FD7055 (Bittersweet)
+ * - Sky: #f5bdaa (Peach Cloud), #E75F72 (Light Carmine Pink)
+ * - Sand: #E9DB9A (Khaki/Sand)
+ */
+
+/* Light Mode - Day at the Beach */
+:root,
+.marine-sunset {
+  /* Core backgrounds */
+  --background: 42 33% 95%;          /* Warm sand #F5F2E8 */
+  --foreground: 184 48% 18%;         /* Deep ocean text #173F42 */
+
+  /* Cards & surfaces */
+  --card: 42 40% 98%;                /* Light sand */
+  --card-foreground: 184 48% 18%;
+  --popover: 42 40% 98%;
+  --popover-foreground: 184 48% 18%;
+
+  /* Primary - Sunset Orange */
+  --primary: 18 100% 62%;            /* #FF773E Sunset Orange */
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary - Ocean Teal */
+  --secondary: 184 48% 37%;          /* #235a5a Deep Teal */
+  --secondary-foreground: 0 0% 98%;
+
+  /* Muted - Soft Sand */
+  --muted: 38 30% 90%;
+  --muted-foreground: 184 30% 40%;
+
+  /* Accent - Coral Pink */
+  --accent: 13 82% 82%;              /* #f5bdaa Peach */
+  --accent-foreground: 184 48% 18%;
+
+  /* Destructive - Deep Coral */
+  --destructive: 354 70% 54%;        /* #E75F72 Light Carmine */
+  --destructive-foreground: 0 0% 100%;
+
+  /* Borders & inputs */
+  --border: 184 30% 80%;
+  --input: 184 30% 85%;
+  --ring: 18 100% 62%;
+
+  /* Radius */
+  --radius: 0.625rem;
+
+  /* Chart colors - Sunset gradient */
+  --chart-1: 18 100% 62%;            /* Sunset Orange */
+  --chart-2: 184 48% 37%;            /* Deep Teal */
+  --chart-3: 354 70% 54%;            /* Coral Pink */
+  --chart-4: 48 70% 75%;             /* Sand Gold */
+  --chart-5: 199 50% 52%;            /* Ocean Blue */
+}
+
+/* Dark Mode - Sunset Hour */
+.dark.marine-sunset,
+.marine-sunset.dark {
+  /* Deep ocean background */
+  --background: 184 60% 8%;          /* #0A1F22 Deep Ocean */
+  --foreground: 42 40% 95%;          /* Warm sand text */
+
+  /* Cards - Slightly lighter ocean */
+  --card: 184 50% 12%;
+  --card-foreground: 42 40% 95%;
+  --popover: 184 50% 12%;
+  --popover-foreground: 42 40% 95%;
+
+  /* Primary - Glowing Sunset */
+  --primary: 18 100% 58%;            /* Brighter sunset for dark */
+  --primary-foreground: 184 60% 8%;
+
+  /* Secondary - Muted Teal */
+  --secondary: 184 40% 25%;
+  --secondary-foreground: 42 40% 95%;
+
+  /* Muted - Deep water */
+  --muted: 184 40% 18%;
+  --muted-foreground: 184 20% 60%;
+
+  /* Accent - Coral glow */
+  --accent: 13 70% 65%;
+  --accent-foreground: 184 60% 8%;
+
+  /* Destructive */
+  --destructive: 354 65% 45%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Borders */
+  --border: 184 40% 20%;
+  --input: 184 40% 20%;
+  --ring: 18 100% 58%;
+
+  /* Chart colors - Dusk tones */
+  --chart-1: 18 100% 58%;
+  --chart-2: 184 50% 45%;
+  --chart-3: 354 60% 55%;
+  --chart-4: 48 60% 60%;
+  --chart-5: 199 45% 45%;
+}
+
+/* Typography Enhancements */
+.marine-sunset {
+  /* Recommended font pairings */
+  --font-heading: 'Playfair Display', 'Georgia', serif;
+  --font-body: 'Source Sans Pro', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Letter spacing adjustments */
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em;
+}

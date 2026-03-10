@@ -1,0 +1,65 @@
+# Observer Domain Enums
+# Version: 1.0.0
+
+enums:
+  Severity:
+    description: Violation severity (like ECC error types)
+    values:
+      - name: critical
+        description: Must fix immediately
+      - name: error
+        description: Uncorrectable, blocks
+      - name: warning
+        description: Correctable, doesn't block
+      - name: info
+        description: Informational
+
+  EnforcementLevel:
+    description: How violations should be handled
+    values:
+      - name: block
+        description: Log error, block execution
+      - name: warn
+        description: Log warning, don't block
+      - name: allow
+        description: Log only, never block
+
+  LogLevel:
+    description: Observable logging levels
+    values:
+      - name: debug
+      - name: info
+      - name: notice
+      - name: warn
+      - name: critical
+
+  AssetType:
+    description: Asset types for rule targeting
+    values:
+      - name: markdown
+        extensions: [".md"]
+      - name: python
+        extensions: [".py"]
+      - name: typescript
+        extensions: [".ts", ".tsx"]
+      - name: javascript
+        extensions: [".js", ".jsx"]
+      - name: json
+        extensions: [".json"]
+      - name: yaml
+        extensions: [".yaml", ".yml"]
+      - name: any
+        description: Matches all asset types
+
+  RuleCategory:
+    description: Categories for organizing rules
+    values:
+      - name: documentation
+      - name: code_quality
+      - name: security
+      - name: style
+      - name: architecture
+      - name: testing
+      - name: performance
+      - name: accessibility
+      - name: compliance

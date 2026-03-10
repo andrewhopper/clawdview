@@ -1,0 +1,195 @@
+<!--
+  ❌ NON-COMPLIANT EXAMPLE - DO NOT USE AS TEMPLATE
+
+  This file demonstrates common violations of the Design System Management Guidelines.
+  Each violation is marked with ❌ and the correct approach with ✅.
+
+  VIOLATIONS IN THIS FILE:
+  1. No asset metadata (missing UUID, project, date, version)
+  2. Raw hex colors instead of design tokens
+  3. Magic number spacing (px values instead of tokens)
+  4. Inconsistent typography (no clear hierarchy)
+  5. Too many hierarchy levels (>3)
+  6. Multiple primary CTAs (confusing focal point)
+  7. No atomic design classification
+  8. Poor information architecture (unclear grouping)
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bad Example</title>
+  <!-- ❌ VIOLATION: No Tailwind, using custom inline styles -->
+  <style>
+    /* ❌ VIOLATION: Raw hex colors instead of CSS variables/tokens */
+    body {
+      background-color: #1a1a2e;  /* ✅ Should be: hsl(var(--background)) */
+      color: #ffffff;              /* ✅ Should be: hsl(var(--foreground)) */
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ❌ VIOLATION: Magic number spacing (should use token scale) */
+    .header {
+      background: #16213e;        /* ✅ Should be: hsl(var(--card)) */
+      padding: 17px 23px;         /* ✅ Should be: 1rem 1.5rem (space-4, space-6) */
+      border-bottom: 1px solid #333333;  /* ✅ Should be: hsl(var(--border)) */
+    }
+
+    /* ❌ VIOLATION: Inconsistent typography - no clear scale */
+    .title {
+      font-size: 28px;  /* ✅ Should use type scale: text-3xl = 1.875rem */
+      font-weight: bold;
+      margin-bottom: 13px;  /* ✅ Should be: 0.75rem or 1rem */
+    }
+
+    .subtitle {
+      font-size: 17px;  /* ✅ Not on scale - should be text-base (1rem) or text-lg (1.125rem) */
+      color: #888888;   /* ✅ Should be: hsl(var(--muted-foreground)) */
+    }
+
+    /* ❌ VIOLATION: Too many heading levels with inconsistent sizing */
+    .heading-1 { font-size: 32px; }
+    .heading-2 { font-size: 26px; }
+    .heading-3 { font-size: 22px; }
+    .heading-4 { font-size: 18px; }
+    .heading-5 { font-size: 15px; }  /* ❌ 5+ levels confuses users */
+    .heading-6 { font-size: 13px; }
+
+    /* ❌ VIOLATION: Hard-coded border radius instead of token */
+    .card {
+      background: #0f0f23;
+      border-radius: 7px;  /* ✅ Should be: var(--radius) = 0.5rem */
+      padding: 22px;       /* ✅ Should be: 1.5rem (space-6) */
+      margin: 11px;        /* ✅ Not on scale - should be 0.5rem or 1rem */
+      border: 1px solid #2a2a4a;
+    }
+
+    /* ❌ VIOLATION: Button with hard-coded colors */
+    .btn {
+      padding: 9px 18px;  /* ✅ Should be: 0.5rem 1rem */
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-blue {
+      background: #3b82f6;  /* ✅ Should be: hsl(var(--primary)) */
+      color: white;
+    }
+
+    .btn-green {
+      background: #22c55e;  /* ❌ Not in design system palette */
+      color: white;
+    }
+
+    .btn-red {
+      background: #ef4444;  /* ✅ Should be: hsl(var(--destructive)) */
+      color: white;
+    }
+
+    .btn-purple {
+      background: #8b5cf6;  /* ❌ Not in design system palette */
+      color: white;
+    }
+
+    /* ❌ VIOLATION: Inline styles in HTML below */
+  </style>
+</head>
+<body>
+
+  <!-- ❌ VIOLATION: No semantic HTML structure, poor IA -->
+  <div class="header">
+    <span style="font-size: 20px; font-weight: bold;">My App</span>  <!-- ❌ Inline style -->
+    <span style="float: right;">                                      <!-- ❌ Inline style -->
+      <button class="btn btn-blue">Login</button>
+      <button class="btn btn-green">Sign Up</button>  <!-- ❌ Multiple primary CTAs -->
+      <button class="btn btn-purple">Get Started</button>  <!-- ❌ 3 competing actions! -->
+    </span>
+  </div>
+
+  <!-- ❌ VIOLATION: Poor content grouping (no clear sections) -->
+  <div style="padding: 25px;">  <!-- ❌ Inline style with magic number -->
+
+    <div class="title">Welcome to Dashboard</div>
+    <div class="subtitle">Here is your overview</div>
+
+    <!-- ❌ VIOLATION: 6 levels of headings - way too many -->
+    <div class="heading-1">Level 1 Heading</div>
+    <div class="heading-2">Level 2 Heading</div>
+    <div class="heading-3">Level 3 Heading</div>
+    <div class="heading-4">Level 4 Heading</div>
+    <div class="heading-5">Level 5 Heading</div>
+    <div class="heading-6">Level 6 Heading</div>
+
+    <!-- ❌ VIOLATION: Cards not grouped logically -->
+    <div class="card">
+      <div style="font-size: 14px; color: #666;">Revenue</div>  <!-- ❌ Inline style -->
+      <div style="font-size: 24px; font-weight: bold;">$45,231</div>
+    </div>
+
+    <div class="card">
+      <div style="font-size: 14px; color: #666;">Some Text</div>
+      <p style="line-height: 1.3;">Random content here without proper hierarchy.</p>
+      <!-- ❌ VIOLATION: Multiple competing primary buttons -->
+      <button class="btn btn-blue">Primary Action</button>
+      <button class="btn btn-blue">Also Primary</button>
+      <button class="btn btn-blue">Third Primary</button>
+    </div>
+
+    <!-- ❌ VIOLATION: No whitespace between unrelated sections -->
+    <div class="card">More stuff crammed together</div>
+    <div class="card">And more</div>
+    <div class="card">Even more</div>
+
+    <!-- ❌ VIOLATION: Footer has no semantic structure -->
+    <div style="margin-top: 50px; color: #555; font-size: 12px;">
+      Copyright 2024
+    </div>
+
+  </div>
+
+</body>
+</html>
+
+<!--
+  ═══════════════════════════════════════════════════════════════════
+  SUMMARY OF VIOLATIONS:
+  ═══════════════════════════════════════════════════════════════════
+
+  METADATA:
+  ❌ No asset UUID
+  ❌ No project UUID
+  ❌ No version number
+  ❌ No date
+  ❌ No atomic level classification
+  ❌ No tokens used documentation
+
+  DESIGN TOKENS:
+  ❌ Raw hex colors: #1a1a2e, #ffffff, #888888, #333333, etc.
+  ❌ Magic number spacing: 17px, 23px, 13px, 22px, 11px
+  ❌ Hard-coded border radius: 7px, 5px
+  ❌ Off-scale typography: 17px, 15px, 13px
+
+  VISUAL HIERARCHY:
+  ❌ 6 heading levels (max should be 3)
+  ❌ Multiple primary CTAs competing for attention
+  ❌ No single focal point
+  ❌ Inconsistent spacing between sections
+
+  INFORMATION ARCHITECTURE:
+  ❌ No semantic HTML (header, main, footer)
+  ❌ Poor content grouping
+  ❌ No clear navigation structure
+  ❌ Related items not proximate
+
+  ATOMIC DESIGN:
+  ❌ No component classification
+  ❌ No reusable patterns
+  ❌ Inline styles break component model
+
+  ═══════════════════════════════════════════════════════════════════
+-->

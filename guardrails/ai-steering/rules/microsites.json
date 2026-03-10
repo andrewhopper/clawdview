@@ -1,0 +1,940 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-23",
+  "description": "Rules for microsite development ensuring shared resource usage and deployment prompts",
+  "rules": [
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456001",
+      "id": "site-use-vite-react",
+      "version": "1.0.0",
+      "level": "SHOULD",
+      "category": "code_generation",
+      "description": "Sites can use Vite + React for frontend development (SPA, fast dev)",
+      "context": {
+        "when": ["creating site", "creating website", "new site project", "creating microsite"],
+        "taskType": ["New Project", "New Script"]
+      },
+      "action": {
+        "directive": "prefer",
+        "target": "Vite + React",
+        "alternative": "Next.js for SSR/SEO/API needs",
+        "message": "Site frontend option 1: Vite 6.x + React 19.x\n  Pros: Fast HMR, lightweight, ESM-first, simple deployment\n  Best for: SPAs, admin dashboards, internal tools\n  Note: Requires separate backend (FastAPI) for APIs"
+      },
+      "rationale": "Vite provides fastest dev experience for SPAs. Choose based on project needs.",
+      "examples": [
+        {
+          "scenario": "User: 'Create a cat lovers website'",
+          "correct": "Ask: 'Do you need: (1) SSR/SEO? (2) API endpoints? If yes to either → Next.js, if no to both → Vite+React'",
+          "incorrect": "Always default to one framework without considering needs"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/sites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456026",
+      "id": "site-use-nextjs",
+      "version": "1.0.0",
+      "level": "SHOULD",
+      "category": "code_generation",
+      "description": "Sites can use Next.js for frontend development (SSR, SEO, full-stack with API routes)",
+      "context": {
+        "when": ["creating site", "creating website", "new site project", "creating microsite", "need SSR", "need SEO", "need API", "simple backend"],
+        "taskType": ["New Project", "New Script"]
+      },
+      "action": {
+        "directive": "prefer",
+        "target": "Next.js",
+        "alternative": "Vite + React for pure client SPAs without API needs",
+        "message": "Site frontend option 2: Next.js 15.x\n  Pros: SSR/SSG, SEO-friendly, API routes (no separate backend needed), App Router\n  Best for: Public sites, SEO-critical pages, sites needing simple APIs\n  API routes: Great for CRUD, auth, webhooks without FastAPI overhead"
+      },
+      "rationale": "Next.js provides SSR, SEO benefits, and built-in API routes. Ideal when you need both frontend and simple backend in one project.",
+      "examples": [
+        {
+          "scenario": "User: 'Create a cat lovers website'",
+          "correct": "Ask: 'Do you need: (1) SSR/SEO? (2) API endpoints? If yes to either → Next.js, if no to both → Vite+React'",
+          "incorrect": "Always default to one framework without considering needs"
+        },
+        {
+          "scenario": "User: 'Build a public-facing marketing site'",
+          "correct": "Recommend Next.js for SSR and SEO benefits",
+          "incorrect": "Use client-only SPA for public marketing site"
+        },
+        {
+          "scenario": "User: 'Create a site with user authentication'",
+          "correct": "Recommend Next.js - API routes handle auth endpoints, no separate backend needed",
+          "incorrect": "Set up Vite+React plus separate FastAPI just for auth"
+        },
+        {
+          "scenario": "User: 'Build a dashboard with data fetching'",
+          "correct": "If simple CRUD → Next.js API routes. If complex ML/data processing → Vite+React + FastAPI",
+          "incorrect": "Always use FastAPI regardless of complexity"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/sites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456002",
+      "id": "microsite-use-fastapi-backend",
+      "version": "1.0.0",
+      "level": "SHOULD",
+      "category": "code_generation",
+      "description": "Microsites with backend requirements should use FastAPI",
+      "context": {
+        "when": ["creating microsite with backend", "microsite needs API"],
+        "taskType": ["New Project", "New Script"]
+      },
+      "action": {
+        "directive": "prefer",
+        "target": "FastAPI",
+        "alternative": "Next.js API routes for simple endpoints",
+        "message": "Microsite backend: Using FastAPI (auto OpenAPI docs, Pydantic validation, async support)"
+      },
+      "rationale": "FastAPI provides auto-generated OpenAPI docs, Pydantic validation, excellent async support, ideal for Python ML/AI endpoints",
+      "examples": [
+        {
+          "scenario": "User: 'Create a microsite with a data processing API'",
+          "correct": "Create FastAPI backend with Pydantic models, Vite+React frontend",
+          "incorrect": "Use Express.js or Flask without type validation"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456003",
+      "id": "microsite-prompt-shared-ui-library",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "When creating new UI components for microsites, prompt user to add reusable components to shared UI library",
+      "context": {
+        "when": ["creating new UI component", "building reusable component"],
+        "taskType": ["Task", "New Script"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "Add component to shared UI library",
+        "message": "New reusable component detected: {component_name}\n\nThis component could benefit other microsites.\n\nAdd to shared/ui-components/? [y/n/skip]"
+      },
+      "rationale": "Encourages code reuse across microsites, builds shared component library, reduces duplication",
+      "examples": [
+        {
+          "scenario": "Creating DataTable component for microsite A",
+          "correct": "Prompt: 'DataTable component created. Add to shared/ui-components for reuse in other microsites? [y/n/skip]'",
+          "incorrect": "Create component only in microsite A without offering to share"
+        },
+        {
+          "scenario": "Creating custom Card component",
+          "correct": "After implementation, ask: 'This Card component could be useful across microsites. Add to shared library?'",
+          "incorrect": "Silently keep component local to single microsite"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456004",
+      "id": "microsite-prompt-s3-publish",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "When microsite is ready for deployment, prompt user to publish to S3",
+      "context": {
+        "when": ["microsite implementation complete", "ready for deployment", "build successful"],
+        "phase": ["PHASE_8_IMPLEMENTATION", "PHASE_9_REFINEMENT"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "S3 deployment",
+        "message": "Microsite '{name}' is ready for deployment.\n\nPublish to S3?\n  [1] Public (permanent URL)\n  [2] Temporary (presigned URL, 7 days)\n  [3] Private (internal access only)\n  [4] Skip deployment"
+      },
+      "rationale": "Ensures microsites are deployed for testing/review, centralizes hosting on S3, provides deployment options",
+      "examples": [
+        {
+          "scenario": "Microsite build completes successfully",
+          "correct": "Prompt: 'Build successful! Publish to S3? [1] Public [2] Temporary [3] Private [4] Skip'",
+          "incorrect": "Complete implementation without offering deployment"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456005",
+      "id": "microsite-use-existing-domain-models",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "Microsites must use existing domain models from shared/semantic/domains/",
+      "context": {
+        "when": ["creating data models", "defining entities", "building API schemas"],
+        "taskType": ["Task", "New Script", "New Project"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Check shared/semantic/domains/registry.yaml for existing models",
+        "message": "Before creating new data models, check shared/semantic/domains/registry.yaml for:\n{domain_list}\n\nUse existing models where applicable."
+      },
+      "rationale": "Ensures consistency across microsites, leverages validated domain models, prevents duplicate definitions",
+      "examples": [
+        {
+          "scenario": "Microsite needs user authentication data model",
+          "correct": "Reference shared/semantic/domains/auth/ models (User, Session, Credential)",
+          "incorrect": "Create new User/Auth models in microsite"
+        },
+        {
+          "scenario": "Microsite needs financial transaction model",
+          "correct": "Import from shared/semantic/domains/finance/ (Transaction, Payment)",
+          "incorrect": "Define new Transaction type locally"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456006",
+      "id": "microsite-prompt-extend-domain-models",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "When microsite requires entities not in shared domain models, prompt user to extend shared models",
+      "context": {
+        "when": ["new entity type needed", "domain model gap detected"],
+        "taskType": ["Task", "New Script"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "Extend shared domain models",
+        "message": "New entity type required: {entity_name}\n\nThis entity is not in shared/semantic/domains/.\n\nOptions:\n  [1] Add to existing domain: {suggested_domain}\n  [2] Create new domain in shared/semantic/domains/\n  [3] Keep local to this microsite only\n\nRecommend: Option {recommended} because {reason}"
+      },
+      "rationale": "Grows shared domain model library organically, ensures new concepts are properly modeled and reusable",
+      "examples": [
+        {
+          "scenario": "Microsite needs 'ProductReview' entity",
+          "correct": "Prompt: 'ProductReview not in shared domains. Add to new product/ domain or keep local? [1] New domain [2] Local only'",
+          "incorrect": "Create ProductReview locally without offering to share"
+        },
+        {
+          "scenario": "Microsite needs 'Invoice' entity",
+          "correct": "Check registry.yaml, find finance domain has Invoice, suggest using existing",
+          "incorrect": "Create duplicate Invoice model"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456007",
+      "id": "microsite-use-shadcn-components",
+      "version": "1.0.0",
+      "level": "SHOULD",
+      "category": "code_generation",
+      "description": "Microsites should use shadcn/ui for base UI components",
+      "context": {
+        "when": ["creating UI components", "building microsite frontend"],
+        "taskType": ["Task", "New Project"]
+      },
+      "action": {
+        "directive": "prefer",
+        "target": "shadcn/ui components",
+        "alternative": "Radix UI primitives for custom designs",
+        "message": "UI components: Using shadcn/ui (Radix primitives + Tailwind, full customization)"
+      },
+      "rationale": "shadcn/ui provides accessible, customizable components that work well with Tailwind CSS",
+      "examples": [
+        {
+          "scenario": "Need a dropdown menu for microsite",
+          "correct": "Use shadcn/ui DropdownMenu component, customize with Tailwind",
+          "incorrect": "Build dropdown from scratch or use heavyweight library"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456008",
+      "id": "microsite-pydantic-models",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "FastAPI backends must use Pydantic models for request/response validation",
+      "context": {
+        "when": ["creating FastAPI endpoints", "defining API schemas"],
+        "taskType": ["Task", "New Script"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Pydantic models for all API contracts",
+        "message": "FastAPI endpoints must use Pydantic models for validation. Check if model maps to shared domain."
+      },
+      "rationale": "Pydantic provides automatic validation, serialization, and OpenAPI schema generation",
+      "examples": [
+        {
+          "scenario": "Creating POST /api/users endpoint",
+          "correct": "Define CreateUserRequest(BaseModel) and UserResponse(BaseModel) Pydantic models",
+          "incorrect": "Accept raw dict without validation"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456009",
+      "id": "microsite-react-components-storybook",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "React components added to shared UI library must have Storybook stories",
+      "context": {
+        "when": ["adding component to shared UI library", "creating shared React component"],
+        "taskType": ["Task", "New Script"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Storybook stories for shared components",
+        "message": "Shared UI component '{component_name}' requires Storybook story.\n\nCreate {component_name}.stories.tsx with:\n  - Default story\n  - Variant stories (sizes, states)\n  - Interactive controls\n\nStorybook enables visual testing and documentation."
+      },
+      "rationale": "Storybook provides visual documentation, enables isolated component development, facilitates design review and testing",
+      "examples": [
+        {
+          "scenario": "Adding Button component to shared/ui-components",
+          "correct": "Create Button.tsx AND Button.stories.tsx with Default, Primary, Secondary, Disabled stories",
+          "incorrect": "Create Button.tsx without Storybook stories"
+        },
+        {
+          "scenario": "Creating DataTable for shared library",
+          "correct": "Include DataTable.stories.tsx showing empty state, loading, populated, sortable variants",
+          "incorrect": "Add DataTable without visual documentation"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456010",
+      "id": "microsite-storybook-required-stories",
+      "version": "1.0.0",
+      "level": "SHOULD",
+      "category": "code_generation",
+      "description": "Storybook stories should include default, variants, and edge case states",
+      "context": {
+        "when": ["creating Storybook stories", "documenting components"],
+        "taskType": ["Task", "New Script"]
+      },
+      "action": {
+        "directive": "prefer",
+        "target": "Comprehensive Storybook coverage",
+        "message": "Story file should include:\n  1. Default - basic usage\n  2. Variants - all visual variations\n  3. States - loading, error, empty, disabled\n  4. Sizes - if applicable\n  5. Interactive - with args/controls"
+      },
+      "rationale": "Comprehensive stories serve as living documentation and catch visual regressions",
+      "examples": [
+        {
+          "scenario": "Creating stories for Modal component",
+          "correct": "Include: Default, WithFooter, Scrollable, Loading, Sizes (sm/md/lg), Closeable, NonCloseable",
+          "incorrect": "Single 'Default' story only"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456011",
+      "id": "app-use-semantic-layer-registry",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "All Python, Node.js, React, and Next.js apps must use the global semantic layer registry",
+      "context": {
+        "when": ["creating Python app", "creating Node.js app", "creating React app", "creating Next.js app", "defining data models", "creating API"],
+        "taskType": ["New Project", "Task", "New Script"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Global semantic layer registry at shared/semantic/domains/",
+        "message": "App type detected: {app_type}\n\nMUST use global semantic layer registry:\n  Location: shared/semantic/domains/registry.yaml\n  Available domains: core, auth, finance, workflow, email, etc.\n\nCheck registry before defining any data models."
+      },
+      "rationale": "Ensures consistent data models across all applications, enables semantic interoperability, prevents duplicate definitions",
+      "examples": [
+        {
+          "scenario": "Creating new FastAPI Python app",
+          "correct": "Import models from shared/semantic/domains/. Use Pydantic models generated from domain schemas.",
+          "incorrect": "Define new User, Transaction, etc. models locally without checking registry"
+        },
+        {
+          "scenario": "Creating Next.js app with API routes",
+          "correct": "Use TypeScript types generated from shared/semantic/domains/ YAML schemas",
+          "incorrect": "Create ad-hoc TypeScript interfaces without referencing semantic layer"
+        },
+        {
+          "scenario": "Creating Node.js microservice",
+          "correct": "Reference shared/semantic/domains/registry.yaml for entity definitions",
+          "incorrect": "Invent new entity schemas without checking existing domains"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456012",
+      "id": "react-use-design-system-repository",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "All React/UI applications must use the shared design system repository for components",
+      "context": {
+        "when": ["creating React components", "building UI", "creating frontend", "creating microsite frontend"],
+        "taskType": ["New Project", "Task", "New Script"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Shared design system repository at shared/ui-components/",
+        "message": "React/UI application detected.\n\nMUST use shared design system:\n  Location: shared/ui-components/\n  Base: shadcn/ui + Tailwind CSS\n  Storybook: Required for all shared components\n\nCheck existing components before creating new ones."
+      },
+      "rationale": "Ensures consistent UI/UX across applications, reduces duplication, enables design system evolution",
+      "examples": [
+        {
+          "scenario": "Creating React microsite with data table",
+          "correct": "Check shared/ui-components/ for existing DataTable. If not found, create and add to shared library.",
+          "incorrect": "Create DataTable locally without checking shared components"
+        },
+        {
+          "scenario": "Building Next.js dashboard",
+          "correct": "Import Button, Card, Modal from shared/ui-components/. Extend if needed.",
+          "incorrect": "Install separate component library or create from scratch"
+        },
+        {
+          "scenario": "Creating Vite+React app",
+          "correct": "Configure to import from shared/ui-components/. Use existing primitives.",
+          "incorrect": "Duplicate component definitions from another project"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456014",
+      "id": "app-creation-workflow",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "Follow structured workflow: create app → define needs → check registries → use or create with approval",
+      "context": {
+        "when": ["creating new app", "creating new site", "creating new feature", "creating microsite"],
+        "taskType": ["New Project", "Task"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Structured app creation workflow",
+        "message": "New {app_type} workflow:\n\n1. CREATE: Initialize {app_type} structure\n2. DEFINE: List required components and data models\n3. CHECK: Audit registries:\n   - UI: shared/ui-components/\n   - Data: shared/semantic/domains/registry.yaml\n4. USE/CREATE:\n   - If found → import and use existing\n   - If not found → create new, request human approval, add to registry\n\nProceeding with step 1..."
+      },
+      "rationale": "Structured workflow ensures registry usage, prevents duplication, maintains approval gates for new additions",
+      "examples": [
+        {
+          "scenario": "Creating new microsite for product catalog",
+          "correct": "1. Create Vite+React project\n2. Define: ProductCard, ProductGrid, Product entity\n3. Check: ProductCard in ui-components? Product in domains?\n4. Found ProductCard → use. Missing Product → create, get approval, add to domains/",
+          "incorrect": "Create all components and models locally without checking registries"
+        },
+        {
+          "scenario": "Adding new dashboard feature",
+          "correct": "1. Define needs (charts, tables, metrics entity)\n2. Check shared/ui-components for Chart, DataTable\n3. Check domains for MetricEntity\n4. Use existing, create missing with approval",
+          "incorrect": "Build everything from scratch without registry check"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456015",
+      "id": "new-component-human-approval",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "New components or domain models not in registry require human approval before adding to shared libraries",
+      "context": {
+        "when": ["creating new component not in registry", "creating new domain model not in registry"],
+        "taskType": ["Task", "New Script"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "Human approval for registry additions",
+        "message": "New {item_type} not found in registry: {item_name}\n\nProposed addition to shared/{registry_path}/:\n\n{item_preview}\n\nApprove adding to shared registry? [y/n/local-only]\n\nNote: If approved, will add to registry and create Storybook story (if UI component)."
+      },
+      "rationale": "Human approval ensures quality gate for shared resources, prevents registry pollution",
+      "examples": [
+        {
+          "scenario": "Need new UserAvatar component",
+          "correct": "Check ui-components → not found → 'UserAvatar not in registry. Approve adding? [y/n/local]' → if y, create and add with Storybook",
+          "incorrect": "Create UserAvatar locally and forget about sharing"
+        },
+        {
+          "scenario": "Need new Subscription entity",
+          "correct": "Check domains registry → not found → 'Subscription entity not in registry. Add to billing domain? [y/n/local]' → if y, add to YAML with validation",
+          "incorrect": "Define Subscription inline without registry consideration"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456013",
+      "id": "design-system-component-audit",
+      "version": "1.0.0",
+      "level": "SHOULD",
+      "category": "workflow",
+      "description": "Before creating new UI components, audit shared design system for existing components",
+      "context": {
+        "when": ["creating UI component", "need new component"],
+        "taskType": ["Task", "New Script"]
+      },
+      "action": {
+        "directive": "prefer",
+        "target": "Audit shared/ui-components/ first",
+        "message": "Before creating '{component_name}':\n\n1. Check shared/ui-components/ for existing component\n2. Check if shadcn/ui has equivalent primitive\n3. Check if component can extend existing\n\nFound: {existing_components}\nSuggestion: {recommendation}"
+      },
+      "rationale": "Prevents component duplication, encourages reuse and extension over creation",
+      "examples": [
+        {
+          "scenario": "Need a dropdown menu",
+          "correct": "Check shared/ui-components/DropdownMenu, if exists use it. Otherwise add shadcn/ui DropdownMenu to shared.",
+          "incorrect": "Build custom dropdown without checking existing options"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456016",
+      "id": "use-known-primitives-first",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "Always try to use known primitives (Artifact, Workflow, Rule, Guardrail, Validation) before creating new concepts",
+      "context": {
+        "when": ["defining entities", "creating data models", "designing system"],
+        "taskType": ["New Project", "Task", "New Script"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Known primitives from shared domain model",
+        "message": "Before creating new entities, check for these known primitives:\n\n  Core Primitives:\n    - Artifact: Any generated output (document, code, presentation)\n    - Workflow: State machine with states, transitions, triggers\n    - Rule: AI steering behavior definition\n    - Guardrail: Tech/architecture preference constraint\n    - Validation: Schema or constraint check\n\n  Also check:\n    - Entity, Action, Intent, Observer\n    - Phase, Transition, Trigger\n\n  Location: shared/semantic/domains/\n\n  Using existing primitives ensures consistency and interoperability."
+      },
+      "rationale": "Known primitives provide semantic consistency across systems, enable cross-project interoperability, and reduce concept duplication",
+      "examples": [
+        {
+          "scenario": "Creating a document generation system",
+          "correct": "Use Artifact entity from shared domains for generated documents",
+          "incorrect": "Create new 'GeneratedDocument' entity without checking primitives"
+        },
+        {
+          "scenario": "Building a review approval system",
+          "correct": "Use Workflow, Transition, and Rule primitives from shared domains",
+          "incorrect": "Create custom 'ApprovalFlow', 'ApprovalStep' entities"
+        },
+        {
+          "scenario": "Adding tech stack constraints",
+          "correct": "Use Guardrail entity and Rule schema from shared domains",
+          "incorrect": "Define inline constraint format without checking existing"
+        },
+        {
+          "scenario": "Adding input validation",
+          "correct": "Use Validation entity pattern from shared domains, possibly Observer rules",
+          "incorrect": "Create new 'InputChecker' concept"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456017",
+      "id": "ensure-primitives-in-shared-domain",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "Core primitives (Artifact, Workflow, Rule, Guardrail, Validation) must be defined in shared domain models",
+      "context": {
+        "when": ["missing primitive in shared domains", "primitive not found"],
+        "taskType": ["Task", "New Script"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Add missing primitives to shared/semantic/domains/",
+        "message": "Core primitive '{primitive_name}' not found in shared domains.\n\nRequired primitives that MUST exist in shared/semantic/domains/:\n  - core/: Entity, Identifier, AuditInfo\n  - artifact-library/: Artifact, ArtifactType, GenerationPrompt\n  - workflow/: WorkflowDefinition, StepDefinition, TransitionDefinition\n  - observer/: Rule, Violation, CheckResult\n  - guardrails/ (proposed): Guardrail, TechPreference, ArchitecturePattern\n\nAdd '{primitive_name}' to appropriate domain before proceeding."
+      },
+      "rationale": "Core primitives form the semantic foundation of the system and must be centrally defined for consistency",
+      "examples": [
+        {
+          "scenario": "Guardrail entity not in shared domains",
+          "correct": "Create shared/semantic/domains/guardrails/schema.yaml with Guardrail entity definition",
+          "incorrect": "Define Guardrail locally in the project only"
+        },
+        {
+          "scenario": "Validation entity missing",
+          "correct": "Add Validation entity to observer domain or create validation domain",
+          "incorrect": "Create ad-hoc validation schema in project"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/microsites"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456018",
+      "id": "typescript-use-domain-types",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "TypeScript applications must use strongly-typed models generated from shared domain models",
+      "context": {
+        "when": ["creating TypeScript app", "creating TypeScript types", "defining interfaces", "creating Next.js app", "creating React app with TypeScript"],
+        "taskType": ["New Project", "Task", "New Script"],
+        "filePattern": ["*.ts", "*.tsx"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Strongly-typed models from shared/semantic/domains/",
+        "message": "TypeScript detected.\n\nMUST use strongly-typed models:\n  1. Check shared/semantic/domains/ for existing type definitions\n  2. Generate TypeScript interfaces from YAML schemas\n  3. Never use 'any' for domain entities\n  4. Use Zod or similar for runtime validation\n\nExample generation:\n  shared/semantic/domains/core/user.yaml → types/User.ts"
+      },
+      "rationale": "Strong typing ensures type safety, IDE support, and catches errors at compile time. Domain models provide semantic consistency across the codebase.",
+      "examples": [
+        {
+          "scenario": "Creating a Next.js app with user management",
+          "correct": "Generate User, Session interfaces from shared/semantic/domains/auth/. Use these types throughout the app.",
+          "incorrect": "Define ad-hoc User interface or use 'any' type"
+        },
+        {
+          "scenario": "Building React dashboard with transactions",
+          "correct": "Import Transaction type from generated types (sourced from domains/finance/). Use strict typing.",
+          "incorrect": "Create loose object types or use 'as any' casts"
+        },
+        {
+          "scenario": "Creating TypeScript API client",
+          "correct": "Use type definitions that match backend Pydantic models, both generated from shared domains",
+          "incorrect": "Manually duplicate type definitions without shared source of truth"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/generic"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456019",
+      "id": "python-use-pydantic-models",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "description": "Python applications must use Pydantic models generated from shared domain models",
+      "context": {
+        "when": ["creating Python app", "creating Python models", "defining data classes", "creating FastAPI app", "creating API endpoints"],
+        "taskType": ["New Project", "Task", "New Script"],
+        "filePattern": ["*.py"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Pydantic models from shared/semantic/domains/",
+        "message": "Python application detected.\n\nMUST use Pydantic models:\n  1. Check shared/semantic/domains/ for existing model definitions\n  2. Generate Pydantic models from YAML schemas\n  3. Use BaseModel for all domain entities\n  4. Include field validators where appropriate\n  5. Use model_config for serialization settings\n\nExample generation:\n  shared/semantic/domains/core/user.yaml → models/user.py (Pydantic)"
+      },
+      "rationale": "Pydantic provides runtime validation, serialization, and automatic OpenAPI schema generation. Shared domain models ensure consistency across Python apps.",
+      "examples": [
+        {
+          "scenario": "Creating FastAPI backend for user service",
+          "correct": "Generate User, UserCreate, UserResponse Pydantic models from shared/semantic/domains/auth/",
+          "incorrect": "Use plain dict or dataclass without validation"
+        },
+        {
+          "scenario": "Building Python CLI tool with config",
+          "correct": "Use Pydantic Settings or BaseModel for config, types from shared domains",
+          "incorrect": "Load JSON into unvalidated dict"
+        },
+        {
+          "scenario": "Creating data pipeline",
+          "correct": "Define Pydantic models for input/output schemas sourced from domain definitions",
+          "incorrect": "Pass untyped dicts between pipeline stages"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/generic"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456020",
+      "id": "html-offer-s3-publish",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "When creating or completing HTML files, always offer to publish to S3",
+      "context": {
+        "when": ["creating HTML file", "HTML file complete", "generating HTML output", "building static site", "creating report HTML"],
+        "taskType": ["Task", "New Script", "New Project"],
+        "filePattern": ["*.html"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "S3 publishing for HTML files",
+        "message": "HTML file created: {filename}\n\nPublish to S3 for easy sharing?\n  [1] Public (permanent URL)\n  [2] Temporary (presigned URL, 7 days)\n  [3] Private (internal access only)\n  [4] Skip\n\nScript: prototypes/proto-s3-publish-vayfd-023/s3_publish.py"
+      },
+      "rationale": "HTML files are often intended for sharing. S3 publishing provides easy access URLs and consistent hosting.",
+      "examples": [
+        {
+          "scenario": "Creating visualization HTML",
+          "correct": "After creating chart.html, prompt: 'Publish to S3? [1] Public [2] Temp [3] Private [4] Skip'",
+          "incorrect": "Create HTML without offering sharing options"
+        },
+        {
+          "scenario": "Generating report as HTML",
+          "correct": "After generating report.html, offer S3 publish with presigned URL option",
+          "incorrect": "Leave report in local filesystem only"
+        },
+        {
+          "scenario": "Building static landing page",
+          "correct": "Upon build completion, prompt for S3 deployment with public URL option",
+          "incorrect": "Complete build without deployment prompt"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/generic"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456021",
+      "id": "zip-offer-s3-publish",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "When creating or completing ZIP archives, always offer to publish to S3",
+      "context": {
+        "when": ["creating ZIP file", "ZIP archive complete", "packaging files", "creating distribution archive"],
+        "taskType": ["Task", "New Script", "New Project"],
+        "filePattern": ["*.zip"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "S3 publishing for ZIP files",
+        "message": "ZIP archive created: {filename}\n\nPublish to S3 for easy sharing?\n  [1] Public (permanent URL)\n  [2] Temporary (presigned URL, 7 days)\n  [3] Private (internal access only)\n  [4] Skip\n\nScript: prototypes/proto-s3-publish-vayfd-023/s3_publish.py"
+      },
+      "rationale": "ZIP archives are often created for distribution. S3 publishing provides easy download URLs.",
+      "examples": [
+        {
+          "scenario": "Creating project distribution ZIP",
+          "correct": "After creating dist.zip, prompt: 'Publish to S3? [1] Public [2] Temp [3] Private [4] Skip'",
+          "incorrect": "Create ZIP without offering sharing options"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/generic"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456022",
+      "id": "svg-offer-s3-publish",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "When creating or completing SVG files, always offer to publish to S3",
+      "context": {
+        "when": ["creating SVG file", "SVG complete", "generating diagram", "creating vector graphic", "creating icon"],
+        "taskType": ["Task", "New Script", "New Project"],
+        "filePattern": ["*.svg"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "S3 publishing for SVG files",
+        "message": "SVG file created: {filename}\n\nPublish to S3 for easy sharing?\n  [1] Public (permanent URL)\n  [2] Temporary (presigned URL, 7 days)\n  [3] Private (internal access only)\n  [4] Skip\n\nScript: prototypes/proto-s3-publish-vayfd-023/s3_publish.py"
+      },
+      "rationale": "SVG diagrams and graphics are often intended for embedding or sharing. S3 provides stable URLs.",
+      "examples": [
+        {
+          "scenario": "Creating architecture diagram SVG",
+          "correct": "After creating architecture.svg, prompt: 'Publish to S3? [1] Public [2] Temp [3] Private [4] Skip'",
+          "incorrect": "Create SVG without offering sharing options"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/generic"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456023",
+      "id": "pdf-offer-s3-publish",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "When creating or completing PDF files, always offer to publish to S3",
+      "context": {
+        "when": ["creating PDF file", "PDF complete", "generating report", "exporting document", "creating presentation PDF"],
+        "taskType": ["Task", "New Script", "New Project"],
+        "filePattern": ["*.pdf"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "S3 publishing for PDF files",
+        "message": "PDF file created: {filename}\n\nPublish to S3 for easy sharing?\n  [1] Public (permanent URL)\n  [2] Temporary (presigned URL, 7 days)\n  [3] Private (internal access only)\n  [4] Skip\n\nScript: prototypes/proto-s3-publish-vayfd-023/s3_publish.py"
+      },
+      "rationale": "PDFs are commonly shared documents. S3 publishing enables easy distribution with access control.",
+      "examples": [
+        {
+          "scenario": "Generating quarterly report PDF",
+          "correct": "After creating report.pdf, prompt: 'Publish to S3? [1] Public [2] Temp [3] Private [4] Skip'",
+          "incorrect": "Generate PDF without offering sharing options"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/generic"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456024",
+      "id": "mp3-offer-s3-publish",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "When creating or completing MP3 audio files, always offer to publish to S3",
+      "context": {
+        "when": ["creating MP3 file", "audio complete", "generating audio", "text-to-speech output", "recording audio"],
+        "taskType": ["Task", "New Script", "New Project"],
+        "filePattern": ["*.mp3"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "S3 publishing for MP3 files",
+        "message": "MP3 audio file created: {filename}\n\nPublish to S3 for easy sharing?\n  [1] Public (permanent URL)\n  [2] Temporary (presigned URL, 7 days)\n  [3] Private (internal access only)\n  [4] Skip\n\nScript: prototypes/proto-s3-publish-vayfd-023/s3_publish.py"
+      },
+      "rationale": "Audio files are often created for distribution. S3 provides streaming-friendly URLs.",
+      "examples": [
+        {
+          "scenario": "Generating TTS audio output",
+          "correct": "After creating narration.mp3, prompt: 'Publish to S3? [1] Public [2] Temp [3] Private [4] Skip'",
+          "incorrect": "Generate audio without offering sharing options"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/generic"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-4789-abcd-ef0123456025",
+      "id": "mp4-offer-s3-publish",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "description": "When creating or completing MP4 video files, always offer to publish to S3",
+      "context": {
+        "when": ["creating MP4 file", "video complete", "generating video", "screen recording", "rendering video"],
+        "taskType": ["Task", "New Script", "New Project"],
+        "filePattern": ["*.mp4"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "S3 publishing for MP4 files",
+        "message": "MP4 video file created: {filename}\n\nPublish to S3 for easy sharing?\n  [1] Public (permanent URL)\n  [2] Temporary (presigned URL, 7 days)\n  [3] Private (internal access only)\n  [4] Skip\n\nScript: prototypes/proto-s3-publish-vayfd-023/s3_publish.py"
+      },
+      "rationale": "Video files are commonly shared. S3 provides streaming-capable URLs with access control.",
+      "examples": [
+        {
+          "scenario": "Creating demo video",
+          "correct": "After creating demo.mp4, prompt: 'Publish to S3? [1] Public [2] Temp [3] Private [4] Skip'",
+          "incorrect": "Create video without offering sharing options"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "namespace": "@protoflow/generic"
+      }
+    }
+  ]
+}

@@ -1,0 +1,701 @@
+# Auction Domain Model
+# Competitive price discovery through bidding
+# Includes English, Dutch, sealed-bid, and spot market auctions
+
+domain:
+  name: auction
+  version: "1.0.0"
+  description: Auction mechanisms for competitive price discovery - English, Dutch, sealed-bid, spot markets, and preemption
+  dependencies: [core, finance, capacity]
+  use_case: AWS spot instances, concert ticket auctions, art auctions, ad auctions, procurement
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  # ============================================
+  # AUCTION CONFIGURATION
+  # ============================================
+
+  Auction:
+    description: An auction for one or more items
+    properties:
+      id: { type: uuid, required: true }
+      title: { type: string, required: true }
+      description: { type: string }
+      # Type
+      auctionType: { type: AuctionType, required: true }
+      auctionFormat: { type: AuctionFormat, required: true }
+      # Items
+      items: { type: array, items: AuctionItem, required: true }
+      itemCount: { type: integer, required: true }
+      # Timing
+      scheduledStart: { type: datetime, required: true }
+      scheduledEnd: { type: datetime }
+      actualStart: { type: datetime }
+      actualEnd: { type: datetime }
+      # Duration
+      durationMinutes: { type: integer }
+      extensionRules: { type: ExtensionRules }
+      # Pricing
+      currency: { type: string, required: true }
+      startingBid: { type: number }
+      reservePrice: { type: number, description: "Hidden minimum acceptable price" }
+      buyNowPrice: { type: number, description: "Instant purchase price" }
+      bidIncrement: { type: number, description: "Minimum bid increment" }
+      # For Dutch auctions
+      startPrice: { type: number, description: "Initial high price" }
+      decrementAmount: { type: number, description: "Price decrease amount" }
+      decrementIntervalSeconds: { type: integer, description: "Time between decrements" }
+      minimumPrice: { type: number, description: "Floor price for Dutch" }
+      # Bidder requirements
+      bidderRequirements: { type: BidderRequirements }
+      # State
+      status: { type: AuctionStatus, required: true, default: draft }
+      currentPrice: { type: number }
+      winningBidId: { type: uuid }
+      # Results
+      totalBids: { type: integer, default: 0 }
+      uniqueBidders: { type: integer, default: 0 }
+      highestBid: { type: number }
+      secondHighestBid: { type: number }
+      finalPrice: { type: number }
+      # Metadata
+      tags: { type: array, items: string }
+      metadata: { type: object }
+      createdBy: { type: string, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AuctionItem:
+    description: An item being auctioned
+    properties:
+      id: { type: uuid, required: true }
+      auctionId: { type: uuid, required: true }
+      # Item reference
+      itemType: { type: string, required: true }
+      itemId: { type: string, required: true }
+      title: { type: string, required: true }
+      description: { type: string }
+      # Quantity
+      quantity: { type: integer, required: true, default: 1 }
+      # Item-specific pricing
+      startingBid: { type: number }
+      reservePrice: { type: number }
+      buyNowPrice: { type: number }
+      # Condition (for physical items)
+      condition: { type: ItemCondition }
+      # Images
+      imageUrls: { type: array, items: string }
+      # State
+      status: { type: ItemStatus, required: true, default: active }
+      currentHighBid: { type: number }
+      currentHighBidderId: { type: string }
+      winningBidId: { type: uuid }
+      finalPrice: { type: number }
+      # Metadata
+      attributes: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ExtensionRules:
+    description: Rules for extending auction end time
+    properties:
+      id: { type: uuid, required: true }
+      auctionId: { type: uuid, required: true }
+      # Soft close / anti-sniping
+      enableSoftClose: { type: boolean, default: true }
+      extensionTriggerMinutes: { type: integer, default: 5, description: "Bid within X minutes of end" }
+      extensionMinutes: { type: integer, default: 5, description: "Add X minutes" }
+      maxExtensions: { type: integer, default: 10 }
+      currentExtensions: { type: integer, default: 0 }
+      # Hard stop
+      absoluteEndTime: { type: datetime, description: "Never extend past this" }
+
+  BidderRequirements:
+    description: Requirements to participate in auction
+    properties:
+      id: { type: uuid, required: true }
+      auctionId: { type: uuid, required: true }
+      # Identity
+      requireVerifiedAccount: { type: boolean, default: true }
+      requirePaymentMethod: { type: boolean, default: true }
+      # Financial
+      requireDeposit: { type: boolean, default: false }
+      depositAmount: { type: number }
+      depositPercent: { type: number }
+      # Pre-authorization
+      requirePreAuth: { type: boolean, default: false }
+      preAuthAmount: { type: number }
+      # Restrictions
+      minAccountAgeDays: { type: integer }
+      minFeedbackScore: { type: number }
+      allowedCountries: { type: array, items: string }
+      blockedBidders: { type: array, items: string }
+
+  # ============================================
+  # BIDDING
+  # ============================================
+
+  Bid:
+    description: A bid placed in an auction
+    properties:
+      id: { type: uuid, required: true }
+      auctionId: { type: uuid, required: true }
+      itemId: { type: uuid, description: "For multi-item auctions" }
+      # Bidder
+      bidderId: { type: string, required: true }
+      bidderName: { type: string }
+      isProxyBid: { type: boolean, default: false }
+      # Bid details
+      bidAmount: { type: number, required: true }
+      maxBidAmount: { type: number, description: "For proxy/auto bidding" }
+      quantity: { type: integer, default: 1, description: "For multi-unit auctions" }
+      # Timing
+      placedAt: { type: datetime, required: true }
+      processedAt: { type: datetime }
+      # State
+      status: { type: BidStatus, required: true, default: pending }
+      isWinning: { type: boolean, default: false }
+      isHighBid: { type: boolean, default: false }
+      # Outbid tracking
+      outbidAt: { type: datetime }
+      outbidByBidId: { type: uuid }
+      # For sealed bids
+      revealedAt: { type: datetime }
+      # Metadata
+      clientInfo: { type: object, description: "Device, IP, etc." }
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ProxyBid:
+    description: Automatic bidding up to a maximum
+    properties:
+      id: { type: uuid, required: true }
+      auctionId: { type: uuid, required: true }
+      itemId: { type: uuid }
+      bidderId: { type: string, required: true }
+      # Configuration
+      maxBidAmount: { type: number, required: true }
+      bidIncrementStrategy: { type: IncrementStrategy, required: true, default: minimum }
+      customIncrement: { type: number }
+      # State
+      isActive: { type: boolean, required: true, default: true }
+      currentBidAmount: { type: number }
+      # Stats
+      bidsPlaced: { type: integer, default: 0 }
+      lastBidAt: { type: datetime }
+      # Stopping conditions
+      stopIfOutbid: { type: boolean, default: false }
+      stopAtPrice: { type: number }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  BidHistory:
+    description: Audit trail of all bids
+    properties:
+      id: { type: uuid, required: true }
+      auctionId: { type: uuid, required: true }
+      bidId: { type: uuid, required: true }
+      # Snapshot
+      bidAmount: { type: number, required: true }
+      bidderId: { type: string, required: true }
+      bidderDisplayName: { type: string }
+      placedAt: { type: datetime, required: true }
+      # Context
+      previousHighBid: { type: number }
+      previousHighBidderId: { type: string }
+      isNewHighBid: { type: boolean, required: true }
+      # Anonymous display
+      bidderNumber: { type: integer, description: "Bidder 1, Bidder 2, etc." }
+
+  # ============================================
+  # SPOT MARKET (Continuous Auction)
+  # ============================================
+
+  SpotMarket:
+    description: Continuous auction market (like AWS spot instances)
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      # Resource
+      resourceType: { type: string, required: true }
+      capacityPoolId: { type: uuid, description: "FK to capacity:CapacityPool" }
+      # Pricing
+      currency: { type: string, required: true }
+      currentSpotPrice: { type: number, required: true }
+      minimumPrice: { type: number, required: true }
+      maximumPrice: { type: number }
+      # Price update
+      priceUpdateIntervalSeconds: { type: integer, required: true, default: 300 }
+      priceAlgorithm: { type: SpotPriceAlgorithm, required: true }
+      lastPriceUpdate: { type: datetime }
+      # Capacity
+      totalCapacity: { type: integer, required: true }
+      allocatedCapacity: { type: integer, default: 0 }
+      availableCapacity: { type: integer }
+      # Status
+      status: { type: MarketStatus, required: true, default: active }
+      # Metadata
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  SpotRequest:
+    description: Request for spot market resources
+    properties:
+      id: { type: uuid, required: true }
+      marketId: { type: uuid, required: true }
+      requesterId: { type: string, required: true }
+      # Request
+      quantity: { type: integer, required: true }
+      maxPrice: { type: number, required: true, description: "Max price willing to pay" }
+      # Duration
+      requestType: { type: SpotRequestType, required: true }
+      durationHours: { type: integer, description: "For fixed duration" }
+      validUntil: { type: datetime, description: "Request expiry" }
+      # State
+      status: { type: SpotRequestStatus, required: true, default: pending }
+      # Fulfillment
+      fulfilledQuantity: { type: integer, default: 0 }
+      fulfilledAt: { type: datetime }
+      currentPrice: { type: number, description: "Price when fulfilled" }
+      allocationIds: { type: array, items: uuid }
+      # Interruption
+      interruptionBehavior: { type: InterruptionBehavior, required: true }
+      interruptedAt: { type: datetime }
+      interruptionReason: { type: string }
+      # Metadata
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  SpotAllocation:
+    description: Allocated spot resources
+    properties:
+      id: { type: uuid, required: true }
+      marketId: { type: uuid, required: true }
+      requestId: { type: uuid, required: true }
+      holderId: { type: string, required: true }
+      # Allocation
+      quantity: { type: integer, required: true }
+      unitIds: { type: array, items: string, description: "Specific units allocated" }
+      # Pricing
+      bidPrice: { type: number, required: true, description: "Price bid" }
+      currentSpotPrice: { type: number, required: true, description: "Market price at allocation" }
+      effectivePrice: { type: number, required: true, description: "Actual price charged" }
+      # Timing
+      allocatedAt: { type: datetime, required: true }
+      expiresAt: { type: datetime }
+      # State
+      status: { type: AllocationStatus, required: true, default: active }
+      # Preemption
+      preemptedAt: { type: datetime }
+      preemptionReason: { type: PreemptionReason }
+      preemptionNoticeMinutes: { type: integer }
+      # Billing
+      billingStartedAt: { type: datetime }
+      billingEndedAt: { type: datetime }
+      totalCost: { type: number }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  SpotPriceHistory:
+    description: Historical spot prices
+    properties:
+      id: { type: uuid, required: true }
+      marketId: { type: uuid, required: true }
+      timestamp: { type: datetime, required: true }
+      spotPrice: { type: number, required: true }
+      # Context
+      demandLevel: { type: number }
+      availableCapacity: { type: integer }
+      activeRequests: { type: integer }
+      fulfilledRequests: { type: integer }
+
+  # ============================================
+  # AUCTION RESULTS
+  # ============================================
+
+  AuctionResult:
+    description: Final result of an auction
+    properties:
+      id: { type: uuid, required: true }
+      auctionId: { type: uuid, required: true }
+      # Winner
+      winnerId: { type: string }
+      winningBidId: { type: uuid }
+      winningBidAmount: { type: number }
+      # Final price (may differ from bid in some auction types)
+      finalPrice: { type: number }
+      pricingRule: { type: PricingRule, required: true }
+      # Reserve
+      reserveMet: { type: boolean, required: true }
+      reservePrice: { type: number }
+      # Statistics
+      totalBids: { type: integer, required: true }
+      uniqueBidders: { type: integer, required: true }
+      highestBid: { type: number }
+      secondHighestBid: { type: number }
+      lowestBid: { type: number }
+      averageBid: { type: number }
+      # Timing
+      duration: { type: integer, description: "Actual duration in minutes" }
+      extensionCount: { type: integer }
+      closedAt: { type: datetime, required: true }
+      # Outcome
+      outcome: { type: AuctionOutcome, required: true }
+      outcomeReason: { type: string }
+      createdAt: { type: datetime, required: true }
+
+  WinnerNotification:
+    description: Notification sent to auction winner
+    properties:
+      id: { type: uuid, required: true }
+      auctionId: { type: uuid, required: true }
+      resultId: { type: uuid, required: true }
+      winnerId: { type: string, required: true }
+      # Content
+      notificationType: { type: WinnerNotificationType, required: true }
+      channel: { type: string, required: true }
+      subject: { type: string }
+      body: { type: string }
+      # Payment instructions
+      paymentDueAt: { type: datetime }
+      paymentInstructions: { type: object }
+      # State
+      sentAt: { type: datetime }
+      deliveredAt: { type: datetime }
+      acknowledgedAt: { type: datetime }
+      status: { type: NotificationStatus, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+enums:
+
+  AuctionType:
+    values:
+      - english         # Ascending price, highest bidder wins
+      - dutch           # Descending price, first bidder wins
+      - sealed_first    # Sealed bid, first price (pay what you bid)
+      - sealed_second   # Sealed bid, second price (Vickrey)
+      - japanese        # Continuous ascending, bidders drop out
+      - yankee          # Multi-unit ascending
+      - reverse         # Sellers compete, lowest price wins
+      - double          # Both buyers and sellers bid
+      - penny           # Small increments, pay per bid
+      - spot            # Continuous market (spot instances)
+
+  AuctionFormat:
+    values:
+      - single_item     # One item
+      - multi_item      # Multiple separate items
+      - lot             # Multiple items sold together
+      - multi_unit      # Multiple identical units
+      - combinatorial   # Bidding on combinations
+
+  AuctionStatus:
+    values:
+      - draft           # Being set up
+      - scheduled       # Scheduled to start
+      - preview         # Viewable, not yet accepting bids
+      - active          # Accepting bids
+      - extended        # Extended due to activity
+      - closing         # In final minutes
+      - ended           # Bidding complete
+      - pending_payment # Awaiting winner payment
+      - completed       # Fully complete
+      - cancelled       # Cancelled
+      - failed          # Failed (no bids, reserve not met)
+
+  ItemStatus:
+    values:
+      - active          # Available for bidding
+      - sold            # Sold
+      - unsold          # Ended without sale
+      - withdrawn       # Withdrawn from auction
+      - reserved        # Reserve not met
+
+  ItemCondition:
+    values:
+      - new
+      - like_new
+      - excellent
+      - good
+      - fair
+      - poor
+      - for_parts
+
+  BidStatus:
+    values:
+      - pending         # Being processed
+      - accepted        # Valid bid accepted
+      - rejected        # Bid rejected
+      - outbid          # Outbid by another
+      - winning         # Currently winning
+      - won             # Won the auction
+      - cancelled       # Bid cancelled
+      - invalid         # Invalid bid
+
+  IncrementStrategy:
+    values:
+      - minimum         # Always minimum increment
+      - aggressive      # Larger increments
+      - conservative    # Just over current
+      - custom          # Custom increment
+      - percentage      # Percentage of current bid
+
+  PricingRule:
+    values:
+      - first_price     # Winner pays their bid
+      - second_price    # Winner pays second highest
+      - third_price     # Winner pays third highest
+      - uniform_price   # All winners pay same
+      - pay_as_bid      # Each winner pays their bid
+      - spot_price      # Market-clearing price
+
+  AuctionOutcome:
+    values:
+      - sold            # Item(s) sold
+      - no_bids         # No bids received
+      - reserve_not_met # Reserve price not met
+      - cancelled       # Auction cancelled
+      - buy_now         # Sold via buy now
+      - expired         # Expired without sale
+
+  # Spot market enums
+  MarketStatus:
+    values:
+      - active          # Market operational
+      - paused          # Temporarily paused
+      - closed          # Not accepting requests
+      - maintenance     # Under maintenance
+
+  SpotPriceAlgorithm:
+    values:
+      - market_clearing # Price where supply meets demand
+      - marginal_cost   # Based on marginal cost
+      - auction_based   # Based on bid distribution
+      - time_weighted   # Weighted by time
+      - ml_predicted    # ML-based prediction
+
+  SpotRequestType:
+    values:
+      - one_time        # Single allocation
+      - persistent      # Keep trying until fulfilled
+      - fleet           # Maintain fleet of N units
+
+  SpotRequestStatus:
+    values:
+      - pending         # Waiting for capacity
+      - fulfilled       # Fully allocated
+      - partially_fulfilled # Some allocated
+      - cancelled       # Cancelled by requester
+      - expired         # Request expired
+      - price_exceeded  # Spot price exceeded max
+
+  InterruptionBehavior:
+    values:
+      - terminate       # Terminate immediately
+      - stop            # Stop (can restart)
+      - hibernate       # Hibernate (save state)
+
+  AllocationStatus:
+    values:
+      - active          # Currently allocated
+      - preempted       # Preempted by higher bid
+      - terminated      # User terminated
+      - expired         # Duration expired
+      - completed       # Completed normally
+
+  PreemptionReason:
+    values:
+      - higher_bid      # Outbid by higher price
+      - capacity_needed # Capacity reclaimed
+      - maintenance     # System maintenance
+      - policy          # Policy enforcement
+      - user_request    # User requested
+
+  WinnerNotificationType:
+    values:
+      - won             # You won notification
+      - payment_due     # Payment reminder
+      - payment_received # Payment confirmed
+      - shipped         # Item shipped
+      - pickup_ready    # Ready for pickup
+
+  NotificationStatus:
+    values:
+      - pending
+      - sent
+      - delivered
+      - failed
+      - acknowledged
+
+actions:
+
+  # Auction management
+  CreateAuction:
+    description: Create a new auction
+    parameters:
+      title: { type: string, required: true }
+      auctionType: { type: AuctionType, required: true }
+      items: { type: array, items: AuctionItem, required: true }
+      startingBid: { type: number }
+      reservePrice: { type: number }
+      scheduledStart: { type: datetime, required: true }
+      durationMinutes: { type: integer }
+    result: Auction
+    idempotent: false
+
+  StartAuction:
+    description: Start an auction
+    parameters:
+      auctionId: { type: uuid, required: true }
+    result: Auction
+    idempotent: true
+
+  EndAuction:
+    description: End an auction
+    parameters:
+      auctionId: { type: uuid, required: true }
+      reason: { type: string }
+    result: AuctionResult
+    idempotent: true
+
+  CancelAuction:
+    description: Cancel an auction
+    parameters:
+      auctionId: { type: uuid, required: true }
+      reason: { type: string, required: true }
+    result: Auction
+    idempotent: true
+
+  # Bidding
+  PlaceBid:
+    description: Place a bid
+    parameters:
+      auctionId: { type: uuid, required: true }
+      itemId: { type: uuid }
+      bidAmount: { type: number, required: true }
+      maxBidAmount: { type: number, description: "For proxy bidding" }
+    result: Bid
+    idempotent: false
+
+  SetProxyBid:
+    description: Set up proxy/auto bidding
+    parameters:
+      auctionId: { type: uuid, required: true }
+      maxBidAmount: { type: number, required: true }
+      incrementStrategy: { type: IncrementStrategy }
+    result: ProxyBid
+    idempotent: true
+
+  CancelBid:
+    description: Cancel a bid (if allowed)
+    parameters:
+      bidId: { type: uuid, required: true }
+      reason: { type: string }
+    result: Bid
+    idempotent: true
+
+  # Spot market
+  CreateSpotMarket:
+    description: Create a spot market
+    parameters:
+      name: { type: string, required: true }
+      resourceType: { type: string, required: true }
+      minimumPrice: { type: number, required: true }
+      totalCapacity: { type: integer, required: true }
+    result: SpotMarket
+    idempotent: false
+
+  RequestSpotResource:
+    description: Request spot market resource
+    parameters:
+      marketId: { type: uuid, required: true }
+      quantity: { type: integer, required: true }
+      maxPrice: { type: number, required: true }
+      requestType: { type: SpotRequestType, required: true }
+      interruptionBehavior: { type: InterruptionBehavior, required: true }
+    result: SpotRequest
+    idempotent: false
+
+  CancelSpotRequest:
+    description: Cancel spot request
+    parameters:
+      requestId: { type: uuid, required: true }
+    result: SpotRequest
+    idempotent: true
+
+  TerminateSpotAllocation:
+    description: Terminate spot allocation
+    parameters:
+      allocationId: { type: uuid, required: true }
+      reason: { type: string }
+    result: SpotAllocation
+    idempotent: true
+
+  # Queries
+  GetAuctionStatus:
+    description: Get current auction status
+    parameters:
+      auctionId: { type: uuid, required: true }
+    result: Auction
+    idempotent: true
+
+  GetBidHistory:
+    description: Get bid history for auction
+    parameters:
+      auctionId: { type: uuid, required: true }
+      limit: { type: integer }
+    result: { type: array, items: BidHistory }
+    idempotent: true
+
+  GetSpotPriceHistory:
+    description: Get spot price history
+    parameters:
+      marketId: { type: uuid, required: true }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+    result: { type: array, items: SpotPriceHistory }
+    idempotent: true
+
+relationships:
+  - type: one_to_many
+    from: Auction
+    to: AuctionItem
+    foreign_key: auctionId
+    description: Auction has many items
+
+  - type: one_to_many
+    from: Auction
+    to: Bid
+    foreign_key: auctionId
+    description: Auction has many bids
+
+  - type: one_to_one
+    from: Auction
+    to: AuctionResult
+    foreign_key: auctionId
+    description: Auction has one result
+
+  - type: one_to_many
+    from: SpotMarket
+    to: SpotRequest
+    foreign_key: marketId
+    description: Market has many requests
+
+  - type: one_to_many
+    from: SpotRequest
+    to: SpotAllocation
+    foreign_key: requestId
+    description: Request may have allocations
+
+  - type: one_to_many
+    from: SpotMarket
+    to: SpotPriceHistory
+    foreign_key: marketId
+    description: Market has price history

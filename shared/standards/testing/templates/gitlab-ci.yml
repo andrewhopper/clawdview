@@ -1,0 +1,150 @@
+# GitLab CI Test Configuration
+# File UUID: 4c6d8e0f-3a5b-7c9d-1e2f-4a6b8c0d2e3f
+#
+# Copy to: .gitlab-ci.yml
+#
+# Required CI/CD variables (Settings > CI/CD > Variables):
+#   - PRODUCTION_URL (required for smoke tests)
+#   - TEST_COVERAGE_THRESHOLD (optional, default: 70)
+
+stages:
+  - lint
+  - test
+  - smoke
+
+# ============================================================================
+# GLOBAL CONFIGURATION
+# ============================================================================
+
+variables:
+  # All test configuration is parameterized
+  TEST_COVERAGE_THRESHOLD: ${TEST_COVERAGE_THRESHOLD:-70}
+  TEST_TIMEOUT: ${TEST_TIMEOUT:-30000}
+  TEST_RETRIES: ${TEST_RETRIES:-2}
+  TEST_FAIL_FAST: ${TEST_FAIL_FAST:-true}
+  TEST_REPORT_DIR: "./test-reports"
+  # Node.js settings
+  NODE_VERSION: "20"
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+
+# Shared Node.js setup
+.node-setup:
+  image: node:${NODE_VERSION}
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+      - node_modules/
+  before_script:
+    - npm ci --prefer-offline
+
+# Shared Playwright setup (includes browsers)
+.playwright-setup:
+  extends: .node-setup
+  image: mcr.microsoft.com/playwright:v1.40.0-focal
+  before_script:
+    - npm ci --prefer-offline
+
+# ============================================================================
+# LINT STAGE
+# ============================================================================
+
+lint:
+  extends: .node-setup
+  stage: lint
+  script:
+    - make lint
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+# ============================================================================
+# TEST STAGE
+# ============================================================================
+
+test-unit:
+  extends: .node-setup
+  stage: test
+  script:
+    - make test-coverage
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    when: always
+    reports:
+      junit: $TEST_REPORT_DIR/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: $TEST_REPORT_DIR/coverage/cobertura-coverage.xml
+    paths:
+      - $TEST_REPORT_DIR/coverage/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+test-e2e:
+  extends: .playwright-setup
+  stage: test
+  script:
+    - make test-e2e
+  artifacts:
+    when: always
+    paths:
+      - $TEST_REPORT_DIR/playwright/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+# ============================================================================
+# SMOKE STAGE (only on main branch)
+# ============================================================================
+
+smoke-test:
+  extends: .playwright-setup
+  stage: smoke
+  script:
+    - make test-smoke
+  variables:
+    TEST_BASE_URL: $PRODUCTION_URL
+    EXPECTED_GIT_HASH: $CI_COMMIT_SHA
+  artifacts:
+    when: always
+    paths:
+      - $TEST_REPORT_DIR/smoke/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: on_success
+  needs:
+    - job: test-unit
+      artifacts: false
+    - job: test-e2e
+      artifacts: false
+
+# ============================================================================
+# MANUAL SMOKE TEST (for other branches)
+# ============================================================================
+
+smoke-test-manual:
+  extends: .playwright-setup
+  stage: smoke
+  script:
+    - make test-smoke
+  variables:
+    TEST_BASE_URL: $STAGING_URL
+    EXPECTED_GIT_HASH: $CI_COMMIT_SHA
+  artifacts:
+    when: always
+    paths:
+      - $TEST_REPORT_DIR/smoke/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true

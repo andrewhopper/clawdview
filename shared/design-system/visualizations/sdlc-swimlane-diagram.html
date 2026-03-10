@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<!-- File UUID: 9191ad49-f4a1-452b-b48c-fe68c0e6a47e -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDLC Swimlane Diagram - Agent & Human Handoffs</title>
+  <!--
+    Asset: SDLC Swimlane Diagram with Agent Handoffs
+    Project: protoflow-monorepo
+    Asset ID: sdlc-swim-d4e8f2a1.v1
+    Date: 2026-01-27
+    Design System: shared/design-system
+
+    Atomic Level: page
+
+    Tokens Used:
+    - Colors: --background, --foreground, --primary, --muted, --accent
+    - Spacing: space-4, space-6, space-8
+    - Typography: text-base, text-lg, text-xl
+
+    D3.js Version: 7.9.0
+  -->
+  <style>
+    :root {
+      /* Color tokens */
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --primary: 142.1 76.2% 36.3%;
+      --primary-foreground: 355.7 100% 97.3%;
+      --secondary: 240 3.7% 15.9%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 142.1 76.2% 36.3%;
+
+      /* Semantic tokens */
+      --swimlane-human: 217 91% 60%;
+      --swimlane-main: 142.1 76.2% 36.3%;
+      --swimlane-domain: 262 83% 58%;
+      --swimlane-ia: 31 97% 72%;
+      --swimlane-ux: 280 100% 70%;
+      --swimlane-infra: 173 80% 40%;
+      --swimlane-amplify: 24 95% 53%;
+
+      /* Spacing tokens */
+      --space-2: 0.5rem;
+      --space-4: 1rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: var(--space-8);
+      overflow-x: auto;
+    }
+
+    header {
+      margin-bottom: var(--space-8);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: hsl(var(--primary));
+      margin-bottom: var(--space-4);
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    #diagram-container {
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      padding: var(--space-6);
+      overflow-x: auto;
+      min-height: 1200px;
+    }
+
+    .swimlane-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      fill: hsl(var(--foreground));
+    }
+
+    .phase-box {
+      stroke-width: 2;
+      rx: 4;
+      ry: 4;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .phase-box:hover {
+      opacity: 0.8;
+    }
+
+    .phase-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      fill: hsl(var(--foreground));
+      pointer-events: none;
+      text-anchor: middle;
+    }
+
+    .phase-number {
+      font-size: 0.625rem;
+      fill: hsl(var(--foreground));
+      opacity: 0.8;
+      pointer-events: none;
+      text-anchor: middle;
+    }
+
+    .handoff-arrow {
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .handoff-label {
+      font-size: 0.625rem;
+      fill: hsl(240 5% 64.9%);
+      text-anchor: middle;
+    }
+
+    .gate-icon {
+      stroke-width: 2;
+      fill: hsl(0 62.8% 30.6%);
+      stroke: hsl(0 62.8% 30.6%);
+    }
+
+    .gate-label {
+      font-size: 0.625rem;
+      fill: hsl(0 62.8% 30.6%);
+      font-weight: 600;
+    }
+
+    .legend {
+      margin-top: var(--space-8);
+      padding: var(--space-6);
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+    }
+
+    .legend h2 {
+      font-size: 1.25rem;
+      color: hsl(var(--primary));
+      margin-bottom: var(--space-4);
+    }
+
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-4);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .legend-color {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px solid hsl(var(--border));
+    }
+
+    .legend-text {
+      font-size: 0.875rem;
+      color: hsl(var(--foreground));
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SDLC Swimlane Diagram</h1>
+    <p class="subtitle">Agent & Human Handoffs Across All Phases</p>
+  </header>
+
+  <div id="diagram-container"></div>
+
+  <div class="legend">
+    <h2>Legend</h2>
+    <div class="legend-grid">
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: hsl(217 91% 60%);"></div>
+        <span class="legend-text">Human (Approvals)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: hsl(142.1 76.2% 36.3%);"></div>
+        <span class="legend-text">Main Claude Agent</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: hsl(262 83% 58%);"></div>
+        <span class="legend-text">Domain Modeling Agent</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: hsl(31 97% 72%);"></div>
+        <span class="legend-text">Information Architecture Agent</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: hsl(280 100% 70%);"></div>
+        <span class="legend-text">UX Composition Agent</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: hsl(173 80% 40%);"></div>
+        <span class="legend-text">Infrastructure/SRE Agent</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: hsl(24 95% 53%);"></div>
+        <span class="legend-text">Amplify Deploy Agent</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    // Data model
+    const swimlanes = [
+      { id: 'human', label: 'Human', color: '217 91% 60%' },
+      { id: 'main', label: 'Main Claude Agent', color: '142.1 76.2% 36.3%' },
+      { id: 'domain', label: 'Domain Modeling Agent', color: '262 83% 58%' },
+      { id: 'ia', label: 'Info Architecture Agent', color: '31 97% 72%' },
+      { id: 'ux', label: 'UX Composition Agent', color: '280 100% 70%' },
+      { id: 'infra', label: 'Infrastructure/SRE Agent', color: '173 80% 40%' },
+      { id: 'amplify', label: 'Amplify Deploy Agent', color: '24 95% 53%' }
+    ];
+
+    const phases = [
+      { id: '1', number: '1.0', name: 'SEED', swimlane: 'main', description: 'Capture idea' },
+      { id: '2', number: '2.0', name: 'RESEARCH', swimlane: 'main', description: 'Persona & intent' },
+      { id: '2.5', number: '2.5', name: 'FEASIBILITY', swimlane: 'main', description: 'Go/no-go (prod only)' },
+      { id: '3', number: '3.0', name: 'EXPANSION', swimlane: 'main', description: 'Explore solutions' },
+      { id: '4', number: '4.0', name: 'ANALYSIS', swimlane: 'main', description: 'Compare options' },
+      { id: '5', number: '5.0', name: 'SELECTION', swimlane: 'main', description: 'Choose approach' },
+      { id: '5.5', number: '5.5', name: 'PRD', swimlane: 'main', description: 'Requirements (prod only)' },
+      { id: '6.1', number: '6.1', name: 'Domain Models', swimlane: 'domain', description: 'Define data structures' },
+      { id: '6.2', number: '6.2', name: 'Info Arch', swimlane: 'ia', description: 'Navigation & flows' },
+      { id: '6.3', number: '6.3', name: 'UX Design', swimlane: 'ux', description: 'Mockups & components' },
+      { id: '7', number: '7.0', name: 'TEST', swimlane: 'main', description: 'Write tests first' },
+      { id: '8.1', number: '8.1', name: 'Code', swimlane: 'main', description: 'Write implementation' },
+      { id: '8.2', number: '8.2', name: 'Infrastructure', swimlane: 'infra', description: 'CDK/Terraform' },
+      { id: '8.3', number: '8.3', name: 'Deploy', swimlane: 'amplify', description: 'Amplify/publish' },
+      { id: '9', number: '9.0', name: 'REFINE', swimlane: 'main', description: 'Polish & iterate' }
+    ];
+
+    const handoffs = [
+      // Phase 2: Persona inference → Human approval
+      { from: { phase: '2', swimlane: 'main' }, to: { phase: '2', swimlane: 'human' }, label: 'Confirm persona', type: 'approval' },
+
+      // Phase 2.5: Go/no-go gate
+      { from: { phase: '2.5', swimlane: 'main' }, to: { phase: '2.5', swimlane: 'human' }, label: 'Go/no-go', type: 'gate' },
+
+      // Phase 5: Tech preferences gate
+      { from: { phase: '5', swimlane: 'main' }, to: { phase: '5', swimlane: 'human' }, label: 'Approve tech stack', type: 'gate' },
+
+      // Phase 5.5: PRD approval
+      { from: { phase: '5.5', swimlane: 'main' }, to: { phase: '5.5', swimlane: 'human' }, label: 'Approve PRD', type: 'gate' },
+
+      // Phase 6: Design phase with sub-phases
+      { from: { phase: '5.5', swimlane: 'main' }, to: { phase: '6.1', swimlane: 'domain' }, label: 'Need data models', type: 'delegation' },
+      { from: { phase: '6.1', swimlane: 'domain' }, to: { phase: '6.1', swimlane: 'human' }, label: 'Approve domain', type: 'approval' },
+      { from: { phase: '6.1', swimlane: 'domain' }, to: { phase: '6.2', swimlane: 'ia' }, label: 'Models ready', type: 'handoff' },
+      { from: { phase: '6.2', swimlane: 'ia' }, to: { phase: '6.3', swimlane: 'ux' }, label: 'IA spec', type: 'handoff' },
+      { from: { phase: '6.3', swimlane: 'ux' }, to: { phase: '7', swimlane: 'main' }, label: 'Design complete', type: 'return' },
+
+      // Phase 8: Implementation with sub-phases
+      { from: { phase: '7', swimlane: 'main' }, to: { phase: '8.1', swimlane: 'main' }, label: 'Begin coding', type: 'flow' },
+      { from: { phase: '8.1', swimlane: 'main' }, to: { phase: '8.2', swimlane: 'infra' }, label: 'Need infra', type: 'delegation' },
+      { from: { phase: '8.2', swimlane: 'infra' }, to: { phase: '8.3', swimlane: 'amplify' }, label: 'Infra ready', type: 'handoff' },
+      { from: { phase: '8.3', swimlane: 'amplify' }, to: { phase: '9', swimlane: 'main' }, label: 'Deployed', type: 'return' },
+
+      // Phase 9: Final approval
+      { from: { phase: '9', swimlane: 'main' }, to: { phase: '9', swimlane: 'human' }, label: 'Review & approve', type: 'approval' }
+    ];
+
+    // Dimensions
+    const margin = { top: 60, right: 40, bottom: 40, left: 200 };
+    const swimlaneHeight = 120;
+    const phaseWidth = 140;
+    const phaseHeight = 60;
+    const phaseSpacing = 40;
+    const totalWidth = (phases.length * (phaseWidth + phaseSpacing)) + margin.left + margin.right;
+    const totalHeight = (swimlanes.length * swimlaneHeight) + margin.top + margin.bottom;
+
+    // Create SVG
+    const svg = d3.select('#diagram-container')
+      .append('svg')
+      .attr('width', totalWidth)
+      .attr('height', totalHeight);
+
+    // Define arrowhead markers for different colors
+    const defs = svg.append('defs');
+
+    // Muted arrowhead
+    defs.append('marker')
+      .attr('id', 'arrowhead-muted')
+      .attr('markerWidth', 10)
+      .attr('markerHeight', 10)
+      .attr('refX', 8)
+      .attr('refY', 3)
+      .attr('orient', 'auto')
+      .append('polygon')
+      .attr('points', '0 0, 10 3, 0 6')
+      .style('fill', 'hsl(240 5% 64.9%)');
+
+    // Primary arrowhead
+    defs.append('marker')
+      .attr('id', 'arrowhead-primary')
+      .attr('markerWidth', 10)
+      .attr('markerHeight', 10)
+      .attr('refX', 8)
+      .attr('refY', 3)
+      .attr('orient', 'auto')
+      .append('polygon')
+      .attr('points', '0 0, 10 3, 0 6')
+      .style('fill', 'hsl(142.1 76.2% 36.3%)');
+
+    // Destructive arrowhead
+    defs.append('marker')
+      .attr('id', 'arrowhead-destructive')
+      .attr('markerWidth', 10)
+      .attr('markerHeight', 10)
+      .attr('refX', 8)
+      .attr('refY', 3)
+      .attr('orient', 'auto')
+      .append('polygon')
+      .attr('points', '0 0, 10 3, 0 6')
+      .style('fill', 'hsl(0 62.8% 30.6%)');
+
+    // Create main group
+    const g = svg.append('g')
+      .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+    // Draw swimlanes
+    const swimlaneGroups = g.selectAll('.swimlane')
+      .data(swimlanes)
+      .enter()
+      .append('g')
+      .attr('class', 'swimlane')
+      .attr('transform', (d, i) => `translate(0, ${i * swimlaneHeight})`);
+
+    // Swimlane backgrounds
+    swimlaneGroups.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', phases.length * (phaseWidth + phaseSpacing))
+      .attr('height', swimlaneHeight)
+      .attr('fill', d => `hsl(${d.color})`)
+      .attr('opacity', 0.1)
+      .attr('stroke', d => `hsl(${d.color})`)
+      .attr('stroke-width', 1)
+      .attr('stroke-opacity', 0.3);
+
+    // Swimlane labels
+    swimlaneGroups.append('text')
+      .attr('class', 'swimlane-label')
+      .attr('x', -10)
+      .attr('y', swimlaneHeight / 2)
+      .attr('text-anchor', 'end')
+      .attr('dominant-baseline', 'middle')
+      .text(d => d.label);
+
+    // Position calculation helper
+    function getPhasePosition(phaseId, swimlaneId) {
+      const phaseIndex = phases.findIndex(p => p.id === phaseId);
+      const swimlaneIndex = swimlanes.findIndex(s => s.id === swimlaneId);
+
+      return {
+        x: phaseIndex * (phaseWidth + phaseSpacing) + (phaseWidth / 2),
+        y: swimlaneIndex * swimlaneHeight + (swimlaneHeight / 2)
+      };
+    }
+
+    // Draw handoff arrows FIRST (so they appear behind boxes)
+    handoffs.forEach(handoff => {
+      const fromPos = getPhasePosition(handoff.from.phase, handoff.from.swimlane);
+      const toPos = getPhasePosition(handoff.to.phase, handoff.to.swimlane);
+
+      // Determine arrow color and style
+      let strokeColor = '240 5% 64.9%'; // muted-foreground
+      let strokeDasharray = 'none';
+      let markerEnd = 'url(#arrowhead-muted)';
+
+      if (handoff.type === 'gate' || handoff.type === 'approval') {
+        strokeColor = '0 62.8% 30.6%'; // destructive
+        markerEnd = 'url(#arrowhead-destructive)';
+      } else if (handoff.type === 'delegation') {
+        strokeColor = '142.1 76.2% 36.3%'; // primary
+        markerEnd = 'url(#arrowhead-primary)';
+      } else if (handoff.type === 'return') {
+        strokeColor = '142.1 76.2% 36.3%'; // primary
+        strokeDasharray = '5,5';
+        markerEnd = 'url(#arrowhead-primary)';
+      } else if (handoff.type === 'handoff') {
+        strokeColor = '240 5% 64.9%'; // muted-foreground
+        markerEnd = 'url(#arrowhead-muted)';
+      } else if (handoff.type === 'flow') {
+        strokeColor = '240 5% 64.9%'; // muted-foreground
+        markerEnd = 'url(#arrowhead-muted)';
+      }
+
+      // Draw curved arrow
+      const path = g.append('path')
+        .attr('class', 'handoff-arrow')
+        .attr('d', () => {
+          // Use quadratic bezier curve for smoother connections
+          const midX = (fromPos.x + toPos.x) / 2;
+          const controlY = fromPos.y + ((toPos.y - fromPos.y) * 0.5);
+          return `M ${fromPos.x} ${fromPos.y} Q ${midX} ${controlY} ${toPos.x} ${toPos.y}`;
+        })
+        .attr('stroke', `hsl(${strokeColor})`)
+        .attr('stroke-dasharray', strokeDasharray)
+        .attr('marker-end', markerEnd)
+        .attr('opacity', 0.6);
+
+      // Add label at midpoint
+      const midX = (fromPos.x + toPos.x) / 2;
+      const midY = (fromPos.y + toPos.y) / 2;
+
+      g.append('text')
+        .attr('class', 'handoff-label')
+        .attr('x', midX)
+        .attr('y', midY - 5)
+        .text(handoff.label);
+    });
+
+    // Draw phase boxes
+    phases.forEach(phase => {
+      const swimlaneIndex = swimlanes.findIndex(s => s.id === phase.swimlane);
+      const phaseIndex = phases.findIndex(p => p.id === phase.id);
+
+      const x = phaseIndex * (phaseWidth + phaseSpacing);
+      const y = swimlaneIndex * swimlaneHeight + (swimlaneHeight - phaseHeight) / 2;
+
+      const swimlaneColor = swimlanes.find(s => s.id === phase.swimlane).color;
+
+      // Phase box
+      const phaseGroup = g.append('g')
+        .attr('class', 'phase-group')
+        .attr('transform', `translate(${x}, ${y})`);
+
+      phaseGroup.append('rect')
+        .attr('class', 'phase-box')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', phaseWidth)
+        .attr('height', phaseHeight)
+        .attr('fill', `hsl(${swimlaneColor})`)
+        .attr('stroke', `hsl(${swimlaneColor})`)
+        .on('click', function() {
+          alert(`${phase.number} - ${phase.name}\n\n${phase.description}`);
+        });
+
+      // Phase number
+      phaseGroup.append('text')
+        .attr('class', 'phase-number')
+        .attr('x', phaseWidth / 2)
+        .attr('y', 15)
+        .text(phase.number);
+
+      // Phase name
+      phaseGroup.append('text')
+        .attr('class', 'phase-label')
+        .attr('x', phaseWidth / 2)
+        .attr('y', phaseHeight / 2 + 5)
+        .text(phase.name);
+    });
+
+    // Add title
+    svg.append('text')
+      .attr('x', totalWidth / 2)
+      .attr('y', 30)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '1.25rem')
+      .attr('font-weight', '700')
+      .attr('fill', 'hsl(142.1 76.2% 36.3%)')
+      .text('SDLC with Agent & Human Handoffs');
+  </script>
+</body>
+</html>

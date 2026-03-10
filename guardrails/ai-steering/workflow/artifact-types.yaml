@@ -1,0 +1,210 @@
+# Artifact Type Hierarchy with Inheritance
+# Defines base types and their specializations for rule application
+# Version: 1.0.0
+# Last Updated: 2025-11-23
+
+version: "1.0.0"
+
+# =============================================================================
+# Base Types (Abstract)
+# =============================================================================
+
+base_types:
+  Publishable:
+    description: Any artifact that can be published/deployed to S3 or other hosting
+    capabilities:
+      - s3_publish
+      - presigned_urls
+      - public_hosting
+    rules:
+      - microsite-prompt-s3-publish
+    publish_options:
+      - public: Permanent public URL
+      - temporary: Presigned URL (7 days)
+      - private: Internal access only
+
+  UIApplication:
+    description: Any artifact with a user interface (React, HTML, etc.)
+    capabilities:
+      - react_components
+      - design_system
+      - storybook
+    rules:
+      - react-use-design-system-repository
+      - microsite-use-shadcn-components
+      - microsite-react-components-storybook
+      - design-system-component-audit
+    dependencies:
+      - shared/ui-components/
+
+  DataApplication:
+    description: Any artifact that uses data models
+    capabilities:
+      - domain_models
+      - semantic_layer
+      - pydantic_validation
+    rules:
+      - app-use-semantic-layer-registry
+      - microsite-use-existing-domain-models
+      - microsite-prompt-extend-domain-models
+    dependencies:
+      - shared/semantic/domains/
+
+  BackendApplication:
+    description: Any artifact with server-side logic
+    capabilities:
+      - api_endpoints
+      - data_processing
+      - authentication
+    rules:
+      - microsite-use-fastapi-backend
+      - microsite-pydantic-models
+
+# =============================================================================
+# Concrete Types (Inherit from Base Types)
+# =============================================================================
+
+artifact_types:
+  Microsite:
+    inherits:
+      - Publishable
+      - UIApplication
+      - DataApplication
+      - BackendApplication
+    description: Small, focused web application with frontend and optional backend
+    tech_stack:
+      frontend: Vite + React
+      backend: FastAPI (optional)
+      styling: Tailwind CSS + shadcn/ui
+    rules:
+      - microsite-use-vite-react
+      - app-creation-workflow
+      - new-component-human-approval
+    workflow: microsite-creation-workflow
+
+  Website:
+    inherits:
+      - Publishable
+      - UIApplication
+    description: Static or dynamic website without complex backend
+    tech_stack:
+      frontend: Next.js or Vite + React
+      styling: Tailwind CSS
+    rules:
+      - microsite-use-vite-react
+      - app-creation-workflow
+
+  Dashboard:
+    inherits:
+      - Publishable
+      - UIApplication
+      - DataApplication
+    description: Data visualization and analytics interface
+    tech_stack:
+      frontend: Next.js or Vite + React
+      charts: Recharts or Tremor
+      styling: Tailwind CSS + shadcn/ui
+    rules:
+      - app-creation-workflow
+
+  API:
+    inherits:
+      - DataApplication
+      - BackendApplication
+    description: Backend API service without UI
+    tech_stack:
+      backend: FastAPI
+      validation: Pydantic
+    rules:
+      - app-creation-workflow
+
+  PDF:
+    inherits:
+      - Publishable
+    description: Generated PDF document
+    tech_stack:
+      generator: WeasyPrint or Puppeteer
+    publish_options:
+      - public
+      - temporary
+      - private
+
+  Document:
+    inherits:
+      - Publishable
+    description: Markdown, HTML, or other document artifacts
+    tech_stack:
+      format: Markdown, HTML
+    publish_options:
+      - public
+      - temporary
+      - private
+
+  Presentation:
+    inherits:
+      - Publishable
+    description: Slidev or PowerPoint presentation
+    tech_stack:
+      format: Slidev (Markdown)
+    rules:
+      - slide-deck-format-slidev
+
+  CLI:
+    inherits:
+      - DataApplication
+    description: Command-line interface tool
+    tech_stack:
+      framework: React Ink or Click
+    rules: []
+
+  MobileApp:
+    inherits:
+      - UIApplication
+      - DataApplication
+      - BackendApplication
+    description: iOS/Android mobile application
+    tech_stack:
+      frontend: Expo (React Native)
+    rules: []
+
+# =============================================================================
+# Rule Resolution
+# =============================================================================
+
+rule_resolution:
+  description: How to determine which rules apply to an artifact
+  algorithm: |
+    1. Identify artifact type
+    2. Collect all inherited base types
+    3. Gather rules from:
+       a. Artifact type's own rules
+       b. All inherited base type rules
+    4. Deduplicate rules
+    5. Apply in order of constraint level (NEVER > ALWAYS > MUST > ...)
+
+  example:
+    artifact: Microsite
+    inherited_types:
+      - Publishable
+      - UIApplication
+      - DataApplication
+      - BackendApplication
+    resolved_rules:
+      # From Publishable
+      - microsite-prompt-s3-publish
+      # From UIApplication
+      - react-use-design-system-repository
+      - microsite-use-shadcn-components
+      - microsite-react-components-storybook
+      - design-system-component-audit
+      # From DataApplication
+      - app-use-semantic-layer-registry
+      - microsite-use-existing-domain-models
+      - microsite-prompt-extend-domain-models
+      # From BackendApplication
+      - microsite-use-fastapi-backend
+      - microsite-pydantic-models
+      # From Microsite
+      - microsite-use-vite-react
+      - app-creation-workflow
+      - new-component-human-approval

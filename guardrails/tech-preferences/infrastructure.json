@@ -1,0 +1,499 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Infrastructure",
+  "description": "Deployment, monitoring, CI/CD, caching, and search",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "categories": {
+    "deployment_frontend": {
+      "description": "Frontend hosting and deployment",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Amplify",
+          "version": "Gen 2",
+          "rationale": "AWS-native, branch previews, SSR support, environment variables, CI/CD",
+          "useCases": [
+            "AWS apps",
+            "Next.js SSR",
+            "branch deployments"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "Vercel",
+          "version": "platform",
+          "rationale": "Next.js creators, excellent DX, edge functions, analytics, instant rollbacks",
+          "useCases": [
+            "Next.js apps",
+            "developer experience",
+            "edge computing"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Cloudflare Pages",
+          "version": "platform",
+          "rationale": "Fast, free tier, edge workers, unlimited bandwidth, simple deployment",
+          "useCases": [
+            "static sites",
+            "edge computing",
+            "cost optimization"
+          ]
+        }
+      ]
+    },
+    "deployment_backend": {
+      "description": "Backend hosting and deployment",
+      "avoid": [
+        {
+          "name": "AWS App Runner",
+          "reason": "Limited control, WebSocket issues, prefer ECS Fargate for containers"
+        }
+      ],
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Lambda + API Gateway",
+          "version": "AWS",
+          "rationale": "Serverless, auto-scaling, pay-per-use, AWS ecosystem integration",
+          "useCases": [
+            "AWS apps",
+            "serverless APIs",
+            "event-driven architectures"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "AWS ECS Fargate",
+          "version": "AWS",
+          "rationale": "Containerized, serverless containers, no EC2 management, predictable pricing",
+          "useCases": [
+            "containerized apps",
+            "long-running tasks",
+            "stateful services"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Fly.io",
+          "version": "platform",
+          "rationale": "Global edge deployment, simple pricing, excellent DX, Dockerfile-based",
+          "useCases": [
+            "rapid prototyping",
+            "global deployment",
+            "low-latency apps"
+          ]
+        }
+      ]
+    },
+    "monitoring": {
+      "description": "Application monitoring and observability",
+      "required": {
+        "aws_projects": {
+          "description": "ALL AWS projects MUST configure CloudWatch and X-Ray",
+          "cloudwatch": {
+            "logs": "Required for all Lambda, ECS, and API Gateway",
+            "metrics": "Custom metrics for business KPIs",
+            "alarms": "Error rate, latency P99, and availability",
+            "dashboards": "Per-service operational dashboard",
+            "retention": "30 days minimum, 90 days for production"
+          },
+          "xray": {
+            "tracing": "Enable active tracing on all Lambda functions",
+            "sampling": "1% for high-volume, 100% for low-volume services",
+            "annotations": "Add user_id, request_id, and environment",
+            "subsegments": "Instrument external API calls and database queries"
+          }
+        }
+      },
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Sentry",
+          "version": "latest",
+          "rationale": "Error tracking, performance monitoring, release tracking, source maps",
+          "useCases": [
+            "all projects",
+            "error tracking",
+            "performance monitoring"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "AWS CloudWatch",
+          "version": "AWS",
+          "rationale": "AWS-native, logs + metrics + alarms, Lambda insights, cost-effective",
+          "useCases": [
+            "AWS apps",
+            "centralized logging",
+            "infrastructure monitoring"
+          ],
+          "configuration": {
+            "log_groups": {
+              "naming": "/aws/{service}/{environment}/{app-name}",
+              "retention_days": 30,
+              "encryption": "KMS-managed key for production"
+            },
+            "metrics": {
+              "namespace": "Protoflow/{AppName}",
+              "dimensions": ["Environment", "Service", "Operation"],
+              "resolution": "60 seconds standard, 1 second for critical paths"
+            },
+            "alarms": {
+              "required": [
+                "ErrorRate > 1% for 5 minutes",
+                "Latency P99 > 3s for 5 minutes",
+                "5xx responses > 10 in 5 minutes"
+              ],
+              "actions": "SNS topic for PagerDuty/Slack integration"
+            }
+          },
+          "docsUrl": "https://docs.aws.amazon.com/cloudwatch/",
+          "examplesUrl": "https://github.com/aws-samples/aws-cloudwatch-alarms-examples"
+        },
+        {
+          "rank": 3,
+          "name": "Datadog",
+          "version": "platform",
+          "rationale": "Full observability, APM, logs, metrics, traces, dashboards",
+          "useCases": [
+            "enterprise monitoring",
+            "complex systems",
+            "full observability"
+          ],
+          "docsUrl": "https://docs.datadoghq.com/",
+          "examplesUrl": "https://github.com/DataDog/dd-trace-js/tree/master/examples"
+        },
+        {
+          "rank": 4,
+          "name": "New Relic",
+          "version": "platform",
+          "rationale": "Full-stack observability, APM, infrastructure monitoring, distributed tracing",
+          "useCases": [
+            "enterprise monitoring",
+            "APM",
+            "distributed systems"
+          ],
+          "docsUrl": "https://docs.newrelic.com/",
+          "examplesUrl": "https://github.com/newrelic/newrelic-node-examples"
+        }
+      ]
+    },
+    "tracing": {
+      "description": "Distributed tracing for request tracking across services",
+      "required": {
+        "aws_projects": "X-Ray MUST be enabled for all AWS serverless applications"
+      },
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS X-Ray",
+          "version": "AWS",
+          "rationale": "AWS-native, service map visualization, trace analysis, annotations support",
+          "useCases": [
+            "AWS serverless apps",
+            "Lambda tracing",
+            "API Gateway tracing",
+            "distributed systems"
+          ],
+          "configuration": {
+            "lambda": {
+              "active_tracing": true,
+              "sdk": "aws-xray-sdk",
+              "capture_http": true,
+              "capture_aws_sdk": true
+            },
+            "api_gateway": {
+              "tracing_enabled": true,
+              "stage_variable": "xray_sampling_rate"
+            },
+            "sampling_rules": {
+              "default": {
+                "rate": 0.05,
+                "reservoir_size": 1
+              },
+              "high_priority": {
+                "rate": 1.0,
+                "url_path": "/api/v1/critical/*"
+              }
+            },
+            "annotations": [
+              "user_id",
+              "tenant_id",
+              "environment",
+              "version"
+            ],
+            "metadata": [
+              "request_body_size",
+              "response_status",
+              "db_query_count"
+            ]
+          },
+          "docsUrl": "https://docs.aws.amazon.com/xray/latest/devguide/",
+          "examplesUrl": "https://github.com/aws-samples/aws-xray-sdk-node-sample"
+        },
+        {
+          "rank": 2,
+          "name": "OpenTelemetry",
+          "version": "1.x",
+          "rationale": "Vendor-neutral, CNCF standard, wide ecosystem support",
+          "useCases": [
+            "multi-cloud apps",
+            "vendor-neutral tracing",
+            "custom instrumentation"
+          ],
+          "docsUrl": "https://opentelemetry.io/docs/",
+          "examplesUrl": "https://github.com/open-telemetry/opentelemetry-js/tree/main/examples"
+        },
+        {
+          "rank": 3,
+          "name": "Jaeger",
+          "version": "1.x",
+          "rationale": "Open source, self-hosted, Kubernetes-native, strong community",
+          "useCases": [
+            "self-hosted tracing",
+            "Kubernetes environments",
+            "cost optimization"
+          ],
+          "docsUrl": "https://www.jaegertracing.io/docs/",
+          "examplesUrl": "https://github.com/jaegertracing/jaeger/tree/main/examples"
+        }
+      ]
+    },
+    "ci_cd": {
+      "description": "Continuous Integration and Deployment",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "GitHub Actions",
+          "version": "built-in",
+          "rationale": "Native to GitHub, matrix builds, reusable workflows, marketplace",
+          "useCases": [
+            "all GitHub projects",
+            "automated testing",
+            "deployments"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "AWS CodePipeline + CodeBuild",
+          "version": "AWS",
+          "rationale": "AWS-native, deep AWS integration, VPC support, cost-effective",
+          "useCases": [
+            "AWS-native apps",
+            "complex AWS deployments",
+            "private VPC"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "GitLab CI",
+          "version": "built-in",
+          "rationale": "Native to GitLab, powerful YAML, Docker support, self-hosted runners",
+          "useCases": [
+            "GitLab projects",
+            "self-hosted CI",
+            "complex pipelines"
+          ]
+        }
+      ]
+    },
+    "caching": {
+      "description": "Application caching",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Redis (Upstash)",
+          "version": "7.x",
+          "rationale": "Serverless Redis, per-request pricing, REST API, global replication",
+          "useCases": [
+            "serverless apps",
+            "edge caching",
+            "session storage"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "AWS ElastiCache Redis",
+          "version": "7.x",
+          "rationale": "AWS-native, managed, cluster mode, auto-failover, VPC-isolated",
+          "useCases": [
+            "AWS apps",
+            "high-throughput",
+            "complex caching"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Cloudflare KV",
+          "version": "platform",
+          "rationale": "Edge key-value storage, global distribution, low latency",
+          "useCases": [
+            "edge computing",
+            "global distribution",
+            "simple caching"
+          ]
+        }
+      ]
+    },
+    "search": {
+      "description": "Full-text search and search engines",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Algolia",
+          "version": "API",
+          "rationale": "Fast, typo-tolerance, faceting, instant search, great DX",
+          "useCases": [
+            "product search",
+            "instant search",
+            "e-commerce"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "Meilisearch",
+          "version": "latest",
+          "rationale": "Open source, self-hosted, fast, typo-tolerant, simple API",
+          "useCases": [
+            "self-hosted search",
+            "cost optimization",
+            "privacy-sensitive"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "AWS OpenSearch",
+          "version": "2.x",
+          "rationale": "AWS-native, Elasticsearch-compatible, analytics, log search",
+          "useCases": [
+            "AWS apps",
+            "log analytics",
+            "complex queries"
+          ]
+        }
+      ]
+    },
+    "task_queues": {
+      "description": "Background job processing and task queues",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Inngest",
+          "version": "latest",
+          "rationale": "Serverless, durable functions, retries, cron, developer-first, TypeScript",
+          "useCases": [
+            "serverless background jobs",
+            "workflows",
+            "scheduled tasks"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "AWS SQS + Lambda",
+          "version": "AWS",
+          "rationale": "AWS-native, serverless, FIFO queues, dead-letter queues, reliable",
+          "useCases": [
+            "AWS apps",
+            "event-driven architectures",
+            "decoupling"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "BullMQ",
+          "version": "latest",
+          "rationale": "Redis-based, Node.js, rate limiting, priorities, repeatable jobs",
+          "useCases": [
+            "Node.js apps",
+            "complex job scheduling",
+            "priority queues"
+          ]
+        }
+      ]
+    },
+    "infrastructure_as_code": {
+      "description": "Infrastructure provisioning and management as code",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS CDK",
+          "version": "2.x",
+          "rationale": "AWS-native, TypeScript/Python, high-level constructs, CloudFormation under the hood",
+          "useCases": [
+            "AWS infrastructure",
+            "type-safe IaC",
+            "CloudFormation abstractions"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/cdk/v2/guide/home.html",
+          "examplesUrl": "https://github.com/aws-samples/aws-cdk-examples"
+        },
+        {
+          "rank": 2,
+          "name": "Terraform",
+          "version": "1.x",
+          "rationale": "Multi-cloud, declarative HCL, mature ecosystem, state management",
+          "useCases": [
+            "multi-cloud",
+            "infrastructure provisioning",
+            "state management"
+          ],
+          "docsUrl": "https://developer.hashicorp.com/terraform/docs",
+          "examplesUrl": "https://github.com/hashicorp/terraform-provider-aws/tree/main/examples"
+        },
+        {
+          "rank": 3,
+          "name": "AWS CloudFormation",
+          "version": "AWS",
+          "rationale": "AWS-native, JSON/YAML templates, integrated with AWS services",
+          "useCases": [
+            "AWS-only projects",
+            "AWS-native tooling",
+            "template-based IaC"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/cloudformation/",
+          "examplesUrl": "https://github.com/aws-cloudformation/aws-cloudformation-templates"
+        }
+      ]
+    },
+    "workflow_orchestration": {
+      "description": "Complex workflow and data pipeline orchestration",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Temporal",
+          "version": "latest",
+          "rationale": "Durable execution, workflow-as-code, retries, versioning, excellent DX",
+          "useCases": [
+            "complex workflows",
+            "long-running processes",
+            "distributed systems"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "AWS Step Functions",
+          "version": "AWS",
+          "rationale": "AWS-native, visual workflow, serverless, AWS service integration",
+          "useCases": [
+            "AWS apps",
+            "serverless workflows",
+            "AWS service orchestration"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "n8n",
+          "version": "latest",
+          "rationale": "Open source, visual workflow builder, 400+ integrations, self-hosted",
+          "useCases": [
+            "no-code workflows",
+            "integrations",
+            "rapid automation"
+          ]
+        }
+      ]
+    }
+  }
+}

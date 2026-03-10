@@ -1,0 +1,47 @@
+{
+  "domain": "email",
+  "version": "1.0.0",
+  "description": "Canonical email domain model with W3C RDF/OWL ontology",
+  "languages": ["typescript", "rust", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - Email, Folder, Attachment entities with SendEmail, DeleteEmail, ForwardEmail, MarkAsRead, Archive, Search actions"
+  },
+  "entities": [
+    "Email",
+    "Inbox",
+    "Folder",
+    "Thread",
+    "Attachment"
+  ],
+  "enums": [
+    "EmailStatus"
+  ],
+  "actions": [
+    "SendEmailAction",
+    "DeleteEmailAction",
+    "ForwardEmailAction",
+    "MarkAsReadAction",
+    "ArchiveEmailAction",
+    "SearchEmailsAction"
+  ],
+  "w3c_standards": [
+    "RDF",
+    "OWL",
+    "SHACL",
+    "Schema.org"
+  ],
+  "generated": {
+    "typescript": {
+      "file": "generated/typescript/email.types.ts",
+      "exports": ["Email", "EmailStatus", "EmailFolder", "EmailAttachment"]
+    },
+    "rust": {
+      "file": "generated/rust/email.rs",
+      "exports": ["Email", "EmailStatus", "EmailFolder", "EmailAttachment"]
+    },
+    "python": {
+      "file": "generated/python/email.py",
+      "exports": ["Email", "EmailStatus", "EmailFolder", "EmailAttachment"]
+    }
+  }
+}

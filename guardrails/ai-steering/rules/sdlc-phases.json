@@ -1,0 +1,313 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-19",
+  "rules": [
+    {
+      "id": "never-skip-phases",
+      "level": "NEVER",
+      "category": "sdlc",
+      "description": "Never skip SDLC phases (1→2→3→4→5→6→7→8→9)",
+      "context": {
+        "when": ["transitioning phases"],
+        "unless": ["spike exception explicitly approved"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "Phase skipping",
+        "message": "Must complete Phase {N} before Phase {N+1}. Current: {current_phase}"
+      },
+      "rationale": "9-phase SDLC ensures quality, design-first approach, prevents premature implementation",
+      "examples": [
+        {
+          "scenario": "User in Phase 3 wants to jump to Phase 8",
+          "correct": "Explain must complete Phases 4, 5, 6, 7 first. Offer to expedite if needed.",
+          "incorrect": "Move directly from Phase 3 to Phase 8"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "phase-1-seed-requirements",
+      "level": "MUST",
+      "category": "sdlc",
+      "description": "Phase 1 SEED must include: concept, problem, opportunity, assumptions, constraints, success criteria",
+      "context": {
+        "when": ["creating Phase 1 seed"],
+        "phase": ["PHASE_1_SEED"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Complete seed.md with all sections",
+        "message": "Phase 1 deliverable: seed.md with 7 required sections"
+      },
+      "rationale": "Seed document ensures clear problem definition before research",
+      "examples": [
+        {
+          "scenario": "User: 'Create new idea for CLI tool'",
+          "correct": "Generate seed.md with: 1.0 Concept, 2.0 Problem, 3.0 Opportunity, 4.0 Assumptions, 5.0 Constraints, 6.0 Success Criteria, 7.0 Initial Approach Ideas",
+          "incorrect": "Create incomplete seed with only concept section"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "phase-2-research-before-expansion",
+      "level": "MUST",
+      "category": "sdlc",
+      "description": "Phase 2 RESEARCH existing solutions before designing new one",
+      "context": {
+        "when": ["starting new prototype"],
+        "phase": ["PHASE_2_RESEARCH"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Research existing solutions, alternatives, prior art",
+        "message": "Phase 2: Research existing solutions before expanding design"
+      },
+      "rationale": "Avoid reinventing wheel, learn from existing solutions, understand trade-offs",
+      "examples": [
+        {
+          "scenario": "Phase 2, building semantic layer tool",
+          "correct": "Research: Cube.js, dbt, LookML, AWS Glue, existing semantic layer approaches",
+          "incorrect": "Skip research, immediately expand design in Phase 3"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "phase-6-design-deliverables",
+      "level": "MUST",
+      "category": "sdlc",
+      "description": "Phase 6 DESIGN must produce: architecture diagram, component breakdown, data models, API contracts",
+      "context": {
+        "when": ["completing Phase 6"],
+        "phase": ["PHASE_6_DESIGN"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Complete technical design artifacts",
+        "message": "Phase 6 deliverables: TECHNICAL_DESIGN.md with diagrams, components, data models"
+      },
+      "rationale": "Detailed design prevents implementation surprises, enables accurate estimation",
+      "examples": [
+        {
+          "scenario": "Completing Phase 6 for API service",
+          "correct": "Create: System diagram, component breakdown, database schema, API endpoint specs, error handling patterns",
+          "incorrect": "Skip to Phase 7 with only high-level architecture sketch"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "phase-7-test-design-before-code",
+      "level": "MUST",
+      "category": "sdlc",
+      "description": "Phase 7 TEST_DESIGN: Write test specifications before implementation",
+      "context": {
+        "when": ["preparing for Phase 8"],
+        "phase": ["PHASE_7_TEST_DESIGN"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Test specifications, test cases, test data",
+        "message": "Phase 7: Design tests first (what to test, expected behavior)"
+      },
+      "rationale": "Test-first mindset ensures testability, clear acceptance criteria",
+      "examples": [
+        {
+          "scenario": "Phase 7 for authentication feature",
+          "correct": "Write: Login test cases, session test cases, permission test cases, edge cases, test data fixtures",
+          "incorrect": "Skip Phase 7, write tests during Phase 8 implementation"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "phase-8-implementation-only",
+      "level": "NEVER",
+      "category": "sdlc",
+      "description": "Never write production code outside Phase 8 (except spikes)",
+      "context": {
+        "when": ["writing production code"],
+        "unless": ["spike exception", "phase is PHASE_8 or later"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "Production code before Phase 8",
+        "message": "Cannot write production code in {current_phase}. Reach Phase 8 first."
+      },
+      "rationale": "Ensures design, testing planned before coding. Prevents premature implementation.",
+      "examples": [
+        {
+          "scenario": "Phase 6, user asks to 'start coding the API'",
+          "correct": "Explain: 'Phase 6 is design. Complete design, then Phase 7 tests, then Phase 8 code.'",
+          "incorrect": "Start writing API implementation code"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "phase-8.5-web-ui-validation",
+      "level": "MUST",
+      "category": "sdlc",
+      "description": "Web/UI projects must complete Phase 8.5 VALIDATION (E2E tests, screenshots, QA)",
+      "context": {
+        "when": ["project involves web UI", "completing Phase 8"],
+        "phase": ["PHASE_8_IMPLEMENTATION"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Phase 8.5 validation step before Phase 9",
+        "message": "Web/UI project: Phase 8 → 8.5 (E2E, screenshots, QA) → Phase 9"
+      },
+      "rationale": "UI projects need visual/interaction validation beyond unit tests",
+      "examples": [
+        {
+          "scenario": "Completed React app implementation",
+          "correct": "Move to Phase 8.5: Run Playwright E2E tests, capture screenshots, manual QA checklist",
+          "incorrect": "Skip directly to Phase 9 refinement without validation"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "spike-max-3-days",
+      "level": "MUST",
+      "category": "sdlc",
+      "description": "SPIKE exceptions limited to 3 days max, throwaway code only",
+      "context": {
+        "when": ["spike exception requested"],
+        "phase": ["SPIKE"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "3-day max timeline, code not merged to main",
+        "message": "Spike: Max 3 days, throwaway code, findings inform design"
+      },
+      "rationale": "Spikes are learning tools, not production shortcuts. Time-box prevents scope creep.",
+      "examples": [
+        {
+          "scenario": "User: 'Quick spike to test feasibility'",
+          "correct": "Approve 3-day spike, create spike branch, document findings, don't merge code",
+          "incorrect": "Allow indefinite spike, merge spike code to production"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "divergent-mode-confirmation",
+      "level": "MUST",
+      "category": "sdlc",
+      "description": "DIVERGENT mode requires confirmation: depth, width, evaluation criteria",
+      "context": {
+        "when": ["entering divergent mode"],
+        "phase": ["DIVERGENT"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "Divergent parameters (depth, width, clustering strategy)",
+        "message": "Divergent mode: Confirm depth (1-3), width (3-5), evaluation criteria"
+      },
+      "rationale": "Divergent generates many variants, user must confirm scope and effort",
+      "examples": [
+        {
+          "scenario": "User: 'Try 3 different architectures'",
+          "correct": "Confirm: depth=1, width=3, eval criteria (cost, performance, complexity). Show effort estimate.",
+          "incorrect": "Immediately generate variants without confirmation"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "phase-transition-gate-approval",
+      "level": "MUST",
+      "category": "sdlc",
+      "description": "Major phase transitions (3→4, 5→6, 7→8) require user approval",
+      "context": {
+        "when": ["transitioning to next phase"],
+        "phase": ["PHASE_3_EXPANSION", "PHASE_5_SELECTION", "PHASE_7_TEST_DESIGN"]
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "Phase transition with deliverables summary",
+        "message": "Phase {N} complete. Deliverables: {list}. Move to Phase {N+1}? y/n"
+      },
+      "rationale": "User approval at gates ensures quality, prevents rushing",
+      "examples": [
+        {
+          "scenario": "Completed Phase 5 approach selection",
+          "correct": "Summary: 'Phase 5 complete. Selected: FastAPI + React. Move to Phase 6 design? y/n'",
+          "incorrect": "Automatically move to Phase 6 without user acknowledgment"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "update-project-metadata-phase-transition",
+      "level": "ALWAYS",
+      "category": "sdlc",
+      "description": "Update .project file on every phase transition",
+      "context": {
+        "when": ["transitioning phases"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Update .project current_phase, phase_number, updated_at",
+        "message": "Updating .project metadata for phase transition"
+      },
+      "rationale": "Accurate .project metadata enables phase detection, tracking",
+      "examples": [
+        {
+          "scenario": "Moving from Phase 6 to Phase 7",
+          "correct": "Edit .project: current_phase='TECHNICAL_DESIGN'→'TEST_DESIGN', phase_number=6→7, updated_at=now",
+          "incorrect": "Change phase without updating .project file"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    }
+  ]
+}

@@ -1,0 +1,550 @@
+# Service Catalog Domain
+# Services offered, pricing, duration
+# Version: 1.0.0
+
+domain:
+  name: service-catalog
+  version: "1.0.0"
+  status: production
+  description: Services offered by a business with pricing and scheduling
+  dependencies: [core, booking]
+  use_case: Salons, auto shops, professional services, home services
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Service:
+    description: A service offered by a business
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      display_name:
+        type: string
+      description:
+        type: string
+      short_description:
+        type: string
+        description: Brief description for listings
+
+      # Classification
+      category_id:
+        type: uuid
+        required: true
+        description: FK to ServiceCategory
+      service_type:
+        type: ServiceType
+        required: true
+      tags:
+        type: array
+        items: string
+
+      # Duration
+      duration:
+        type: Duration
+        required: true
+      duration_type:
+        type: DurationType
+        required: true
+        default: fixed
+      min_duration:
+        type: Duration
+        description: For variable duration
+      max_duration:
+        type: Duration
+      buffer_before:
+        type: Duration
+        description: Prep time before
+      buffer_after:
+        type: Duration
+        description: Cleanup time after
+
+      # Pricing
+      pricing_type:
+        type: PricingType
+        required: true
+      base_price:
+        type: Money
+        required: true
+      price_unit:
+        type: PriceUnit
+        required: true
+        default: per_service
+      min_price:
+        type: Money
+        description: For variable pricing
+      max_price:
+        type: Money
+      deposit_required:
+        type: boolean
+        default: false
+      deposit_amount:
+        type: Money
+      deposit_percentage:
+        type: decimal
+
+      # Add-ons and variations
+      variations:
+        type: array
+        items: ServiceVariation
+      add_ons:
+        type: array
+        items: ServiceAddOn
+
+      # Resources required
+      required_resources:
+        type: array
+        items: ResourceRequirement
+      assigned_providers:
+        type: array
+        items: string
+        description: Provider IDs who can perform this service
+
+      # Capacity
+      capacity:
+        type: integer
+        default: 1
+        description: How many can be served simultaneously
+      group_service:
+        type: boolean
+        default: false
+        description: Is this a group service (class, tour)
+      min_participants:
+        type: integer
+      max_participants:
+        type: integer
+
+      # Booking constraints
+      requires_consultation:
+        type: boolean
+        default: false
+      requires_deposit:
+        type: boolean
+        default: false
+      advance_booking_min:
+        type: Duration
+        description: Minimum advance booking time
+      advance_booking_max:
+        type: Duration
+        description: Maximum advance booking time
+      cancellation_policy_id:
+        type: uuid
+        description: FK to CancellationPolicy
+
+      # Media
+      images:
+        type: array
+        items: MediaObject
+      featured_image:
+        type: MediaObject
+
+      # Availability
+      available_online:
+        type: boolean
+        default: true
+      available_in_person:
+        type: boolean
+        default: true
+      location_ids:
+        type: array
+        items: uuid
+        description: Which locations offer this
+
+      # Status
+      status:
+        type: ServiceStatus
+        required: true
+        default: active
+      featured:
+        type: boolean
+        default: false
+      sort_order:
+        type: integer
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ServiceCategory:
+    description: Category for organizing services
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      slug:
+        type: string
+        description: URL-friendly identifier
+      parent_id:
+        type: uuid
+        description: For hierarchical categories
+      icon:
+        type: string
+      image:
+        type: MediaObject
+      color:
+        type: string
+      sort_order:
+        type: integer
+      status:
+        type: CategoryStatus
+        default: active
+
+  ServiceVariation:
+    description: Variation of a service (e.g., hair length options)
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      price_adjustment:
+        type: Money
+        description: Price difference from base
+      duration_adjustment:
+        type: Duration
+        description: Duration difference from base
+      is_default:
+        type: boolean
+        default: false
+      sort_order:
+        type: integer
+
+  ServiceAddOn:
+    description: Optional add-on to a service
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      price:
+        type: Money
+        required: true
+      duration:
+        type: Duration
+      max_quantity:
+        type: integer
+        default: 1
+      requires_main_service:
+        type: boolean
+        default: true
+      status:
+        type: ServiceStatus
+        default: active
+
+  ResourceRequirement:
+    description: Resource required to perform service
+    properties:
+      resource_type:
+        type: string
+        required: true
+        description: Type of resource (room, equipment, person)
+      resource_id:
+        type: uuid
+        description: Specific resource (null for any of type)
+      quantity:
+        type: integer
+        default: 1
+      is_optional:
+        type: boolean
+        default: false
+
+  ServiceProvider:
+    description: A person who provides services
+    properties:
+      id:
+        type: uuid
+        required: true
+      user_id:
+        type: string
+        required: true
+        description: FK to user/employee
+      name:
+        type: string
+        required: true
+      title:
+        type: string
+        description: Job title or role
+      bio:
+        type: string
+      photo:
+        type: MediaObject
+
+      # Services
+      services:
+        type: array
+        items: uuid
+        description: Service IDs this provider offers
+      specialties:
+        type: array
+        items: string
+
+      # Availability
+      schedule_id:
+        type: uuid
+        description: FK to OperatingSchedule
+      accepting_bookings:
+        type: boolean
+        default: true
+
+      # Ratings
+      rating:
+        type: decimal
+      review_count:
+        type: integer
+        default: 0
+
+      # Location
+      location_ids:
+        type: array
+        items: uuid
+        description: Locations where they work
+
+      status:
+        type: ProviderStatus
+        default: active
+
+  CancellationPolicy:
+    description: Policy for service cancellations
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+
+      # Rules
+      rules:
+        type: array
+        items: CancellationRule
+        required: true
+
+      # Defaults
+      is_default:
+        type: boolean
+        default: false
+
+  CancellationRule:
+    description: A rule within cancellation policy
+    properties:
+      hours_before:
+        type: integer
+        required: true
+        description: Applies if canceled within this many hours
+      refund_percentage:
+        type: decimal
+        required: true
+        description: Percentage refunded (0-100)
+      fee:
+        type: Money
+        description: Fixed cancellation fee
+
+  ServicePackage:
+    description: Bundle of services at discounted price
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+
+      # Services included
+      items:
+        type: array
+        items: PackageItem
+        required: true
+
+      # Pricing
+      regular_price:
+        type: Money
+        required: true
+        description: Sum of individual prices
+      package_price:
+        type: Money
+        required: true
+        description: Discounted bundle price
+      savings:
+        type: Money
+        description: Computed savings
+      savings_percentage:
+        type: decimal
+
+      # Validity
+      valid_days:
+        type: integer
+        description: Days to use package from purchase
+      sessions_included:
+        type: integer
+        description: For multi-session packages
+
+      status:
+        type: ServiceStatus
+        default: active
+
+  PackageItem:
+    description: A service included in a package
+    properties:
+      service_id:
+        type: uuid
+        required: true
+      quantity:
+        type: integer
+        default: 1
+      variation_id:
+        type: uuid
+        description: Specific variation included
+      add_ons_included:
+        type: array
+        items: uuid
+
+enums:
+
+  ServiceType:
+    values:
+      - appointment       # One-on-one appointment
+      - class             # Group class
+      - consultation      # Consultation/assessment
+      - treatment         # Treatment/procedure
+      - maintenance       # Maintenance service
+      - repair            # Repair service
+      - installation      # Installation service
+      - inspection        # Inspection service
+      - virtual           # Virtual/remote service
+      - on_site           # On-site service
+
+  DurationType:
+    values:
+      - fixed             # Exact duration
+      - estimated         # Approximate
+      - variable          # Customer chooses
+      - open_ended        # No fixed end
+
+  PricingType:
+    values:
+      - fixed             # Fixed price
+      - hourly            # Per hour
+      - variable          # Depends on options
+      - quote             # Requires quote
+      - starting_at       # Minimum price
+      - range             # Price range
+
+  PriceUnit:
+    values:
+      - per_service       # Per service rendered
+      - per_hour          # Hourly rate
+      - per_person        # Per person (group)
+      - per_unit          # Per unit (sq ft, item, etc.)
+      - per_session       # Per session
+
+  ServiceStatus:
+    values:
+      - draft
+      - active
+      - inactive
+      - discontinued
+      - seasonal          # Only available certain times
+
+  CategoryStatus:
+    values:
+      - active
+      - inactive
+      - hidden
+
+  ProviderStatus:
+    values:
+      - active
+      - inactive
+      - on_leave
+      - terminated
+
+examples:
+
+  haircut:
+    name: "Haircut"
+    display_name: "Haircut & Style"
+    description: "Precision haircut with consultation"
+    category_id: "cat_hair_services"
+    service_type: appointment
+    duration: "PT45M"
+    duration_type: fixed
+    pricing_type: fixed
+    base_price: { amount: 50, currency: "USD" }
+    price_unit: per_service
+    variations:
+      - name: "Short hair"
+        price_adjustment: { amount: 0, currency: "USD" }
+        is_default: true
+      - name: "Long hair"
+        price_adjustment: { amount: 15, currency: "USD" }
+    add_ons:
+      - name: "Deep conditioning"
+        price: { amount: 20, currency: "USD" }
+        duration: "PT15M"
+    status: active
+
+  oil_change:
+    name: "Oil Change"
+    display_name: "Full Synthetic Oil Change"
+    description: "Complete oil and filter change with inspection"
+    category_id: "cat_maintenance"
+    service_type: maintenance
+    duration: "PT30M"
+    duration_type: estimated
+    pricing_type: starting_at
+    base_price: { amount: 49.99, currency: "USD" }
+    min_price: { amount: 49.99, currency: "USD" }
+    max_price: { amount: 89.99, currency: "USD" }
+    price_unit: per_service
+    variations:
+      - name: "Standard (up to 5 quarts)"
+        is_default: true
+      - name: "Extended (up to 8 quarts)"
+        price_adjustment: { amount: 25, currency: "USD" }
+    status: active
+
+  yoga_class:
+    name: "yoga_flow"
+    display_name: "Yoga Flow"
+    description: "All-levels vinyasa yoga class"
+    category_id: "cat_fitness"
+    service_type: class
+    duration: "PT60M"
+    duration_type: fixed
+    pricing_type: fixed
+    base_price: { amount: 25, currency: "USD" }
+    price_unit: per_person
+    capacity: 20
+    group_service: true
+    min_participants: 3
+    max_participants: 20
+    status: active
+
+sources:
+  - "Square Appointments"
+  - "Mindbody Service Catalog"
+  - "Acuity Scheduling"
+  - "Professional Services Best Practices"

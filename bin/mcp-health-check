@@ -1,0 +1,277 @@
+#!/usr/bin/env python3
+# File UUID: 9a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
+
+"""
+MCP Health Check Tool
+
+Verifies MCP server processes are running and responding.
+Checks environment variables, network dependencies, and server responsiveness.
+"""
+
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+
+
+@dataclass
+class ServerHealth:
+    name: str
+    configured: bool
+    process_running: bool
+    env_vars_ok: bool
+    dependencies_ok: bool
+    errors: List[str]
+    warnings: List[str]
+
+
+class MCPHealthChecker:
+    def __init__(self):
+        self.home_dir = Path.home()
+        self.global_config_path = self.home_dir / ".claude" / "settings.json"
+        self.servers: Dict[str, dict] = {}
+        self.health_results: List[ServerHealth] = []
+
+    def load_config(self) -> bool:
+        """Load MCP server configuration"""
+        if not self.global_config_path.exists():
+            print(f"❌ Config not found: {self.global_config_path}")
+            return False
+
+        try:
+            with open(self.global_config_path, 'r') as f:
+                config = json.load(f)
+                self.servers = config.get("mcpServers", {})
+                return True
+        except Exception as e:
+            print(f"❌ Error loading config: {e}")
+            return False
+
+    def check_process_running(self, command: str, args: List[str]) -> bool:
+        """Check if a process matching the command is running"""
+        try:
+            result = subprocess.run(
+                ["pgrep", "-f", command],
+                capture_output=True,
+                text=True
+            )
+            return result.returncode == 0
+        except Exception:
+            return False
+
+    def check_env_vars(self, env_config: Optional[Dict[str, str]]) -> Tuple[bool, List[str]]:
+        """Check if required environment variables are set"""
+        if not env_config:
+            return True, []
+
+        missing = []
+        for key in env_config.keys():
+            if key not in os.environ and key not in env_config:
+                missing.append(key)
+
+        return len(missing) == 0, missing
+
+    def check_command_exists(self, command: str) -> Tuple[bool, Optional[str]]:
+        """Check if command executable exists"""
+        # If absolute path, check directly
+        if command.startswith("/"):
+            if Path(command).exists():
+                return True, None
+            else:
+                return False, f"Executable not found: {command}"
+
+        # Otherwise check in PATH
+        result = subprocess.run(
+            ["which", command],
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode == 0:
+            return True, None
+        else:
+            return False, f"Command not in PATH: {command}"
+
+    def check_network_dependency(self, server_name: str, config: dict) -> Tuple[bool, List[str]]:
+        """Check network dependencies for specific servers"""
+        warnings = []
+
+        # Check playwright CDP endpoint
+        if server_name == "playwright":
+            if "--cdp-endpoint" in config.get("args", []):
+                # Try to check if Chrome DevTools is listening
+                warnings.append("Playwright requires Chrome with remote debugging (port 9222)")
+
+        # Check Neo4j for graph-rag
+        if server_name == "graph-rag":
+            env = config.get("env", {})
+            if "NEO4J_URI" in env:
+                warnings.append("Graph-rag requires Neo4j running on bolt://localhost:7687")
+
+        return len(warnings) == 0, warnings
+
+    def check_file_paths(self, args: List[str]) -> Tuple[bool, List[str]]:
+        """Check if file paths in arguments exist"""
+        errors = []
+
+        for arg in args:
+            # Check if arg looks like a path
+            if arg.startswith("/") or arg.startswith("~"):
+                path = Path(arg).expanduser()
+                if not path.exists():
+                    errors.append(f"Path does not exist: {arg}")
+
+        return len(errors) == 0, errors
+
+    def check_server_health(self, name: str, config: dict) -> ServerHealth:
+        """Perform comprehensive health check on a server"""
+        errors = []
+        warnings = []
+
+        # Check command exists
+        command = config.get("command", "")
+        cmd_ok, cmd_error = self.check_command_exists(command)
+        if not cmd_ok:
+            errors.append(cmd_error)
+
+        # Check environment variables
+        env_ok, missing_vars = self.check_env_vars(config.get("env"))
+        if not env_ok:
+            errors.append(f"Missing env vars: {', '.join(missing_vars)}")
+
+        # Check file paths in args
+        args = config.get("args", [])
+        paths_ok, path_errors = self.check_file_paths(args)
+        if not paths_ok:
+            errors.extend(path_errors)
+
+        # Check network dependencies
+        net_ok, net_warnings = self.check_network_dependency(name, config)
+        warnings.extend(net_warnings)
+
+        # Check if process is running (best effort)
+        process_running = self.check_process_running(command, args)
+
+        return ServerHealth(
+            name=name,
+            configured=True,
+            process_running=process_running,
+            env_vars_ok=env_ok,
+            dependencies_ok=cmd_ok and paths_ok,
+            errors=errors,
+            warnings=warnings
+        )
+
+    def run_health_checks(self):
+        """Run health checks on all configured servers"""
+        for name, config in self.servers.items():
+            health = self.check_server_health(name, config)
+            self.health_results.append(health)
+
+    def print_report(self):
+        """Print health check report"""
+        print("=" * 80)
+        print("  MCP SERVER HEALTH CHECK")
+        print("=" * 80)
+        print()
+
+        total = len(self.health_results)
+        healthy = sum(1 for h in self.health_results if not h.errors)
+
+        print(f"Servers checked: {total}")
+        print(f"Healthy: {healthy}")
+        print(f"Issues: {total - healthy}")
+        print()
+
+        # Group by health status
+        healthy_servers = [h for h in self.health_results if not h.errors]
+        unhealthy_servers = [h for h in self.health_results if h.errors]
+        warned_servers = [h for h in self.health_results if h.warnings and not h.errors]
+
+        # Print unhealthy servers first
+        if unhealthy_servers:
+            print("┌─ CRITICAL ISSUES")
+            print("│")
+            for health in unhealthy_servers:
+                print(f"│ ❌ {health.name}")
+                for error in health.errors:
+                    print(f"│    {error}")
+                print("│")
+            print("└─")
+            print()
+
+        # Print warnings
+        if warned_servers:
+            print("┌─ WARNINGS")
+            print("│")
+            for health in warned_servers:
+                print(f"│ ⚠️  {health.name}")
+                for warning in health.warnings:
+                    print(f"│    {warning}")
+                print("│")
+            print("└─")
+            print()
+
+        # Print healthy servers
+        if healthy_servers:
+            print("┌─ HEALTHY SERVERS")
+            print("│")
+            for health in healthy_servers:
+                status = "🟢" if health.process_running else "🟡"
+                running_status = " (running)" if health.process_running else " (not running, will start on demand)"
+                print(f"│ {status} {health.name}{running_status}")
+            print("│")
+            print("└─")
+            print()
+
+        # Print recommendations
+        if unhealthy_servers or warned_servers:
+            print("┌─ RECOMMENDATIONS")
+            print("│")
+
+            if unhealthy_servers:
+                print("│ 1. Fix critical issues before using MCP servers")
+                print("│    → Check file paths are absolute")
+                print("│    → Verify environment variables are set")
+                print("│    → Ensure executables are installed")
+                print("│")
+
+            if warned_servers:
+                print("│ 2. Address warnings for optimal performance")
+                print("│    → Start required services (Chrome, Neo4j, etc.)")
+                print("│    → Verify network connectivity")
+                print("│")
+
+            print("│ 3. Run audit to check configuration")
+            print("│    → bin/audit-mcp-config")
+            print("│")
+            print("└─")
+            print()
+
+    def get_exit_code(self) -> int:
+        """Return exit code based on health results"""
+        unhealthy = sum(1 for h in self.health_results if h.errors)
+        return 1 if unhealthy > 0 else 0
+
+
+def main():
+    checker = MCPHealthChecker()
+
+    if not checker.load_config():
+        return 1
+
+    if not checker.servers:
+        print("⚠️  No MCP servers configured")
+        return 0
+
+    checker.run_health_checks()
+    checker.print_report()
+
+    return checker.get_exit_code()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

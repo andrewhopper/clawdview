@@ -1,0 +1,77 @@
+{
+  "$schema": "https://protoflow.ai/schemas/domain-version.schema.json",
+  "domain": "finance",
+  "current_version": "2.0.0",
+  "description": "Financial transactions, payments, monetary operations, and accounting (AP/AR)",
+  "languages": ["typescript", "python"],
+  "dependencies": {
+    "core": "^1.0.0"
+  },
+  "versions": {
+    "2.0.0": {
+      "released_at": "2025-11-27",
+      "status": "current",
+      "changes": "Added accounting entities - Vendor, Customer, Bill, AccountsPayable, AccountsReceivable, PaymentTerms, AgingReport, CreditMemo, DebitMemo",
+      "breaking_changes": [],
+      "migration": null
+    },
+    "1.0.0": {
+      "released_at": "2025-09-01",
+      "status": "supported",
+      "support_until": "2026-05-27",
+      "changes": "Initial release - Transaction, Payment, PaymentInstrument, BankAccount, Invoice, Refund"
+    }
+  },
+  "entities": [
+    "Transaction",
+    "Payment",
+    "PaymentInstrument",
+    "BankAccount",
+    "Invoice",
+    "InvoiceLineItem",
+    "Refund",
+    "Vendor",
+    "Customer",
+    "PaymentTerms",
+    "Bill",
+    "BillLineItem",
+    "AccountsPayable",
+    "AccountsReceivable",
+    "AgingReport",
+    "AgingBucket",
+    "CreditMemo",
+    "DebitMemo"
+  ],
+  "actions": [
+    "CreatePayment",
+    "ProcessPayment",
+    "RefundPayment",
+    "CreateInvoice",
+    "RecordPayment",
+    "AddPaymentInstrument",
+    "CreateVendor",
+    "CreateCustomer",
+    "CreatePaymentTerms",
+    "CreateBill",
+    "RecordBillPayment",
+    "ApplyCreditMemo",
+    "ApplyDebitMemo",
+    "GenerateAgingReport",
+    "GetAccountsPayable",
+    "GetAccountsReceivable"
+  ],
+  "enums": [
+    "PaymentMethodType",
+    "TransactionStatus",
+    "TransactionType",
+    "InvoiceStatus",
+    "BankAccountType",
+    "CurrencyCode",
+    "PaymentTermsType",
+    "BillStatus",
+    "AgingBucketType",
+    "AccountType"
+  ],
+  "w3c_standards": ["RDF", "OWL", "SHACL"],
+  "extracted_from": ["expense-report (PaymentMethod, Reimbursement)"]
+}

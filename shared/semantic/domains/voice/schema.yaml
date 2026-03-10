@@ -1,0 +1,302 @@
+# Voice Domain Model
+# Voice calls, conferencing, recording, and transcription
+# Extracted from mobile domain, inspired by Twilio Programmable Voice
+
+domain:
+  name: voice
+  version: "1.0.0"
+  description: Voice calls, conferencing, recording, and transcription
+  dependencies: [core]
+  source: Twilio Programmable Voice API
+  created_at: "2025-11-22"
+  updated_at: "2025-11-22"
+
+entities:
+
+  Call:
+    description: Voice call resource
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      parentCallId: { type: string, description: "Parent call for child legs" }
+      from: { type: string, required: true, description: "Caller (E.164)" }
+      to: { type: string, required: true, description: "Callee (E.164)" }
+      fromFormatted: { type: string }
+      toFormatted: { type: string }
+      status: { type: CallStatus, required: true }
+      direction: { type: CallDirection, required: true }
+      answeredBy: { type: AnsweredBy }
+      durationSeconds: { type: integer }
+      price: { type: decimal }
+      priceCurrency: { type: string }
+      callerName: { type: string, description: "Caller ID name (CNAM)" }
+      forwardedFrom: { type: string, description: "Original number if forwarded" }
+      queueTimeMs: { type: integer, description: "Time in queue" }
+      trunkId: { type: string, description: "SIP trunk used" }
+      startTime: { type: datetime }
+      endTime: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CallRecording:
+    description: Recording of a voice call
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      callId: { type: string, required: true }
+      conferenceId: { type: string }
+      durationSeconds: { type: integer }
+      channels: { type: integer, description: "Audio channels (1=mono, 2=stereo)" }
+      source: { type: RecordingSource }
+      status: { type: RecordingStatus, required: true }
+      url: { type: uri }
+      fileFormat: { type: AudioFormat }
+      fileSize: { type: integer }
+      errorCode: { type: integer }
+      price: { type: decimal }
+      priceCurrency: { type: string }
+      startTime: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Transcription:
+    description: Transcription of a call recording
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      recordingId: { type: string, required: true }
+      status: { type: TranscriptionStatus, required: true }
+      text: { type: string }
+      durationSeconds: { type: integer }
+      language: { type: string, description: "ISO language code" }
+      confidence: { type: decimal, description: "0.0-1.0 confidence score" }
+      words: { type: array, items: TranscriptionWord }
+      price: { type: decimal }
+      priceCurrency: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  TranscriptionWord:
+    description: Individual word with timing
+    properties:
+      word: { type: string, required: true }
+      startMs: { type: integer, required: true }
+      endMs: { type: integer, required: true }
+      confidence: { type: decimal }
+      speaker: { type: string, description: "Speaker label for diarization" }
+
+  Conference:
+    description: Multi-party conference call
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      friendlyName: { type: string, required: true }
+      status: { type: ConferenceStatus, required: true }
+      region: { type: string }
+      endReason: { type: ConferenceEndReason }
+      endedByCallId: { type: string }
+      maxParticipants: { type: integer }
+      recordingEnabled: { type: boolean }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ConferenceParticipant:
+    description: Participant in a conference call
+    properties:
+      id: { type: string, required: true }
+      callId: { type: string, required: true }
+      conferenceId: { type: string, required: true }
+      accountId: { type: string, required: true }
+      label: { type: string }
+      status: { type: ParticipantStatus, required: true }
+      muted: { type: boolean, default: false }
+      hold: { type: boolean, default: false }
+      coaching: { type: boolean, default: false }
+      coachingCallId: { type: string }
+      startConferenceOnEnter: { type: boolean }
+      endConferenceOnExit: { type: boolean }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Voicemail:
+    description: Voicemail message
+    properties:
+      id: { type: string, required: true }
+      accountId: { type: string, required: true }
+      callId: { type: string, required: true }
+      from: { type: string, required: true }
+      to: { type: string, required: true }
+      durationSeconds: { type: integer }
+      recordingUrl: { type: uri }
+      transcriptionId: { type: string }
+      isRead: { type: boolean, default: false }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+enums:
+
+  CallStatus:
+    values:
+      - Queued
+      - Ringing
+      - InProgress
+      - Completed
+      - Busy
+      - Failed
+      - NoAnswer
+      - Canceled
+
+  CallDirection:
+    values:
+      - Inbound
+      - OutboundApi
+      - OutboundDial
+
+  AnsweredBy:
+    description: Who/what answered the call
+    values:
+      - Human
+      - MachineStart
+      - MachineEndBeep
+      - MachineEndSilence
+      - MachineEndOther
+      - Fax
+      - Unknown
+
+  RecordingSource:
+    values:
+      - DialVerb
+      - Conference
+      - OutboundApi
+      - Trunking
+      - RecordVerb
+      - StartRecordingApi
+
+  RecordingStatus:
+    values:
+      - Processing
+      - Completed
+      - Absent
+      - Deleted
+      - Failed
+
+  AudioFormat:
+    values:
+      - MP3
+      - WAV
+      - OGG
+      - FLAC
+
+  TranscriptionStatus:
+    values:
+      - Queued
+      - InProgress
+      - Completed
+      - Failed
+
+  ConferenceStatus:
+    values:
+      - Init
+      - InProgress
+      - Completed
+
+  ConferenceEndReason:
+    values:
+      - LastParticipantLeft
+      - EndedViaApi
+      - ParticipantWithEndOnExitLeft
+
+  ParticipantStatus:
+    values:
+      - Queued
+      - Connecting
+      - Ringing
+      - Connected
+      - Complete
+      - Failed
+
+actions:
+
+  MakeCall:
+    description: Initiate an outbound call
+    parameters:
+      to: { type: string, required: true }
+      from: { type: string, required: true }
+      webhookUrl: { type: uri, description: "TwiML/instructions URL" }
+      statusCallbackUrl: { type: uri }
+      statusCallbackEvents: { type: array, items: string }
+      timeoutSeconds: { type: integer, default: 60 }
+      record: { type: boolean, default: false }
+      machineDetection: { type: boolean, default: false }
+    result: Call
+
+  GetCall:
+    description: Get call details
+    parameters:
+      id: { type: string, required: true }
+    result: Call
+
+  UpdateCall:
+    description: Modify an in-progress call
+    parameters:
+      id: { type: string, required: true }
+      status: { type: CallStatus, description: "Set Completed to end" }
+      webhookUrl: { type: uri }
+      muted: { type: boolean }
+    result: Call
+
+  EndCall:
+    description: End a call
+    parameters:
+      id: { type: string, required: true }
+    result: Call
+
+  CreateConference:
+    description: Create a conference room
+    parameters:
+      friendlyName: { type: string, required: true }
+      maxParticipants: { type: integer }
+      record: { type: boolean, default: false }
+      statusCallbackUrl: { type: uri }
+    result: Conference
+
+  AddParticipant:
+    description: Add participant to conference
+    parameters:
+      conferenceId: { type: string, required: true }
+      from: { type: string, required: true }
+      to: { type: string, required: true }
+      muted: { type: boolean, default: false }
+      startConferenceOnEnter: { type: boolean, default: true }
+      endConferenceOnExit: { type: boolean, default: false }
+    result: ConferenceParticipant
+
+  MuteParticipant:
+    description: Mute/unmute a conference participant
+    parameters:
+      conferenceId: { type: string, required: true }
+      participantId: { type: string, required: true }
+      muted: { type: boolean, required: true }
+    result: ConferenceParticipant
+
+  StartRecording:
+    description: Start recording a call
+    parameters:
+      callId: { type: string, required: true }
+      channels: { type: integer, default: 1 }
+      statusCallbackUrl: { type: uri }
+    result: CallRecording
+
+  StopRecording:
+    description: Stop an active recording
+    parameters:
+      recordingId: { type: string, required: true }
+    result: CallRecording
+
+  TranscribeRecording:
+    description: Transcribe a call recording
+    parameters:
+      recordingId: { type: string, required: true }
+      language: { type: string, default: "en-US" }
+      enableSpeakerDiarization: { type: boolean, default: false }
+    result: Transcription

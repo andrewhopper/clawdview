@@ -1,0 +1,143 @@
+# AWS CodeBuild Build Specification
+# File UUID: 5d7e9f1a-4b6c-8d0e-2f3a-5b7c9d1e3f4a
+#
+# Copy to: buildspec.yml (project root)
+#
+# Required SSM parameters or environment variables:
+#   - /app/production-url (or PRODUCTION_URL env var)
+#   - /app/test-coverage-threshold (optional, default: 70)
+#
+# CodeBuild project configuration:
+#   - Source: Your repository
+#   - Environment: Ubuntu standard 7.0 (or newer)
+#   - Compute: Small (3 GB, 2 vCPU) for most projects
+
+version: 0.2
+
+# ============================================================================
+# ENVIRONMENT CONFIGURATION
+# ============================================================================
+
+env:
+  variables:
+    # All test configuration is parameterized with defaults
+    TEST_COVERAGE_THRESHOLD: "70"
+    TEST_TIMEOUT: "30000"
+    TEST_RETRIES: "2"
+    TEST_FAIL_FAST: "true"
+    TEST_REPORT_DIR: "./test-reports"
+    CI: "true"
+  parameter-store:
+    # Override from SSM Parameter Store (optional)
+    # PRODUCTION_URL: "/app/production-url"
+    # TEST_COVERAGE_THRESHOLD: "/app/test-coverage-threshold"
+  exported-variables:
+    - TEST_RESULT
+    - COVERAGE_PERCENT
+
+# ============================================================================
+# BUILD PHASES
+# ============================================================================
+
+phases:
+  # --------------------------------------------------------------------------
+  # INSTALL PHASE
+  # --------------------------------------------------------------------------
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies..."
+      - npm ci
+      # Install Playwright browsers for E2E tests
+      - npx playwright install --with-deps chromium
+
+  # --------------------------------------------------------------------------
+  # PRE-BUILD PHASE (Lint)
+  # --------------------------------------------------------------------------
+  pre_build:
+    commands:
+      - echo "Running linter..."
+      - make lint
+      - echo "Lint passed"
+
+  # --------------------------------------------------------------------------
+  # BUILD PHASE (Tests)
+  # --------------------------------------------------------------------------
+  build:
+    commands:
+      - echo "Running unit tests with coverage..."
+      - make test-coverage
+      - echo "Running E2E tests..."
+      - make test-e2e
+      - export TEST_RESULT="PASSED"
+      # Extract coverage percentage for reporting
+      - |
+        if [ -f "$TEST_REPORT_DIR/coverage/coverage-summary.json" ]; then
+          export COVERAGE_PERCENT=$(cat $TEST_REPORT_DIR/coverage/coverage-summary.json | jq -r '.total.lines.pct')
+          echo "Coverage: $COVERAGE_PERCENT%"
+        fi
+
+  # --------------------------------------------------------------------------
+  # POST-BUILD PHASE (Smoke tests on main branch)
+  # --------------------------------------------------------------------------
+  post_build:
+    commands:
+      - |
+        echo "Build result: $CODEBUILD_BUILD_SUCCEEDING"
+        if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ]; then
+          # Only run smoke tests on main branch
+          if [ "$CODEBUILD_WEBHOOK_HEAD_REF" = "refs/heads/main" ] || [ "$CODEBUILD_SOURCE_VERSION" = "main" ]; then
+            echo "Running smoke tests against production..."
+            export TEST_BASE_URL="${PRODUCTION_URL:-https://example.com}"
+            export EXPECTED_GIT_HASH="$CODEBUILD_RESOLVED_SOURCE_VERSION"
+            make test-smoke && echo "Smoke tests passed" || echo "Smoke tests failed"
+          else
+            echo "Skipping smoke tests (not main branch)"
+          fi
+        else
+          export TEST_RESULT="FAILED"
+          echo "Build failed, skipping smoke tests"
+        fi
+
+# ============================================================================
+# REPORTS
+# ============================================================================
+
+reports:
+  # JUnit test reports (shows in CodeBuild console)
+  test-reports:
+    files:
+      - "junit.xml"
+      - "**/junit.xml"
+    base-directory: $TEST_REPORT_DIR
+    file-format: JUNITXML
+    discard-paths: yes
+
+  # Code coverage reports
+  coverage-reports:
+    files:
+      - "coverage/cobertura-coverage.xml"
+      - "**/cobertura-coverage.xml"
+    base-directory: $TEST_REPORT_DIR
+    file-format: COBERTURAXML
+    discard-paths: yes
+
+# ============================================================================
+# ARTIFACTS
+# ============================================================================
+
+artifacts:
+  files:
+    - "$TEST_REPORT_DIR/**/*"
+  name: test-reports-$CODEBUILD_BUILD_NUMBER
+  discard-paths: no
+
+# ============================================================================
+# CACHE
+# ============================================================================
+
+cache:
+  paths:
+    - "node_modules/**/*"
+    - ".npm/**/*"

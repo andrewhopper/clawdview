@@ -1,0 +1,124 @@
+# enums.yaml - Meeting Domain Enumerations
+# Generated: 2025-11-24
+# Status: PENDING APPROVAL
+
+enums:
+  AffiliationType:
+    description: "Relationship of attendee's organization to meeting owner"
+    values:
+      - customer     # End customer organization
+      - partner      # Third-party consulting/partner firm
+      - internal     # Same organization as meeting owner
+      - vendor       # Vendor or supplier
+      - other        # Other affiliation
+
+  JobType:
+    description: "Functional area or department"
+    values:
+      - engineering      # Software/cloud/systems engineers
+      - architecture     # Solutions/enterprise architects
+      - management       # Engineering managers, team leads
+      - executive        # C-level, VP-level
+      - product          # Product management
+      - design           # UX/UI designers
+      - data             # Data science, analytics
+      - security         # Security specialists
+      - operations       # DevOps, SRE, IT ops
+      - sales            # Account executives, sales engineers
+      - consulting       # Professional services, consulting
+      - support          # Customer support, technical support
+      - finance          # Finance, accounting
+      - legal            # Legal, compliance
+      - other            # Other function
+
+  SeniorityLevel:
+    description: "Position level within organizational hierarchy"
+    values:
+      - individual_contributor  # IC, engineer, specialist
+      - senior                  # Senior IC (5+ years)
+      - staff                   # Staff+ engineer, distinguished
+      - lead                    # Tech lead, team lead
+      - manager                 # First-level manager
+      - senior_manager          # Manager of managers
+      - director                # Director-level
+      - senior_director         # Senior director
+      - vp                      # Vice president
+      - svp                     # Senior VP
+      - c_level                 # CTO, CIO, CEO, etc.
+
+  MeetingStatus:
+    description: "Meeting lifecycle states"
+    values:
+      - scheduled    # Meeting is planned
+      - in_progress  # Meeting is actively happening
+      - completed    # Meeting finished normally
+      - cancelled    # Meeting was cancelled
+      - postponed    # Meeting delayed to future date
+
+  AttendeeRole:
+    description: "Role of participant in meeting"
+    values:
+      - organizer    # Created/owns the meeting
+      - required     # Must attend
+      - optional     # May attend
+      - observer     # View-only, no participation expected
+      - presenter    # Will present during meeting
+
+  ResponseStatus:
+    description: "Attendee RSVP status"
+    values:
+      - pending      # No response yet
+      - accepted     # Confirmed attendance
+      - declined     # Will not attend
+      - tentative    # May attend
+
+  AgendaItemType:
+    description: "Type of agenda item"
+    values:
+      - discussion   # Topic for group discussion
+      - presentation # Information sharing
+      - decision     # Requires formal decision
+      - update       # Status update
+      - brainstorm   # Ideation session
+      - review       # Review existing work/document
+      - break        # Scheduled break
+
+  MinutesStatus:
+    description: "Meeting minutes approval workflow"
+    values:
+      - draft        # Being written/edited
+      - pending_review  # Awaiting approval
+      - approved     # Officially approved
+      - archived     # Historical record
+
+  NoteVisibility:
+    description: "Who can see meeting notes"
+    values:
+      - private      # Only author
+      - shared       # All meeting attendees
+      - public       # Anyone with access to meeting
+
+  DecisionType:
+    description: "How decision was reached"
+    values:
+      - consensus    # General agreement
+      - vote         # Formal voting
+      - authority    # Decision maker authority
+      - delegation   # Delegated to specific person
+
+  ActionItemStatus:
+    description: "Follow-up task states"
+    values:
+      - pending      # Not started
+      - in_progress  # Being worked on
+      - completed    # Done
+      - blocked      # Cannot proceed
+      - cancelled    # No longer needed
+
+  Priority:
+    description: "Task urgency levels"
+    values:
+      - low
+      - medium
+      - high
+      - critical

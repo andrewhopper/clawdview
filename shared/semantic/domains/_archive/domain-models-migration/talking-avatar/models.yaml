@@ -1,0 +1,630 @@
+# models.yaml - Talking Avatar Domain Models
+# Generated: 2025-11-25
+# Status: PENDING APPROVAL
+#
+# Research Sources:
+# - HeyGen API: https://docs.heygen.com/
+# - D-ID API: Talking head generation with Photo Live Portrait
+# - Synthesia API: 230+ avatars with enterprise features
+# - Comparison: https://a2e.ai/top-5-best-avatar-apis-2025/
+# - Schema.org: VideoObject, MediaObject, Person
+
+entities:
+  Avatar:
+    description: "Digital character for video generation (photo-based or CGI)"
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique identifier"
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Display name for avatar"
+      avatar_type:
+        type: enum
+        enum_ref: AvatarType
+        required: true
+        description: "talking_photo, cgi_avatar, custom, instant"
+      provider_id:
+        type: string
+        required: false
+        max_length: 255
+        description: "Provider's avatar ID (HeyGen, D-ID, Synthesia)"
+      provider:
+        type: enum
+        enum_ref: AvatarProvider
+        required: true
+        description: "Which service provides this avatar"
+      gender:
+        type: enum
+        enum_ref: AvatarGender
+        required: false
+        description: "male, female, neutral"
+      ethnicity:
+        type: string
+        required: false
+        max_length: 100
+      age_range:
+        type: string
+        required: false
+        max_length: 50
+        description: "e.g., '25-35', 'senior'"
+      style:
+        type: enum
+        enum_ref: AvatarStyle
+        required: true
+        default: realistic
+        description: "realistic, cartoon, anime, professional"
+      thumbnail_url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "Preview image URL"
+      source_image_url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "Original photo for custom avatars"
+      supported_poses:
+        type: json
+        required: false
+        description: "Array of supported pose types"
+      is_custom:
+        type: boolean
+        required: true
+        default: false
+        description: "User-created vs provider stock avatar"
+      is_premium:
+        type: boolean
+        required: true
+        default: false
+        description: "Requires premium/enterprise tier"
+      training_job_id:
+        type: uuid
+        required: false
+        references: AvatarTrainingJob.id
+        description: "Link to training job if custom avatar"
+      user_id:
+        type: uuid
+        required: false
+        references: User.id
+        description: "Owner if custom avatar"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [provider]
+      - [avatar_type]
+      - [user_id]
+      - [is_custom]
+
+  Voice:
+    description: "Voice profile for avatar speech synthesis"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Voice name (e.g., 'Sarah - Professional')"
+      provider_id:
+        type: string
+        required: false
+        max_length: 255
+        description: "Provider's voice ID"
+      provider:
+        type: enum
+        enum_ref: VoiceProvider
+        required: true
+        description: "HeyGen, ElevenLabs, Polly, OpenAI"
+      language_code:
+        type: string
+        required: true
+        max_length: 10
+        description: "ISO 639-1 + country code (e.g., en-US)"
+      language_name:
+        type: string
+        required: false
+        max_length: 100
+        description: "English (United States)"
+      gender:
+        type: enum
+        enum_ref: VoiceGender
+        required: false
+      age:
+        type: string
+        required: false
+        max_length: 50
+        description: "young, middle-aged, senior"
+      accent:
+        type: string
+        required: false
+        max_length: 100
+        description: "e.g., British, Australian, Southern"
+      style:
+        type: enum
+        enum_ref: VoiceStyle
+        required: false
+        description: "conversational, professional, cheerful, calm"
+      sample_audio_url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "Preview audio file"
+      is_custom:
+        type: boolean
+        required: true
+        default: false
+        description: "Voice cloned from user audio"
+      is_premium:
+        type: boolean
+        required: true
+        default: false
+      user_id:
+        type: uuid
+        required: false
+        references: User.id
+        description: "Owner if custom voice"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [provider]
+      - [language_code]
+      - [user_id]
+
+  AvatarVideo:
+    description: "Generated talking avatar video"
+    properties:
+      id:
+        type: uuid
+        required: true
+      title:
+        type: string
+        required: false
+        max_length: 500
+      avatar_id:
+        type: uuid
+        required: true
+        references: Avatar.id
+      voice_id:
+        type: uuid
+        required: true
+        references: Voice.id
+      scene_id:
+        type: uuid
+        required: false
+        references: Scene.id
+        description: "Template/background scene"
+      script_text:
+        type: text
+        required: false
+        description: "Text to be spoken (TTS)"
+      script_audio_url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "Pre-recorded audio to lip-sync (alternative to TTS)"
+      duration_seconds:
+        type: decimal
+        precision: 10
+        scale: 2
+        required: false
+        description: "Video length"
+      aspect_ratio:
+        type: enum
+        enum_ref: AspectRatio
+        required: true
+        default: "16:9"
+      video_quality:
+        type: enum
+        enum_ref: VideoQuality
+        required: true
+        default: hd
+      status:
+        type: enum
+        enum_ref: VideoStatus
+        required: true
+        default: pending
+      output_url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "URL to generated video file"
+      thumbnail_url:
+        type: string
+        required: false
+        max_length: 1000
+      provider:
+        type: enum
+        enum_ref: AvatarProvider
+        required: true
+      provider_video_id:
+        type: string
+        required: false
+        max_length: 255
+        description: "External provider video ID"
+      error_message:
+        type: text
+        required: false
+        description: "Error details if generation failed"
+      processing_started_at:
+        type: datetime
+        required: false
+      processing_completed_at:
+        type: datetime
+        required: false
+      generation_time_seconds:
+        type: decimal
+        precision: 10
+        scale: 2
+        required: false
+        description: "Time taken to generate"
+      file_size_bytes:
+        type: bigint
+        required: false
+      webhook_url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "URL to notify on completion"
+      user_id:
+        type: uuid
+        required: false
+        references: User.id
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [status]
+      - [user_id]
+      - [avatar_id]
+      - [created_at]
+      - [provider]
+
+  Scene:
+    description: "Background template/scene for avatar video"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+      description:
+        type: text
+        required: false
+      scene_type:
+        type: enum
+        enum_ref: SceneType
+        required: true
+      background_type:
+        type: enum
+        enum_ref: BackgroundType
+        required: true
+        description: "solid_color, image, video, greenscreen"
+      background_url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "Image/video URL for background"
+      background_color:
+        type: string
+        required: false
+        max_length: 7
+        description: "Hex color for solid backgrounds"
+      avatar_position:
+        type: enum
+        enum_ref: AvatarPosition
+        required: true
+        default: center
+      avatar_size:
+        type: enum
+        enum_ref: AvatarSize
+        required: true
+        default: medium
+        description: "small, medium, large, fullscreen"
+      provider:
+        type: enum
+        enum_ref: AvatarProvider
+        required: false
+        description: "null for custom scenes"
+      provider_scene_id:
+        type: string
+        required: false
+        max_length: 255
+      thumbnail_url:
+        type: string
+        required: false
+        max_length: 1000
+      is_custom:
+        type: boolean
+        required: true
+        default: false
+      user_id:
+        type: uuid
+        required: false
+        references: User.id
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [scene_type]
+      - [user_id]
+
+  AvatarTrainingJob:
+    description: "Job to train custom avatar from user photos"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Name for the custom avatar"
+      training_photos:
+        type: json
+        required: true
+        description: "Array of photo URLs for training"
+      photo_count:
+        type: integer
+        required: true
+        description: "Number of photos uploaded"
+      status:
+        type: enum
+        enum_ref: TrainingStatus
+        required: true
+        default: uploading
+      provider:
+        type: enum
+        enum_ref: AvatarProvider
+        required: true
+      provider_job_id:
+        type: string
+        required: false
+        max_length: 255
+      avatar_id:
+        type: uuid
+        required: false
+        references: Avatar.id
+        description: "Generated avatar after training completes"
+      training_options:
+        type: json
+        required: false
+        description: "Provider-specific training parameters"
+      error_message:
+        type: text
+        required: false
+      training_started_at:
+        type: datetime
+        required: false
+      training_completed_at:
+        type: datetime
+        required: false
+      training_time_minutes:
+        type: integer
+        required: false
+      user_id:
+        type: uuid
+        required: true
+        references: User.id
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [status]
+      - [user_id]
+      - [avatar_id]
+
+  StreamingSession:
+    description: "Real-time interactive avatar session (WebRTC)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      session_name:
+        type: string
+        required: false
+        max_length: 255
+      avatar_id:
+        type: uuid
+        required: true
+        references: Avatar.id
+      voice_id:
+        type: uuid
+        required: true
+        references: Voice.id
+      session_status:
+        type: enum
+        enum_ref: StreamingStatus
+        required: true
+        default: initializing
+      provider:
+        type: enum
+        enum_ref: AvatarProvider
+        required: true
+      provider_session_id:
+        type: string
+        required: false
+        max_length: 255
+      webrtc_url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "WebRTC connection URL"
+      ice_servers:
+        type: json
+        required: false
+        description: "STUN/TURN server configuration"
+      session_token:
+        type: string
+        required: false
+        max_length: 500
+        description: "Authentication token for session"
+      quality:
+        type: enum
+        enum_ref: StreamingQuality
+        required: true
+        default: medium
+      started_at:
+        type: datetime
+        required: false
+      ended_at:
+        type: datetime
+        required: false
+      duration_seconds:
+        type: integer
+        required: false
+      message_count:
+        type: integer
+        required: true
+        default: 0
+        description: "Number of messages sent during session"
+      user_id:
+        type: uuid
+        required: true
+        references: User.id
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [session_status]
+      - [user_id]
+      - [started_at]
+
+  StreamingMessage:
+    description: "Message sent to interactive avatar during streaming session"
+    properties:
+      id:
+        type: uuid
+        required: true
+      session_id:
+        type: uuid
+        required: true
+        references: StreamingSession.id
+      message_text:
+        type: text
+        required: true
+        description: "Text for avatar to speak"
+      message_type:
+        type: enum
+        enum_ref: StreamingMessageType
+        required: true
+        default: text
+        description: "text, emotion, task, interrupt"
+      emotion:
+        type: enum
+        enum_ref: AvatarEmotion
+        required: false
+        description: "happy, sad, surprised, neutral, etc."
+      task_config:
+        type: json
+        required: false
+        description: "Task-specific parameters"
+      status:
+        type: enum
+        enum_ref: MessageStatus
+        required: true
+        default: pending
+      delivered_at:
+        type: datetime
+        required: false
+      spoken_at:
+        type: datetime
+        required: false
+        description: "When avatar started speaking"
+      completed_at:
+        type: datetime
+        required: false
+      duration_seconds:
+        type: decimal
+        precision: 10
+        scale: 2
+        required: false
+      user_id:
+        type: uuid
+        required: true
+        references: User.id
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [session_id]
+      - [status]
+      - [created_at]
+
+  AvatarEmotion:
+    description: "Emotion state for avatar expression"
+    properties:
+      id:
+        type: uuid
+        required: true
+      avatar_id:
+        type: uuid
+        required: true
+        references: Avatar.id
+      emotion_type:
+        type: enum
+        enum_ref: AvatarEmotion
+        required: true
+      intensity:
+        type: decimal
+        precision: 3
+        scale: 2
+        required: true
+        description: "0.0 to 1.0"
+      duration_seconds:
+        type: decimal
+        precision: 10
+        scale: 2
+        required: false
+        description: "How long emotion lasts"
+      provider_supported:
+        type: boolean
+        required: true
+        default: true
+        description: "If provider API supports this emotion"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [avatar_id]
+      - [emotion_type]

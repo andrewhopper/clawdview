@@ -1,0 +1,768 @@
+# =============================================================================
+# Work System Domain Model
+# Unified domain for Items, Resources, Actors, Checks, and Workflows
+# Version: 1.0.0
+# =============================================================================
+
+domain:
+  name: work-system
+  version: "1.0.0"
+  description: |
+    Unified work tracking system with Items (work units), Resources (allocatable),
+    Actors (capabilities), Checks (gates), and Workflows (state machines).
+    Combines Item + Scale + Type + Intent + Constraint + Check patterns.
+  dependencies: [core]
+  created_at: "2025-12-01"
+  updated_at: "2025-12-01"
+
+# =============================================================================
+# LEVEL 0: PRIMITIVES
+# =============================================================================
+
+primitives:
+
+  Ref:
+    description: Reference to another entity
+    properties:
+      target_type: { type: string, required: true }
+      target_id: { type: string, required: true }
+
+  Quantity:
+    description: Amount with unit
+    properties:
+      amount: { type: decimal, required: true }
+      unit: { type: string, required: true }
+
+  Duration:
+    description: Time span
+    properties:
+      value: { type: decimal, required: true }
+      unit: { type: DurationUnit, required: true }
+
+  Interval:
+    description: Time range with start and end
+    properties:
+      start: { type: datetime }
+      end: { type: datetime }
+
+  Version:
+    description: Semantic version
+    properties:
+      major: { type: integer, required: true }
+      minor: { type: integer, required: true }
+      patch: { type: integer, required: true }
+      prerelease: { type: string }
+      build: { type: string }
+
+# =============================================================================
+# RESOURCE SYSTEM
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # RESOURCE
+  # ---------------------------------------------------------------------------
+
+  Resource:
+    description: Something that can be allocated, consumed, and depleted
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ResourceType, required: true }
+      unit: { type: string, required: true }
+      renewable: { type: boolean, default: false }
+      fungible: { type: boolean, default: true }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Pool:
+    description: Available quantity of a resource
+    properties:
+      id: { type: string, required: true }
+      resource_id: { type: string, required: true }
+      capacity: { type: Quantity, required: true }
+      allocated: { type: Quantity }
+      consumed: { type: Quantity }
+      owner_type: { type: string }
+      owner_id: { type: string }
+      period: { type: Duration, description: "Reset period if renewable" }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Allocation:
+    description: Reserved resource for an item
+    properties:
+      id: { type: string, required: true }
+      pool_id: { type: string, required: true }
+      item_id: { type: string, required: true }
+      quantity: { type: Quantity, required: true }
+      consumed: { type: Quantity }
+      status: { type: AllocationStatus, required: true }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Consumption:
+    description: Record of resource usage
+    properties:
+      id: { type: string, required: true }
+      allocation_id: { type: string, required: true }
+      quantity: { type: Quantity, required: true }
+      actor_id: { type: string }
+      timestamp: { type: datetime, required: true }
+      metadata: { type: object }
+
+  # ---------------------------------------------------------------------------
+  # ACTOR & CAPABILITIES
+  # ---------------------------------------------------------------------------
+
+  Actor:
+    description: Entity that can perform actions (human, AI, system)
+    properties:
+      id: { type: string, required: true }
+      type: { type: ActorType, required: true }
+      name: { type: string, required: true }
+      skills: { type: array, items: Skill }
+      roles: { type: array, items: RoleGrant }
+      certifications: { type: array, items: Certification }
+      attributes: { type: object }
+      availability: { type: Availability }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Skill:
+    description: Capability with proficiency level
+    properties:
+      name: { type: string, required: true }
+      level: { type: integer, required: true, min: 1, max: 5 }
+      verified: { type: boolean, default: false }
+      verified_by: { type: string }
+      verified_at: { type: datetime }
+
+  RoleGrant:
+    description: Role assigned to an actor
+    properties:
+      role: { type: string, required: true }
+      scope_type: { type: string }
+      scope_id: { type: string }
+      permissions: { type: array, items: string }
+      granted_at: { type: datetime, required: true }
+      granted_by: { type: string }
+      expires_at: { type: datetime }
+
+  Certification:
+    description: Formal certification held by actor
+    properties:
+      name: { type: string, required: true }
+      issuer: { type: string }
+      credential_id: { type: string }
+      issued_at: { type: datetime }
+      expires_at: { type: datetime }
+
+  Availability:
+    description: When actor is available
+    properties:
+      status: { type: AvailabilityStatus, required: true }
+      schedule: { type: array, items: SchedulePeriod }
+      exceptions: { type: array, items: AvailabilityException }
+
+  # ---------------------------------------------------------------------------
+  # ITEM TYPE, SCALE, INTENT
+  # ---------------------------------------------------------------------------
+
+  ItemType:
+    description: Kind of work (capture, research, generate, build, execute, discover)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      verb: { type: string, required: true }
+      produces: { type: string }
+      defaults: { type: TypeDefaults }
+
+  TypeDefaults:
+    description: Default values for an item type
+    properties:
+      scale: { type: string }
+      constraints: { type: array, items: Constraint }
+      checks: { type: array, items: string }
+      workflow: { type: string }
+      required_fields: { type: array, items: string }
+
+  Scale:
+    description: Size/duration of work
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      typical_duration: { type: Duration }
+      contains: { type: string, description: "Child scale name" }
+      sequence: { type: integer }
+
+  Intent:
+    description: Why the work is being done
+    properties:
+      goal: { type: string, required: true }
+      trigger: { type: string }
+      success_criteria: { type: string }
+
+  # ---------------------------------------------------------------------------
+  # CONSTRAINT
+  # ---------------------------------------------------------------------------
+
+  Constraint:
+    description: Bound on a resource
+    properties:
+      id: { type: string, required: true }
+      resource_type: { type: ResourceType, required: true }
+      operator: { type: ConstraintOperator, required: true }
+      bound: { type: Quantity, required: true }
+      hard: { type: boolean, default: true }
+      on_exceed: { type: ExceedAction, default: block }
+
+  # ---------------------------------------------------------------------------
+  # CHECK & APPROVAL
+  # ---------------------------------------------------------------------------
+
+  Check:
+    description: Validation gate
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      path: { type: string }
+      predicate: { type: string }
+      on_pass: { type: CheckAction }
+      on_fail: { type: CheckAction }
+      required: { type: boolean, default: true }
+      approver_req: { type: ApproverReq }
+      timeout: { type: Duration }
+      escalation: { type: array, items: Escalation }
+
+  ApproverReq:
+    description: Requirements for who can approve
+    properties:
+      mode: { type: ApproverMode, required: true }
+      minimum_count: { type: integer, default: 1 }
+      requirements: { type: array, items: Requirement }
+      fallback: { type: string }
+
+  Requirement:
+    description: Single approver requirement
+    properties:
+      type: { type: RequirementType, required: true }
+      value: { type: string, required: true }
+      level: { type: integer }
+      required: { type: boolean, default: true }
+
+  Approval:
+    description: Record of approval decision
+    properties:
+      id: { type: string, required: true }
+      check_id: { type: string, required: true }
+      item_id: { type: string, required: true }
+      approver_id: { type: string, required: true }
+      decision: { type: ApprovalDecision, required: true }
+      conditions: { type: array, items: Condition }
+      reservations: { type: array, items: Reservation }
+      rationale: { type: string }
+      status: { type: ApprovalStatus, required: true }
+      approved_at: { type: datetime, required: true }
+      expires_at: { type: datetime }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  Condition:
+    description: Something that must be true for approval to be effective
+    properties:
+      id: { type: string, required: true }
+      description: { type: string, required: true }
+      type: { type: ConditionType, required: true }
+      target: { type: string }
+      from_value: { type: string }
+      to_value: { type: string }
+      verification: { type: Verification }
+      status: { type: ConditionStatus, required: true }
+      verified_by: { type: string }
+      verified_at: { type: datetime }
+
+  Verification:
+    description: How to verify a condition is met
+    properties:
+      method: { type: VerificationMethod, required: true }
+      verifier: { type: ApproverReq }
+      auto: { type: boolean, default: false }
+      predicate: { type: string }
+
+  Reservation:
+    description: Non-blocking concern noted with approval
+    properties:
+      description: { type: string, required: true }
+      severity: { type: Severity }
+      acknowledged_by: { type: string }
+      acknowledged_at: { type: datetime }
+
+  Escalation:
+    description: What to do on timeout
+    properties:
+      after: { type: Duration, required: true }
+      action: { type: EscalationAction, required: true }
+      to: { type: ApproverReq }
+
+  Waiver:
+    description: Record of condition being waived
+    properties:
+      id: { type: string, required: true }
+      condition_id: { type: string, required: true }
+      waived_by: { type: string, required: true }
+      reason: { type: string, required: true }
+      risk_accepted: { type: boolean, default: true }
+      waived_at: { type: datetime, required: true }
+      expires_at: { type: datetime }
+
+  # ---------------------------------------------------------------------------
+  # STATE MACHINE
+  # ---------------------------------------------------------------------------
+
+  StateMachine:
+    description: Definition of states and transitions
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      initial: { type: string, required: true }
+      states: { type: array, items: State, required: true }
+      transitions: { type: array, items: Transition }
+      context_schema: { type: object }
+
+  State:
+    description: A single state in the machine
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: StateType, default: normal }
+      on_enter: { type: array, items: Action }
+      on_exit: { type: array, items: Action }
+      substates: { type: string, description: "Nested state machine ID" }
+
+  Transition:
+    description: Movement between states
+    properties:
+      id: { type: string, required: true }
+      from: { type: array, items: string, required: true }
+      to: { type: string, required: true }
+      event: { type: string, required: true }
+      guards: { type: array, items: Guard }
+      actions: { type: array, items: Action }
+
+  Guard:
+    description: Condition for transition
+    properties:
+      predicate: { type: string, required: true }
+      description: { type: string }
+
+  Action:
+    description: Side effect during transition or state
+    properties:
+      type: { type: ActionType, required: true }
+      target: { type: string }
+      params: { type: object }
+
+  Event:
+    description: Trigger for transition
+    properties:
+      name: { type: string, required: true }
+      payload: { type: object }
+      actor_id: { type: string }
+      timestamp: { type: datetime, required: true }
+
+  StateEvent:
+    description: Record of state change (event sourcing)
+    properties:
+      id: { type: string, required: true }
+      item_id: { type: string, required: true }
+      from_state: { type: string }
+      to_state: { type: string, required: true }
+      event: { type: string, required: true }
+      actor_id: { type: string }
+      timestamp: { type: datetime, required: true }
+      metadata: { type: object }
+
+  # ---------------------------------------------------------------------------
+  # TEMPLATE
+  # ---------------------------------------------------------------------------
+
+  Template:
+    description: Pre-configured item spec with variables
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      version: { type: string, required: true }
+      status: { type: TemplateStatus, required: true }
+      description: { type: string }
+      category: { type: string }
+      spec: { type: ItemSpec, required: true }
+      variables: { type: array, items: Variable }
+      prompts: { type: array, items: Prompt }
+      changelog: { type: string }
+      superseded_by: { type: string }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  ItemSpec:
+    description: Partial item definition in template
+    properties:
+      type: { type: string }
+      scale: { type: string }
+      intent: { type: Intent }
+      constraints: { type: array, items: Constraint }
+      checks: { type: array, items: string }
+
+  Variable:
+    description: Placeholder in template
+    properties:
+      name: { type: string, required: true }
+      path: { type: string, required: true }
+      type: { type: string, required: true }
+      required: { type: boolean, default: true }
+      default: { type: any }
+
+  Prompt:
+    description: Question to ask when instantiating template
+    properties:
+      variable: { type: string, required: true }
+      question: { type: string, required: true }
+      options: { type: array, items: string }
+
+  # ---------------------------------------------------------------------------
+  # SCHEME
+  # ---------------------------------------------------------------------------
+
+  Scheme:
+    description: Configuration template for containers
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      scheme_type: { type: SchemeType, required: true }
+      rules: { type: array, items: DefaultRule }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  DefaultRule:
+    description: Rule for applying defaults
+    properties:
+      when: { type: RuleCondition, required: true }
+      field: { type: string, required: true }
+      value: { type: any, required: true }
+      override: { type: OverrideMode, default: merge }
+
+  RuleCondition:
+    description: When to apply a rule
+    properties:
+      field: { type: string, required: true }
+      operator: { type: string, required: true }
+      value: { type: any, required: true }
+
+  # ---------------------------------------------------------------------------
+  # CONTAINER
+  # ---------------------------------------------------------------------------
+
+  Container:
+    description: Scope for items (like Jira Project)
+    properties:
+      id: { type: string, required: true }
+      key: { type: string, required: true }
+      name: { type: string, required: true }
+      classification: { type: string }
+      schemes: { type: array, items: string }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  # ---------------------------------------------------------------------------
+  # ITEM (THE CORE ATOM)
+  # ---------------------------------------------------------------------------
+
+  Item:
+    description: The fundamental work unit
+    properties:
+      id: { type: string, required: true }
+      key: { type: string }
+      type: { type: string, required: true }
+      scale: { type: string, required: true }
+      intent: { type: Intent }
+      subject: { type: string, required: true }
+      state: { type: string, required: true }
+      container_id: { type: string }
+      parent_id: { type: string }
+      constraints: { type: array, items: Constraint }
+      checks: { type: array, items: string }
+      allocations: { type: array, items: string }
+      outputs: { type: array, items: string }
+      from_template: { type: string }
+      template_version: { type: string }
+      created_at: { type: datetime, required: true }
+      updated_at: { type: datetime, required: true }
+
+  # ---------------------------------------------------------------------------
+  # GRAPH
+  # ---------------------------------------------------------------------------
+
+  Graph:
+    description: Graph structure for entity relationships
+    properties:
+      id: { type: string, required: true }
+      name: { type: string }
+      indexes: { type: array, items: GraphIndex }
+
+  Node:
+    description: Graph node representing an entity
+    properties:
+      id: { type: string, required: true }
+      labels: { type: array, items: string, required: true }
+      properties: { type: object }
+      entity_ref: { type: Ref }
+
+  Edge:
+    description: Relationship between nodes
+    properties:
+      id: { type: string, required: true }
+      type: { type: string, required: true }
+      from_id: { type: string, required: true }
+      to_id: { type: string, required: true }
+      properties: { type: object }
+      directed: { type: boolean, default: true }
+
+  GraphIndex:
+    description: Index for query optimization
+    properties:
+      name: { type: string, required: true }
+      type: { type: GraphIndexType, required: true }
+      label: { type: string }
+      property: { type: string }
+
+  Traversal:
+    description: Graph query
+    properties:
+      start: { type: array, items: string }
+      pattern: { type: PathPattern }
+      filters: { type: array, items: object }
+      returns: { type: array, items: string }
+      limit: { type: integer }
+
+  PathPattern:
+    description: Pattern for graph traversal
+    properties:
+      steps: { type: array, items: PatternStep }
+      min_hops: { type: integer, default: 1 }
+      max_hops: { type: integer }
+
+  PatternStep:
+    description: Single step in path pattern
+    properties:
+      direction: { type: Direction, required: true }
+      edge_types: { type: array, items: string }
+      node_labels: { type: array, items: string }
+      properties: { type: object }
+
+  # ---------------------------------------------------------------------------
+  # SCORED SET (Search Results)
+  # ---------------------------------------------------------------------------
+
+  ScoredSet:
+    description: Set of items with scores
+    properties:
+      query: { type: string }
+      total: { type: integer, required: true }
+      items: { type: array, items: ScoredItem, required: true }
+
+  ScoredItem:
+    description: Item with relevance score
+    properties:
+      item_id: { type: string, required: true }
+      score: { type: decimal, required: true }
+      reasons: { type: array, items: MatchReason }
+
+  MatchReason:
+    description: Why an item matched
+    properties:
+      field: { type: string, required: true }
+      match_type: { type: MatchType, required: true }
+      term: { type: string }
+      score: { type: integer, required: true }
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  DurationUnit:
+    values: [minutes, hours, days, weeks, months]
+
+  ResourceType:
+    values: [time, money, tokens, compute, storage, focus, creativity, decision, people, bandwidth]
+
+  AllocationStatus:
+    values: [active, released, exhausted, expired]
+
+  ActorType:
+    values: [human, ai, system]
+
+  AvailabilityStatus:
+    values: [available, busy, away, offline]
+
+  ConstraintOperator:
+    values: [max, min, exactly, range, before, after]
+
+  ExceedAction:
+    values: [warn, block, escalate]
+
+  ApproverMode:
+    values: [any, all, minimum]
+
+  RequirementType:
+    values: [skill, role, cert, actor, attribute, available]
+
+  ApprovalDecision:
+    values: [approved, approved_if, approved_with, rejected, blocked_until, request_changes, abstain, delegate]
+
+  ApprovalStatus:
+    values: [pending_conditions, effective, expired, revoked]
+
+  ConditionType:
+    values: [change, add, remove, verify, acknowledge, obtain, wait]
+
+  ConditionStatus:
+    values: [pending, met, waived, expired]
+
+  VerificationMethod:
+    values: [self, submitter, anyone, specific, automatic, implicit]
+
+  Severity:
+    values: [info, warning, concern, critical]
+
+  EscalationAction:
+    values: [notify, reassign, auto_approve, auto_reject]
+
+  StateType:
+    values: [initial, normal, final, parallel]
+
+  ActionType:
+    values: [notify, assign, update, invoke, log]
+
+  TemplateStatus:
+    values: [draft, active, deprecated]
+
+  SchemeType:
+    values: [type, workflow, constraint, check, output, default]
+
+  OverrideMode:
+    values: [replace, merge]
+
+  GraphIndexType:
+    values: [node, edge, fulltext]
+
+  Direction:
+    values: [out, in, both]
+
+  MatchType:
+    values: [exact_name, contains_name, description, path, tag, tech_stack, fuzzy]
+
+# =============================================================================
+# STANDARD ITEM TYPES
+# =============================================================================
+
+item_types:
+  capture:
+    verb: remember
+    produces: record
+    defaults:
+      scale: seed
+  research:
+    verb: learn
+    produces: findings
+    defaults:
+      scale: task
+      constraints: [{ resource_type: focus, operator: min, bound: { amount: 2, unit: level } }]
+  generate:
+    verb: create
+    produces: artifact
+    defaults:
+      scale: task
+  build:
+    verb: construct
+    produces: system
+    defaults:
+      scale: project
+      checks: [artifact_library, golden_repo, tech_prefs, domain_model, code_standards]
+  execute:
+    verb: do
+    produces: result
+    defaults:
+      scale: action
+  discover:
+    verb: find
+    produces: matches
+    defaults:
+      scale: action
+  validate:
+    verb: verify
+    produces: result
+    defaults:
+      scale: action
+  decide:
+    verb: choose
+    produces: decision
+    defaults:
+      scale: task
+
+# =============================================================================
+# STANDARD SCALES
+# =============================================================================
+
+scales:
+  seed:
+    typical_duration: { value: 0, unit: minutes }
+    sequence: 0
+  action:
+    typical_duration: { value: 30, unit: minutes }
+    sequence: 1
+  task:
+    typical_duration: { value: 4, unit: hours }
+    contains: action
+    sequence: 2
+  milestone:
+    typical_duration: { value: 3, unit: days }
+    contains: task
+    sequence: 3
+  project:
+    typical_duration: { value: 4, unit: weeks }
+    contains: milestone
+    sequence: 4
+  initiative:
+    typical_duration: { value: 3, unit: months }
+    contains: project
+    sequence: 5
+
+# =============================================================================
+# STANDARD EDGE TYPES
+# =============================================================================
+
+edge_types:
+  HAS_TYPE: { from: Item, to: ItemType }
+  HAS_SCALE: { from: Item, to: Scale }
+  HAS_STATE: { from: Item, to: State, properties: [since] }
+  HAS_INTENT: { from: Item, to: Intent }
+  HAS_CONSTRAINT: { from: Item, to: Constraint }
+  HAS_CHECK: { from: Item, to: Check, properties: [required] }
+  HAS_APPROVAL: { from: Item, to: Approval }
+  HAS_CONDITION: { from: Approval, to: Condition }
+  APPROVED_BY: { from: Approval, to: Actor, properties: [at] }
+  HAS_SKILL: { from: Actor, to: Skill, properties: [verified] }
+  HAS_ROLE: { from: Actor, to: RoleGrant, properties: [granted_at] }
+  HAS_CERT: { from: Actor, to: Certification, properties: [expires_at] }
+  PARENT_OF: { from: Item, to: Item }
+  DEPENDS_ON: { from: Item, to: Item, properties: [type] }
+  HAS_ALLOCATION: { from: Item, to: Allocation }
+  FROM_POOL: { from: Allocation, to: Pool }
+  CONSUMES: { from: Item, to: Resource, properties: [amount] }
+  CREATED_FROM: { from: Item, to: Template, properties: [version] }
+  IN_CONTAINER: { from: Item, to: Container }
+  TRANSITIONED: { from: State, to: State, properties: [event, at, actor] }

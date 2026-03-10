@@ -1,0 +1,212 @@
+# Cloud & Infrastructure Technologies Registry
+
+technologies:
+
+  # AWS SDK & Services
+
+  aws-sdk:
+    name: AWS SDK
+    description: Official AWS SDK for JavaScript and Python
+    category: library
+    subcategory: cloud-sdk
+    author: Amazon Web Services
+    website: https://aws.amazon.com/sdk-for-javascript
+    repository: https://github.com/aws/aws-sdk-js-v3
+    documentation: https://docs.aws.amazon.com/sdk-for-javascript
+    npm_package: "@aws-sdk/client-s3"
+    pypi_package: boto3
+    license: Apache-2.0
+    tags: [aws, cloud, sdk]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@aws-sdk/*" }
+      - { type: npm_dependency, pattern: "aws-sdk" }
+      - { type: pypi_dependency, pattern: "boto3" }
+      - { type: pypi_dependency, pattern: "botocore" }
+
+  # IaC Tools
+
+  cdk:
+    name: AWS CDK
+    description: Define cloud infrastructure using familiar programming languages
+    category: tool
+    subcategory: iac
+    author: Amazon Web Services
+    website: https://aws.amazon.com/cdk
+    repository: https://github.com/aws/aws-cdk
+    documentation: https://docs.aws.amazon.com/cdk
+    npm_package: aws-cdk-lib
+    pypi_package: aws-cdk-lib
+    license: Apache-2.0
+    first_release: "2019-07-11"
+    tags: [aws, iac, infrastructure, cloudformation, typescript]
+    detection_rules:
+      - { type: npm_dependency, pattern: "aws-cdk-lib" }
+      - { type: npm_dependency, pattern: "aws-cdk" }
+      - { type: file_exists, pattern: "cdk.json" }
+      - { type: pypi_dependency, pattern: "aws-cdk-lib" }
+    alternative_to: [terraform, pulumi, cloudformation]
+
+  terraform:
+    name: Terraform
+    description: Infrastructure as Code tool for building, changing, and versioning infrastructure
+    category: tool
+    subcategory: iac
+    author: HashiCorp
+    website: https://terraform.io
+    repository: https://github.com/hashicorp/terraform
+    documentation: https://developer.hashicorp.com/terraform/docs
+    license: MPL-2.0
+    first_release: "2014-07-28"
+    language: HCL
+    tags: [iac, infrastructure, multi-cloud, hcl]
+    detection_rules:
+      - { type: file_extension, pattern: "*.tf" }
+      - { type: file_exists, pattern: "terraform.tfvars" }
+    alternative_to: [cdk, pulumi, cloudformation]
+
+  pulumi:
+    name: Pulumi
+    description: Infrastructure as Code in any programming language
+    category: tool
+    subcategory: iac
+    author: Pulumi Corporation
+    website: https://pulumi.com
+    repository: https://github.com/pulumi/pulumi
+    documentation: https://pulumi.com/docs
+    npm_package: "@pulumi/pulumi"
+    pypi_package: pulumi
+    license: Apache-2.0
+    first_release: "2018-06-18"
+    tags: [iac, infrastructure, multi-cloud, multi-language]
+    detection_rules:
+      - { type: file_exists, pattern: "Pulumi.yaml" }
+      - { type: npm_dependency, pattern: "@pulumi/pulumi" }
+      - { type: pypi_dependency, pattern: "pulumi" }
+    alternative_to: [cdk, terraform]
+
+  # Serverless
+
+  sam:
+    name: AWS SAM
+    description: Serverless Application Model - build serverless applications
+    category: tool
+    subcategory: serverless
+    author: Amazon Web Services
+    website: https://aws.amazon.com/serverless/sam
+    repository: https://github.com/aws/serverless-application-model
+    documentation: https://docs.aws.amazon.com/serverless-application-model
+    license: Apache-2.0
+    tags: [aws, serverless, lambda, cloudformation]
+    detection_rules:
+      - { type: file_exists, pattern: "template.yaml" }
+      - { type: file_exists, pattern: "sam.yaml" }
+      - { type: file_exists, pattern: "samconfig.toml" }
+    alternative_to: [serverless-framework, sst]
+
+  sst:
+    name: SST
+    description: Build modern full-stack applications on AWS
+    category: framework
+    subcategory: serverless
+    author: SST
+    website: https://sst.dev
+    repository: https://github.com/sst/sst
+    documentation: https://docs.sst.dev
+    npm_package: sst
+    license: MIT
+    first_release: "2021-02-01"
+    language: TypeScript
+    tags: [aws, serverless, fullstack, infrastructure]
+    detection_rules:
+      - { type: npm_dependency, pattern: "sst" }
+      - { type: file_exists, pattern: "sst.config.ts" }
+    alternative_to: [sam, serverless-framework]
+
+  serverless-framework:
+    name: Serverless Framework
+    description: Build applications on AWS Lambda and other serverless platforms
+    category: framework
+    subcategory: serverless
+    author: Serverless Inc
+    website: https://serverless.com
+    repository: https://github.com/serverless/serverless
+    documentation: https://serverless.com/framework/docs
+    npm_package: serverless
+    license: MIT
+    first_release: "2015-10-06"
+    tags: [serverless, lambda, multi-cloud, plugins]
+    detection_rules:
+      - { type: npm_dependency, pattern: "serverless" }
+      - { type: file_exists, pattern: "serverless.yml" }
+      - { type: file_exists, pattern: "serverless.yaml" }
+    alternative_to: [sam, sst]
+
+  # Containers
+
+  docker:
+    name: Docker
+    description: Develop, ship, and run applications in containers
+    category: tool
+    subcategory: container
+    author: Docker Inc
+    website: https://docker.com
+    repository: https://github.com/docker/cli
+    documentation: https://docs.docker.com
+    license: Apache-2.0
+    first_release: "2013-03-20"
+    tags: [container, devops, virtualization]
+    detection_rules:
+      - { type: file_exists, pattern: "Dockerfile" }
+      - { type: file_exists, pattern: "docker-compose.yml" }
+      - { type: file_exists, pattern: "docker-compose.yaml" }
+      - { type: file_exists, pattern: ".dockerignore" }
+    alternative_to: [podman]
+
+  kubernetes:
+    name: Kubernetes
+    description: Production-Grade Container Orchestration
+    category: tool
+    subcategory: container-orchestration
+    author: Cloud Native Computing Foundation
+    website: https://kubernetes.io
+    repository: https://github.com/kubernetes/kubernetes
+    documentation: https://kubernetes.io/docs
+    license: Apache-2.0
+    first_release: "2014-06-07"
+    tags: [container, orchestration, cloud-native, k8s]
+    detection_rules:
+      - { type: file_exists, pattern: "k8s/" }
+      - { type: file_exists, pattern: "kubernetes/" }
+      - { type: file_exists, pattern: "helm/" }
+    alternative_to: [ecs, nomad]
+
+  # Edge Platforms
+
+  vercel:
+    name: Vercel
+    description: Develop, Preview, Ship - Frontend cloud platform
+    category: cloud_service
+    subcategory: edge
+    author: Vercel Inc
+    website: https://vercel.com
+    documentation: https://vercel.com/docs
+    tags: [edge, hosting, serverless, frontend]
+    detection_rules:
+      - { type: file_exists, pattern: "vercel.json" }
+      - { type: npm_dependency, pattern: "@vercel/node" }
+    alternative_to: [netlify, cloudflare-pages]
+
+  cloudflare-workers:
+    name: Cloudflare Workers
+    description: Run code at the edge with Cloudflare's global network
+    category: cloud_service
+    subcategory: edge
+    author: Cloudflare Inc
+    website: https://workers.cloudflare.com
+    documentation: https://developers.cloudflare.com/workers
+    npm_package: "@cloudflare/workers-types"
+    tags: [edge, serverless, v8-isolates]
+    detection_rules:
+      - { type: file_exists, pattern: "wrangler.toml" }
+      - { type: npm_dependency, pattern: "@cloudflare/workers-types" }
+    alternative_to: [vercel, deno-deploy]

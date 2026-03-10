@@ -1,0 +1,158 @@
+#!/bin/bash
+#
+# AWS Account Guard Rails
+# Prevents accessing wrong AWS accounts from wrong computers
+#
+# Usage: Source this in your .zshrc or .bashrc
+#   source ~/dev/lab/bin/aws-account-guard
+
+# Color codes for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration file path
+GUARD_CONFIG="${HOME}/.aws-account-guard.conf"
+
+# Load configuration
+if [[ -f "$GUARD_CONFIG" ]]; then
+    source "$GUARD_CONFIG"
+else
+    echo -e "${YELLOW}⚠️  AWS Account Guard: No config found at $GUARD_CONFIG${NC}"
+    echo -e "${BLUE}Run: aws-account-guard-setup${NC}"
+    return 1
+fi
+
+# Validate required variables
+if [[ -z "$COMPUTER_TYPE" ]] || [[ -z "$ALLOWED_AWS_ACCOUNTS" ]]; then
+    echo -e "${RED}🚫 AWS Account Guard: Invalid configuration${NC}"
+    echo -e "${BLUE}Run: aws-account-guard-setup${NC}"
+    return 1
+fi
+
+# Function to check if account is allowed
+check_aws_account() {
+    local current_account
+    local profile_arg=""
+
+    # Extract --profile argument if present
+    for arg in "$@"; do
+        if [[ "$prev_arg" == "--profile" ]]; then
+            profile_arg="--profile $arg"
+            break
+        fi
+        prev_arg="$arg"
+    done
+
+    # Get current account ID
+    current_account=$(command aws sts get-caller-identity $profile_arg --query Account --output text 2>/dev/null)
+
+    if [[ -z "$current_account" ]]; then
+        # No credentials configured or error - allow (will fail naturally)
+        return 0
+    fi
+
+    # Check if account is in allowed list
+    if [[ " ${ALLOWED_AWS_ACCOUNTS[@]} " =~ " ${current_account} " ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to display account warning
+show_account_error() {
+    local current_account
+    current_account=$(command aws sts get-caller-identity --query Account --output text 2>/dev/null)
+
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}🚫 AWS ACCOUNT ACCESS BLOCKED${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}Computer Type:${NC}  ${COMPUTER_TYPE}"
+    echo -e "${YELLOW}Current Account:${NC} ${current_account}"
+    echo -e "${YELLOW}Allowed Accounts:${NC} ${ALLOWED_AWS_ACCOUNTS[*]}"
+    echo -e ""
+    echo -e "${BLUE}This computer is configured for ${COMPUTER_TYPE} AWS accounts only.${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Show current guard status
+show_guard_status() {
+    local current_account
+    current_account=$(command aws sts get-caller-identity --query Account --output text 2>/dev/null)
+
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}🛡️  AWS Account Guard Status${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}Computer Type:${NC}    ${COMPUTER_TYPE}"
+    echo -e "${BLUE}Allowed Accounts:${NC}  ${ALLOWED_AWS_ACCOUNTS[*]}"
+    if [[ -n "$current_account" ]]; then
+        if [[ " ${ALLOWED_AWS_ACCOUNTS[@]} " =~ " ${current_account} " ]]; then
+            echo -e "${BLUE}Current Account:${NC}   ${GREEN}${current_account} ✓${NC}"
+        else
+            echo -e "${BLUE}Current Account:${NC}   ${RED}${current_account} ✗${NC}"
+        fi
+    else
+        echo -e "${BLUE}Current Account:${NC}   ${YELLOW}Not configured${NC}"
+    fi
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# AWS command wrapper
+aws() {
+    # Check account before executing
+    if ! check_aws_account "$@"; then
+        show_account_error
+        return 1
+    fi
+
+    # Execute original aws command
+    command aws "$@"
+}
+
+# CDK command wrapper (uses AWS credentials)
+cdk() {
+    if ! check_aws_account "$@"; then
+        show_account_error
+        return 1
+    fi
+
+    command cdk "$@"
+}
+
+# Terraform wrapper (uses AWS credentials)
+terraform() {
+    if ! check_aws_account "$@"; then
+        show_account_error
+        return 1
+    fi
+
+    command terraform "$@"
+}
+
+# SAM CLI wrapper
+sam() {
+    if ! check_aws_account "$@"; then
+        show_account_error
+        return 1
+    fi
+
+    command sam "$@"
+}
+
+# Export functions
+export -f check_aws_account
+export -f show_account_error
+export -f show_guard_status
+
+# Alias for status check
+alias aws-guard-status='show_guard_status'
+
+# Show status on shell startup (optional - comment out if annoying)
+if [[ "$SHOW_GUARD_ON_STARTUP" == "true" ]]; then
+    show_guard_status
+fi
+
+echo -e "${GREEN}✓ AWS Account Guard loaded (${COMPUTER_TYPE})${NC}"

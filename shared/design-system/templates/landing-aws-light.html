@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landing Page - AWS Light Theme</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* AWS Light Theme - Clean white with orange accents */
+    :root {
+      --background: 0 0% 100%;           /* Pure white */
+      --foreground: 213 26% 15%;         /* #1A242F - Squid ink for text */
+      --card: 0 0% 100%;                 /* White cards */
+      --card-foreground: 213 26% 15%;
+      --primary: 36 100% 50%;            /* #FF9900 - AWS Orange */
+      --primary-foreground: 0 0% 100%;   /* White text on orange */
+      --secondary: 210 20% 96%;          /* Light gray */
+      --secondary-foreground: 213 26% 15%;
+      --muted: 210 20% 96%;
+      --muted-foreground: 215 16% 47%;   /* Medium gray text */
+      --accent: 36 100% 95%;             /* Light orange tint */
+      --accent-foreground: 36 100% 35%;  /* Dark orange */
+      --destructive: 0 84% 60%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 214 32% 91%;             /* Light border */
+      --input: 214 32% 91%;
+      --ring: 36 100% 50%;               /* AWS Orange focus ring */
+      --radius: 0.375rem;
+    }
+    * { border-color: hsl(var(--border)); }
+    body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
+
+    /* AWS-style buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      border-radius: calc(var(--radius)); font-size: 0.875rem; font-weight: 600;
+      padding: 0.5rem 1.25rem; height: 2.5rem; transition: all 0.15s;
+    }
+    .btn-primary {
+      background: linear-gradient(180deg, #FF9900 0%, #EC7211 100%);
+      color: white;
+      border: 1px solid #EC7211;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(180deg, #EC7211 0%, #D45B0A 100%);
+    }
+    .btn-secondary {
+      background: linear-gradient(180deg, #232F3E 0%, #1A242F 100%);
+      color: white;
+      border: 1px solid #1A242F;
+    }
+    .btn-secondary:hover {
+      background: linear-gradient(180deg, #37475A 0%, #232F3E 100%);
+    }
+    .btn-outline {
+      border: 1px solid hsl(var(--border));
+      background: white;
+      color: hsl(var(--foreground));
+    }
+    .btn-outline:hover {
+      background: hsl(var(--secondary));
+      border-color: hsl(var(--muted-foreground));
+    }
+    .btn-lg { height: 2.75rem; padding: 0 1.75rem; font-size: 1rem; }
+
+    /* AWS-style cards */
+    .card {
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--card));
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-color: #FF9900;
+    }
+
+    /* AWS-style badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 4px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #FF9900;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-squid {
+      background: #232F3E;
+      color: white;
+    }
+
+    /* AWS orange gradient text */
+    .text-gradient-aws {
+      background: linear-gradient(135deg, #EC7211 0%, #FF9900 50%, #EC7211 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Squid ink header */
+    .header-squid {
+      background: #232F3E;
+      color: white;
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+  <!-- Navigation - AWS Console Style (Squid Ink) -->
+  <nav class="sticky top-0 z-50 header-squid">
+    <div class="container mx-auto flex h-14 items-center justify-between px-4">
+      <div class="flex items-center gap-8">
+        <a href="#" class="flex items-center gap-2">
+          <svg class="h-8 w-8 text-[#FF9900]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <span class="text-xl font-bold text-white">CloudStack</span>
+        </a>
+        <div class="hidden md:flex items-center gap-6">
+          <a href="#features" class="text-sm text-gray-300 hover:text-[#FF9900] transition-colors">Services</a>
+          <a href="#pricing" class="text-sm text-gray-300 hover:text-[#FF9900] transition-colors">Pricing</a>
+          <a href="#" class="text-sm text-gray-300 hover:text-[#FF9900] transition-colors">Documentation</a>
+          <a href="#" class="text-sm text-gray-300 hover:text-[#FF9900] transition-colors">Support</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="btn btn-outline bg-transparent border-gray-500 text-white hover:bg-white/10">Sign In</button>
+        <button class="btn btn-primary">Create Account</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="container mx-auto px-4 py-20 lg:py-28">
+    <div class="mx-auto max-w-4xl text-center">
+      <span class="badge mb-6">Now Available</span>
+      <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl text-[#232F3E]">
+        Build on the
+        <span class="text-gradient-aws">most reliable cloud</span>
+      </h1>
+      <p class="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto">
+        Over 200 fully featured services from data centers globally. Build, deploy, and scale applications with industry-leading reliability.
+      </p>
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button class="btn btn-primary btn-lg">
+          Get Started for Free
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn btn-secondary btn-lg">
+          Contact Sales
+        </button>
+      </div>
+      <p class="mt-6 text-sm text-muted-foreground">
+        Free tier includes 750 hours of compute, 5GB storage, and more.
+      </p>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="border-y bg-[#232F3E] py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div>
+          <div class="text-4xl font-bold text-[#FF9900]">99.99%</div>
+          <div class="text-sm text-gray-400 mt-1">Uptime SLA</div>
+        </div>
+        <div>
+          <div class="text-4xl font-bold text-[#FF9900]">31</div>
+          <div class="text-sm text-gray-400 mt-1">Global Regions</div>
+        </div>
+        <div>
+          <div class="text-4xl font-bold text-[#FF9900]">200+</div>
+          <div class="text-sm text-gray-400 mt-1">Services</div>
+        </div>
+        <div>
+          <div class="text-4xl font-bold text-[#FF9900]">1M+</div>
+          <div class="text-sm text-gray-400 mt-1">Active Customers</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="container mx-auto px-4 py-24">
+    <div class="text-center mb-16">
+      <span class="badge mb-4">Cloud Services</span>
+      <h2 class="text-3xl font-bold md:text-4xl text-[#232F3E]">Build anything with our services</h2>
+      <p class="mt-4 text-muted-foreground max-w-2xl mx-auto">
+        From compute to machine learning, we provide the building blocks you need.
+      </p>
+    </div>
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div class="card p-6 group cursor-pointer transition-all">
+        <div class="h-12 w-12 rounded bg-[#FF9900]/10 flex items-center justify-center mb-4 group-hover:bg-[#FF9900]/20 transition-colors">
+          <svg class="h-6 w-6 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2 group-hover:text-[#EC7211] transition-colors">Elastic Compute</h3>
+        <p class="text-muted-foreground text-sm">Secure and resizable compute capacity in the cloud. Launch virtual servers in minutes.</p>
+        <a href="#" class="inline-flex items-center gap-1 text-[#EC7211] text-sm mt-4 font-medium">
+          Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="card p-6 group cursor-pointer transition-all">
+        <div class="h-12 w-12 rounded bg-[#FF9900]/10 flex items-center justify-center mb-4 group-hover:bg-[#FF9900]/20 transition-colors">
+          <svg class="h-6 w-6 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2 group-hover:text-[#EC7211] transition-colors">Object Storage</h3>
+        <p class="text-muted-foreground text-sm">Store and retrieve any amount of data from anywhere. Industry-leading durability.</p>
+        <a href="#" class="inline-flex items-center gap-1 text-[#EC7211] text-sm mt-4 font-medium">
+          Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="card p-6 group cursor-pointer transition-all">
+        <div class="h-12 w-12 rounded bg-[#FF9900]/10 flex items-center justify-center mb-4 group-hover:bg-[#FF9900]/20 transition-colors">
+          <svg class="h-6 w-6 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2 group-hover:text-[#EC7211] transition-colors">Serverless Functions</h3>
+        <p class="text-muted-foreground text-sm">Run code without provisioning servers. Pay only for the compute time you consume.</p>
+        <a href="#" class="inline-flex items-center gap-1 text-[#EC7211] text-sm mt-4 font-medium">
+          Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="card p-6 group cursor-pointer transition-all">
+        <div class="h-12 w-12 rounded bg-[#FF9900]/10 flex items-center justify-center mb-4 group-hover:bg-[#FF9900]/20 transition-colors">
+          <svg class="h-6 w-6 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2 group-hover:text-[#EC7211] transition-colors">Machine Learning</h3>
+        <p class="text-muted-foreground text-sm">Build, train, and deploy ML models at scale with fully managed infrastructure.</p>
+        <a href="#" class="inline-flex items-center gap-1 text-[#EC7211] text-sm mt-4 font-medium">
+          Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="card p-6 group cursor-pointer transition-all">
+        <div class="h-12 w-12 rounded bg-[#FF9900]/10 flex items-center justify-center mb-4 group-hover:bg-[#FF9900]/20 transition-colors">
+          <svg class="h-6 w-6 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2 group-hover:text-[#EC7211] transition-colors">Identity & Security</h3>
+        <p class="text-muted-foreground text-sm">Securely manage access to services with identity, compliance, and encryption tools.</p>
+        <a href="#" class="inline-flex items-center gap-1 text-[#EC7211] text-sm mt-4 font-medium">
+          Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="card p-6 group cursor-pointer transition-all">
+        <div class="h-12 w-12 rounded bg-[#FF9900]/10 flex items-center justify-center mb-4 group-hover:bg-[#FF9900]/20 transition-colors">
+          <svg class="h-6 w-6 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2 group-hover:text-[#EC7211] transition-colors">Monitoring & Analytics</h3>
+        <p class="text-muted-foreground text-sm">Gain insights with real-time monitoring, logging, and analytics dashboards.</p>
+        <a href="#" class="inline-flex items-center gap-1 text-[#EC7211] text-sm mt-4 font-medium">
+          Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="text-center mt-12">
+      <button class="btn btn-outline">View All 200+ Services</button>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="bg-secondary py-24">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <span class="badge mb-4">Pricing</span>
+        <h2 class="text-3xl font-bold md:text-4xl text-[#232F3E]">Pay only for what you use</h2>
+        <p class="mt-4 text-muted-foreground">No upfront costs. No termination fees. Pay as you go.</p>
+      </div>
+      <div class="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+        <div class="card p-8 bg-white">
+          <h3 class="text-lg font-semibold text-[#232F3E]">Free Tier</h3>
+          <p class="text-muted-foreground text-sm mt-1">For exploration and learning</p>
+          <div class="mt-6">
+            <span class="text-4xl font-bold text-[#EC7211]">$0</span>
+            <span class="text-muted-foreground">/month</span>
+          </div>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 750 hours EC2 (t2.micro)</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 5GB S3 storage</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 1M Lambda requests</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 12 months access</li>
+          </ul>
+          <button class="btn btn-outline w-full mt-8">Start Free</button>
+        </div>
+        <div class="card p-8 bg-white border-2 border-[#FF9900] relative">
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 badge">Recommended</span>
+          <h3 class="text-lg font-semibold text-[#232F3E]">On-Demand</h3>
+          <p class="text-muted-foreground text-sm mt-1">For production workloads</p>
+          <div class="mt-6">
+            <span class="text-4xl font-bold text-[#EC7211]">Pay-as-you-go</span>
+          </div>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> All instance types</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Unlimited storage</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 24/7 support options</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> No long-term commitment</li>
+          </ul>
+          <button class="btn btn-primary w-full mt-8">Start Building</button>
+        </div>
+        <div class="card p-8 bg-white">
+          <h3 class="text-lg font-semibold text-[#232F3E]">Reserved</h3>
+          <p class="text-muted-foreground text-sm mt-1">For predictable workloads</p>
+          <div class="mt-6">
+            <span class="text-4xl font-bold text-[#EC7211]">Up to 72%</span>
+            <span class="text-muted-foreground"> savings</span>
+          </div>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 1 or 3 year terms</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Capacity reservation</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Priority support</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#EC7211]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Flexible payment options</li>
+          </ul>
+          <button class="btn btn-outline w-full mt-8">Calculate Savings</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="container mx-auto px-4 py-24">
+    <div class="card p-12 text-center bg-[#232F3E] border-0">
+      <h2 class="text-3xl font-bold text-white">Start building on CloudStack today</h2>
+      <p class="mt-4 text-gray-400 max-w-xl mx-auto">
+        Join millions of customers and partners who trust us for their cloud infrastructure.
+      </p>
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button class="btn btn-primary btn-lg">Create Free Account</button>
+        <button class="btn btn-outline btn-lg border-gray-500 text-white hover:bg-white/10">Contact Sales</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-[#232F3E] py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid gap-8 md:grid-cols-5">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <svg class="h-6 w-6 text-[#FF9900]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <span class="text-lg font-bold text-white">CloudStack</span>
+          </div>
+          <p class="text-sm text-gray-400">The most trusted cloud platform for businesses worldwide.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4 text-[#FF9900]">Products</h4>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white">Compute</a></li>
+            <li><a href="#" class="hover:text-white">Storage</a></li>
+            <li><a href="#" class="hover:text-white">Database</a></li>
+            <li><a href="#" class="hover:text-white">Networking</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4 text-[#FF9900]">Solutions</h4>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white">Startups</a></li>
+            <li><a href="#" class="hover:text-white">Enterprise</a></li>
+            <li><a href="#" class="hover:text-white">Government</a></li>
+            <li><a href="#" class="hover:text-white">Healthcare</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4 text-[#FF9900]">Resources</h4>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white">Documentation</a></li>
+            <li><a href="#" class="hover:text-white">Training</a></li>
+            <li><a href="#" class="hover:text-white">Blog</a></li>
+            <li><a href="#" class="hover:text-white">Case Studies</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4 text-[#FF9900]">Support</h4>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white">Contact Us</a></li>
+            <li><a href="#" class="hover:text-white">Service Status</a></li>
+            <li><a href="#" class="hover:text-white">Forums</a></li>
+            <li><a href="#" class="hover:text-white">Compliance</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-12 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-sm text-gray-400">&copy; 2024 CloudStack. All rights reserved.</p>
+        <div class="flex gap-6 text-sm text-gray-400">
+          <a href="#" class="hover:text-white">Privacy</a>
+          <a href="#" class="hover:text-white">Terms</a>
+          <a href="#" class="hover:text-white">Cookie Preferences</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

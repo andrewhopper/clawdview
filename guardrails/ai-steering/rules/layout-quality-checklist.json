@@ -1,0 +1,299 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-07",
+  "description": "Binary pass/fail quality checklist for AI-generated page layouts. Replaces continuous VUD scoring with simple yes/no checks. AI MUST run this checklist after generating any full-page layout and BEFORE presenting to the user.",
+  "rules": [
+    {
+      "uuid": "qc-001-a1b2-3c4d-5e6f-7a8b9c0d1e2f",
+      "id": "qc-archetype-selected",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "A layout archetype from layout-archetypes.json MUST be selected before any page generation begins",
+      "context": {
+        "when": ["creating page", "creating mockup", "designing layout", "generating HTML"],
+        "taskType": ["Asset Generation", "UI Design", "Mockup"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "archetype selection",
+        "message": "Before generating any full-page layout: (1) determine pageType from user intent, (2) select matching archetype from layout-archetypes.json, (3) use archetype skeleton as the structural starting point. If no archetype matches, ask the user."
+      },
+      "checklist": {
+        "question": "Was a layout archetype selected before generation?",
+        "passCondition": "An archetype ID from layout-archetypes.json was chosen and its skeleton was used",
+        "failAction": "Stop. Select archetype first, then regenerate."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "qc-002-b2c3-4d5e-6f7a-8b9c0d1e2f3a",
+      "id": "qc-p1-above-fold",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "All P1 (primary task) content MUST be fully visible above the fold on a 1440x900 viewport",
+      "context": {
+        "when": ["after generating page", "reviewing layout", "quality check"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "P1 content visibility",
+        "message": "Check: On a 1440x900 viewport, is the user's primary task (data table, form, dashboard stats, search bar, etc.) fully visible without scrolling? If not, the layout wastes above-the-fold space."
+      },
+      "checklist": {
+        "question": "Is all P1 content visible above the fold (1440x900)?",
+        "passCondition": "Primary task UI is fully visible without scrolling on standard viewport",
+        "failAction": "Reduce header/hero height, remove decorative elements, or restructure layout."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "qc-003-c3d4-5e6f-7a8b-9c0d1e2f3a4b",
+      "id": "qc-no-hero-webapp-docs",
+      "version": "1.0.0",
+      "level": "NEVER",
+      "category": "ux_design",
+      "description": "WEBAPP and DOCUMENTATION pages must NEVER have hero images or decorative full-width headers",
+      "context": {
+        "when": ["after generating webapp page", "after generating docs page", "quality check"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "hero sections on WEBAPP/DOCUMENTATION pages",
+        "message": "WEBAPP and DOCUMENTATION pages must start with functional content immediately after the header bar. No hero images, no decorative gradients, no oversized headings. Page title max text-2xl (24px)."
+      },
+      "checklist": {
+        "question": "Does the WEBAPP/DOCS page have any hero image or decorative header?",
+        "passCondition": "No hero, no decorative gradient, no heading larger than text-2xl. Functional content starts immediately.",
+        "failAction": "Remove hero/decorative elements. Replace with functional content (filters, data, navigation)."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "qc-004-d4e5-6f7a-8b9c-0d1e2f3a4b5c",
+      "id": "qc-hierarchy-depth",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "Visual hierarchy MUST NOT exceed the depth limit for the page type (2 for WEBAPP/DOCS, 3 for MARKETING/PRODUCT)",
+      "context": {
+        "when": ["after generating page", "reviewing layout", "quality check"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "constrain",
+        "target": "heading hierarchy depth",
+        "message": "Count distinct heading levels used above the fold. WEBAPP/DOCS: max 2 levels (e.g., H1 page title + H2 section). MARKETING/PRODUCT: max 3 levels (H1 + H2 + H3). More levels create visual noise."
+      },
+      "checklist": {
+        "question": "Does the page exceed its hierarchy depth limit?",
+        "passCondition": "Heading levels used ≤ archetype maxHierarchyDepth",
+        "failAction": "Flatten hierarchy. Merge heading levels or use visual weight (bold, size) instead of more levels."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "qc-005-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+      "id": "qc-single-primary-cta",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "Pages MUST NOT have more primary CTAs above the fold than the archetype allows",
+      "context": {
+        "when": ["after generating page", "reviewing layout", "quality check"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "constrain",
+        "target": "primary CTA count",
+        "message": "Count buttons styled as primary (filled, high-contrast) above the fold. WEBAPP dashboards: 0 primary CTAs (actions are contextual). Forms: 1 (Submit/Save). Marketing: max 2 (hero + nav). Multiple primary CTAs dilute focus."
+      },
+      "checklist": {
+        "question": "Does the page have more primary CTAs than the archetype allows?",
+        "passCondition": "Primary CTA count ≤ archetype maxPrimaryCTAs",
+        "failAction": "Demote extra CTAs to secondary (outline) or tertiary (text link) styling."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "qc-006-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+      "id": "qc-marketing-hero-limit",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "Marketing heroes MUST NOT exceed 60vh and MUST contain headline + value prop + CTA",
+      "context": {
+        "when": ["after generating marketing page", "after generating landing page", "quality check"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "constrain",
+        "target": "marketing hero section",
+        "message": "If page has a hero section: (1) check height ≤ 60vh for MARKETING, ≤ 40vh for PRODUCT, (2) verify hero contains headline text, (3) verify hero contains value proposition, (4) verify hero contains visible CTA button. Hero without all three is pure decoration."
+      },
+      "checklist": {
+        "question": "Does the hero exceed its height limit OR lack headline/value-prop/CTA?",
+        "passCondition": "Hero height ≤ limit AND contains headline + value prop + CTA button",
+        "failAction": "Reduce hero height. Add missing elements. If hero has no CTA, it's decoration — shrink or remove."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "qc-007-a7b8-9c0d-1e2f-3a4b5c6d7e8f",
+      "id": "qc-required-elements-present",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "All required elements defined in the selected archetype MUST be present in the generated layout",
+      "context": {
+        "when": ["after generating page", "quality check"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "archetype required elements",
+        "message": "Cross-reference the generated layout against the selected archetype's requiredElements list. Every required element must be present. Missing elements indicate an incomplete layout."
+      },
+      "checklist": {
+        "question": "Are all archetype-required elements present in the layout?",
+        "passCondition": "Every element in archetype.requiredElements exists in the generated page",
+        "failAction": "Add missing elements. If intentionally omitted, document the override reason."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "qc-008-b8c9-0d1e-2f3a-4b5c6d7e8f9a",
+      "id": "qc-no-prohibited-elements",
+      "version": "1.0.0",
+      "level": "NEVER",
+      "category": "ux_design",
+      "description": "Prohibited elements defined in the selected archetype MUST NOT appear in the generated layout",
+      "context": {
+        "when": ["after generating page", "quality check"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "archetype prohibited elements",
+        "message": "Cross-reference the generated layout against the selected archetype's prohibitedElements list. None of these elements may be present. Their presence indicates the AI fell back to a generic template pattern."
+      },
+      "checklist": {
+        "question": "Does the layout contain any archetype-prohibited elements?",
+        "passCondition": "No element from archetype.prohibitedElements exists in the generated page",
+        "failAction": "Remove prohibited elements. Replace with functional content appropriate to the page type."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "qc-009-c9d0-1e2f-3a4b-5c6d7e8f9a0b",
+      "id": "qc-max-heights-respected",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "All maxHeight constraints from the archetype MUST be respected in CSS/styling",
+      "context": {
+        "when": ["after generating page", "quality check"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "element height constraints",
+        "message": "For each element in archetype.requiredElements that has a maxHeight, verify the generated CSS does not exceed it. Common violations: header > 56px, toolbar > 48px, hero > 60vh."
+      },
+      "checklist": {
+        "question": "Do any elements exceed their archetype maxHeight?",
+        "passCondition": "All elements with maxHeight constraints have CSS heights ≤ the specified limit",
+        "failAction": "Reduce element height to match constraint. Tighten padding, reduce font size, or remove decorative spacing."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    },
+    {
+      "uuid": "qc-010-d0e1-2f3a-4b5c-6d7e8f9a0b1c",
+      "id": "qc-design-tokens-used",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "ux_design",
+      "description": "Layout MUST use design system tokens — no raw hex colors or magic numbers",
+      "context": {
+        "when": ["after generating page", "quality check"],
+        "taskType": ["Asset Generation", "UI Design", "Design Review"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "design token usage",
+        "message": "Scan generated CSS/HTML for: (1) raw hex colors (#1a1a2e) — must use hsl(var(--token)), (2) magic pixel values (17px, 93px) — must use token scale (0.25rem increments), (3) arbitrary font sizes — must use text-sm/base/lg/xl/2xl scale."
+      },
+      "checklist": {
+        "question": "Does the layout use raw hex colors or magic pixel values?",
+        "passCondition": "All colors use CSS custom properties, all spacing uses token scale, all typography uses scale",
+        "failAction": "Replace raw values with design system tokens. See shared/design-system/globals.css."
+      },
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2026-03-07",
+        "status": "approved",
+        "namespace": "@protoflow/ux"
+      }
+    }
+  ],
+  "usage": {
+    "when": "After generating any full-page layout, BEFORE presenting to user",
+    "howToRun": "For each rule in this file, evaluate the checklist.question against the generated output. If passCondition is false, execute failAction before proceeding.",
+    "reportFormat": "Include a compact quality check summary at the end of generation: ✅ Archetype: {id} | P1 ATF: pass | Hero: pass/N/A | Elements: 8/8 | Tokens: pass",
+    "overrides": "User can override any check with explicit instruction. Log overrides in asset metadata."
+  },
+  "metadata": {
+    "approvedBy": "Andrew Hopper",
+    "approvedDate": "2026-03-07",
+    "status": "approved",
+    "namespace": "@protoflow/ux"
+  }
+}

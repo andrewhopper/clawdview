@@ -1,0 +1,598 @@
+# Inventory Domain
+# Material/product at a location with quantity tracking
+# Version: 1.0.0
+
+domain:
+  name: inventory
+  version: "1.0.0"
+  status: production
+  description: Stock tracking - materials and products at locations with quantities
+  dependencies: [core, material]
+  use_case: Warehouse, retail, kitchen pantry, lab supplies
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  StockItem:
+    description: Inventory record - material at location
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # What
+      material_id:
+        type: uuid
+        required: true
+        description: FK to Material
+      variant_id:
+        type: string
+        description: Specific variant (size, color, etc.)
+
+      # Where
+      location_id:
+        type: uuid
+        required: true
+        description: FK to InventoryLocation
+      bin_location:
+        type: string
+        description: Specific bin/shelf (A1-B3, Shelf 2)
+
+      # How much
+      quantity_on_hand:
+        type: Quantity
+        required: true
+      quantity_reserved:
+        type: Quantity
+        description: Reserved for orders/processes
+      quantity_available:
+        type: Quantity
+        description: Computed: on_hand - reserved
+
+      # Lot/Serial tracking
+      lot_number:
+        type: string
+        description: Batch/lot identifier
+      serial_numbers:
+        type: array
+        items: string
+        description: For serialized items
+      tracking_type:
+        type: TrackingType
+        required: true
+        default: quantity
+
+      # Dates
+      received_at:
+        type: datetime
+      expiration_date:
+        type: date
+      best_before_date:
+        type: date
+      manufacture_date:
+        type: date
+
+      # Cost
+      unit_cost:
+        type: Money
+      total_cost:
+        type: Money
+      cost_method:
+        type: CostMethod
+        default: fifo
+
+      # Status
+      status:
+        type: StockStatus
+        required: true
+        default: available
+      condition:
+        type: ItemCondition
+        default: new
+
+      # Reorder
+      reorder_point:
+        type: decimal
+        description: Reorder when quantity falls below
+      reorder_quantity:
+        type: decimal
+        description: How much to reorder
+      max_quantity:
+        type: decimal
+        description: Maximum to keep in stock
+      supplier_id:
+        type: string
+        description: Preferred supplier
+
+      # Audit
+      last_counted_at:
+        type: datetime
+      last_counted_by:
+        type: string
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  InventoryLocation:
+    description: Physical or logical location where inventory is stored
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      location_type:
+        type: LocationType
+        required: true
+      code:
+        type: string
+        description: Location code (WH-001, STORE-A)
+
+      # Address
+      address:
+        type: Address
+      geo_location:
+        type: GeoLocation
+
+      # Hierarchy
+      parent_location_id:
+        type: uuid
+        description: FK to parent location (warehouse > zone > aisle > shelf)
+
+      # Capacity
+      capacity:
+        type: decimal
+        description: Maximum capacity (units or volume)
+      capacity_unit:
+        type: string
+      current_utilization:
+        type: decimal
+        description: Current utilization (0.0-1.0)
+
+      # Characteristics
+      climate_controlled:
+        type: boolean
+        default: false
+      temperature_min:
+        type: decimal
+      temperature_max:
+        type: decimal
+      humidity_controlled:
+        type: boolean
+        default: false
+      secure:
+        type: boolean
+        default: false
+        description: Restricted access
+
+      # Status
+      status:
+        type: LocationStatus
+        required: true
+        default: active
+
+  InventoryMovement:
+    description: Record of inventory quantity change
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # What moved
+      stock_item_id:
+        type: uuid
+        required: true
+      material_id:
+        type: uuid
+        required: true
+
+      # Movement details
+      movement_type:
+        type: MovementType
+        required: true
+      quantity:
+        type: Quantity
+        required: true
+        description: Quantity moved (positive)
+      direction:
+        type: MovementDirection
+        required: true
+
+      # Locations
+      from_location_id:
+        type: uuid
+        description: Source location (null for receipt)
+      to_location_id:
+        type: uuid
+        description: Destination location (null for issue)
+
+      # Reference
+      reference_type:
+        type: string
+        description: What triggered movement (order, transfer, adjustment)
+      reference_id:
+        type: string
+        description: ID of triggering document
+
+      # Lot tracking
+      lot_number:
+        type: string
+      serial_numbers:
+        type: array
+        items: string
+
+      # Cost
+      unit_cost:
+        type: Money
+      total_cost:
+        type: Money
+
+      # Execution
+      planned_at:
+        type: datetime
+      executed_at:
+        type: datetime
+        required: true
+      executed_by:
+        type: string
+
+      # Status
+      status:
+        type: MovementStatus
+        required: true
+
+      notes:
+        type: string
+
+  InventoryAdjustment:
+    description: Manual adjustment to inventory quantities
+    properties:
+      id:
+        type: uuid
+        required: true
+      stock_item_id:
+        type: uuid
+        required: true
+
+      adjustment_type:
+        type: AdjustmentType
+        required: true
+      reason:
+        type: AdjustmentReason
+        required: true
+      reason_detail:
+        type: string
+
+      # Quantities
+      quantity_before:
+        type: Quantity
+        required: true
+      quantity_after:
+        type: Quantity
+        required: true
+      quantity_adjusted:
+        type: Quantity
+        required: true
+
+      # Cost impact
+      cost_impact:
+        type: Money
+
+      # Approval
+      requested_by:
+        type: string
+        required: true
+      requested_at:
+        type: datetime
+        required: true
+      approved_by:
+        type: string
+      approved_at:
+        type: datetime
+      status:
+        type: AdjustmentStatus
+        required: true
+
+      notes:
+        type: string
+      supporting_documents:
+        type: array
+        items: string
+        description: Photos, count sheets, etc.
+
+  ReorderAlert:
+    description: Alert when stock reaches reorder point
+    properties:
+      id:
+        type: uuid
+        required: true
+      stock_item_id:
+        type: uuid
+        required: true
+      material_id:
+        type: uuid
+        required: true
+      location_id:
+        type: uuid
+        required: true
+
+      alert_type:
+        type: AlertType
+        required: true
+      current_quantity:
+        type: Quantity
+        required: true
+      threshold_quantity:
+        type: Quantity
+        required: true
+
+      triggered_at:
+        type: datetime
+        required: true
+      acknowledged_at:
+        type: datetime
+      acknowledged_by:
+        type: string
+      resolved_at:
+        type: datetime
+
+      # Action taken
+      action:
+        type: AlertAction
+      purchase_order_id:
+        type: string
+        description: PO created to resolve
+
+      status:
+        type: AlertStatus
+        required: true
+
+  InventoryCount:
+    description: Physical inventory count event
+    properties:
+      id:
+        type: uuid
+        required: true
+      location_id:
+        type: uuid
+        required: true
+      count_type:
+        type: CountType
+        required: true
+
+      # Scope
+      material_ids:
+        type: array
+        items: uuid
+        description: Specific materials to count (null = all)
+      categories:
+        type: array
+        items: string
+        description: Categories to count
+
+      # Schedule
+      scheduled_at:
+        type: datetime
+      started_at:
+        type: datetime
+      completed_at:
+        type: datetime
+
+      # Results
+      items_counted:
+        type: integer
+      items_with_variance:
+        type: integer
+      total_variance_value:
+        type: Money
+
+      # Who
+      counted_by:
+        type: array
+        items: string
+      supervised_by:
+        type: string
+
+      status:
+        type: CountStatus
+        required: true
+
+      notes:
+        type: string
+
+enums:
+
+  TrackingType:
+    values:
+      - quantity          # Track total quantity only
+      - lot               # Track by lot/batch number
+      - serial            # Track individual serial numbers
+      - lot_and_serial    # Both lot and serial
+
+  CostMethod:
+    values:
+      - fifo              # First in, first out
+      - lifo              # Last in, first out
+      - average           # Weighted average
+      - specific          # Specific identification
+      - standard          # Standard cost
+
+  StockStatus:
+    values:
+      - available         # Ready for use/sale
+      - reserved          # Reserved for order/process
+      - on_hold           # Temporarily unavailable
+      - quarantine        # Quality hold
+      - damaged           # Damaged, pending decision
+      - expired           # Past expiration
+      - in_transit        # Being moved
+      - returned          # Customer return
+
+  ItemCondition:
+    values:
+      - new
+      - like_new
+      - good
+      - fair
+      - poor
+      - damaged
+      - refurbished
+
+  LocationType:
+    values:
+      - warehouse
+      - distribution_center
+      - store
+      - stockroom
+      - zone
+      - aisle
+      - rack
+      - shelf
+      - bin
+      - virtual           # Logical location
+      - transit           # In-transit location
+      - receiving         # Receiving dock
+      - shipping          # Shipping dock
+      - returns           # Returns processing
+
+  LocationStatus:
+    values:
+      - active
+      - inactive
+      - maintenance
+      - full
+      - closed
+
+  MovementType:
+    values:
+      - receipt           # Received from supplier
+      - issue             # Issued to order/process
+      - transfer          # Move between locations
+      - return_to_vendor  # Return to supplier
+      - customer_return   # Customer return
+      - scrap             # Write off as scrap
+      - sample            # Sample taken
+      - production_input  # Issued to production
+      - production_output # Received from production
+      - adjustment        # Inventory adjustment
+
+  MovementDirection:
+    values:
+      - in                # Increases inventory
+      - out               # Decreases inventory
+      - transfer          # Neither (location change)
+
+  MovementStatus:
+    values:
+      - planned
+      - in_progress
+      - completed
+      - cancelled
+
+  AdjustmentType:
+    values:
+      - increase
+      - decrease
+
+  AdjustmentReason:
+    values:
+      - count_variance    # Physical count difference
+      - damage            # Damaged goods
+      - theft             # Suspected theft
+      - expiration        # Expired goods
+      - found             # Found items
+      - system_error      # System correction
+      - unit_conversion   # Unit of measure correction
+      - reclassification  # Changed classification
+      - other
+
+  AdjustmentStatus:
+    values:
+      - pending
+      - approved
+      - rejected
+      - completed
+
+  AlertType:
+    values:
+      - below_reorder     # Below reorder point
+      - below_safety      # Below safety stock
+      - out_of_stock      # Zero quantity
+      - expiring_soon     # Near expiration
+      - expired           # Past expiration
+      - overstock         # Above max quantity
+
+  AlertAction:
+    values:
+      - reorder_placed
+      - transfer_requested
+      - acknowledged_no_action
+      - ignored
+
+  AlertStatus:
+    values:
+      - active
+      - acknowledged
+      - resolved
+      - ignored
+
+  CountType:
+    values:
+      - full              # Complete physical inventory
+      - cycle             # Cycle count (subset)
+      - spot              # Spot check
+      - annual            # Annual inventory
+
+  CountStatus:
+    values:
+      - scheduled
+      - in_progress
+      - completed
+      - cancelled
+
+examples:
+
+  pantry_flour:
+    material_id: "flour_001"
+    location_id: "pantry_shelf_1"
+    quantity_on_hand: { value: 2, unit: "kg" }
+    quantity_reserved: { value: 0, unit: "kg" }
+    tracking_type: quantity
+    reorder_point: 0.5
+    reorder_quantity: 2
+    status: available
+    condition: new
+
+  warehouse_bolt:
+    material_id: "bolt_m8_001"
+    location_id: "warehouse_a_shelf_3"
+    bin_location: "A3-B2"
+    quantity_on_hand: { value: 500, unit: "each" }
+    quantity_reserved: { value: 100, unit: "each" }
+    lot_number: "LOT-2025-001"
+    tracking_type: lot
+    unit_cost: { amount: 0.25, currency: "USD" }
+    reorder_point: 200
+    reorder_quantity: 500
+    status: available
+
+  serialized_laptop:
+    material_id: "laptop_001"
+    location_id: "it_stockroom"
+    quantity_on_hand: { value: 1, unit: "each" }
+    serial_numbers: ["SN-ABC123456"]
+    tracking_type: serial
+    unit_cost: { amount: 1200, currency: "USD" }
+    status: available
+    condition: refurbished
+
+sources:
+  - "APICS Supply Chain Management"
+  - "Warehouse Management Systems"
+  - "Inventory Control Best Practices"
+  - "GAAP Inventory Accounting"

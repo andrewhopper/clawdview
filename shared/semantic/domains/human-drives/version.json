@@ -1,0 +1,71 @@
+{
+  "domain": "human-drives",
+  "version": "1.0.0",
+  "description": "Fundamental existential and evolutionary drives - meaning, purpose, joy, affiliation, procreation",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial production version with 5 fundamental drives: meaning (logotherapy), purpose (ikigai), joy (hedonic/eudaimonic), affiliation (social connection), procreation (mating strategies)"
+  },
+  "entities": [
+    "MeaningSource",
+    "WillToMeaning",
+    "ExistentialVacuum",
+    "MeaningPathway",
+    "LifeTask",
+    "Ikigai",
+    "LifePurpose",
+    "IkigaiDimension",
+    "PurposeAlignment",
+    "HedonicWellbeing",
+    "EudaimonicWellbeing",
+    "Flourishing",
+    "JoySource",
+    "PeakExperience",
+    "SocialConnection",
+    "BelongingNeed",
+    "TribalIdentity",
+    "Coalition",
+    "SocialSupport",
+    "MatingStrategy",
+    "MatePreference",
+    "ReproductiveFitness",
+    "PairBond",
+    "SexualSelection",
+    "ParentalInvestment"
+  ],
+  "actions": [
+    "SeekMeaningAction",
+    "AlignWithPurposeAction",
+    "CultivateJoyAction",
+    "BuildConnectionAction",
+    "SelectMateAction",
+    "InvestInOffspringAction"
+  ],
+  "enums": [
+    "MeaningSourceType",
+    "PathwayType",
+    "IkigaiDimensionType",
+    "PurposeClarity",
+    "TaskStatus",
+    "Severity",
+    "JoySourceType",
+    "FlourishingLevel",
+    "ConnectionType",
+    "TribalRole",
+    "SupportType",
+    "MatingStrategyType",
+    "TimeHorizon",
+    "MateSelectionCriterion",
+    "SelectionType",
+    "InvestmentType"
+  ],
+  "w3c_standards": ["RDF", "OWL", "SHACL"],
+  "research_sources": [
+    "Viktor Frankl - Logotherapy (Man's Search for Meaning, 1946)",
+    "Ikigai Research - Japanese purpose in life framework",
+    "Hedonic/Eudaimonic Psychology - Positive psychology research",
+    "Sexual Strategies Theory - David Buss evolutionary psychology",
+    "Attachment Theory - Social bonding research",
+    "Serotonin & Social Hierarchy - Neuroscience research"
+  ]
+}

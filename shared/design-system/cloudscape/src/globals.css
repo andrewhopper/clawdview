@@ -1,0 +1,29 @@
+/*
+ * AWS Cloudscape Design System - Global Styles
+ *
+ * This file imports Cloudscape's global styles and provides
+ * any additional customizations for the Protoflow environment.
+ */
+
+/* Import Cloudscape global styles */
+@import '@cloudscape-design/global-styles/index.css';
+
+/* Custom overrides (optional) */
+:root {
+  /* Cloudscape uses CSS custom properties for theming */
+  /* Override these to customize the look */
+}
+
+/* Dark mode support */
+.awsui-dark-mode {
+  color-scheme: dark;
+}
+
+/* Utility classes for Cloudscape layouts */
+.cloudscape-app-layout {
+  min-height: 100vh;
+}
+
+.cloudscape-content-wrapper {
+  padding: var(--space-scaled-l);
+}

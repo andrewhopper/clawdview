@@ -1,0 +1,600 @@
+# Content Domain
+# Authored content with blocks, revisions, and drafts
+# Version: 1.0.0
+
+domain:
+  name: content
+  version: "1.0.0"
+  status: production
+  description: Authored content - articles, posts, documents with revisions
+  dependencies: [core]
+  use_case: CMS, blogs, forums, wikis, documentation
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Content:
+    description: A piece of authored content (article, post, document)
+    properties:
+      id:
+        type: uuid
+        required: true
+      content_type:
+        type: ContentType
+        required: true
+
+      # Metadata
+      title:
+        type: string
+        required: true
+      slug:
+        type: string
+        description: URL-friendly identifier
+      summary:
+        type: string
+        description: Brief description/excerpt
+      excerpt:
+        type: string
+        description: Auto-generated or manual excerpt
+
+      # Body
+      body:
+        type: array
+        items: ContentBlock
+        required: true
+      format:
+        type: ContentFormat
+        required: true
+        default: markdown
+      raw_content:
+        type: string
+        description: Raw text content (for search, etc.)
+
+      # Authorship
+      author_id:
+        type: string
+        required: true
+        description: FK to Person/User
+      contributors:
+        type: array
+        items: Contributor
+      created_at:
+        type: datetime
+        required: true
+
+      # Publishing
+      status:
+        type: ContentStatus
+        required: true
+        default: draft
+      published_at:
+        type: datetime
+      scheduled_publish_at:
+        type: datetime
+      unpublished_at:
+        type: datetime
+
+      # Versioning
+      version:
+        type: integer
+        default: 1
+      current_revision_id:
+        type: uuid
+        description: FK to current ContentRevision
+
+      # Organization
+      categories:
+        type: array
+        items: string
+      tags:
+        type: array
+        items: string
+      parent_id:
+        type: uuid
+        description: FK to parent Content (for hierarchies)
+      sort_order:
+        type: integer
+
+      # SEO
+      meta_title:
+        type: string
+      meta_description:
+        type: string
+      canonical_url:
+        type: string
+      featured_image:
+        type: MediaObject
+
+      # Visibility
+      visibility:
+        type: Visibility
+        default: public
+      password:
+        type: string
+        description: For password-protected content
+      allowed_roles:
+        type: array
+        items: string
+
+      # Engagement
+      allow_comments:
+        type: boolean
+        default: true
+      allow_reactions:
+        type: boolean
+        default: true
+
+      # Metrics (denormalized for performance)
+      view_count:
+        type: integer
+        default: 0
+      reaction_count:
+        type: integer
+        default: 0
+      comment_count:
+        type: integer
+        default: 0
+      share_count:
+        type: integer
+        default: 0
+
+      # Audit
+      updated_at:
+        type: datetime
+        required: true
+      updated_by:
+        type: string
+
+  ContentBlock:
+    description: A block of content within a document
+    properties:
+      id:
+        type: uuid
+        required: true
+      block_type:
+        type: BlockType
+        required: true
+      content:
+        type: string
+        description: Block content (text, markdown, etc.)
+      sequence:
+        type: integer
+        required: true
+
+      # Type-specific data
+      data:
+        type: object
+        description: Block-type-specific structured data
+
+      # For media blocks
+      media:
+        type: MediaObject
+      alt_text:
+        type: string
+      caption:
+        type: string
+
+      # For code blocks
+      language:
+        type: string
+      filename:
+        type: string
+
+      # For embed blocks
+      embed_url:
+        type: string
+      embed_html:
+        type: string
+
+      # Attributes
+      attributes:
+        type: object
+        description: Generic attributes (alignment, width, etc.)
+
+  ContentRevision:
+    description: A saved version of content
+    properties:
+      id:
+        type: uuid
+        required: true
+      content_id:
+        type: uuid
+        required: true
+        description: FK to Content
+      revision_number:
+        type: integer
+        required: true
+
+      # Snapshot
+      title:
+        type: string
+        required: true
+      body:
+        type: array
+        items: ContentBlock
+        required: true
+      raw_content:
+        type: string
+
+      # Change info
+      changed_by:
+        type: string
+        required: true
+      changed_at:
+        type: datetime
+        required: true
+      change_summary:
+        type: string
+        description: What changed in this revision
+      change_type:
+        type: ChangeType
+        required: true
+
+      # Comparison
+      previous_revision_id:
+        type: uuid
+      diff:
+        type: string
+        description: Diff from previous revision
+
+      # Status
+      is_current:
+        type: boolean
+        default: false
+      is_published:
+        type: boolean
+        default: false
+
+  Draft:
+    description: Work-in-progress content that hasn't been saved as revision
+    properties:
+      id:
+        type: uuid
+        required: true
+      content_id:
+        type: uuid
+        description: FK to Content (null for new content)
+
+      # Draft content
+      title:
+        type: string
+      body:
+        type: array
+        items: ContentBlock
+      raw_content:
+        type: string
+
+      # Author
+      author_id:
+        type: string
+        required: true
+
+      # Auto-save
+      auto_saved_at:
+        type: datetime
+      last_edited_at:
+        type: datetime
+        required: true
+
+      # Expiration
+      expires_at:
+        type: datetime
+        description: When draft will be auto-deleted
+
+  Contributor:
+    description: Someone who contributed to content
+    properties:
+      user_id:
+        type: string
+        required: true
+      role:
+        type: ContributorRole
+        required: true
+      contributed_at:
+        type: datetime
+      sections:
+        type: array
+        items: string
+        description: Which sections they contributed to
+
+  ContentRelation:
+    description: Relationship between content items
+    properties:
+      id:
+        type: uuid
+        required: true
+      source_content_id:
+        type: uuid
+        required: true
+      target_content_id:
+        type: uuid
+        required: true
+      relation_type:
+        type: RelationType
+        required: true
+      sequence:
+        type: integer
+        description: For ordered relations
+
+enums:
+
+  ContentType:
+    values:
+      - article
+      - blog_post
+      - page
+      - news
+      - documentation
+      - wiki
+      - tutorial
+      - guide
+      - review
+      - announcement
+      - faq
+      - glossary
+      - changelog
+      - memo              # Short-form business communication
+      - presentation      # Slide deck (uses slide BlockType)
+
+  ContentFormat:
+    values:
+      - markdown
+      - html
+      - rich_text
+      - plain_text
+      - asciidoc
+      - rst
+
+  ContentStatus:
+    values:
+      - draft
+      - pending_review
+      - scheduled
+      - published
+      - unpublished
+      - archived
+      - deleted
+
+  Visibility:
+    values:
+      - public
+      - unlisted          # Accessible via link, not listed
+      - private           # Author only
+      - password          # Password protected
+      - members           # Members/logged-in users
+      - role_restricted   # Specific roles only
+
+  BlockType:
+    values:
+      # Text
+      - paragraph
+      - heading
+      - quote
+      - callout
+      - list
+      - checklist
+
+      # Media
+      - image
+      - gallery
+      - video
+      - audio
+      - file
+
+      # Code
+      - code
+      - code_block
+
+      # Embed
+      - embed
+      - iframe
+      - tweet
+      - youtube
+
+      # Layout
+      - divider
+      - spacer
+      - columns
+      - table
+
+      # Interactive
+      - poll
+      - form
+      - toc              # Table of contents
+
+      # Presentation
+      - slide            # Presentation slide (title, content, speaker_notes in data)
+
+      # Custom
+      - custom
+
+  ChangeType:
+    values:
+      - created
+      - updated
+      - published
+      - unpublished
+      - restored          # Restored from previous version
+      - merged            # Merged changes
+      - auto_saved
+
+  ContributorRole:
+    values:
+      - author
+      - co_author
+      - editor
+      - reviewer
+      - translator
+      - illustrator
+
+  RelationType:
+    values:
+      - related           # Generally related
+      - prerequisite      # Should read first
+      - sequel            # Follows this content
+      - translation       # Translation of
+      - version           # Different version of
+      - canonical         # Canonical source
+      - series            # Part of series
+
+  PresentationStatus:
+    values:
+      - draft
+      - in_review
+      - approved
+      - published
+      - archived
+
+# =============================================================================
+# PRESENTATION ENTITIES
+# =============================================================================
+
+presentation_entities:
+
+  Presentation:
+    description: Slide deck with authors and optional project/org links
+    properties:
+      id:
+        type: uuid
+        required: true
+      title:
+        type: string
+        required: true
+        maxLength: 500
+      description:
+        type: string
+        description: "Brief summary of presentation"
+      authors:
+        type: array
+        items: core.Author
+        required: true
+        description: "Presentation creators/contributors"
+      slides:
+        type: array
+        items: Slide
+        required: true
+      status:
+        type: PresentationStatus
+        required: true
+        default: draft
+      visibility:
+        type: core.Visibility
+        description: "Overall presentation visibility"
+      project_id:
+        type: uuid
+        description: "FK to project (optional)"
+      organization_id:
+        type: uuid
+        description: "FK to organization (optional)"
+      organization_name:
+        type: string
+        description: "Denormalized org name for display"
+      tags:
+        type: array
+        items: string
+      version:
+        type: integer
+        default: 1
+      presented_at:
+        type: datetime
+        description: "When presentation was given"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Slide:
+    description: Single slide within a presentation
+    properties:
+      id:
+        type: uuid
+        required: true
+      presentation_id:
+        type: uuid
+        required: true
+        description: "FK to Presentation"
+      title:
+        type: string
+        maxLength: 255
+      content:
+        type: string
+        description: "Slide body content (markdown)"
+      speaker_notes:
+        type: string
+        description: "Notes visible only to presenter"
+      communication_objective:
+        type: string
+        description: "What this slide aims to convey"
+      position:
+        type: integer
+        required: true
+        description: "Order in presentation (0-indexed)"
+      layout:
+        type: SlideLayout
+        default: default
+      visibility:
+        type: core.Visibility
+        description: "Per-slide visibility (show/hide in modes)"
+      media:
+        type: array
+        items: core.MediaObject
+        description: "Images, videos embedded in slide"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  SlideLayout:
+    description: Slide layout templates
+    values:
+      - default           # Title + content
+      - title_only        # Title slide
+      - title_content     # Title with body
+      - two_column        # Side by side
+      - image_left        # Image on left, text right
+      - image_right       # Image on right, text left
+      - image_full        # Full bleed image
+      - quote             # Quote/testimonial
+      - section           # Section divider
+      - blank             # Empty slide
+
+examples:
+
+  blog_post:
+    content_type: blog_post
+    title: "Introduction to Domain-Driven Design"
+    slug: "intro-to-ddd"
+    summary: "Learn the basics of Domain-Driven Design"
+    body:
+      - block_type: paragraph
+        sequence: 1
+        content: "Domain-Driven Design (DDD) is a software development approach..."
+      - block_type: heading
+        sequence: 2
+        content: "Core Concepts"
+        data: { level: 2 }
+      - block_type: paragraph
+        sequence: 3
+        content: "The key concepts in DDD include..."
+      - block_type: code_block
+        sequence: 4
+        content: "class Order:\n    def __init__(self):\n        pass"
+        language: "python"
+    format: markdown
+    author_id: "user_123"
+    status: published
+    published_at: "2025-01-15T10:00:00Z"
+    categories: ["software-development", "architecture"]
+    tags: ["ddd", "design-patterns", "best-practices"]
+    allow_comments: true
+
+sources:
+  - "WordPress Block Editor"
+  - "Notion Block Model"
+  - "Ghost CMS"
+  - "Contentful Content Model"

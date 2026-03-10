@@ -1,0 +1,21 @@
+# Business Strategy Domain Model Index
+# Imports all modular schema files
+# Sources: Osterwalder & Pigneur (2010), Maurya (2012), Blank (2013), Ries (2011), Bland & Osterwalder (2019)
+
+domain:
+  name: business-strategy
+  version: "1.0.0"
+  description: Business strategy frameworks for startup validation and business model design
+  dependencies: [core]
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+
+# Import all entities
+imports:
+  - business-model-canvas.yaml
+  - lean-canvas.yaml
+  - four-steps.yaml
+  - lean-startup.yaml
+  - validation-toolkit.yaml
+  - market-analysis.yaml
+  - enums.yaml

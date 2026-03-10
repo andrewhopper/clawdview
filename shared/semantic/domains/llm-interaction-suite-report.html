@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human-LLM Interaction Domain Model Suite</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --bg-hover: #21262d;
+            --border: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-purple: #a371f7;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+            --accent-cyan: #39c5cf;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .architecture {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre;
+            color: var(--text-secondary);
+        }
+
+        .layer-5 { color: var(--accent-purple); }
+        .layer-4 { color: var(--accent-orange); }
+        .layer-3 { color: var(--accent-cyan); }
+        .layer-2 { color: var(--accent-green); }
+        .layer-1 { color: var(--accent-blue); }
+
+        .domains-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .domain-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .domain-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .domain-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-hover);
+        }
+
+        .domain-header:hover {
+            background: #282e36;
+        }
+
+        .domain-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .domain-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .domain-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .domain-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(63, 185, 80, 0.2);
+            color: var(--accent-green);
+        }
+
+        .expand-icon {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            transition: transform 0.2s ease;
+        }
+
+        .domain-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .domain-content {
+            display: none;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .domain-card.expanded .domain-content {
+            display: block;
+        }
+
+        .domain-description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .domain-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .domain-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tag {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .tag-entity {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .tag-enum {
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .dependencies {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .dep {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .sources {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .sources a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .sources a:hover {
+            text-decoration: underline;
+        }
+
+        .file-path {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.8rem;
+            color: var(--accent-orange);
+            background: var(--bg-hover);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .expand-all {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .expand-all:hover {
+            background: #4999e9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Human-LLM Interaction Domain Model Suite</h1>
+            <p class="subtitle">12 composable domains for modeling LLM interactions</p>
+            <p class="subtitle" style="margin-top: 0.5rem;">Validated against 15+ research papers from Anthropic, OpenAI, Microsoft, and arXiv</p>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Domains</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">125</div>
+                    <div class="stat-label">Entities</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">92</div>
+                    <div class="stat-label">Enums</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">2,692</div>
+                    <div class="stat-label">Lines of YAML</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="architecture">
+<span class="layer-5">┌─────────────────────────────────────────────────────────────────────┐
+│                    Layer 5: LLM MEMORY                              │
+│  MemoryBank, ShortTerm, LongTerm, ForgettingCurve, EntityMemory     │</span>
+<span class="layer-4">├─────────────────────────────────────────────────────────────────────┤
+│                    Layer 4: CACHING + EVALUATION + GUARDRAILS       │
+│  CacheEntry, SemanticHash │ Evaluation, Judge │ GuardrailSet, Filter│</span>
+<span class="layer-3">├─────────────────────────────────────────────────────────────────────┤
+│                    Layer 3: ROUTING                                 │
+│  Router, Route, CostOptimizer, QualityThreshold, FallbackStrategy   │</span>
+<span class="layer-2">├─────────────────────────────────────────────────────────────────────┤
+│                  Layer 2: CONTEXT ENGINEERING                       │
+│  ContextWindow, ContextSlot │ SystemPrompt, Compaction, RAG, JIT    │</span>
+<span class="layer-1">├─────────────────────────────────────────────────────────────────────┤
+│                Layer 1: CORE INTERACTION                            │
+│  Participant │ Model │ Message │ Conversation │ ToolUse             │
+└─────────────────────────────────────────────────────────────────────┘</span>
+        </div>
+
+        <button class="expand-all" onclick="toggleAll()">Expand/Collapse All</button>
+
+        <div class="domains-grid">
+            <!-- llm-participant -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(88, 166, 255, 0.2);">👤</div>
+                        <span class="domain-name">llm-participant</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">Actor types in LLM interactions - humans, assistants, agents, systems</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (7)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">Participant</span>
+                            <span class="tag tag-entity">HumanParticipant</span>
+                            <span class="tag tag-entity">AssistantParticipant</span>
+                            <span class="tag tag-entity">AgentParticipant</span>
+                            <span class="tag tag-entity">SystemParticipant</span>
+                            <span class="tag tag-entity">UserPreferences</span>
+                            <span class="tag tag-entity">ParticipantSession</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (6)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">ParticipantType</span>
+                            <span class="tag tag-enum">AgentType</span>
+                            <span class="tag tag-enum">AutonomyLevel</span>
+                            <span class="tag tag-enum">SystemSource</span>
+                            <span class="tag tag-enum">SessionRole</span>
+                            <span class="tag tag-enum">VerbosityLevel</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">RAISE paper, Open Message Format, Anthropic/OpenAI APIs</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-participant/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-model -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(88, 166, 255, 0.2);">🤖</div>
+                        <span class="domain-name">llm-model</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">LLM model definitions, capabilities, pricing, and provider configurations</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (7)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">Model</span>
+                            <span class="tag tag-entity">Provider</span>
+                            <span class="tag tag-entity">ModelPricing</span>
+                            <span class="tag tag-entity">RateLimits</span>
+                            <span class="tag tag-entity">ModelBenchmark</span>
+                            <span class="tag tag-entity">ModelComparison</span>
+                            <span class="tag tag-entity">ModelEndpoint</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (8)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">ProviderType</span>
+                            <span class="tag tag-enum">ModelFamily</span>
+                            <span class="tag tag-enum">ModelCapability</span>
+                            <span class="tag tag-enum">Modality</span>
+                            <span class="tag tag-enum">TaskCategory</span>
+                            <span class="tag tag-enum">AuthMethod</span>
+                            <span class="tag tag-enum">DeploymentType</span>
+                            <span class="tag tag-enum">HealthStatus</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">OpenAI, Anthropic, AWS Bedrock, RouteLLM</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-model/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-message -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(88, 166, 255, 0.2);">💬</div>
+                        <span class="domain-name">llm-message</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">Message structure for LLM interactions - roles, content types, formatting</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (12)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">Message</span>
+                            <span class="tag tag-entity">ContentBlock</span>
+                            <span class="tag tag-entity">TextContent</span>
+                            <span class="tag tag-entity">ImageContent</span>
+                            <span class="tag tag-entity">ImageSource</span>
+                            <span class="tag tag-entity">FileContent</span>
+                            <span class="tag tag-entity">ToolUseContent</span>
+                            <span class="tag tag-entity">ToolResultContent</span>
+                            <span class="tag tag-entity">ThinkingContent</span>
+                            <span class="tag tag-entity">MessageMetadata</span>
+                            <span class="tag tag-entity">MessageTemplate</span>
+                            <span class="tag tag-entity">TemplateVariable</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (6)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">MessageRole</span>
+                            <span class="tag tag-enum">ContentType</span>
+                            <span class="tag tag-enum">TextFormat</span>
+                            <span class="tag tag-enum">ImageSourceType</span>
+                            <span class="tag tag-enum">StopReason</span>
+                            <span class="tag tag-enum">CacheStatus</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                            <span class="dep">llm-participant</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">OpenAI Chat API, Anthropic Messages API, Open Message Format</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-message/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-conversation -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(88, 166, 255, 0.2);">🔄</div>
+                        <span class="domain-name">llm-conversation</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">Conversation structures - sessions, turns, threads for multi-turn interactions</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (10)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">Session</span>
+                            <span class="tag tag-entity">Turn</span>
+                            <span class="tag tag-entity">Thread</span>
+                            <span class="tag tag-entity">ConversationHistory</span>
+                            <span class="tag tag-entity">HistoryTurn</span>
+                            <span class="tag tag-entity">Scene</span>
+                            <span class="tag tag-entity">ChainOfThought</span>
+                            <span class="tag tag-entity">CoTIteration</span>
+                            <span class="tag tag-entity">SessionMetadata</span>
+                            <span class="tag tag-entity">ConversationSummary</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (3)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">SessionStatus</span>
+                            <span class="tag tag-enum">TurnStatus</span>
+                            <span class="tag tag-enum">Sentiment</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                            <span class="dep">llm-participant</span>
+                            <span class="dep">llm-message</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">RAISE paper, LoCoMo benchmark, multi-turn dialogue surveys</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-conversation/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-tool-use -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(88, 166, 255, 0.2);">🔧</div>
+                        <span class="domain-name">llm-tool-use</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">Tool definitions, function calling, and Model Context Protocol (MCP)</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (11)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">Tool</span>
+                            <span class="tag tag-entity">ParameterSchema</span>
+                            <span class="tag tag-entity">ToolParameter</span>
+                            <span class="tag tag-entity">ToolCall</span>
+                            <span class="tag tag-entity">ToolResult</span>
+                            <span class="tag tag-entity">RetryPolicy</span>
+                            <span class="tag tag-entity">MCPServer</span>
+                            <span class="tag tag-entity">MCPResource</span>
+                            <span class="tag tag-entity">MCPPrompt</span>
+                            <span class="tag tag-entity">ToolRegistry</span>
+                            <span class="tag tag-entity">ToolCallBatch</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (8)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">ToolCategory</span>
+                            <span class="tag tag-enum">ParameterType</span>
+                            <span class="tag tag-enum">ToolCallStatus</span>
+                            <span class="tag tag-enum">ExecutionMode</span>
+                            <span class="tag tag-enum">ToolErrorType</span>
+                            <span class="tag tag-enum">BackoffType</span>
+                            <span class="tag tag-enum">MCPTransport</span>
+                            <span class="tag tag-enum">SchemaFormat</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                            <span class="dep">llm-model</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">ToolACE, Anthropic MCP, OpenAI Function Calling, AsyncLM</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-tool-use/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-context-window -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(63, 185, 80, 0.2);">📊</div>
+                        <span class="domain-name">llm-context-window</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">Context window management - token budgets, slots, and priority allocation</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (7)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">ContextWindow</span>
+                            <span class="tag tag-entity">ContextSlot</span>
+                            <span class="tag tag-entity">TokenBudget</span>
+                            <span class="tag tag-entity">ContextAllocation</span>
+                            <span class="tag tag-entity">ContextOverflow</span>
+                            <span class="tag tag-entity">TokenCount</span>
+                            <span class="tag tag-entity">ContextSnapshot</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (4)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">SlotType</span>
+                            <span class="tag tag-enum">AllocationStrategy</span>
+                            <span class="tag tag-enum">OverflowPolicy</span>
+                            <span class="tag tag-enum">OverflowResolution</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">Anthropic context engineering, proto-context-management-game</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-context-window/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-context-engineering -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(63, 185, 80, 0.2);">🧠</div>
+                        <span class="domain-name">llm-context-engineering</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">Advanced context techniques - compaction, JIT retrieval, RAG, sub-agents</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (11)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">SystemPrompt</span>
+                            <span class="tag tag-entity">PromptVariable</span>
+                            <span class="tag tag-entity">Compaction</span>
+                            <span class="tag tag-entity">CompactionRule</span>
+                            <span class="tag tag-entity">JustInTimeRetrieval</span>
+                            <span class="tag tag-entity">RAGContext</span>
+                            <span class="tag tag-entity">RAGChunk</span>
+                            <span class="tag tag-entity">FewShotExample</span>
+                            <span class="tag tag-entity">ExamplesPool</span>
+                            <span class="tag tag-entity">SubAgentContext</span>
+                            <span class="tag tag-entity">StructuredNotes</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (8)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">SystemPromptCategory</span>
+                            <span class="tag tag-enum">VariableSource</span>
+                            <span class="tag tag-enum">CompactionStrategy</span>
+                            <span class="tag tag-enum">PreserveType</span>
+                            <span class="tag tag-enum">ReferenceType</span>
+                            <span class="tag tag-enum">RetrievalMethod</span>
+                            <span class="tag tag-enum">ExampleSelectionStrategy</span>
+                            <span class="tag tag-enum">NoteCategory</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                            <span class="dep">llm-context-window</span>
+                            <span class="dep">llm-message</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">Anthropic context engineering guide, RAG research</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-context-engineering/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-routing -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(57, 197, 207, 0.2);">🔀</div>
+                        <span class="domain-name">llm-routing</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">LLM routing - model selection, cost-quality tradeoffs, fallback strategies</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (11)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">Router</span>
+                            <span class="tag tag-entity">RouterConfig</span>
+                            <span class="tag tag-entity">Route</span>
+                            <span class="tag tag-entity">RouteCondition</span>
+                            <span class="tag tag-entity">RoutingDecision</span>
+                            <span class="tag tag-entity">CostOptimizer</span>
+                            <span class="tag tag-entity">QualityThreshold</span>
+                            <span class="tag tag-entity">FallbackStrategy</span>
+                            <span class="tag tag-entity">FallbackTrigger</span>
+                            <span class="tag tag-entity">RouterTrainingData</span>
+                            <span class="tag tag-entity">RoutingMetrics</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (6)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">RouterType</span>
+                            <span class="tag tag-enum">RoutingReason</span>
+                            <span class="tag tag-enum">CostStrategy</span>
+                            <span class="tag tag-enum">QualityMetric</span>
+                            <span class="tag tag-enum">ConditionOperator</span>
+                            <span class="tag tag-enum">FallbackTriggerType</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                            <span class="dep">llm-model</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">RouteLLM, AutoMix, HybridLLM, IBM Frugal Routing</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-routing/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-caching -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(210, 153, 34, 0.2);">💾</div>
+                        <span class="domain-name">llm-caching</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">Prompt caching - exact and semantic matching, cache policies, breakpoints</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (11)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">CacheEntry</span>
+                            <span class="tag tag-entity">CacheKey</span>
+                            <span class="tag tag-entity">CacheKeyComponent</span>
+                            <span class="tag tag-entity">CacheBreakpoint</span>
+                            <span class="tag tag-entity">CachePolicy</span>
+                            <span class="tag tag-entity">SemanticHash</span>
+                            <span class="tag tag-entity">CacheHit</span>
+                            <span class="tag tag-entity">CacheMiss</span>
+                            <span class="tag tag-entity">CacheMetrics</span>
+                            <span class="tag tag-entity">CacheInvalidation</span>
+                            <span class="tag tag-entity">PrefixCache</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (8)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">CacheKeyType</span>
+                            <span class="tag tag-enum">ComponentType</span>
+                            <span class="tag tag-enum">BreakpointContentType</span>
+                            <span class="tag tag-enum">CachePolicyType</span>
+                            <span class="tag tag-enum">EvictionStrategy</span>
+                            <span class="tag tag-enum">CacheHitType</span>
+                            <span class="tag tag-enum">CacheMissReason</span>
+                            <span class="tag tag-enum">InvalidationReason</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                            <span class="dep">llm-message</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">Anthropic Prompt Caching, SCALM, MeanCache, GPTCache</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-caching/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-memory -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(163, 113, 247, 0.2);">🧬</div>
+                        <span class="domain-name">llm-memory</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">LLM memory systems - short-term, long-term, retrieval, and forgetting</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (13)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">MemoryBank</span>
+                            <span class="tag tag-entity">ShortTermMemory</span>
+                            <span class="tag tag-entity">LongTermMemory</span>
+                            <span class="tag tag-entity">MemoryItem</span>
+                            <span class="tag tag-entity">MemoryRetrieval</span>
+                            <span class="tag tag-entity">ForgettingCurve</span>
+                            <span class="tag tag-entity">ConsolidationPolicy</span>
+                            <span class="tag tag-entity">MemoryConsolidation</span>
+                            <span class="tag tag-entity">ExperientialMemory</span>
+                            <span class="tag tag-entity">EntityMemory</span>
+                            <span class="tag tag-entity">EntityFact</span>
+                            <span class="tag tag-entity">EntityRelationship</span>
+                            <span class="tag tag-entity">MemoryService</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (8)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">MemoryType</span>
+                            <span class="tag tag-enum">MemorySource</span>
+                            <span class="tag tag-enum">StorageType</span>
+                            <span class="tag tag-enum">IndexType</span>
+                            <span class="tag tag-enum">RetrievalMethod</span>
+                            <span class="tag tag-enum">ConsolidationTrigger</span>
+                            <span class="tag tag-enum">MemoryServiceType</span>
+                            <span class="tag tag-enum">MemoryCapability</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                            <span class="dep">llm-conversation</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">RAISE, MemoryBank, LongMem, M+, MaaS papers</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-memory/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-evaluation -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(210, 153, 34, 0.2);">📈</div>
+                        <span class="domain-name">llm-evaluation</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">LLM output evaluation - quality scoring, feedback loops, judging</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (12)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">Evaluation</span>
+                            <span class="tag tag-entity">Criterion</span>
+                            <span class="tag tag-entity">CriterionScore</span>
+                            <span class="tag tag-entity">Judge</span>
+                            <span class="tag tag-entity">PairwiseComparison</span>
+                            <span class="tag tag-entity">Feedback</span>
+                            <span class="tag tag-entity">QualityReport</span>
+                            <span class="tag tag-entity">ValidationCheck</span>
+                            <span class="tag tag-entity">ImprovementSuggestion</span>
+                            <span class="tag tag-entity">ABTest</span>
+                            <span class="tag tag-entity">TestVariant</span>
+                            <span class="tag tag-entity">EvaluationMetrics</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (12)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">EvaluationTargetType</span>
+                            <span class="tag tag-enum">EvaluatorType</span>
+                            <span class="tag tag-enum">CriterionCategory</span>
+                            <span class="tag tag-enum">ComparisonWinner</span>
+                            <span class="tag tag-enum">FeedbackType</span>
+                            <span class="tag tag-enum">FeedbackSentiment</span>
+                            <span class="tag tag-enum">ThumbsRating</span>
+                            <span class="tag tag-enum">ValidationCheckType</span>
+                            <span class="tag tag-enum">Severity</span>
+                            <span class="tag tag-enum">ImprovementCategory</span>
+                            <span class="tag tag-enum">EffortLevel</span>
+                            <span class="tag tag-enum">ABTestStatus</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                            <span class="dep">llm-message</span>
+                            <span class="dep">llm-conversation</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">LLM-as-Judge, proto-self-improving-writer-bot, Chatbot Arena</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-evaluation/schema.yaml</div>
+                </div>
+            </div>
+
+            <!-- llm-guardrails -->
+            <div class="domain-card" onclick="toggleCard(this)">
+                <div class="domain-header">
+                    <div class="domain-title">
+                        <div class="domain-icon" style="background: rgba(248, 81, 73, 0.2);">🛡️</div>
+                        <span class="domain-name">llm-guardrails</span>
+                    </div>
+                    <span class="domain-badge">v1.0.0</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="domain-content">
+                    <p class="domain-description">Safety guardrails - constraints, content filtering, output validation</p>
+
+                    <div class="domain-section">
+                        <div class="section-title">Entities (13)</div>
+                        <div class="tags">
+                            <span class="tag tag-entity">GuardrailSet</span>
+                            <span class="tag tag-entity">GuardrailRule</span>
+                            <span class="tag tag-entity">ContentFilter</span>
+                            <span class="tag tag-entity">OutputValidator</span>
+                            <span class="tag tag-entity">GuardrailViolation</span>
+                            <span class="tag tag-entity">TopicPolicy</span>
+                            <span class="tag tag-entity">Topic</span>
+                            <span class="tag tag-entity">PIIConfig</span>
+                            <span class="tag tag-entity">WordPolicy</span>
+                            <span class="tag tag-entity">GroundingConfig</span>
+                            <span class="tag tag-entity">SafetyScore</span>
+                            <span class="tag tag-entity">CategoryScore</span>
+                            <span class="tag tag-entity">GuardrailMetrics</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Enums (15)</div>
+                        <div class="tags">
+                            <span class="tag tag-enum">RuleType</span>
+                            <span class="tag tag-enum">RuleScope</span>
+                            <span class="tag tag-enum">RuleAction</span>
+                            <span class="tag tag-enum">FilterCategory</span>
+                            <span class="tag tag-enum">FilterMethod</span>
+                            <span class="tag tag-enum">FilterAction</span>
+                            <span class="tag tag-enum">ValidatorType</span>
+                            <span class="tag tag-enum">ValidatorAction</span>
+                            <span class="tag tag-enum">ViolationType</span>
+                            <span class="tag tag-enum">Severity</span>
+                            <span class="tag tag-enum">EnforcementLevel</span>
+                            <span class="tag tag-enum">TopicAction</span>
+                            <span class="tag tag-enum">PIIType</span>
+                            <span class="tag tag-enum">PIIAction</span>
+                            <span class="tag tag-enum">GroundingAction</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Dependencies</div>
+                        <div class="dependencies">
+                            <span class="dep">core</span>
+                            <span class="dep">llm-message</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-section">
+                        <div class="section-title">Sources</div>
+                        <div class="sources">Anthropic Constitutional AI, OpenAI Moderation, AWS Bedrock Guardrails</div>
+                    </div>
+
+                    <div class="file-path">shared/semantic/domains/llm-guardrails/schema.yaml</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Generated: 2025-11-23 | Branch: claude/human-llm-interaction-model-01AZgEM2efkT1mPYnwVjrQVQ</p>
+            <p style="margin-top: 0.5rem;">Location: shared/semantic/domains/</p>
+        </footer>
+    </div>
+
+    <script>
+        function toggleCard(card) {
+            card.classList.toggle('expanded');
+        }
+
+        function toggleAll() {
+            const cards = document.querySelectorAll('.domain-card');
+            const allExpanded = Array.from(cards).every(c => c.classList.contains('expanded'));
+            cards.forEach(card => {
+                if (allExpanded) {
+                    card.classList.remove('expanded');
+                } else {
+                    card.classList.add('expanded');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

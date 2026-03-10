@@ -1,0 +1,788 @@
+# AI/ML Infrastructure Domain Model
+# Core concepts for machine learning: hardware, training, inference, optimization
+# Source: NVIDIA CUDA, PyTorch, HuggingFace, MLOps best practices
+# Created: 2025-11-25
+
+domain:
+  name: ai-ml
+  version: "1.0.0"
+  description: AI/ML infrastructure - GPUs, training, quantization, LoRA, fine-tuning, inference
+  dependencies: [core, llm-model]
+  sources:
+    - "NVIDIA CUDA Documentation"
+    - "PyTorch Documentation"
+    - "HuggingFace Transformers/PEFT"
+    - "bitsandbytes quantization"
+    - "llama.cpp GGUF format"
+    - "vLLM inference engine"
+  created_at: "2025-11-25"
+  updated_at: "2025-11-25"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # HARDWARE
+  # ---------------------------------------------------------------------------
+
+  GPU:
+    description: Graphics Processing Unit for ML acceleration
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true, description: "e.g., A100, H100, RTX 4090" }
+      vendor: { type: GPUVendor, required: true }
+      architecture: { type: GPUArchitecture, description: "e.g., Ampere, Hopper, Ada Lovelace" }
+      memoryGB: { type: integer, required: true, description: "VRAM in GB" }
+      memoryBandwidthGBps: { type: integer, description: "Memory bandwidth GB/s" }
+      tensorCores: { type: integer, description: "Number of tensor cores" }
+      cudaCores: { type: integer, description: "CUDA cores (NVIDIA)" }
+      fp32TFLOPS: { type: decimal, description: "FP32 compute in TFLOPS" }
+      fp16TFLOPS: { type: decimal, description: "FP16 compute in TFLOPS" }
+      bf16TFLOPS: { type: decimal, description: "BF16 compute in TFLOPS" }
+      int8TOPS: { type: decimal, description: "INT8 compute in TOPS" }
+      tdpWatts: { type: integer, description: "Thermal design power" }
+      interconnect: { type: GPUInterconnect, description: "NVLink, PCIe, etc." }
+      nvlinkBandwidthGBps: { type: integer, description: "NVLink bandwidth if applicable" }
+      isDatacenter: { type: boolean, default: false }
+      msrpUSD: { type: decimal, description: "Manufacturer suggested retail price" }
+      releaseDate: { type: date }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Accelerator:
+    description: General ML accelerator (GPU, TPU, NPU, custom silicon)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: AcceleratorType, required: true }
+      vendor: { type: string, required: true }
+      memoryGB: { type: integer }
+      peakTFLOPS: { type: decimal }
+      supportedPrecisions: { type: array, items: PrecisionType }
+      cloudProvider: { type: string, description: "AWS, GCP, Azure if cloud-specific" }
+      instanceTypes: { type: array, items: string, description: "e.g., p4d.24xlarge, a2-highgpu-8g" }
+
+  ComputeCluster:
+    description: Multi-GPU/accelerator cluster for distributed training
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      accelerators: { type: array, items: Accelerator }
+      totalGPUs: { type: integer, required: true }
+      totalMemoryGB: { type: integer }
+      interconnectType: { type: GPUInterconnect }
+      distributedBackend: { type: DistributedBackend }
+      location: { type: string }
+
+  # ---------------------------------------------------------------------------
+  # PRECISION & QUANTIZATION
+  # ---------------------------------------------------------------------------
+
+  Quantization:
+    description: Model quantization configuration for reduced precision inference
+    properties:
+      id: { type: string, required: true }
+      method: { type: QuantizationMethod, required: true }
+      targetPrecision: { type: PrecisionType, required: true }
+      groupSize: { type: integer, description: "Quantization group size (e.g., 128 for GPTQ)" }
+      calibrationSamples: { type: integer, description: "Samples used for calibration" }
+      calibrationDataset: { type: string, description: "Dataset used for calibration" }
+      symmetricQuantization: { type: boolean, default: false }
+      actOrder: { type: boolean, default: true, description: "Activation order for GPTQ" }
+      descAct: { type: boolean, default: false, description: "Descending activation order" }
+      perplexityDelta: { type: decimal, description: "Perplexity increase vs full precision" }
+      memorySavingsPercent: { type: decimal, description: "Memory reduction percentage" }
+      speedupFactor: { type: decimal, description: "Inference speedup vs full precision" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  QuantizedModel:
+    description: A model that has been quantized
+    properties:
+      id: { type: string, required: true }
+      baseModelId: { type: string, required: true }
+      quantization: { type: Quantization, required: true }
+      fileFormat: { type: QuantizedFileFormat, required: true }
+      fileSizeGB: { type: decimal }
+      sha256: { type: string, description: "File hash for verification" }
+      huggingFaceRepo: { type: string, description: "HF repo if published" }
+      requiredVRAMGB: { type: integer, description: "Minimum VRAM to run" }
+      benchmarks: { type: array, items: QuantizationBenchmark }
+
+  QuantizationBenchmark:
+    description: Benchmark comparing quantized vs full precision
+    properties:
+      task: { type: string, required: true, description: "MMLU, HumanEval, etc." }
+      fullPrecisionScore: { type: decimal, required: true }
+      quantizedScore: { type: decimal, required: true }
+      degradationPercent: { type: decimal }
+      tokensPerSecond: { type: decimal }
+
+  # ---------------------------------------------------------------------------
+  # LORA & ADAPTERS
+  # ---------------------------------------------------------------------------
+
+  LoRAConfig:
+    description: Low-Rank Adaptation configuration for efficient fine-tuning
+    properties:
+      id: { type: string, required: true }
+      rank: { type: integer, required: true, description: "LoRA rank (r), typically 8-64" }
+      alpha: { type: integer, required: true, description: "LoRA alpha scaling factor" }
+      dropout: { type: decimal, default: 0.0 }
+      targetModules: { type: array, items: LoRATarget, required: true }
+      biasMode: { type: LoRABiasMode, default: "none" }
+      taskType: { type: LoRATaskType }
+      useRSLoRA: { type: boolean, default: false, description: "Rank-stabilized LoRA" }
+      useDora: { type: boolean, default: false, description: "Weight-decomposed LoRA" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  LoRAAdapter:
+    description: Trained LoRA adapter weights
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      baseModelId: { type: string, required: true }
+      config: { type: LoRAConfig, required: true }
+      trainableParams: { type: integer, description: "Number of trainable parameters" }
+      totalParams: { type: integer, description: "Total model parameters" }
+      trainablePercent: { type: decimal, description: "Percentage of params trained" }
+      adapterSizeMB: { type: decimal }
+      trainingRunId: { type: string }
+      huggingFaceRepo: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  QLoRAConfig:
+    description: Quantized LoRA - combines quantization with LoRA fine-tuning
+    properties:
+      id: { type: string, required: true }
+      loraConfig: { type: LoRAConfig, required: true }
+      quantizationType: { type: QuantizationMethod, required: true, default: "NF4" }
+      computeDtype: { type: PrecisionType, default: "BF16" }
+      doubleQuant: { type: boolean, default: true, description: "Nested quantization" }
+      bnbConfig: { type: BitsAndBytesConfig }
+
+  BitsAndBytesConfig:
+    description: bitsandbytes library quantization configuration
+    properties:
+      load4bit: { type: boolean, default: true }
+      load8bit: { type: boolean, default: false }
+      bnb4bitQuantType: { type: string, default: "nf4", description: "fp4 or nf4" }
+      bnb4bitComputeDtype: { type: PrecisionType, default: "BF16" }
+      bnb4bitUseDoubleQuant: { type: boolean, default: true }
+
+  # ---------------------------------------------------------------------------
+  # TRAINING
+  # ---------------------------------------------------------------------------
+
+  TrainingRun:
+    description: A model training or fine-tuning run
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      baseModelId: { type: string, required: true }
+      trainingType: { type: TrainingType, required: true }
+      dataset: { type: Dataset }
+      hyperparameters: { type: Hyperparameters, required: true }
+      hardwareConfig: { type: HardwareConfig }
+      loraConfig: { type: LoRAConfig, description: "If using LoRA/QLoRA" }
+      status: { type: TrainingStatus, required: true }
+      startedAt: { type: datetime }
+      completedAt: { type: datetime }
+      totalSteps: { type: integer }
+      currentStep: { type: integer }
+      bestLoss: { type: decimal }
+      finalLoss: { type: decimal }
+      checkpoints: { type: array, items: Checkpoint }
+      wandbRunId: { type: string, description: "Weights & Biases run ID" }
+      mlflowRunId: { type: string, description: "MLflow run ID" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Hyperparameters:
+    description: Training hyperparameters
+    properties:
+      learningRate: { type: decimal, required: true, default: 0.0002 }
+      batchSize: { type: integer, required: true }
+      microBatchSize: { type: integer, description: "For gradient accumulation" }
+      gradientAccumulationSteps: { type: integer, default: 1 }
+      epochs: { type: integer }
+      maxSteps: { type: integer }
+      warmupSteps: { type: integer, default: 0 }
+      warmupRatio: { type: decimal }
+      weightDecay: { type: decimal, default: 0.0 }
+      maxGradNorm: { type: decimal, default: 1.0, description: "Gradient clipping" }
+      optimizer: { type: OptimizerType, default: "AdamW" }
+      scheduler: { type: SchedulerType, default: "cosine" }
+      fp16: { type: boolean, default: false }
+      bf16: { type: boolean, default: true }
+      tf32: { type: boolean, default: true, description: "TensorFloat-32 for Ampere+" }
+      gradientCheckpointing: { type: boolean, default: true }
+      seed: { type: integer, default: 42 }
+
+  HardwareConfig:
+    description: Hardware configuration for training
+    properties:
+      gpuType: { type: string }
+      numGPUs: { type: integer, default: 1 }
+      distributedStrategy: { type: DistributedStrategy }
+      deepspeedConfig: { type: DeepSpeedConfig }
+      fsdpConfig: { type: FSDPConfig }
+      mixedPrecision: { type: PrecisionType }
+
+  DeepSpeedConfig:
+    description: Microsoft DeepSpeed configuration
+    properties:
+      stage: { type: integer, required: true, description: "ZeRO stage 1, 2, or 3" }
+      offloadOptimizer: { type: boolean, default: false }
+      offloadParams: { type: boolean, default: false }
+      offloadDevice: { type: string, default: "cpu" }
+      pinnedMemory: { type: boolean, default: true }
+
+  FSDPConfig:
+    description: PyTorch Fully Sharded Data Parallel configuration
+    properties:
+      shardingStrategy: { type: FSDPShardingStrategy, default: "FULL_SHARD" }
+      cpuOffload: { type: boolean, default: false }
+      backwardPrefetch: { type: string }
+      forwardPrefetch: { type: boolean, default: false }
+
+  Dataset:
+    description: Training or evaluation dataset
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      source: { type: string, description: "HuggingFace, local path, S3, etc." }
+      format: { type: DatasetFormat, required: true }
+      numExamples: { type: integer }
+      splitRatios: { type: DatasetSplit }
+      columns: { type: array, items: string }
+      promptTemplate: { type: string, description: "Template for formatting examples" }
+      maxSeqLength: { type: integer }
+
+  DatasetSplit:
+    description: Train/validation/test split configuration
+    properties:
+      train: { type: decimal, default: 0.9 }
+      validation: { type: decimal, default: 0.1 }
+      test: { type: decimal, default: 0.0 }
+
+  Checkpoint:
+    description: Model checkpoint saved during training
+    properties:
+      id: { type: string, required: true }
+      trainingRunId: { type: string, required: true }
+      step: { type: integer, required: true }
+      epoch: { type: decimal }
+      loss: { type: decimal }
+      evalLoss: { type: decimal }
+      path: { type: string, required: true }
+      sizeGB: { type: decimal }
+      isBest: { type: boolean, default: false }
+      createdAt: { type: datetime, required: true }
+
+  # ---------------------------------------------------------------------------
+  # RLHF & ALIGNMENT
+  # ---------------------------------------------------------------------------
+
+  RLHFConfig:
+    description: Reinforcement Learning from Human Feedback configuration
+    properties:
+      id: { type: string, required: true }
+      method: { type: AlignmentMethod, required: true }
+      rewardModelId: { type: string, description: "For PPO-based methods" }
+      beta: { type: decimal, default: 0.1, description: "KL penalty coefficient" }
+      ppoEpochs: { type: integer, default: 4 }
+      ppoClipRange: { type: decimal, default: 0.2 }
+      valueLossCoef: { type: decimal, default: 0.1 }
+      advantageNormalization: { type: boolean, default: true }
+      whiten: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  DPOConfig:
+    description: Direct Preference Optimization configuration
+    properties:
+      id: { type: string, required: true }
+      beta: { type: decimal, default: 0.1, description: "Temperature for DPO loss" }
+      labelSmoothing: { type: decimal, default: 0.0 }
+      lossType: { type: DPOLossType, default: "sigmoid" }
+      referenceModelId: { type: string, description: "Reference model for KL" }
+      generateDuringEval: { type: boolean, default: false }
+
+  PreferenceDataset:
+    description: Dataset of human preferences for RLHF/DPO
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      format: { type: PreferenceFormat, required: true }
+      numPairs: { type: integer, required: true }
+      source: { type: string }
+      columns:
+        prompt: { type: string, required: true }
+        chosen: { type: string, required: true }
+        rejected: { type: string, required: true }
+
+  # ---------------------------------------------------------------------------
+  # INFERENCE
+  # ---------------------------------------------------------------------------
+
+  InferenceConfig:
+    description: Configuration for model inference/serving
+    properties:
+      id: { type: string, required: true }
+      engine: { type: InferenceEngine, required: true }
+      modelId: { type: string, required: true }
+      quantization: { type: Quantization }
+      loraAdapters: { type: array, items: LoRAAdapter }
+      tensorParallelism: { type: integer, default: 1 }
+      pipelineParallelism: { type: integer, default: 1 }
+      maxBatchSize: { type: integer }
+      maxConcurrentRequests: { type: integer }
+      maxSeqLen: { type: integer }
+      kvCacheConfig: { type: KVCacheConfig }
+      specDecodingConfig: { type: SpeculativeDecodingConfig }
+      continuousBatching: { type: boolean, default: true }
+      flashAttention: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  KVCacheConfig:
+    description: Key-Value cache configuration for inference
+    properties:
+      cacheDtype: { type: PrecisionType, default: "auto" }
+      blockSize: { type: integer, default: 16 }
+      gpuMemoryUtilization: { type: decimal, default: 0.9 }
+      swapSpace: { type: integer, default: 4, description: "CPU swap space in GB" }
+      enablePrefixCaching: { type: boolean, default: true }
+
+  SpeculativeDecodingConfig:
+    description: Speculative decoding for faster inference
+    properties:
+      enabled: { type: boolean, default: false }
+      draftModelId: { type: string, description: "Smaller draft model" }
+      numSpeculativeTokens: { type: integer, default: 5 }
+      acceptanceMethod: { type: string, default: "rejection_sampling" }
+
+  InferenceBenchmark:
+    description: Inference performance benchmark results
+    properties:
+      id: { type: string, required: true }
+      configId: { type: string, required: true }
+      tokensPerSecond: { type: decimal, required: true }
+      timeToFirstTokenMs: { type: decimal }
+      latencyP50Ms: { type: decimal }
+      latencyP99Ms: { type: decimal }
+      throughputRequestsPerSec: { type: decimal }
+      memoryUsageGB: { type: decimal }
+      gpuUtilizationPercent: { type: decimal }
+      batchSize: { type: integer }
+      inputLength: { type: integer }
+      outputLength: { type: integer }
+      measuredAt: { type: datetime, required: true }
+
+  # ---------------------------------------------------------------------------
+  # EMBEDDINGS
+  # ---------------------------------------------------------------------------
+
+  EmbeddingModel:
+    description: Text/multimodal embedding model
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      dimensions: { type: integer, required: true }
+      maxInputTokens: { type: integer, required: true }
+      modalities: { type: array, items: EmbeddingModality }
+      normalization: { type: boolean, default: true }
+      poolingStrategy: { type: PoolingStrategy }
+      mtebScore: { type: decimal, description: "MTEB benchmark score" }
+      similarity: { type: SimilarityMetric, default: "cosine" }
+      provider: { type: string }
+      huggingFaceRepo: { type: string }
+
+  Embedding:
+    description: A computed embedding vector
+    properties:
+      id: { type: string, required: true }
+      modelId: { type: string, required: true }
+      input: { type: string, required: true }
+      inputType: { type: EmbeddingInputType }
+      vector: { type: array, items: decimal, description: "Float array" }
+      dimensions: { type: integer, required: true }
+      tokenCount: { type: integer }
+      createdAt: { type: datetime, required: true }
+
+  # ---------------------------------------------------------------------------
+  # MODEL ARCHITECTURE
+  # ---------------------------------------------------------------------------
+
+  ModelArchitecture:
+    description: Neural network architecture specification
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ArchitectureType, required: true }
+      numLayers: { type: integer }
+      hiddenSize: { type: integer }
+      numAttentionHeads: { type: integer }
+      numKeyValueHeads: { type: integer, description: "For GQA/MQA" }
+      intermediateSize: { type: integer, description: "FFN intermediate dim" }
+      vocabSize: { type: integer }
+      maxPositionEmbeddings: { type: integer }
+      ropeTheta: { type: decimal, description: "RoPE base frequency" }
+      attentionType: { type: AttentionType }
+      activationFunction: { type: ActivationFunction }
+      normType: { type: NormalizationType }
+      tieWordEmbeddings: { type: boolean }
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  # Hardware
+  GPUVendor:
+    description: GPU manufacturer
+    values:
+      - NVIDIA
+      - AMD
+      - Intel
+      - Apple       # Apple Silicon
+      - Google      # TPU
+      - AWS         # Trainium/Inferentia
+      - Qualcomm
+      - Cerebras
+
+  GPUArchitecture:
+    description: GPU microarchitecture
+    values:
+      # NVIDIA
+      - Volta       # V100
+      - Turing      # RTX 20 series
+      - Ampere      # A100, RTX 30 series
+      - Ada         # RTX 40 series
+      - Hopper      # H100, H200
+      - Blackwell   # B100, B200
+      # AMD
+      - CDNA        # MI100
+      - CDNA2       # MI200
+      - CDNA3       # MI300
+      # Intel
+      - Xe          # Arc, Ponte Vecchio
+
+  GPUInterconnect:
+    description: GPU interconnect technology
+    values:
+      - PCIe3
+      - PCIe4
+      - PCIe5
+      - NVLink3     # A100
+      - NVLink4     # H100
+      - NVLink5     # Blackwell
+      - InfinityFabric  # AMD
+
+  AcceleratorType:
+    description: Type of ML accelerator
+    values:
+      - GPU
+      - TPU
+      - NPU
+      - FPGA
+      - ASIC
+      - Trainium    # AWS
+      - Inferentia  # AWS
+      - Gaudi       # Intel Habana
+
+  DistributedBackend:
+    description: Distributed training backend
+    values:
+      - NCCL
+      - Gloo
+      - MPI
+      - XLA
+
+  # Precision & Quantization
+  PrecisionType:
+    description: Numerical precision for computation
+    values:
+      - FP64        # 64-bit float
+      - FP32        # 32-bit float
+      - TF32        # TensorFloat-32
+      - FP16        # 16-bit float
+      - BF16        # Brain float 16
+      - FP8         # 8-bit float
+      - INT8        # 8-bit integer
+      - INT4        # 4-bit integer
+      - NF4         # 4-bit NormalFloat
+      - FP4         # 4-bit float
+
+  QuantizationMethod:
+    description: Quantization algorithm
+    values:
+      - GPTQ        # Post-training quantization
+      - AWQ         # Activation-aware quantization
+      - GGUF        # llama.cpp format
+      - GGML        # Legacy llama.cpp
+      - EXL2        # ExLlamaV2 format
+      - HQQ         # Half-Quadratic Quantization
+      - AQLM        # Additive Quantization
+      - NF4         # 4-bit NormalFloat (bitsandbytes)
+      - FP4         # 4-bit float (bitsandbytes)
+      - INT8        # 8-bit integer
+      - INT4        # 4-bit integer
+      - SmoothQuant # Activation smoothing + quantization
+      - SpQR        # Sparse quantization
+      - EETQ        # Easy & Efficient quantization
+      - Marlin      # NVIDIA optimized format
+
+  QuantizedFileFormat:
+    description: File format for quantized models
+    values:
+      - GGUF        # llama.cpp
+      - SafeTensors # HuggingFace standard
+      - GPTQ        # AutoGPTQ
+      - AWQ         # AutoAWQ
+      - EXL2        # ExLlamaV2
+      - ONNX        # ONNX Runtime
+
+  # LoRA
+  LoRATarget:
+    description: Model layers to apply LoRA
+    values:
+      - q_proj      # Query projection
+      - k_proj      # Key projection
+      - v_proj      # Value projection
+      - o_proj      # Output projection
+      - gate_proj   # MLP gate
+      - up_proj     # MLP up projection
+      - down_proj   # MLP down projection
+      - embed_tokens # Token embeddings
+      - lm_head     # Language model head
+      - all_linear  # All linear layers
+
+  LoRABiasMode:
+    description: How to handle bias terms in LoRA
+    values:
+      - none        # No bias training
+      - all         # Train all biases
+      - lora_only   # Only LoRA-related biases
+
+  LoRATaskType:
+    description: Task type for LoRA adapter
+    values:
+      - CAUSAL_LM        # Causal language modeling
+      - SEQ_CLS          # Sequence classification
+      - SEQ_2_SEQ_LM     # Sequence-to-sequence
+      - TOKEN_CLS        # Token classification
+      - QUESTION_ANS     # Question answering
+      - FEATURE_EXTRACTION
+
+  # Training
+  TrainingType:
+    description: Type of training run
+    values:
+      - Pretrain         # From scratch
+      - ContinuedPretrain # Continue pretraining
+      - FullFineTune     # Full parameter fine-tuning
+      - LoRA             # LoRA fine-tuning
+      - QLoRA            # Quantized LoRA
+      - RLHF             # Reinforcement learning
+      - DPO              # Direct preference optimization
+      - ORPO             # Odds Ratio Preference Optimization
+      - KTO              # Kahneman-Tversky Optimization
+      - SFT              # Supervised fine-tuning
+      - Distillation     # Knowledge distillation
+
+  TrainingStatus:
+    description: Current status of training run
+    values:
+      - Queued
+      - Initializing
+      - Running
+      - Paused
+      - Checkpointing
+      - Completed
+      - Failed
+      - Cancelled
+
+  OptimizerType:
+    description: Optimization algorithm
+    values:
+      - SGD
+      - Adam
+      - AdamW        # Adam with weight decay fix
+      - AdamW8bit    # 8-bit AdamW
+      - Adafactor    # Memory-efficient
+      - Lion         # Evolved optimizer
+      - LAMB         # Layer-wise adaptive
+      - LARS         # Layer-wise rate scaling
+      - Sophia       # Second-order optimizer
+      - Prodigy      # D-Adaptation based
+
+  SchedulerType:
+    description: Learning rate scheduler
+    values:
+      - constant
+      - linear
+      - cosine
+      - cosine_with_restarts
+      - polynomial
+      - inverse_sqrt
+      - one_cycle
+      - warmup_stable_decay
+
+  DistributedStrategy:
+    description: Distributed training strategy
+    values:
+      - DDP          # Distributed Data Parallel
+      - FSDP         # Fully Sharded Data Parallel
+      - DeepSpeed    # Microsoft DeepSpeed
+      - Megatron     # NVIDIA Megatron-LM
+      - FairScale    # Meta FairScale
+      - Colossal     # Colossal-AI
+
+  FSDPShardingStrategy:
+    description: FSDP sharding strategy
+    values:
+      - FULL_SHARD   # Shard all parameters
+      - SHARD_GRAD_OP # Shard gradients and optimizer
+      - NO_SHARD     # No sharding (DDP-like)
+      - HYBRID_SHARD # Hybrid sharding
+
+  DatasetFormat:
+    description: Dataset file format
+    values:
+      - JSON
+      - JSONL
+      - Parquet
+      - Arrow
+      - CSV
+      - TSV
+      - HuggingFace  # HF datasets
+      - WebDataset   # Tar-based
+
+  # RLHF & Alignment
+  AlignmentMethod:
+    description: Human alignment training method
+    values:
+      - PPO          # Proximal Policy Optimization
+      - RLHF         # Classic RLHF with reward model
+      - DPO          # Direct Preference Optimization
+      - IPO          # Identity Preference Optimization
+      - KTO          # Kahneman-Tversky Optimization
+      - ORPO         # Odds Ratio Preference Optimization
+      - RRHF         # Reward Ranking for Human Feedback
+      - RAFT         # Reward rAnked FineTuning
+      - Constitutional # Constitutional AI
+
+  DPOLossType:
+    description: DPO loss function variant
+    values:
+      - sigmoid      # Standard DPO
+      - hinge        # Hinge loss variant
+      - ipo          # IPO loss
+      - kto          # KTO loss
+      - robust       # Robust DPO
+
+  PreferenceFormat:
+    description: Format of preference dataset
+    values:
+      - pairs        # (prompt, chosen, rejected)
+      - rankings     # Ranked list of responses
+      - ratings      # Numerical ratings
+      - comparisons  # Pairwise comparisons
+
+  # Inference
+  InferenceEngine:
+    description: Inference serving engine
+    values:
+      - vLLM
+      - TGI          # Text Generation Inference
+      - TensorRT_LLM # NVIDIA TensorRT-LLM
+      - llama_cpp    # llama.cpp
+      - ExLlamaV2
+      - Transformers # HuggingFace Transformers
+      - ONNX_Runtime
+      - OpenVINO
+      - MLC          # MLC LLM
+      - Triton       # NVIDIA Triton
+
+  # Embeddings
+  EmbeddingModality:
+    description: Modalities for embedding models
+    values:
+      - Text
+      - Image
+      - Audio
+      - Code
+      - Multimodal
+
+  PoolingStrategy:
+    description: Token pooling for embeddings
+    values:
+      - CLS          # [CLS] token
+      - Mean         # Mean of all tokens
+      - Max          # Max pooling
+      - LastToken    # Last token
+      - WeightedMean # Weighted average
+
+  SimilarityMetric:
+    description: Similarity metric for embeddings
+    values:
+      - cosine
+      - dotProduct
+      - euclidean
+      - manhattan
+
+  EmbeddingInputType:
+    description: Type of input for embedding
+    values:
+      - query        # Search query
+      - document     # Document/passage
+      - symmetric    # Symmetric similarity
+
+  # Architecture
+  ArchitectureType:
+    description: Neural network architecture family
+    values:
+      - Transformer
+      - MoE           # Mixture of Experts
+      - SSM           # State Space Model
+      - Mamba
+      - RWKV
+      - RetNet
+      - Hybrid        # Combination
+
+  AttentionType:
+    description: Attention mechanism type
+    values:
+      - MHA          # Multi-Head Attention
+      - MQA          # Multi-Query Attention
+      - GQA          # Grouped-Query Attention
+      - SlidingWindow
+      - FlashAttention
+      - LinearAttention
+      - SparseAttention
+
+  ActivationFunction:
+    description: Activation function in neural network
+    values:
+      - ReLU
+      - GeLU
+      - SiLU         # Swish
+      - GELU_New
+      - QuickGELU
+      - Mish
+
+  NormalizationType:
+    description: Normalization layer type
+    values:
+      - LayerNorm
+      - RMSNorm
+      - BatchNorm
+      - GroupNorm

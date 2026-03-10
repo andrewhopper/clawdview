@@ -1,0 +1,617 @@
+# Goal Frameworks Domain Model
+# Corporate and personal goal management frameworks (OKR, MBO)
+
+domain:
+  name: goal-frameworks
+  version: "1.0.0"
+  description: Goal management frameworks - OKR (Objectives and Key Results) and MBO (Management by Objectives)
+  dependencies: [core]
+  use_case: Performance management, strategic alignment, personal and organizational goal tracking
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+
+entities:
+
+  # ============================================
+  # CORE UNIFIED ENTITIES
+  # ============================================
+
+  Goal:
+    description: Unified goal entity for all frameworks (OKR Objective, MBO Goal, etc.)
+    properties:
+      id: { type: uuid, required: true }
+      title: { type: string, required: true, maxLength: 200 }
+      description: { type: string }
+      owner: { type: GoalOwner, required: true }
+      framework: { type: GoalFramework, required: true }
+      scope: { type: GoalScope, required: true }
+      period: { type: GoalPeriod, required: true }
+      status: { type: GoalStatus, required: true }
+      visibility: { type: GoalVisibility, required: true }
+      parentGoalId: { type: uuid, description: "FK to parent Goal for cascading" }
+      alignedGoalIds: { type: array, items: uuid, description: "Related goals across teams" }
+      tags: { type: array, items: string }
+      # OKR-specific (when framework=OKR)
+      objectiveType: { type: ObjectiveType, description: "Committed/Aspirational/Learning (OKR only)" }
+      inspirational: { type: boolean, description: "Moonshot vs roofshot (OKR only)" }
+      gradingType: { type: OKRGradingType, description: "How to score (OKR only)" }
+      # MBO-specific (when framework=MBO)
+      category: { type: MBOCategory, description: "Strategic/Operational/etc (MBO only)" }
+      priority: { type: MBOPriority, description: "Critical/High/Medium/Low (MBO only)" }
+      weight: { type: decimal, min: 0, max: 100, description: "% weight in overall score (MBO only)" }
+      targetOutcome: { type: string, description: "Specific measurable target (MBO only)" }
+      successCriteria: { type: array, items: string, description: "Success criteria list (MBO only)" }
+      developmentAreas: { type: array, items: string, description: "Skills to develop (MBO only)" }
+      resourcesNeeded: { type: array, items: string, description: "Resources required (MBO only)" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  GoalOwner:
+    description: Individual or team responsible for goal
+    properties:
+      type: { type: OwnerType, required: true }
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      email: { type: string }
+
+  GoalPeriod:
+    description: Time period for goal achievement
+    properties:
+      name: { type: string, required: true, description: "Q1 2025, H1 2025, FY2025" }
+      periodType: { type: PeriodType, required: true }
+      startDate: { type: date, required: true }
+      endDate: { type: date, required: true }
+      year: { type: integer, required: true }
+      quarter: { type: integer, description: "1-4 for quarterly periods" }
+
+  GoalProgress:
+    description: Progress tracking snapshot
+    properties:
+      id: { type: uuid, required: true }
+      goalId: { type: uuid, required: true }
+      progressPercent: { type: decimal, required: true, min: 0, max: 100 }
+      confidenceLevel: { type: ConfidenceLevel, required: true }
+      blockers: { type: array, items: string }
+      notes: { type: string }
+      recordedBy: { type: GoalOwner, required: true }
+      recordedAt: { type: datetime, required: true }
+
+  GoalComment:
+    description: Discussion thread on goals
+    properties:
+      id: { type: uuid, required: true }
+      goalId: { type: uuid, required: true }
+      author: { type: GoalOwner, required: true }
+      content: { type: string, required: true }
+      parentCommentId: { type: uuid }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # MEASUREMENT ENTITIES (OKR Key Results, Metrics)
+  # ============================================
+
+  KeyResult:
+    description: Measurable outcome for goals (primarily OKR, but reusable for any framework)
+    properties:
+      id: { type: uuid, required: true }
+      goalId: { type: uuid, required: true, description: "FK to Goal" }
+      title: { type: string, required: true, maxLength: 200 }
+      description: { type: string }
+      owner: { type: GoalOwner, required: true }
+      metricType: { type: MetricType, required: true }
+      startValue: { type: decimal, required: true, description: "Baseline at period start" }
+      targetValue: { type: decimal, required: true, description: "Target at period end" }
+      currentValue: { type: decimal, description: "Latest measured value" }
+      unit: { type: string, description: "%, $, count, etc." }
+      direction: { type: MetricDirection, required: true }
+      weight: { type: decimal, default: 1.0, description: "Relative importance" }
+      score: { type: decimal, min: 0, max: 1, description: "0.0-1.0 achievement score" }
+      status: { type: KeyResultStatus, required: true }
+      milestones: { type: array, items: KeyResultMilestone }
+      dataSources: { type: array, items: DataSource }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  KeyResultMilestone:
+    description: Intermediate checkpoint for key result
+    properties:
+      id: { type: uuid, required: true }
+      title: { type: string, required: true }
+      targetValue: { type: decimal, required: true }
+      targetDate: { type: date, required: true }
+      actualValue: { type: decimal }
+      completedAt: { type: datetime }
+      status: { type: MilestoneStatus, required: true }
+
+  Initiative:
+    description: Project or action to achieve goals/key results
+    properties:
+      id: { type: uuid, required: true }
+      title: { type: string, required: true }
+      description: { type: string }
+      goalIds: { type: array, items: uuid, description: "Goals this supports" }
+      keyResultIds: { type: array, items: uuid, description: "Key results this supports" }
+      owner: { type: GoalOwner, required: true }
+      priority: { type: InitiativePriority, required: true }
+      status: { type: InitiativeStatus, required: true }
+      effortEstimate: { type: string, description: "T-shirt size: S, M, L, XL" }
+      startDate: { type: date }
+      dueDate: { type: date }
+      completedAt: { type: datetime }
+      dependencies: { type: array, items: uuid }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # CYCLE/PERIOD MANAGEMENT
+  # ============================================
+
+  GoalCycle:
+    description: Planning and review cycle for goals (OKR, MBO, etc.)
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      framework: { type: GoalFramework, required: true }
+      period: { type: GoalPeriod, required: true }
+      phase: { type: CyclePhase, required: true }
+      planningDeadline: { type: date, required: true }
+      midCycleReviewDate: { type: date }
+      scoringDeadline: { type: date, required: true }
+      retrospectiveDate: { type: date }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # ASSESSMENT ENTITIES (MBO Ratings, Reviews)
+  # ============================================
+
+  Assessment:
+    description: Rating/evaluation data for goals (primarily MBO, but reusable)
+    properties:
+      id: { type: uuid, required: true }
+      goalId: { type: uuid, required: true, description: "FK to Goal" }
+      reviewId: { type: uuid, description: "FK to Review if part of formal review" }
+      selfRating: { type: decimal, min: 1, max: 5 }
+      managerRating: { type: decimal, min: 1, max: 5 }
+      agreedRating: { type: decimal, min: 1, max: 5 }
+      finalScore: { type: decimal, min: 1, max: 5 }
+      ratingJustification: { type: string }
+      achievements: { type: array, items: string }
+      challenges: { type: array, items: string }
+      lessonsLearned: { type: array, items: string }
+      ratedBy: { type: GoalOwner }
+      ratedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Review:
+    description: Formal review session for goals (MBO, annual reviews, etc.)
+    properties:
+      id: { type: uuid, required: true }
+      reviewType: { type: ReviewType, required: true }
+      framework: { type: GoalFramework, required: true }
+      reviewee: { type: GoalOwner, required: true }
+      reviewer: { type: GoalOwner, required: true }
+      period: { type: GoalPeriod, required: true }
+      goalIds: { type: array, items: uuid, required: true }
+      scheduledDate: { type: date, required: true }
+      completedDate: { type: date }
+      status: { type: ReviewStatus, required: true }
+      overallRating: { type: decimal, min: 1, max: 5 }
+      strengths: { type: array, items: string }
+      improvementAreas: { type: array, items: string }
+      developmentPlan: { type: string }
+      employeeComments: { type: string }
+      managerComments: { type: string }
+      nextPeriodFocus: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  GoalCascade:
+    description: Goal cascade from organizational to individual level
+    properties:
+      id: { type: uuid, required: true }
+      organizationGoalId: { type: uuid, required: true }
+      departmentGoalId: { type: uuid }
+      teamGoalId: { type: uuid }
+      individualGoalId: { type: uuid, required: true }
+      alignmentScore: { type: decimal, min: 0, max: 1 }
+      cascadeLevel: { type: CascadeLevel, required: true }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # SHARED SUPPORTING ENTITIES
+  # ============================================
+
+  DataSource:
+    description: External data source for automatic metric updates
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      type: { type: DataSourceType, required: true }
+      connectionString: { type: string }
+      query: { type: string }
+      refreshFrequency: { type: string, description: "Cron expression or interval" }
+      lastSyncAt: { type: datetime }
+      syncStatus: { type: SyncStatus }
+
+  GoalTemplate:
+    description: Reusable goal template
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      framework: { type: GoalFramework, required: true }
+      category: { type: string }
+      titleTemplate: { type: string, required: true }
+      descriptionTemplate: { type: string }
+      suggestedKeyResults: { type: array, items: string }
+      suggestedMetrics: { type: array, items: string }
+      isPublic: { type: boolean, default: false }
+      usageCount: { type: integer, default: 0 }
+      createdBy: { type: GoalOwner, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  GoalAlignment:
+    description: Cross-goal alignment tracking
+    properties:
+      id: { type: uuid, required: true }
+      sourceGoalId: { type: uuid, required: true }
+      targetGoalId: { type: uuid, required: true }
+      alignmentType: { type: AlignmentType, required: true }
+      contributionWeight: { type: decimal, min: 0, max: 1 }
+      notes: { type: string }
+      createdAt: { type: datetime, required: true }
+
+enums:
+
+  # Framework Type
+  GoalFramework:
+    values:
+      - OKR           # Objectives and Key Results
+      - MBO           # Management by Objectives
+      - SMART         # Specific, Measurable, Achievable, Relevant, Time-bound
+      - BSC           # Balanced Scorecard
+      - V2MOM         # Vision, Values, Methods, Obstacles, Measures
+
+  # Scope and Visibility
+  GoalScope:
+    values:
+      - Personal      # Individual personal goals
+      - Individual    # Work-related individual goals
+      - Team          # Team-level goals
+      - Department    # Department-level goals
+      - Division      # Division/BU-level goals
+      - Organization  # Company-wide goals
+
+  GoalVisibility:
+    values:
+      - Private       # Only owner can see
+      - Team          # Team members can see
+      - Department    # Department can see
+      - Organization  # Everyone in org can see
+      - Public        # Externally visible
+
+  OwnerType:
+    values:
+      - Individual
+      - Team
+      - Department
+      - Organization
+
+  # Time Periods
+  PeriodType:
+    values:
+      - Weekly
+      - Monthly
+      - Quarterly
+      - Biannual
+      - Annual
+      - Custom
+
+  # Status Enums
+  GoalStatus:
+    values:
+      - Draft         # Being defined
+      - Active        # In progress
+      - AtRisk        # Behind schedule
+      - OnTrack       # Progressing well
+      - Completed     # Successfully achieved
+      - Cancelled     # Abandoned
+      - Deferred      # Postponed to future period
+
+  KeyResultStatus:
+    values:
+      - NotStarted
+      - OnTrack
+      - AtRisk
+      - Behind
+      - Achieved
+      - Missed
+
+  MilestoneStatus:
+    values:
+      - Pending
+      - Completed
+      - Missed
+      - Skipped
+
+  InitiativeStatus:
+    values:
+      - Planned
+      - InProgress
+      - Blocked
+      - Completed
+      - Cancelled
+
+  ReviewStatus:
+    values:
+      - Scheduled
+      - InProgress
+      - PendingApproval
+      - Completed
+      - Cancelled
+
+  # OKR Specific
+  ObjectiveType:
+    values:
+      - Committed     # Must achieve (0.7-1.0 target score)
+      - Aspirational  # Stretch goals (0.4-0.7 expected)
+      - Learning      # Experimental objectives
+
+  OKRGradingType:
+    values:
+      - Percentage    # 0-100%
+      - GoogleScale   # 0.0-1.0 where 0.7 is success
+      - Binary        # Done/Not Done
+      - TrafficLight  # Red/Yellow/Green
+
+  CyclePhase:
+    values:
+      - Planning      # Setting goals
+      - Execution     # Working on goals
+      - MidReview     # Mid-cycle check-in
+      - Scoring       # End-of-cycle scoring
+      - Retrospective # Learning and planning next cycle
+
+  MetricType:
+    values:
+      - Number        # Raw count
+      - Percentage    # % value
+      - Currency      # Money amount
+      - Binary        # Yes/No
+      - Milestone     # Date-based completion
+      - NPS           # Net Promoter Score
+      - Rating        # 1-5 or 1-10 scale
+
+  MetricDirection:
+    values:
+      - Increase      # Higher is better
+      - Decrease      # Lower is better
+      - Maintain      # Keep within range
+      - Achieve       # Hit specific target
+
+  InitiativePriority:
+    values:
+      - P0            # Critical/Must do
+      - P1            # High priority
+      - P2            # Medium priority
+      - P3            # Low priority/Nice to have
+
+  ConfidenceLevel:
+    values:
+      - High          # Very likely to achieve
+      - Medium        # Reasonable chance
+      - Low           # At risk
+      - Unknown       # Not enough data
+
+  # MBO Specific
+  MBOCategory:
+    values:
+      - Strategic     # Long-term strategic goals
+      - Operational   # Day-to-day operational goals
+      - Financial     # Revenue, cost, profit goals
+      - Customer      # Customer satisfaction, retention
+      - Innovation    # New products, processes
+      - People        # Team development, culture
+      - Quality       # Quality improvement
+      - Compliance    # Regulatory, policy compliance
+
+  MBOPriority:
+    values:
+      - Critical      # Must achieve
+      - High          # Very important
+      - Medium        # Important
+      - Low           # Nice to have
+
+  ReviewType:
+    values:
+      - GoalSetting   # Initial goal setting meeting
+      - CheckIn       # Regular progress check-in
+      - MidYear       # Mid-year formal review
+      - Annual        # Annual performance review
+      - AdHoc         # Unscheduled review
+
+  CascadeLevel:
+    values:
+      - Organization
+      - Division
+      - Department
+      - Team
+      - Individual
+
+  # Data Integration
+  DataSourceType:
+    values:
+      - Manual        # Manually entered
+      - API           # REST/GraphQL API
+      - Database      # Direct DB query
+      - Spreadsheet   # Google Sheets, Excel
+      - Analytics     # GA, Mixpanel, etc.
+      - CRM           # Salesforce, HubSpot
+      - ProjectTool   # Jira, Asana, etc.
+
+  SyncStatus:
+    values:
+      - Synced
+      - Syncing
+      - Failed
+      - Stale
+
+  AlignmentType:
+    values:
+      - ParentChild   # Vertical cascade
+      - Contributes   # Horizontal contribution
+      - Depends       # Dependency
+      - Conflicts     # Potential conflict
+
+actions:
+
+  # Goal CRUD Actions
+  CreateGoal:
+    description: Create a new goal (OKR, MBO, or any framework)
+    parameters:
+      title: { type: string, required: true }
+      description: { type: string }
+      owner: { type: GoalOwner, required: true }
+      framework: { type: GoalFramework, required: true }
+      scope: { type: GoalScope, required: true }
+      period: { type: GoalPeriod, required: true }
+      objectiveType: { type: ObjectiveType, description: "For OKR only" }
+      category: { type: MBOCategory, description: "For MBO only" }
+      priority: { type: MBOPriority, description: "For MBO only" }
+      weight: { type: decimal, description: "For MBO only" }
+      parentGoalId: { type: uuid }
+    result: Goal
+    permission: goal:create
+    idempotent: false
+
+  UpdateGoal:
+    description: Update goal properties
+    parameters:
+      goalId: { type: uuid, required: true }
+      title: { type: string }
+      description: { type: string }
+      status: { type: GoalStatus }
+    result: Goal
+    permission: goal:update
+    idempotent: false
+
+  # Key Result Actions
+  AddKeyResult:
+    description: Add measurable key result to goal
+    parameters:
+      goalId: { type: uuid, required: true }
+      title: { type: string, required: true }
+      metricType: { type: MetricType, required: true }
+      startValue: { type: decimal, required: true }
+      targetValue: { type: decimal, required: true }
+      direction: { type: MetricDirection, required: true }
+      weight: { type: decimal }
+    result: KeyResult
+    permission: goal:update
+    idempotent: false
+
+  UpdateKeyResultProgress:
+    description: Record new measurement for key result
+    parameters:
+      keyResultId: { type: uuid, required: true }
+      currentValue: { type: decimal, required: true }
+      notes: { type: string }
+    result: KeyResult
+    permission: goal:update
+    idempotent: false
+
+  # Scoring Actions
+  ScoreGoal:
+    description: Calculate final score for goal based on key results or assessment
+    parameters:
+      goalId: { type: uuid, required: true }
+    result: Goal
+    permission: goal:score
+    idempotent: true
+
+  # Assessment Actions (MBO)
+  CreateAssessment:
+    description: Create rating/evaluation for goal
+    parameters:
+      goalId: { type: uuid, required: true }
+      selfRating: { type: decimal, min: 1, max: 5 }
+      managerRating: { type: decimal, min: 1, max: 5 }
+      achievements: { type: array, items: string }
+      challenges: { type: array, items: string }
+    result: Assessment
+    permission: goal:assess
+    idempotent: false
+
+  SubmitSelfRating:
+    description: Employee submits self-rating for goal
+    parameters:
+      assessmentId: { type: uuid, required: true }
+      selfRating: { type: decimal, required: true, min: 1, max: 5 }
+      justification: { type: string }
+    result: Assessment
+    permission: goal:self-rate
+    idempotent: false
+
+  SubmitManagerRating:
+    description: Manager submits rating for employee goal
+    parameters:
+      assessmentId: { type: uuid, required: true }
+      managerRating: { type: decimal, required: true, min: 1, max: 5 }
+      justification: { type: string }
+    result: Assessment
+    permission: goal:rate
+    idempotent: false
+
+  # Review Actions
+  ScheduleReview:
+    description: Schedule a formal review session
+    parameters:
+      reviewType: { type: ReviewType, required: true }
+      framework: { type: GoalFramework, required: true }
+      reviewee: { type: GoalOwner, required: true }
+      reviewer: { type: GoalOwner, required: true }
+      goalIds: { type: array, items: uuid, required: true }
+      scheduledDate: { type: date, required: true }
+    result: Review
+    permission: goal:review
+    idempotent: false
+
+  FinalizeReview:
+    description: Complete review with agreed rating
+    parameters:
+      reviewId: { type: uuid, required: true }
+      overallRating: { type: decimal, required: true, min: 1, max: 5 }
+      strengths: { type: array, items: string }
+      improvementAreas: { type: array, items: string }
+      developmentPlan: { type: string }
+    result: Review
+    permission: goal:finalize
+    idempotent: false
+
+  # Alignment Actions
+  AlignGoals:
+    description: Create alignment between goals
+    parameters:
+      sourceGoalId: { type: uuid, required: true }
+      targetGoalId: { type: uuid, required: true }
+      alignmentType: { type: AlignmentType, required: true }
+      contributionWeight: { type: decimal }
+    result: GoalAlignment
+    permission: goal:align
+    idempotent: false
+
+  # Progress Tracking
+  RecordProgress:
+    description: Record progress update for any goal
+    parameters:
+      goalId: { type: uuid, required: true }
+      progressPercent: { type: decimal, required: true }
+      confidenceLevel: { type: ConfidenceLevel, required: true }
+      blockers: { type: array, items: string }
+      notes: { type: string }
+    result: GoalProgress
+    permission: goal:update
+    idempotent: false

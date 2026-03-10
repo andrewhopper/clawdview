@@ -1,0 +1,1105 @@
+@prefix tech: <http://hopperlabs.ai/ontology/tech-advisory#> .
+@prefix sdlc: <http://hopperlabs.ai/ontology/sdlc#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# ============================================
+# Technology Advisory & Consulting Ontology
+# Domain model for consulting engagements
+# ============================================
+
+# ----------------
+# Core Classes
+# ----------------
+
+tech:Consultant a owl:Class ;
+    rdfs:label "Consultant" ;
+    rdfs:comment "Individual providing technology advisory services" ;
+    rdfs:subClassOf schema:Person .
+
+tech:Client a owl:Class ;
+    rdfs:label "Client" ;
+    rdfs:comment "Organization receiving advisory services" ;
+    rdfs:subClassOf schema:Organization .
+
+tech:Engagement a owl:Class ;
+    rdfs:label "Engagement" ;
+    rdfs:comment "Advisory project or consulting engagement" .
+
+tech:Assessment a owl:Class ;
+    rdfs:label "Assessment" ;
+    rdfs:comment "Evaluation of current state (architecture, technology, processes)" .
+
+tech:Recommendation a owl:Class ;
+    rdfs:label "Recommendation" ;
+    rdfs:comment "Advisory guidance based on assessment findings" .
+
+tech:TechnologyStack a owl:Class ;
+    rdfs:label "Technology Stack" ;
+    rdfs:comment "Collection of technologies used or recommended" .
+
+tech:ArchitecturePattern a owl:Class ;
+    rdfs:label "Architecture Pattern" ;
+    rdfs:comment "Architectural approach or design pattern" .
+
+tech:Capability a owl:Class ;
+    rdfs:label "Capability" ;
+    rdfs:comment "Business or technical capability being assessed" .
+
+tech:MaturityLevel a owl:Class ;
+    rdfs:label "Maturity Level" ;
+    rdfs:comment "Maturity assessment (Initial, Developing, Defined, Managed, Optimizing)" .
+
+tech:Risk a owl:Class ;
+    rdfs:label "Risk" ;
+    rdfs:comment "Technical or business risk identified" .
+
+tech:Deliverable a owl:Class ;
+    rdfs:label "Deliverable" ;
+    rdfs:comment "Artifact produced during engagement" .
+
+tech:Roadmap a owl:Class ;
+    rdfs:label "Roadmap" ;
+    rdfs:comment "Strategic plan with timeline and milestones" .
+
+tech:DecisionCriteria a owl:Class ;
+    rdfs:label "Decision Criteria" ;
+    rdfs:comment "Criteria used to evaluate options" .
+
+tech:TechnologyOption a owl:Class ;
+    rdfs:label "Technology Option" ;
+    rdfs:comment "Technology alternative being evaluated" .
+
+tech:Contact a owl:Class ;
+    rdfs:label "Contact" ;
+    rdfs:comment "Person associated with client or engagement (stakeholder, decision maker, etc.)" ;
+    rdfs:subClassOf schema:Person .
+
+tech:Workload a owl:Class ;
+    rdfs:label "Workload" ;
+    rdfs:comment "Infrastructure workload (ML inference stack, data pipeline, web application, batch processing, etc.)" .
+
+tech:Observation a owl:Class ;
+    rdfs:label "Observation" ;
+    rdfs:comment "Field note, finding, or insight captured during engagement" .
+
+tech:Account a owl:Class ;
+    rdfs:label "Account" ;
+    rdfs:comment "Salesforce Account - organization or company in CRM" ;
+    rdfs:subClassOf schema:Organization .
+
+tech:Opportunity a owl:Class ;
+    rdfs:label "Opportunity" ;
+    rdfs:comment "Salesforce Opportunity - potential sales deal or engagement" .
+
+tech:Activity a owl:Class ;
+    rdfs:label "Activity" ;
+    rdfs:comment "Salesforce Activity - task, call, email, or meeting logged in CRM" .
+
+tech:Product a owl:Class ;
+    rdfs:label "Product" ;
+    rdfs:comment "Cloud service or technology product (AWS Textract, AWS Aurora, AWS EKS, Azure services, etc.)" ;
+    rdfs:subClassOf schema:Product .
+
+# ----------------
+# Engagement Types
+# ----------------
+
+tech:TechnologyStrategy a owl:Class ;
+    rdfs:subClassOf tech:Engagement ;
+    rdfs:label "Technology Strategy" ;
+    rdfs:comment "Strategic technology planning engagement" .
+
+tech:ArchitectureReview a owl:Class ;
+    rdfs:subClassOf tech:Engagement ;
+    rdfs:label "Architecture Review" ;
+    rdfs:comment "Assessment of current architecture" .
+
+tech:CloudMigration a owl:Class ;
+    rdfs:subClassOf tech:Engagement ;
+    rdfs:label "Cloud Migration" ;
+    rdfs:comment "Cloud adoption or migration engagement" .
+
+tech:DigitalTransformation a owl:Class ;
+    rdfs:subClassOf tech:Engagement ;
+    rdfs:label "Digital Transformation" ;
+    rdfs:comment "Broad organizational digital transformation" .
+
+tech:AIMLStrategy a owl:Class ;
+    rdfs:subClassOf tech:Engagement ;
+    rdfs:label "AI/ML Strategy" ;
+    rdfs:comment "Artificial intelligence and machine learning strategy" .
+
+# ----------------
+# Assessment Types
+# ----------------
+
+tech:TechnologyAssessment a owl:Class ;
+    rdfs:subClassOf tech:Assessment ;
+    rdfs:label "Technology Assessment" ;
+    rdfs:comment "Evaluation of technology choices and stack" .
+
+tech:ArchitectureAssessment a owl:Class ;
+    rdfs:subClassOf tech:Assessment ;
+    rdfs:label "Architecture Assessment" ;
+    rdfs:comment "Review of system architecture and design" .
+
+tech:SecurityAssessment a owl:Class ;
+    rdfs:subClassOf tech:Assessment ;
+    rdfs:label "Security Assessment" ;
+    rdfs:comment "Security posture evaluation" .
+
+tech:CapabilityAssessment a owl:Class ;
+    rdfs:subClassOf tech:Assessment ;
+    rdfs:label "Capability Assessment" ;
+    rdfs:comment "Assessment of organizational capabilities" .
+
+tech:MaturityAssessment a owl:Class ;
+    rdfs:subClassOf tech:Assessment ;
+    rdfs:label "Maturity Assessment" ;
+    rdfs:comment "Maturity model evaluation" .
+
+# ----------------
+# Maturity Levels (Instances)
+# ----------------
+
+tech:MaturityLevel1_Initial a tech:MaturityLevel ;
+    rdfs:label "Level 1: Initial" ;
+    tech:maturityScore 1 ;
+    rdfs:comment "Ad-hoc processes, unpredictable outcomes" .
+
+tech:MaturityLevel2_Developing a tech:MaturityLevel ;
+    rdfs:label "Level 2: Developing" ;
+    tech:maturityScore 2 ;
+    rdfs:comment "Some processes defined, repeatable with consistent results" .
+
+tech:MaturityLevel3_Defined a tech:MaturityLevel ;
+    rdfs:label "Level 3: Defined" ;
+    tech:maturityScore 3 ;
+    rdfs:comment "Processes well-characterized, understood, and documented" .
+
+tech:MaturityLevel4_Managed a tech:MaturityLevel ;
+    rdfs:label "Level 4: Managed" ;
+    tech:maturityScore 4 ;
+    rdfs:comment "Processes measured and controlled" .
+
+tech:MaturityLevel5_Optimizing a tech:MaturityLevel ;
+    rdfs:label "Level 5: Optimizing" ;
+    tech:maturityScore 5 ;
+    rdfs:comment "Focus on continuous improvement" .
+
+# ----------------
+# Risk Levels (Instances)
+# ----------------
+
+tech:RiskLevel_Critical a owl:Class ;
+    rdfs:label "Critical Risk" ;
+    tech:riskScore 5 ;
+    rdfs:comment "Immediate action required, high impact" .
+
+tech:RiskLevel_High a owl:Class ;
+    rdfs:label "High Risk" ;
+    tech:riskScore 4 ;
+    rdfs:comment "Near-term action required, significant impact" .
+
+tech:RiskLevel_Medium a owl:Class ;
+    rdfs:label "Medium Risk" ;
+    tech:riskScore 3 ;
+    rdfs:comment "Should be addressed, moderate impact" .
+
+tech:RiskLevel_Low a owl:Class ;
+    rdfs:label "Low Risk" ;
+    tech:riskScore 2 ;
+    rdfs:comment "Monitor, minimal impact" .
+
+tech:RiskLevel_Minimal a owl:Class ;
+    rdfs:label "Minimal Risk" ;
+    tech:riskScore 1 ;
+    rdfs:comment "Acceptable risk, no action needed" .
+
+# ----------------
+# Decision Weights (Instances)
+# ----------------
+
+tech:DecisionWeight_Always a owl:Class ;
+    rdfs:label "ALWAYS" ;
+    tech:weightScore 10 ;
+    rdfs:comment "Non-negotiable requirement" .
+
+tech:DecisionWeight_StronglyPrefer a owl:Class ;
+    rdfs:label "STRONGLY_PREFER" ;
+    tech:weightScore 5 ;
+    rdfs:comment "Strong preference, exceptions rare" .
+
+tech:DecisionWeight_Prefer a owl:Class ;
+    rdfs:label "PREFER" ;
+    tech:weightScore 2 ;
+    rdfs:comment "Preferred but flexible" .
+
+tech:DecisionWeight_Neutral a owl:Class ;
+    rdfs:label "NEUTRAL" ;
+    tech:weightScore 0 ;
+    rdfs:comment "No preference" .
+
+tech:DecisionWeight_Avoid a owl:Class ;
+    rdfs:label "AVOID" ;
+    tech:weightScore -2 ;
+    rdfs:comment "Avoid if reasonable alternatives exist" .
+
+tech:DecisionWeight_StronglyAvoid a owl:Class ;
+    rdfs:label "STRONGLY_AVOID" ;
+    tech:weightScore -5 ;
+    rdfs:comment "Strong avoidance, exceptions rare" .
+
+tech:DecisionWeight_Never a owl:Class ;
+    rdfs:label "NEVER" ;
+    tech:weightScore -10 ;
+    rdfs:comment "Unacceptable, no exceptions" .
+
+# ----------------
+# Properties - Engagement
+# ----------------
+
+tech:hasConsultant a owl:ObjectProperty ;
+    rdfs:domain tech:Engagement ;
+    rdfs:range tech:Consultant ;
+    rdfs:label "has consultant" .
+
+tech:hasClient a owl:ObjectProperty ;
+    rdfs:domain tech:Engagement ;
+    rdfs:range tech:Client ;
+    rdfs:label "has client" .
+
+tech:hasAssessment a owl:ObjectProperty ;
+    rdfs:domain tech:Engagement ;
+    rdfs:range tech:Assessment ;
+    rdfs:label "has assessment" .
+
+tech:hasRecommendation a owl:ObjectProperty ;
+    rdfs:domain tech:Engagement ;
+    rdfs:range tech:Recommendation ;
+    rdfs:label "has recommendation" .
+
+tech:hasDeliverable a owl:ObjectProperty ;
+    rdfs:domain tech:Engagement ;
+    rdfs:range tech:Deliverable ;
+    rdfs:label "has deliverable" .
+
+tech:hasRoadmap a owl:ObjectProperty ;
+    rdfs:domain tech:Engagement ;
+    rdfs:range tech:Roadmap ;
+    rdfs:label "has roadmap" .
+
+tech:startDate a owl:DatatypeProperty ;
+    rdfs:domain tech:Engagement ;
+    rdfs:range xsd:date ;
+    rdfs:label "start date" .
+
+tech:endDate a owl:DatatypeProperty ;
+    rdfs:domain tech:Engagement ;
+    rdfs:range xsd:date ;
+    rdfs:label "end date" .
+
+tech:status a owl:DatatypeProperty ;
+    rdfs:domain tech:Engagement ;
+    rdfs:range xsd:string ;
+    rdfs:label "status" ;
+    rdfs:comment "planning, active, on-hold, completed, cancelled" .
+
+# ----------------
+# Properties - Assessment
+# ----------------
+
+tech:assessesCapability a owl:ObjectProperty ;
+    rdfs:domain tech:Assessment ;
+    rdfs:range tech:Capability ;
+    rdfs:label "assesses capability" .
+
+tech:identifiesRisk a owl:ObjectProperty ;
+    rdfs:domain tech:Assessment ;
+    rdfs:range tech:Risk ;
+    rdfs:label "identifies risk" .
+
+tech:evaluatesTechnology a owl:ObjectProperty ;
+    rdfs:domain tech:Assessment ;
+    rdfs:range tech:TechnologyStack ;
+    rdfs:label "evaluates technology" .
+
+tech:assessmentDate a owl:DatatypeProperty ;
+    rdfs:domain tech:Assessment ;
+    rdfs:range xsd:date ;
+    rdfs:label "assessment date" .
+
+tech:assessmentScore a owl:DatatypeProperty ;
+    rdfs:domain tech:Assessment ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "assessment score" ;
+    rdfs:comment "Numeric score 0.0 - 5.0" .
+
+# ----------------
+# Properties - Capability
+# ----------------
+
+tech:hasMaturityLevel a owl:ObjectProperty ;
+    rdfs:domain tech:Capability ;
+    rdfs:range tech:MaturityLevel ;
+    rdfs:label "has maturity level" .
+
+tech:capabilityName a owl:DatatypeProperty ;
+    rdfs:domain tech:Capability ;
+    rdfs:range xsd:string ;
+    rdfs:label "capability name" .
+
+tech:capabilityDescription a owl:DatatypeProperty ;
+    rdfs:domain tech:Capability ;
+    rdfs:range xsd:string ;
+    rdfs:label "capability description" .
+
+tech:targetMaturityLevel a owl:ObjectProperty ;
+    rdfs:domain tech:Capability ;
+    rdfs:range tech:MaturityLevel ;
+    rdfs:label "target maturity level" .
+
+# ----------------
+# Properties - Risk
+# ----------------
+
+tech:riskCategory a owl:DatatypeProperty ;
+    rdfs:domain tech:Risk ;
+    rdfs:range xsd:string ;
+    rdfs:label "risk category" ;
+    rdfs:comment "technical, security, operational, business, compliance" .
+
+tech:riskSeverity a owl:DatatypeProperty ;
+    rdfs:domain tech:Risk ;
+    rdfs:range xsd:string ;
+    rdfs:label "risk severity" ;
+    rdfs:comment "critical, high, medium, low, minimal" .
+
+tech:riskScore a owl:DatatypeProperty ;
+    rdfs:range xsd:integer ;
+    rdfs:label "risk score" .
+
+tech:riskDescription a owl:DatatypeProperty ;
+    rdfs:domain tech:Risk ;
+    rdfs:range xsd:string ;
+    rdfs:label "risk description" .
+
+tech:riskMitigation a owl:DatatypeProperty ;
+    rdfs:domain tech:Risk ;
+    rdfs:range xsd:string ;
+    rdfs:label "risk mitigation" ;
+    rdfs:comment "Steps to mitigate the risk" .
+
+# ----------------
+# Properties - Recommendation
+# ----------------
+
+tech:recommendationType a owl:DatatypeProperty ;
+    rdfs:domain tech:Recommendation ;
+    rdfs:range xsd:string ;
+    rdfs:label "recommendation type" ;
+    rdfs:comment "strategic, tactical, quick-win, long-term" .
+
+tech:priority a owl:DatatypeProperty ;
+    rdfs:domain tech:Recommendation ;
+    rdfs:range xsd:string ;
+    rdfs:label "priority" ;
+    rdfs:comment "critical, high, medium, low" .
+
+tech:estimatedEffort a owl:DatatypeProperty ;
+    rdfs:domain tech:Recommendation ;
+    rdfs:range xsd:string ;
+    rdfs:label "estimated effort" ;
+    rdfs:comment "Person-days or story points" .
+
+tech:expectedBenefit a owl:DatatypeProperty ;
+    rdfs:domain tech:Recommendation ;
+    rdfs:range xsd:string ;
+    rdfs:label "expected benefit" .
+
+tech:recommendsOption a owl:ObjectProperty ;
+    rdfs:domain tech:Recommendation ;
+    rdfs:range tech:TechnologyOption ;
+    rdfs:label "recommends option" .
+
+# ----------------
+# Properties - Technology Stack
+# ----------------
+
+tech:language a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyStack ;
+    rdfs:range xsd:string ;
+    rdfs:label "programming language" .
+
+tech:framework a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyStack ;
+    rdfs:range xsd:string ;
+    rdfs:label "framework" .
+
+tech:database a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyStack ;
+    rdfs:range xsd:string ;
+    rdfs:label "database" .
+
+tech:cloudProvider a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyStack ;
+    rdfs:range xsd:string ;
+    rdfs:label "cloud provider" ;
+    rdfs:comment "AWS, Azure, GCP, Multi-cloud" .
+
+tech:deploymentPattern a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyStack ;
+    rdfs:range xsd:string ;
+    rdfs:label "deployment pattern" ;
+    rdfs:comment "containers, serverless, VM, hybrid" .
+
+# ----------------
+# Properties - Decision Criteria
+# ----------------
+
+tech:criteriaCategory a owl:DatatypeProperty ;
+    rdfs:domain tech:DecisionCriteria ;
+    rdfs:range xsd:string ;
+    rdfs:label "criteria category" ;
+    rdfs:comment "architecture, tech_stack, performance, security, cost" .
+
+tech:criterion a owl:DatatypeProperty ;
+    rdfs:domain tech:DecisionCriteria ;
+    rdfs:range xsd:string ;
+    rdfs:label "criterion" .
+
+tech:weight a owl:DatatypeProperty ;
+    rdfs:domain tech:DecisionCriteria ;
+    rdfs:range xsd:string ;
+    rdfs:label "weight" ;
+    rdfs:comment "ALWAYS, STRONGLY_PREFER, PREFER, NEUTRAL, AVOID, STRONGLY_AVOID, NEVER" .
+
+tech:weightScore a owl:DatatypeProperty ;
+    rdfs:range xsd:integer ;
+    rdfs:label "weight score" .
+
+# ----------------
+# Properties - Technology Option
+# ----------------
+
+tech:optionId a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyOption ;
+    rdfs:range xsd:string ;
+    rdfs:label "option ID" ;
+    rdfs:comment "A, B, C, etc." .
+
+tech:optionDescription a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyOption ;
+    rdfs:range xsd:string ;
+    rdfs:label "option description" .
+
+tech:hasTechnologyStack a owl:ObjectProperty ;
+    rdfs:domain tech:TechnologyOption ;
+    rdfs:range tech:TechnologyStack ;
+    rdfs:label "has technology stack" .
+
+tech:totalScore a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyOption ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "total score" .
+
+tech:isSelected a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyOption ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "is selected" .
+
+tech:tradeOffs a owl:DatatypeProperty ;
+    rdfs:domain tech:TechnologyOption ;
+    rdfs:range xsd:string ;
+    rdfs:label "trade-offs" .
+
+# ----------------
+# Properties - Roadmap
+# ----------------
+
+tech:hasMilestone a owl:ObjectProperty ;
+    rdfs:domain tech:Roadmap ;
+    rdfs:range tech:Milestone ;
+    rdfs:label "has milestone" .
+
+tech:roadmapTimeframe a owl:DatatypeProperty ;
+    rdfs:domain tech:Roadmap ;
+    rdfs:range xsd:string ;
+    rdfs:label "roadmap timeframe" ;
+    rdfs:comment "6-months, 1-year, 3-year" .
+
+tech:Milestone a owl:Class ;
+    rdfs:label "Milestone" ;
+    rdfs:comment "Key milestone in roadmap" .
+
+tech:milestoneDate a owl:DatatypeProperty ;
+    rdfs:domain tech:Milestone ;
+    rdfs:range xsd:date ;
+    rdfs:label "milestone date" .
+
+tech:milestoneDescription a owl:DatatypeProperty ;
+    rdfs:domain tech:Milestone ;
+    rdfs:range xsd:string ;
+    rdfs:label "milestone description" .
+
+# ----------------
+# Properties - Consultant
+# ----------------
+
+tech:hasSpecialization a owl:DatatypeProperty ;
+    rdfs:domain tech:Consultant ;
+    rdfs:range xsd:string ;
+    rdfs:label "specialization" ;
+    rdfs:comment "Cloud Architecture, AI/ML, Security, DevOps, etc." .
+
+tech:hasExpertise a owl:DatatypeProperty ;
+    rdfs:domain tech:Consultant ;
+    rdfs:range xsd:string ;
+    rdfs:label "expertise area" .
+
+tech:yearsExperience a owl:DatatypeProperty ;
+    rdfs:domain tech:Consultant ;
+    rdfs:range xsd:integer ;
+    rdfs:label "years of experience" .
+
+# ----------------
+# Properties - Client
+# ----------------
+
+tech:industry a owl:DatatypeProperty ;
+    rdfs:domain tech:Client ;
+    rdfs:range xsd:string ;
+    rdfs:label "industry" ;
+    rdfs:comment "Healthcare, Finance, Retail, Manufacturing, etc." .
+
+tech:companySize a owl:DatatypeProperty ;
+    rdfs:domain tech:Client ;
+    rdfs:range xsd:string ;
+    rdfs:label "company size" ;
+    rdfs:comment "startup, SMB, mid-market, enterprise" .
+
+tech:revenue a owl:DatatypeProperty ;
+    rdfs:domain tech:Client ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "annual revenue" .
+
+# ----------------
+# Properties - Contact
+# ----------------
+
+tech:contactRole a owl:DatatypeProperty ;
+    rdfs:domain tech:Contact ;
+    rdfs:range xsd:string ;
+    rdfs:label "contact role" ;
+    rdfs:comment "Primary Contact, Stakeholder, Decision Maker, Technical Lead, etc." .
+
+tech:contactTitle a owl:DatatypeProperty ;
+    rdfs:domain tech:Contact ;
+    rdfs:range xsd:string ;
+    rdfs:label "contact title" ;
+    rdfs:comment "Job title (CTO, VP Engineering, etc.)" .
+
+tech:phoneNumber a owl:DatatypeProperty ;
+    rdfs:domain tech:Contact ;
+    rdfs:range xsd:string ;
+    rdfs:label "phone number" .
+
+tech:worksFor a owl:ObjectProperty ;
+    rdfs:domain tech:Contact ;
+    rdfs:range tech:Client ;
+    rdfs:label "works for" ;
+    rdfs:comment "Client organization this contact represents" .
+
+tech:isPrimaryContact a owl:DatatypeProperty ;
+    rdfs:domain tech:Contact ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "is primary contact" .
+
+# ----------------
+# Properties - Workload
+# ----------------
+
+tech:workloadName a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "workload name" .
+
+tech:workloadDescription a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "workload description" .
+
+tech:workloadType a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "workload type" ;
+    rdfs:comment "ml-inference, data-pipeline, web-application, batch-processing, streaming, microservices, etc." .
+
+tech:workloadStatus a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "workload status" ;
+    rdfs:comment "development, staging, production, deprecated" .
+
+tech:workloadEnvironment a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "workload environment" ;
+    rdfs:comment "development, staging, production" .
+
+tech:computeRequirements a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "compute requirements" ;
+    rdfs:comment "CPU, GPU, memory specifications" .
+
+tech:storageRequirements a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "storage requirements" ;
+    rdfs:comment "Storage type and capacity" .
+
+tech:scalingConfiguration a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "scaling configuration" ;
+    rdfs:comment "Auto-scaling rules and limits" .
+
+tech:runtimeEnvironment a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "runtime environment" ;
+    rdfs:comment "Container, serverless, VM, etc." .
+
+tech:hasTechnologyStack a owl:ObjectProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range tech:TechnologyStack ;
+    rdfs:label "has technology stack" .
+
+tech:dependsOnWorkload a owl:ObjectProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range tech:Workload ;
+    rdfs:label "depends on workload" ;
+    rdfs:comment "Workload dependencies" .
+
+tech:assessedInEngagement a owl:ObjectProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range tech:Engagement ;
+    rdfs:label "assessed in engagement" ;
+    rdfs:comment "Engagement where this workload is assessed or designed" .
+
+tech:costPerMonth a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "cost per month" ;
+    rdfs:comment "Estimated monthly infrastructure cost" .
+
+tech:throughput a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "throughput" ;
+    rdfs:comment "Requests per second, events per minute, etc." .
+
+tech:latencyRequirement a owl:DatatypeProperty ;
+    rdfs:domain tech:Workload ;
+    rdfs:range xsd:string ;
+    rdfs:label "latency requirement" ;
+    rdfs:comment "Response time SLA (e.g., p99 < 100ms)" .
+
+# ----------------
+# Properties - Observation
+# ----------------
+
+tech:observationDate a owl:DatatypeProperty ;
+    rdfs:domain tech:Observation ;
+    rdfs:range xsd:date ;
+    rdfs:label "observation date" .
+
+tech:observedBy a owl:ObjectProperty ;
+    rdfs:domain tech:Observation ;
+    rdfs:range tech:Consultant ;
+    rdfs:label "observed by" .
+
+tech:observationCategory a owl:DatatypeProperty ;
+    rdfs:domain tech:Observation ;
+    rdfs:range xsd:string ;
+    rdfs:label "observation category" ;
+    rdfs:comment "technical, process, organizational, cultural, risk" .
+
+tech:observationDescription a owl:DatatypeProperty ;
+    rdfs:domain tech:Observation ;
+    rdfs:range xsd:string ;
+    rdfs:label "observation description" .
+
+tech:observationSeverity a owl:DatatypeProperty ;
+    rdfs:domain tech:Observation ;
+    rdfs:range xsd:string ;
+    rdfs:label "observation severity" ;
+    rdfs:comment "critical, high, medium, low, info" .
+
+tech:relatedToEngagement a owl:ObjectProperty ;
+    rdfs:domain tech:Observation ;
+    rdfs:range tech:Engagement ;
+    rdfs:label "related to engagement" .
+
+tech:relatedToAssessment a owl:ObjectProperty ;
+    rdfs:domain tech:Observation ;
+    rdfs:range tech:Assessment ;
+    rdfs:label "related to assessment" .
+
+tech:actionRequired a owl:DatatypeProperty ;
+    rdfs:domain tech:Observation ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "action required" .
+
+# ----------------
+# Properties - Account (Salesforce)
+# ----------------
+
+tech:accountName a owl:DatatypeProperty ;
+    rdfs:domain tech:Account ;
+    rdfs:range xsd:string ;
+    rdfs:label "account name" .
+
+tech:accountType a owl:DatatypeProperty ;
+    rdfs:domain tech:Account ;
+    rdfs:range xsd:string ;
+    rdfs:label "account type" ;
+    rdfs:comment "Customer, Prospect, Partner, Vendor" .
+
+tech:accountIndustry a owl:DatatypeProperty ;
+    rdfs:domain tech:Account ;
+    rdfs:range xsd:string ;
+    rdfs:label "account industry" .
+
+tech:accountOwner a owl:ObjectProperty ;
+    rdfs:domain tech:Account ;
+    rdfs:range tech:Consultant ;
+    rdfs:label "account owner" .
+
+tech:annualRevenue a owl:DatatypeProperty ;
+    rdfs:domain tech:Account ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "annual revenue" .
+
+tech:numberOfEmployees a owl:DatatypeProperty ;
+    rdfs:domain tech:Account ;
+    rdfs:range xsd:integer ;
+    rdfs:label "number of employees" .
+
+tech:hasContact a owl:ObjectProperty ;
+    rdfs:domain tech:Account ;
+    rdfs:range tech:Contact ;
+    rdfs:label "has contact" .
+
+# ----------------
+# Properties - Opportunity (Salesforce)
+# ----------------
+
+tech:opportunityName a owl:DatatypeProperty ;
+    rdfs:domain tech:Opportunity ;
+    rdfs:range xsd:string ;
+    rdfs:label "opportunity name" .
+
+tech:opportunityStage a owl:DatatypeProperty ;
+    rdfs:domain tech:Opportunity ;
+    rdfs:range xsd:string ;
+    rdfs:label "opportunity stage" ;
+    rdfs:comment "Prospecting, Qualification, Proposal, Negotiation, Closed Won, Closed Lost" .
+
+tech:opportunityAmount a owl:DatatypeProperty ;
+    rdfs:domain tech:Opportunity ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "opportunity amount" .
+
+tech:opportunityProbability a owl:DatatypeProperty ;
+    rdfs:domain tech:Opportunity ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "opportunity probability" ;
+    rdfs:comment "Probability of winning (0-100%)" .
+
+tech:closeDate a owl:DatatypeProperty ;
+    rdfs:domain tech:Opportunity ;
+    rdfs:range xsd:date ;
+    rdfs:label "close date" .
+
+tech:relatedToAccount a owl:ObjectProperty ;
+    rdfs:domain tech:Opportunity ;
+    rdfs:range tech:Account ;
+    rdfs:label "related to account" .
+
+tech:opportunityOwner a owl:ObjectProperty ;
+    rdfs:domain tech:Opportunity ;
+    rdfs:range tech:Consultant ;
+    rdfs:label "opportunity owner" .
+
+tech:includesProduct a owl:ObjectProperty ;
+    rdfs:domain tech:Opportunity ;
+    rdfs:range tech:Product ;
+    rdfs:label "includes product" .
+
+tech:convertsToEngagement a owl:ObjectProperty ;
+    rdfs:domain tech:Opportunity ;
+    rdfs:range tech:Engagement ;
+    rdfs:label "converts to engagement" ;
+    rdfs:comment "Opportunity that became an engagement" .
+
+# ----------------
+# Properties - Activity (Salesforce)
+# ----------------
+
+tech:activityType a owl:DatatypeProperty ;
+    rdfs:domain tech:Activity ;
+    rdfs:range xsd:string ;
+    rdfs:label "activity type" ;
+    rdfs:comment "Call, Email, Meeting, Task" .
+
+tech:activitySubject a owl:DatatypeProperty ;
+    rdfs:domain tech:Activity ;
+    rdfs:range xsd:string ;
+    rdfs:label "activity subject" .
+
+tech:activityDescription a owl:DatatypeProperty ;
+    rdfs:domain tech:Activity ;
+    rdfs:range xsd:string ;
+    rdfs:label "activity description" .
+
+tech:activityDate a owl:DatatypeProperty ;
+    rdfs:domain tech:Activity ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "activity date" .
+
+tech:activityDuration a owl:DatatypeProperty ;
+    rdfs:domain tech:Activity ;
+    rdfs:range xsd:integer ;
+    rdfs:label "activity duration" ;
+    rdfs:comment "Duration in minutes" .
+
+tech:activityStatus a owl:DatatypeProperty ;
+    rdfs:domain tech:Activity ;
+    rdfs:range xsd:string ;
+    rdfs:label "activity status" ;
+    rdfs:comment "Planned, Completed, Cancelled" .
+
+tech:performedBy a owl:ObjectProperty ;
+    rdfs:domain tech:Activity ;
+    rdfs:range tech:Consultant ;
+    rdfs:label "performed by" .
+
+tech:relatedToOpportunity a owl:ObjectProperty ;
+    rdfs:domain tech:Activity ;
+    rdfs:range tech:Opportunity ;
+    rdfs:label "related to opportunity" .
+
+tech:withContact a owl:ObjectProperty ;
+    rdfs:domain tech:Activity ;
+    rdfs:range tech:Contact ;
+    rdfs:label "with contact" .
+
+# ----------------
+# Properties - Product
+# ----------------
+
+tech:productName a owl:DatatypeProperty ;
+    rdfs:domain tech:Product ;
+    rdfs:range xsd:string ;
+    rdfs:label "product name" .
+
+tech:productDescription a owl:DatatypeProperty ;
+    rdfs:domain tech:Product ;
+    rdfs:range xsd:string ;
+    rdfs:label "product description" .
+
+tech:productCategory a owl:DatatypeProperty ;
+    rdfs:domain tech:Product ;
+    rdfs:range xsd:string ;
+    rdfs:label "product category" ;
+    rdfs:comment "compute, storage, database, ml-ai, analytics, networking, security, etc." .
+
+tech:productVendor a owl:DatatypeProperty ;
+    rdfs:domain tech:Product ;
+    rdfs:range xsd:string ;
+    rdfs:label "product vendor" ;
+    rdfs:comment "AWS, Azure, GCP, third-party vendor" .
+
+tech:productServiceName a owl:DatatypeProperty ;
+    rdfs:domain tech:Product ;
+    rdfs:range xsd:string ;
+    rdfs:label "product service name" ;
+    rdfs:comment "Specific service name (e.g., Textract, Aurora, EKS)" .
+
+tech:productPrice a owl:DatatypeProperty ;
+    rdfs:domain tech:Product ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "product price" .
+
+tech:productActive a owl:DatatypeProperty ;
+    rdfs:domain tech:Product ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "product active" .
+
+# ----------------
+# Integration with SDLC Ontology
+# ----------------
+
+tech:hasPrototype a owl:ObjectProperty ;
+    rdfs:domain tech:Deliverable ;
+    rdfs:range sdlc:Prototype ;
+    rdfs:label "has prototype" ;
+    rdfs:comment "Links consulting deliverable to SDLC prototype" .
+
+tech:implementsRecommendation a owl:ObjectProperty ;
+    rdfs:domain sdlc:Prototype ;
+    rdfs:range tech:Recommendation ;
+    rdfs:label "implements recommendation" ;
+    rdfs:comment "Prototype implements a consulting recommendation" .
+
+# ----------------
+# Maturity Score Property
+# ----------------
+
+tech:maturityScore a owl:DatatypeProperty ;
+    rdfs:range xsd:integer ;
+    rdfs:label "maturity score" .
+
+# ----------------
+# SHACL Constraints
+# ----------------
+
+tech:EngagementShape a sh:NodeShape ;
+    sh:targetClass tech:Engagement ;
+    sh:property [
+        sh:path tech:hasClient ;
+        sh:minCount 1 ;
+        sh:message "Engagement must have at least one client"
+    ] ;
+    sh:property [
+        sh:path tech:hasConsultant ;
+        sh:minCount 1 ;
+        sh:message "Engagement must have at least one consultant"
+    ] ;
+    sh:property [
+        sh:path tech:startDate ;
+        sh:minCount 1 ;
+        sh:datatype xsd:date ;
+        sh:message "Engagement must have a start date"
+    ] .
+
+tech:AssessmentShape a sh:NodeShape ;
+    sh:targetClass tech:Assessment ;
+    sh:property [
+        sh:path tech:assessmentDate ;
+        sh:minCount 1 ;
+        sh:datatype xsd:date ;
+        sh:message "Assessment must have a date"
+    ] ;
+    sh:property [
+        sh:path tech:assessmentScore ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 5.0 ;
+        sh:message "Assessment score must be between 0.0 and 5.0"
+    ] .
+
+tech:RiskShape a sh:NodeShape ;
+    sh:targetClass tech:Risk ;
+    sh:property [
+        sh:path tech:riskCategory ;
+        sh:in ("technical" "security" "operational" "business" "compliance") ;
+        sh:message "Risk category must be valid"
+    ] ;
+    sh:property [
+        sh:path tech:riskSeverity ;
+        sh:in ("critical" "high" "medium" "low" "minimal") ;
+        sh:message "Risk severity must be valid"
+    ] ;
+    sh:property [
+        sh:path tech:riskDescription ;
+        sh:minCount 1 ;
+        sh:message "Risk must have a description"
+    ] .
+
+tech:TechnologyOptionShape a sh:NodeShape ;
+    sh:targetClass tech:TechnologyOption ;
+    sh:property [
+        sh:path tech:optionId ;
+        sh:minCount 1 ;
+        sh:pattern "^[A-Z]$" ;
+        sh:message "Option ID must be a single uppercase letter"
+    ] ;
+    sh:property [
+        sh:path tech:hasTechnologyStack ;
+        sh:minCount 1 ;
+        sh:message "Technology option must have a stack"
+    ] .
+
+# ----------------
+# Example Instance
+# ----------------
+
+# Example: Cloud migration engagement
+<http://hopperlabs.ai/engagements/example-001> a tech:CloudMigration ;
+    rdfs:label "Acme Corp Cloud Migration" ;
+    tech:hasClient <http://hopperlabs.ai/clients/acme-corp> ;
+    tech:hasConsultant <http://hopperlabs.ai/consultants/john-doe> ;
+    tech:startDate "2025-01-15"^^xsd:date ;
+    tech:endDate "2025-06-30"^^xsd:date ;
+    tech:status "active" ;
+    tech:hasAssessment <http://hopperlabs.ai/assessments/acme-architecture-001> ;
+    tech:hasRecommendation <http://hopperlabs.ai/recommendations/acme-aws-migration> .
+
+<http://hopperlabs.ai/clients/acme-corp> a tech:Client ;
+    schema:name "Acme Corporation" ;
+    tech:industry "Healthcare" ;
+    tech:companySize "mid-market" ;
+    tech:revenue 50000000 .
+
+<http://hopperlabs.ai/consultants/john-doe> a tech:Consultant ;
+    schema:name "John Doe" ;
+    tech:hasSpecialization "Cloud Architecture" ;
+    tech:yearsExperience 12 .
+
+<http://hopperlabs.ai/assessments/acme-architecture-001> a tech:ArchitectureAssessment ;
+    tech:assessmentDate "2025-01-20"^^xsd:date ;
+    tech:assessmentScore 2.5 ;
+    tech:identifiesRisk <http://hopperlabs.ai/risks/acme-vendor-lock-in> ;
+    tech:assessesCapability <http://hopperlabs.ai/capabilities/acme-devops> .
+
+<http://hopperlabs.ai/capabilities/acme-devops> a tech:Capability ;
+    tech:capabilityName "DevOps Practices" ;
+    tech:capabilityDescription "CI/CD, automation, monitoring" ;
+    tech:hasMaturityLevel tech:MaturityLevel2_Developing ;
+    tech:targetMaturityLevel tech:MaturityLevel4_Managed .
+
+<http://hopperlabs.ai/risks/acme-vendor-lock-in> a tech:Risk ;
+    tech:riskCategory "technical" ;
+    tech:riskSeverity "high" ;
+    tech:riskDescription "Heavy dependency on proprietary cloud services" ;
+    tech:riskMitigation "Use open standards and multi-cloud abstractions" .
+
+<http://hopperlabs.ai/recommendations/acme-aws-migration> a tech:Recommendation ;
+    tech:recommendationType "strategic" ;
+    tech:priority "high" ;
+    tech:estimatedEffort "90 person-days" ;
+    tech:expectedBenefit "40% cost reduction, improved scalability" ;
+    tech:recommendsOption <http://hopperlabs.ai/options/acme-option-a> .
+
+<http://hopperlabs.ai/options/acme-option-a> a tech:TechnologyOption ;
+    tech:optionId "A" ;
+    tech:optionDescription "AWS with containerized microservices" ;
+    tech:hasTechnologyStack <http://hopperlabs.ai/stacks/acme-aws-ecs> ;
+    tech:totalScore 42.5 ;
+    tech:isSelected true ;
+    tech:tradeOffs "Higher initial learning curve, long-term cost efficiency" .
+
+<http://hopperlabs.ai/stacks/acme-aws-ecs> a tech:TechnologyStack ;
+    tech:language "Python" ;
+    tech:framework "FastAPI" ;
+    tech:database "PostgreSQL" ;
+    tech:cloudProvider "AWS" ;
+    tech:deploymentPattern "containers" .

@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Backend",
+  "description": "Backend frameworks, databases, and ORMs",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "categories": {
+    "backend_frameworks": {
+      "description": "Server-side frameworks",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Next.js API Routes",
+          "version": "14.x+",
+          "rationale": "Integrated with frontend, serverless-ready, TypeScript support, simple deployment",
+          "useCases": [
+            "full-stack Next.js apps",
+            "simple APIs",
+            "serverless functions"
+          ],
+          "docsUrl": "https://nextjs.org/docs/app/building-your-application/routing/route-handlers",
+          "examplesUrl": "https://nextjs.org/docs/app/building-your-application/routing/route-handlers#examples"
+        },
+        {
+          "rank": 2,
+          "name": "Fastify",
+          "version": "4.x+",
+          "rationale": "Fast, low overhead, excellent TypeScript support, plugin ecosystem",
+          "useCases": [
+            "standalone Node.js APIs",
+            "microservices",
+            "high-performance APIs"
+          ],
+          "docsUrl": "https://fastify.dev/docs/latest/",
+          "examplesUrl": "https://github.com/fastify/fastify/tree/main/examples"
+        },
+        {
+          "rank": 3,
+          "name": "FastAPI",
+          "version": "0.110+",
+          "rationale": "Python, auto-generated OpenAPI docs, Pydantic validation, async support",
+          "useCases": [
+            "Python APIs",
+            "ML/AI endpoints",
+            "data processing APIs"
+          ],
+          "docsUrl": "https://fastapi.tiangolo.com/",
+          "examplesUrl": "https://fastapi.tiangolo.com/tutorial/"
+        }
+      ]
+    },
+    "databases": {
+      "description": "Database systems",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "SQLite",
+          "version": "3.x",
+          "rationale": "Zero-config, serverless, perfect for local prototyping, no external dependencies, excellent for rapid development and testing",
+          "useCases": [
+            "prototypes",
+            "local development",
+            "local-first apps",
+            "embedded databases",
+            "testing"
+          ],
+          "docsUrl": "https://www.sqlite.org/docs.html",
+          "examplesUrl": "https://www.sqlite.org/quickstart.html"
+        },
+        {
+          "rank": 2,
+          "name": "PostgreSQL",
+          "version": "15+",
+          "rationale": "Robust, JSONB support, excellent performance, rich ecosystem, ACID compliant. Run locally via Docker for simplified prototyping",
+          "useCases": [
+            "production apps",
+            "local development (Docker)",
+            "relational data",
+            "complex queries",
+            "analytics"
+          ],
+          "docsUrl": "https://www.postgresql.org/docs/current/",
+          "examplesUrl": "https://www.postgresql.org/docs/current/tutorial.html",
+          "localSetup": "docker run --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:15"
+        },
+        {
+          "rank": 3,
+          "name": "DynamoDB",
+          "version": "AWS",
+          "rationale": "Serverless, scalable, AWS-native, pay-per-use, single-digit ms latency",
+          "useCases": [
+            "AWS-native apps",
+            "high-scale serverless",
+            "key-value stores"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/",
+          "examplesUrl": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.html"
+        }
+      ]
+    },
+    "orm_query_builders": {
+      "description": "Database ORMs and query builders",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Drizzle ORM",
+          "version": "latest",
+          "rationale": "Type-safe, lightweight, SQL-like syntax, excellent TypeScript inference",
+          "useCases": [
+            "TypeScript projects",
+            "type-safe queries",
+            "PostgreSQL/SQLite"
+          ],
+          "docsUrl": "https://orm.drizzle.team/docs/overview",
+          "examplesUrl": "https://orm.drizzle.team/docs/quick-start"
+        },
+        {
+          "rank": 2,
+          "name": "Prisma",
+          "version": "5.x+",
+          "rationale": "Great DX, migrations, Prisma Studio, strong TypeScript support",
+          "useCases": [
+            "rapid development",
+            "schema-first design",
+            "admin tools"
+          ],
+          "docsUrl": "https://www.prisma.io/docs",
+          "examplesUrl": "https://github.com/prisma/prisma-examples"
+        },
+        {
+          "rank": 3,
+          "name": "SQLAlchemy",
+          "version": "2.x",
+          "rationale": "Python standard, mature, flexible, ORM + Core (query builder)",
+          "useCases": [
+            "Python projects",
+            "complex queries",
+            "legacy databases"
+          ]
+        }
+      ]
+    }
+  }
+}

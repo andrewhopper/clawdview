@@ -1,0 +1,277 @@
+# Verification Rules Data
+# Rule = Eval + metadata
+
+categories:
+  - id: a1b2c3d4-0001-4000-8000-000000000001
+    code: error_tracking
+    weight: 15
+  - id: a1b2c3d4-0002-4000-8000-000000000002
+    code: theme
+    weight: 20
+  - id: a1b2c3d4-0003-4000-8000-000000000003
+    code: structure
+    weight: 15
+  - id: a1b2c3d4-0004-4000-8000-000000000004
+    code: code_quality
+    weight: 20
+  - id: a1b2c3d4-0005-4000-8000-000000000005
+    code: testing
+    weight: 15
+  - id: a1b2c3d4-0006-4000-8000-000000000006
+    code: documentation
+    weight: 10
+  - id: a1b2c3d4-0007-4000-8000-000000000007
+    code: performance
+    weight: 5
+
+rules:
+
+  # ERROR TRACKING
+  - id: e1a2b3c4-0001-4000-8000-000000000001
+    code: ERR-001
+    name: React Error Boundary
+    category: error_tracking
+    severity: critical
+    appliesTo: [react, next]
+    eval:
+      type: ExistsEval
+      paths: ["**/ErrorBoundary.tsx", "**/error-boundary.tsx"]
+      kind: file
+    fix: Create src/components/ErrorBoundary.tsx
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: e1a2b3c4-0002-4000-8000-000000000002
+    code: ERR-002
+    name: Python Exception Handler
+    category: error_tracking
+    severity: critical
+    appliesTo: [python, fastapi]
+    eval:
+      type: PatternEval
+      pattern: "sys\\.excepthook|@app\\.exception_handler"
+      target: file_content
+    fix: Add sys.excepthook handler
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: e1a2b3c4-0003-4000-8000-000000000003
+    code: ERR-003
+    name: Node Uncaught Handler
+    category: error_tracking
+    severity: critical
+    appliesTo: [node]
+    eval:
+      type: PatternEval
+      pattern: "process\\.on\\(['\"]uncaughtException"
+      target: file_content
+    fix: Add process.on('uncaughtException')
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  # THEME
+  - id: t1a2b3c4-0001-4000-8000-000000000001
+    code: THM-001
+    name: No Raw Hex Colors
+    category: theme
+    severity: critical
+    appliesTo: [react, html, css]
+    eval:
+      type: PatternEval
+      pattern: "#[0-9a-fA-F]{6}"
+      target: file_content
+      invert: true
+    fix: Use hsl(var(--token))
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: t1a2b3c4-0002-4000-8000-000000000002
+    code: THM-002
+    name: CSS Variables Present
+    category: theme
+    severity: critical
+    appliesTo: [react, html]
+    eval:
+      type: PatternEval
+      pattern: "var\\(--"
+      target: file_content
+    fix: Import Night Sky theme
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  # STRUCTURE
+  - id: s1a2b3c4-0001-4000-8000-000000000001
+    code: STR-001
+    name: Project Metadata
+    category: structure
+    severity: critical
+    appliesTo: [all]
+    eval:
+      type: ExistsEval
+      paths: [".project"]
+      kind: file
+    fix: Create .project file
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: s1a2b3c4-0002-4000-8000-000000000002
+    code: STR-002
+    name: README Exists
+    category: structure
+    severity: critical
+    appliesTo: [all]
+    eval:
+      type: ExistsEval
+      paths: ["README.md"]
+      kind: file
+    fix: Create README.md
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: s1a2b3c4-0003-4000-8000-000000000003
+    code: STR-003
+    name: Makefile Exists
+    category: structure
+    severity: important
+    appliesTo: [all]
+    eval:
+      type: ExistsEval
+      paths: ["Makefile"]
+      kind: file
+    fix: Create Makefile
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  # CODE QUALITY
+  - id: q1a2b3c4-0001-4000-8000-000000000001
+    code: QUA-001
+    name: TypeScript Strict
+    category: code_quality
+    severity: critical
+    appliesTo: [typescript, react, next]
+    eval:
+      type: FieldEval
+      file: tsconfig.json
+      field: compilerOptions.strict
+      value: true
+    fix: Set strict true in tsconfig
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: q1a2b3c4-0004-4000-8000-000000000004
+    code: QUA-004
+    name: No Hardcoded Secrets
+    category: code_quality
+    severity: critical
+    appliesTo: [all]
+    eval:
+      type: PatternEval
+      pattern: "AKIA[0-9A-Z]{16}"
+      target: file_content
+      invert: true
+    fix: Use environment variables
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: q1a2b3c4-0005-4000-8000-000000000005
+    code: QUA-005
+    name: HTTPS Only
+    category: code_quality
+    severity: critical
+    appliesTo: [all]
+    eval:
+      type: PatternEval
+      pattern: "http://(?!localhost)"
+      target: file_content
+      invert: true
+    fix: Replace http with https
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: q1a2b3c4-0006-4000-8000-000000000006
+    code: QUA-006
+    name: WSS Only
+    category: code_quality
+    severity: critical
+    appliesTo: [all]
+    eval:
+      type: PatternEval
+      pattern: "ws://(?!localhost)"
+      target: file_content
+      invert: true
+    fix: Replace ws with wss
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  # TESTING
+  - id: x1a2b3c4-0001-4000-8000-000000000001
+    code: TST-001
+    name: Tests Directory
+    category: testing
+    severity: important
+    appliesTo: [all]
+    eval:
+      type: ExistsEval
+      paths: ["tests", "__tests__", "test"]
+      kind: dir
+    fix: Create tests directory
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: x1a2b3c4-0002-4000-8000-000000000002
+    code: TST-002
+    name: Test Files Exist
+    category: testing
+    severity: important
+    appliesTo: [all]
+    eval:
+      type: ExistsEval
+      paths: ["**/*.test.ts", "**/test_*.py"]
+      kind: file
+    fix: Create test files
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  # DOCUMENTATION
+  - id: d1a2b3c4-0001-4000-8000-000000000001
+    code: DOC-001
+    name: README Has Title
+    category: documentation
+    severity: important
+    appliesTo: [all]
+    eval:
+      type: ContainsEval
+      file: README.md
+      patterns: ["^# "]
+    fix: Add title to README
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  # DEPLOYMENT
+  - id: p1a2b3c4-0001-4000-8000-000000000001
+    code: DEP-001
+    name: Bootstrap Target
+    category: deployment
+    severity: important
+    appliesTo: [deployable]
+    eval:
+      type: ContainsEval
+      file: Makefile
+      patterns: ["infra-bootstrap:"]
+    fix: Add infra-bootstrap target
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"
+
+  - id: p1a2b3c4-0002-4000-8000-000000000002
+    code: DEP-002
+    name: Deploy Target
+    category: deployment
+    severity: important
+    appliesTo: [deployable]
+    eval:
+      type: ContainsEval
+      file: Makefile
+      patterns: ["infra-deploy:"]
+    fix: Add infra-deploy target
+    created_at: "2025-12-16"
+    updated_at: "2025-12-16"

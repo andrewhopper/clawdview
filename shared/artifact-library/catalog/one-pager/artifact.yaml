@@ -1,0 +1,256 @@
+# One Pager Artifact Definition
+# Category: brief
+# Complexity: moderate
+
+id: one-pager
+name: One Pager (PR/FAQ)
+version: "1.0.0"
+description: Amazon-style PR/FAQ document for new initiatives, features, or projects
+category: brief
+complexity: moderate
+created_at: "2025-11-22"
+updated_at: "2025-11-22"
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: press-release
+      name: Press Release
+      description: Future-dated announcement as if the project shipped
+      required: true
+      format: prose
+      subsections:
+        - id: headline
+          name: Headline
+          description: Attention-grabbing title
+          word_limit: 15
+        - id: subheadline
+          name: Sub-headline
+          description: One sentence expanding on headline
+          word_limit: 30
+        - id: dateline
+          name: Dateline
+          description: City, Date format
+          format: "CITY, STATE — Month Day, Year"
+        - id: opening
+          name: Opening Paragraph
+          description: Who, what, when, where, why
+          word_limit: 75
+        - id: problem
+          name: Problem Statement
+          description: The customer problem being solved
+          word_limit: 100
+        - id: solution
+          name: Solution Description
+          description: How the product/feature solves the problem
+          word_limit: 150
+        - id: quote-leader
+          name: Leadership Quote
+          description: Quote from a leader about why this matters
+          word_limit: 75
+        - id: how-it-works
+          name: How It Works
+          description: Brief explanation of the solution
+          word_limit: 100
+        - id: quote-customer
+          name: Customer Quote
+          description: Quote from a customer or user
+          word_limit: 75
+        - id: call-to-action
+          name: Call to Action
+          description: How to get started or learn more
+          word_limit: 50
+
+    - id: faq-external
+      name: External FAQ
+      description: Questions customers would ask
+      required: true
+      format: qa
+      item_count: 5-7
+
+    - id: faq-internal
+      name: Internal FAQ
+      description: Questions stakeholders would ask
+      required: true
+      format: qa
+      item_count: 5-7
+      topics:
+        - timeline
+        - resources
+        - risks
+        - dependencies
+        - metrics
+
+  required_inputs:
+    - name: project_name
+      type: string
+      description: Name of the project, feature, or initiative
+      required: true
+    - name: customer
+      type: string
+      description: Target customer segment
+      required: true
+    - name: problem
+      type: text
+      description: Customer problem being solved
+      required: true
+    - name: solution
+      type: text
+      description: Proposed solution approach
+      required: true
+    - name: success_metrics
+      type: text
+      description: How success will be measured
+      required: true
+    - name: timeline
+      type: string
+      description: Expected delivery timeline
+      default: "TBD"
+    - name: leader_name
+      type: string
+      description: Name for leadership quote attribution
+      default: "Project Lead"
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are an Amazon product manager expert in writing PR/FAQ documents.
+
+    Key principles:
+    - Work backwards from the customer
+    - Write the press release as if the product already launched
+    - Be specific about customer benefits, not features
+    - FAQs should address real concerns, not softballs
+    - Use crisp, clear language
+
+    PR/FAQ structure:
+    1. Press Release: The vision, written as a future announcement
+    2. External FAQ: Questions customers would ask
+    3. Internal FAQ: Questions leadership/stakeholders would ask
+
+  task: |
+    Generate a PR/FAQ one-pager for: {{PROJECT_NAME}}
+
+    Target Customer: {{CUSTOMER}}
+
+    Problem:
+    {{PROBLEM}}
+
+    Proposed Solution:
+    {{SOLUTION}}
+
+    Success Metrics:
+    {{SUCCESS_METRICS}}
+
+    Timeline: {{TIMELINE}}
+    Leader for quote: {{LEADER_NAME}}
+
+    Structure:
+    1. **Press Release** (future-dated)
+       - Headline + Sub-headline
+       - Opening paragraph (who/what/when/where/why)
+       - Problem statement
+       - Solution description
+       - Leadership quote
+       - How it works
+       - Customer quote (create a realistic persona)
+       - Call to action
+
+    2. **External FAQ** (5-7 questions customers would ask)
+
+    3. **Internal FAQ** (5-7 questions about timeline, resources, risks, dependencies, metrics)
+
+  tone: professional
+  reading_level: general
+  density: standard
+
+# -----------------------------------------
+# VALIDATORS: Quality Checks
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 800
+      max: 1500
+    severity: error
+    message: "One-pager should be 800-1500 words"
+
+  - id: has-press-release
+    name: Press Release Present
+    type: section_presence
+    rule:
+      required: [press-release]
+    severity: error
+    message: "Missing press release section"
+
+  - id: has-external-faq
+    name: External FAQ Present
+    type: section_presence
+    rule:
+      required: [faq-external]
+    severity: error
+    message: "Missing external FAQ section"
+
+  - id: has-internal-faq
+    name: Internal FAQ Present
+    type: section_presence
+    rule:
+      required: [faq-internal]
+    severity: error
+    message: "Missing internal FAQ section"
+
+  - id: faq-count
+    name: FAQ Count
+    type: regex
+    rule:
+      pattern: "\\*\\*Q\\d*:|^Q:"
+      min_matches: 10
+    severity: warning
+    message: "Should have at least 10 FAQ questions total"
+
+  - id: has-quotes
+    name: Contains Quotes
+    type: regex
+    rule:
+      pattern: '"[^"]{20,}"'
+      min_matches: 2
+    severity: warning
+    message: "Should include leadership and customer quotes"
+
+  - id: customer-focus
+    name: Customer Focus
+    type: regex
+    rule:
+      pattern: "\\b(customer|user|client)s?\\b"
+      min_matches: 5
+    severity: info
+    message: "Ensure customer-centric language throughout"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 800
+  max_words: 1500
+  reading_level: general
+  density: standard
+  output_formats:
+    - markdown
+    - docx
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - one-pager
+  - pr-faq
+  - amazon
+  - product
+  - initiative
+  - planning

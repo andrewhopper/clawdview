@@ -1,0 +1,692 @@
+# Membership Domain
+# Subscriptions, plans, access, tiers
+# Version: 1.0.0
+
+domain:
+  name: membership
+  version: "1.0.0"
+  status: production
+  description: Membership and subscription management - plans, access, billing
+  dependencies: [core, economic-agreement, economic-exchange]
+  use_case: SaaS, gyms, clubs, loyalty programs, paywalls
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Plan:
+    description: A membership/subscription plan definition
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      display_name:
+        type: string
+        description: User-facing name
+      description:
+        type: string
+      tagline:
+        type: string
+
+      # Classification
+      plan_type:
+        type: PlanType
+        required: true
+      tier:
+        type: TierLevel
+        required: true
+
+      # Pricing
+      pricing:
+        type: array
+        items: PlanPricing
+        required: true
+      has_free_tier:
+        type: boolean
+        default: false
+      trial_available:
+        type: boolean
+        default: false
+      trial_days:
+        type: integer
+        default: 0
+
+      # Features
+      features:
+        type: array
+        items: PlanFeature
+      limits:
+        type: array
+        items: UsageLimit
+
+      # Visibility
+      public:
+        type: boolean
+        default: true
+      featured:
+        type: boolean
+        default: false
+      sort_order:
+        type: integer
+
+      # Availability
+      available_from:
+        type: datetime
+      available_until:
+        type: datetime
+      max_subscribers:
+        type: integer
+        description: Limit on number of subscribers
+
+      # Status
+      status:
+        type: PlanStatus
+        required: true
+        default: active
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  PlanPricing:
+    description: Pricing option for a plan
+    properties:
+      id:
+        type: uuid
+        required: true
+      billing_period:
+        type: BillingPeriod
+        required: true
+      amount:
+        type: Money
+        required: true
+      currency:
+        type: string
+        required: true
+
+      # Discounts
+      original_amount:
+        type: Money
+        description: Original price before discount
+      discount_percentage:
+        type: decimal
+        description: For showing savings
+
+      # Per-unit pricing
+      is_per_unit:
+        type: boolean
+        default: false
+      unit_name:
+        type: string
+        description: "seat", "member", "user"
+      min_units:
+        type: integer
+        default: 1
+      max_units:
+        type: integer
+
+      # Setup
+      setup_fee:
+        type: Money
+
+      # External
+      stripe_price_id:
+        type: string
+      paypal_plan_id:
+        type: string
+
+  PlanFeature:
+    description: A feature included in a plan
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      feature_type:
+        type: FeatureType
+        required: true
+
+      # Value
+      enabled:
+        type: boolean
+        default: true
+      value:
+        type: string
+        description: Feature value for display
+      numeric_value:
+        type: decimal
+        description: For countable features
+
+      # Display
+      icon:
+        type: string
+      highlight:
+        type: boolean
+        default: false
+      sort_order:
+        type: integer
+
+  UsageLimit:
+    description: Usage limit within a plan
+    properties:
+      id:
+        type: uuid
+        required: true
+      resource:
+        type: string
+        required: true
+        description: What is being limited (api_calls, storage_gb, users)
+      limit_type:
+        type: LimitType
+        required: true
+      limit_value:
+        type: decimal
+        required: true
+      period:
+        type: BillingPeriod
+        description: For rate limits (per day, per month)
+      overage_allowed:
+        type: boolean
+        default: false
+      overage_rate:
+        type: Money
+        description: Cost per unit over limit
+      soft_limit:
+        type: decimal
+        description: Warning threshold
+
+  Subscription:
+    description: A user's subscription to a plan
+    properties:
+      id:
+        type: uuid
+        required: true
+      subscriber_id:
+        type: string
+        required: true
+        description: FK to user/organization
+      subscriber_type:
+        type: SubscriberType
+        required: true
+      plan_id:
+        type: uuid
+        required: true
+      pricing_id:
+        type: uuid
+        required: true
+        description: FK to PlanPricing
+
+      # Status
+      status:
+        type: SubscriptionStatus
+        required: true
+        default: active
+
+      # Dates
+      started_at:
+        type: datetime
+        required: true
+      trial_started_at:
+        type: datetime
+      trial_ends_at:
+        type: datetime
+      current_period_start:
+        type: datetime
+        required: true
+      current_period_end:
+        type: datetime
+        required: true
+      canceled_at:
+        type: datetime
+      ended_at:
+        type: datetime
+      pause_start:
+        type: datetime
+      pause_end:
+        type: datetime
+
+      # Quantity (for per-seat plans)
+      quantity:
+        type: integer
+        default: 1
+
+      # Billing
+      billing_anchor:
+        type: integer
+        description: Day of month for billing
+      auto_renew:
+        type: boolean
+        default: true
+      payment_method_id:
+        type: string
+        description: FK to payment method
+
+      # Cancellation
+      cancel_at_period_end:
+        type: boolean
+        default: false
+      cancellation_reason:
+        type: CancellationReason
+      cancellation_feedback:
+        type: string
+
+      # Discounts
+      coupon_id:
+        type: string
+      discount_ends_at:
+        type: datetime
+
+      # External
+      stripe_subscription_id:
+        type: string
+      paypal_subscription_id:
+        type: string
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  SubscriptionEvent:
+    description: Event in subscription lifecycle
+    properties:
+      id:
+        type: uuid
+        required: true
+      subscription_id:
+        type: uuid
+        required: true
+      event_type:
+        type: SubscriptionEventType
+        required: true
+      occurred_at:
+        type: datetime
+        required: true
+
+      # Details
+      from_status:
+        type: SubscriptionStatus
+      to_status:
+        type: SubscriptionStatus
+      from_plan_id:
+        type: uuid
+      to_plan_id:
+        type: uuid
+
+      # Metadata
+      reason:
+        type: string
+      initiated_by:
+        type: string
+        description: user, admin, system
+      metadata:
+        type: object
+
+  UsageRecord:
+    description: Record of usage against limits
+    properties:
+      id:
+        type: uuid
+        required: true
+      subscription_id:
+        type: uuid
+        required: true
+      resource:
+        type: string
+        required: true
+      period_start:
+        type: datetime
+        required: true
+      period_end:
+        type: datetime
+        required: true
+      quantity:
+        type: decimal
+        required: true
+      limit:
+        type: decimal
+      utilization:
+        type: decimal
+        description: quantity / limit
+      overage:
+        type: decimal
+        description: Amount over limit
+      overage_cost:
+        type: Money
+
+  Entitlement:
+    description: Access granted by subscription
+    properties:
+      id:
+        type: uuid
+        required: true
+      subscription_id:
+        type: uuid
+        required: true
+      feature_id:
+        type: uuid
+        description: FK to PlanFeature
+      resource:
+        type: string
+        required: true
+        description: What they have access to
+      access_level:
+        type: AccessLevel
+        required: true
+      granted_at:
+        type: datetime
+        required: true
+      expires_at:
+        type: datetime
+      revoked_at:
+        type: datetime
+
+  LoyaltyProgram:
+    description: Loyalty/rewards program
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+
+      # Points
+      points_name:
+        type: string
+        default: "points"
+      points_per_dollar:
+        type: decimal
+        default: 1.0
+      redemption_rate:
+        type: decimal
+        description: Value per point in dollars
+
+      # Tiers
+      tiers:
+        type: array
+        items: LoyaltyTier
+
+      # Rules
+      points_expiration:
+        type: Duration
+      earning_rules:
+        type: array
+        items: EarningRule
+      redemption_rules:
+        type: array
+        items: RedemptionRule
+
+      status:
+        type: PlanStatus
+        default: active
+
+  LoyaltyTier:
+    description: A tier in loyalty program
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      min_points:
+        type: integer
+        required: true
+      benefits:
+        type: array
+        items: string
+      multiplier:
+        type: decimal
+        default: 1.0
+        description: Points earning multiplier
+      color:
+        type: string
+      icon:
+        type: string
+
+  LoyaltyMember:
+    description: Member in loyalty program
+    properties:
+      id:
+        type: uuid
+        required: true
+      program_id:
+        type: uuid
+        required: true
+      user_id:
+        type: string
+        required: true
+      tier_id:
+        type: uuid
+      current_points:
+        type: integer
+        default: 0
+      lifetime_points:
+        type: integer
+        default: 0
+      joined_at:
+        type: datetime
+        required: true
+      tier_qualified_at:
+        type: datetime
+      tier_expires_at:
+        type: datetime
+
+  EarningRule:
+    description: Rule for earning points
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      trigger:
+        type: string
+        description: What action earns points
+      points:
+        type: integer
+      multiplier:
+        type: decimal
+      conditions:
+        type: object
+
+  RedemptionRule:
+    description: Rule for redeeming points
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      points_required:
+        type: integer
+        required: true
+      reward:
+        type: string
+        required: true
+      reward_value:
+        type: Money
+      max_per_period:
+        type: integer
+      conditions:
+        type: object
+
+enums:
+
+  PlanType:
+    values:
+      - subscription      # Recurring payment
+      - one_time          # One-time purchase
+      - freemium          # Free with paid upgrades
+      - usage_based       # Pay per use
+      - hybrid            # Base + usage
+
+  TierLevel:
+    values:
+      - free
+      - basic
+      - standard
+      - premium
+      - enterprise
+      - custom
+
+  BillingPeriod:
+    values:
+      - daily
+      - weekly
+      - monthly
+      - quarterly
+      - semi_annual
+      - annual
+      - lifetime
+
+  FeatureType:
+    values:
+      - boolean           # Enabled/disabled
+      - count             # Limited quantity
+      - unlimited         # Unlimited access
+      - custom            # Custom value
+
+  LimitType:
+    values:
+      - hard              # Cannot exceed
+      - soft              # Warning only
+      - throttle          # Reduced service
+      - overage           # Pay for overage
+
+  PlanStatus:
+    values:
+      - draft
+      - active
+      - grandfathered     # No new subscribers
+      - discontinued
+      - archived
+
+  SubscriberType:
+    values:
+      - individual
+      - organization
+      - team
+
+  SubscriptionStatus:
+    values:
+      - trialing
+      - active
+      - past_due
+      - paused
+      - canceled
+      - unpaid
+      - incomplete
+
+  CancellationReason:
+    values:
+      - too_expensive
+      - missing_features
+      - switching_competitor
+      - not_using
+      - technical_issues
+      - customer_service
+      - other
+
+  SubscriptionEventType:
+    values:
+      - created
+      - activated
+      - trial_started
+      - trial_ended
+      - renewed
+      - upgraded
+      - downgraded
+      - paused
+      - resumed
+      - canceled
+      - reactivated
+      - payment_failed
+      - payment_succeeded
+
+  AccessLevel:
+    values:
+      - none
+      - read
+      - write
+      - admin
+      - full
+
+examples:
+
+  saas_pro_plan:
+    name: "pro"
+    display_name: "Pro Plan"
+    description: "For growing teams"
+    plan_type: subscription
+    tier: premium
+    pricing:
+      - billing_period: monthly
+        amount: { amount: 49, currency: "USD" }
+      - billing_period: annual
+        amount: { amount: 490, currency: "USD" }
+        original_amount: { amount: 588, currency: "USD" }
+        discount_percentage: 17
+    features:
+      - name: "Unlimited projects"
+        feature_type: unlimited
+        enabled: true
+      - name: "Team members"
+        feature_type: count
+        numeric_value: 10
+      - name: "Priority support"
+        feature_type: boolean
+        enabled: true
+    limits:
+      - resource: "api_calls"
+        limit_type: hard
+        limit_value: 100000
+        period: monthly
+    trial_available: true
+    trial_days: 14
+    status: active
+
+  gym_membership:
+    name: "premium"
+    display_name: "Premium Membership"
+    plan_type: subscription
+    tier: premium
+    pricing:
+      - billing_period: monthly
+        amount: { amount: 79, currency: "USD" }
+      - billing_period: annual
+        amount: { amount: 799, currency: "USD" }
+    features:
+      - name: "24/7 Access"
+        feature_type: boolean
+        enabled: true
+      - name: "Group Classes"
+        feature_type: unlimited
+      - name: "Guest Passes"
+        feature_type: count
+        numeric_value: 4
+        description: "per month"
+    status: active
+
+sources:
+  - "Stripe Subscription Model"
+  - "SaaS Pricing Patterns"
+  - "Gym Membership Systems"
+  - "Loyalty Program Best Practices"

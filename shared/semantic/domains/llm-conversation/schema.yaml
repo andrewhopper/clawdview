@@ -1,0 +1,158 @@
+# LLM Conversation Domain Model
+# Session, turn, and thread structures for multi-turn interactions
+# Source: RAISE paper, LoCoMo benchmark, multi-turn dialogue surveys
+
+domain:
+  name: llm-conversation
+  version: "1.0.0"
+  description: Conversation structures - sessions, turns, threads for multi-turn LLM interactions
+  dependencies: [core, llm-participant, llm-message]
+  sources:
+    - "RAISE: arxiv.org/abs/2401.02777"
+    - "LoCoMo: arxiv.org/abs/2402.17753"
+    - "Survey on LLM Multi-turn Dialogue: arxiv.org/abs/2402.18013"
+    - "Anthropic context engineering guide"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  Session:
+    description: A conversation session between participants
+    properties:
+      id: { type: string, required: true }
+      title: { type: string }
+      status: { type: SessionStatus, required: true }
+      participants: { type: array, items: string, description: "Participant IDs" }
+      turnCount: { type: integer, default: 0 }
+      totalTokens: { type: integer, default: 0 }
+      startedAt: { type: datetime, required: true }
+      endedAt: { type: datetime }
+      lastActivityAt: { type: datetime }
+      metadata: { type: SessionMetadata }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Turn:
+    description: A single exchange in a conversation (user query + assistant response)
+    properties:
+      id: { type: string, required: true }
+      sessionId: { type: string, required: true }
+      sequence: { type: integer, required: true, description: "Turn number in session" }
+      userMessageId: { type: string, required: true }
+      assistantMessageId: { type: string }
+      status: { type: TurnStatus, required: true }
+      startedAt: { type: datetime, required: true }
+      completedAt: { type: datetime }
+      latencyMs: { type: integer }
+      toolCallCount: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Thread:
+    description: A branch or sub-conversation within a session
+    properties:
+      id: { type: string, required: true }
+      sessionId: { type: string, required: true }
+      parentThreadId: { type: string, description: "For nested threads" }
+      name: { type: string }
+      branchPoint: { type: integer, description: "Turn number where branch occurred" }
+      turnIds: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ConversationHistory:
+    description: Accumulated history for context (RAISE History_t structure)
+    properties:
+      sessionId: { type: string, required: true }
+      turns: { type: array, items: HistoryTurn }
+      totalTokens: { type: integer }
+      compactedAt: { type: datetime }
+      compactionLevel: { type: integer, default: 0 }
+
+  HistoryTurn:
+    description: A turn in conversation history (Q_t, A_t from RAISE)
+    properties:
+      sequence: { type: integer, required: true }
+      query: { type: string, required: true }
+      response: { type: string, required: true }
+      timestamp: { type: datetime }
+      tokenCount: { type: integer }
+
+  Scene:
+    description: RAISE Scene structure - complete context for a turn
+    properties:
+      id: { type: string, required: true }
+      turnId: { type: string, required: true }
+      history: { type: ConversationHistory }
+      query: { type: string, required: true }
+      chainOfThought: { type: ChainOfThought }
+      response: { type: string }
+
+  ChainOfThought:
+    description: RAISE CoT structure - reasoning trace
+    properties:
+      thought: { type: string, description: "Reasoning about the query" }
+      action: { type: string, description: "Decided action/tool" }
+      observation: { type: string, description: "Result of action" }
+      iterations: { type: array, items: CoTIteration }
+
+  CoTIteration:
+    description: A single iteration in chain of thought
+    properties:
+      step: { type: integer, required: true }
+      thought: { type: string }
+      action: { type: string }
+      actionInput: { type: object }
+      observation: { type: string }
+      isTerminal: { type: boolean, default: false }
+
+  SessionMetadata:
+    description: Additional session metadata
+    properties:
+      source: { type: string, description: "API, web, CLI, etc." }
+      clientVersion: { type: string }
+      userAgent: { type: string }
+      ipAddress: { type: string }
+      tags: { type: array, items: string }
+      customFields: { type: object }
+
+  ConversationSummary:
+    description: Summary of a conversation for display or retrieval
+    properties:
+      sessionId: { type: string, required: true }
+      title: { type: string }
+      summary: { type: string }
+      keyTopics: { type: array, items: string }
+      sentiment: { type: Sentiment }
+      generatedAt: { type: datetime }
+
+enums:
+
+  SessionStatus:
+    description: Current state of a session
+    values:
+      - Active        # In progress
+      - Paused        # Temporarily paused
+      - Completed     # Finished normally
+      - Abandoned     # User left without completion
+      - Expired       # Timed out
+      - Error         # Ended due to error
+
+  TurnStatus:
+    description: Current state of a turn
+    values:
+      - Pending       # Awaiting processing
+      - Processing    # Being processed
+      - AwaitingTool  # Waiting for tool result
+      - Completed     # Successfully completed
+      - Failed        # Error occurred
+      - Cancelled     # User cancelled
+
+  Sentiment:
+    description: Detected conversation sentiment
+    values:
+      - Positive
+      - Neutral
+      - Negative
+      - Mixed

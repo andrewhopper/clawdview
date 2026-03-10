@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Microsite Title</title>
+  <meta name="description" content="Microsite description for SEO.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --primary-foreground: 0 0% 98%;
+      --secondary: 240 4.8% 95.9%;
+      --secondary-foreground: 240 5.9% 10%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --accent: 240 4.8% 95.9%;
+      --accent-foreground: 240 5.9% 10%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 5.9% 90%;
+      --input: 240 5.9% 90%;
+      --ring: 240 5.9% 10%;
+      --radius: 0.5rem;
+    }
+    .dark {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      --secondary: 240 3.7% 15.9%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+    }
+    * { border-color: hsl(var(--border)); }
+    body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      border-radius: calc(var(--radius) - 2px); font-size: 0.875rem; font-weight: 500;
+      padding: 0.5rem 1rem; height: 2.5rem; transition: all 0.2s;
+    }
+    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-outline { border: 1px solid hsl(var(--input)); background: transparent; }
+    .btn-outline:hover { background: hsl(var(--accent)); }
+    .btn-lg { height: 3rem; padding: 0 2rem; font-size: 1rem; }
+    .card { border-radius: var(--radius); border: 1px solid hsl(var(--border)); background: hsl(var(--card)); }
+  </style>
+</head>
+<body class="min-h-screen bg-background font-sans antialiased">
+
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+    <div class="container mx-auto flex h-16 items-center justify-between px-4">
+      <a href="#" class="text-xl font-bold">Brand</a>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#features" class="text-sm text-muted-foreground hover:text-foreground">Features</a>
+        <a href="#pricing" class="text-sm text-muted-foreground hover:text-foreground">Pricing</a>
+        <a href="#about" class="text-sm text-muted-foreground hover:text-foreground">About</a>
+        <button class="btn btn-primary">Get Started</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="container mx-auto px-4 py-24 text-center">
+    <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+      Your Main <span class="text-primary">Headline</span>
+    </h1>
+    <p class="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+      A compelling description of your product or service. Make it clear and concise.
+    </p>
+    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <button class="btn btn-primary btn-lg">Get Started Free</button>
+      <button class="btn btn-outline btn-lg">Learn More</button>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="container mx-auto px-4 py-24">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold">Features</h2>
+      <p class="mt-4 text-muted-foreground">Everything you need to succeed.</p>
+    </div>
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div class="card p-6">
+        <div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold">Feature One</h3>
+        <p class="mt-2 text-muted-foreground">Description of this amazing feature and how it helps users.</p>
+      </div>
+      <div class="card p-6">
+        <div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold">Feature Two</h3>
+        <p class="mt-2 text-muted-foreground">Description of another great feature that users will love.</p>
+      </div>
+      <div class="card p-6">
+        <div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold">Feature Three</h3>
+        <p class="mt-2 text-muted-foreground">Yet another compelling feature with clear benefits.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="border-t border-b bg-muted/50 py-24">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl font-bold">Ready to get started?</h2>
+      <p class="mt-4 text-muted-foreground">Join thousands of satisfied users today.</p>
+      <button class="btn btn-primary btn-lg mt-8">Start Your Free Trial</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t py-12">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-sm text-muted-foreground">&copy; 2024 Brand. All rights reserved.</p>
+        <nav class="flex gap-6">
+          <a href="#" class="text-sm text-muted-foreground hover:text-foreground">Privacy</a>
+          <a href="#" class="text-sm text-muted-foreground hover:text-foreground">Terms</a>
+          <a href="#" class="text-sm text-muted-foreground hover:text-foreground">Contact</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,171 @@
+# Empathy Map Artifact Type
+# Source: XPLANE, Dave Gray (2017) "Gamestorming"
+# Version: 1.0.0
+
+# Composes from shared/semantic/domains/user-research
+domain_types:
+  imports:
+    - user-research/Actor
+    - user-research/EmpathyMap
+    - user-research/EmpathyQuadrant
+    - user-research/Behavior
+    - user-research/Emotion
+    - user-research/Pain
+    - user-research/Gain
+
+id: empathy-map
+name: Empathy Map
+description: |
+  Four-quadrant visualization of user experience. Captures what users
+  Say, Think, Do, and Feel. Used to build empathy and identify gaps
+  between stated needs and actual behaviors.
+category: assessment
+complexity: simple
+version: "1.0.0"
+created_at: "2025-11-28"
+updated_at: "2025-11-28"
+
+tags:
+  - user-research
+  - ux
+  - empathy
+  - customer-insight
+
+schema:
+  sections:
+    - id: persona_reference
+      name: Persona Reference
+      order: 1
+      required: true
+      description: Which persona this map is for
+      format: prose
+
+    - id: says
+      name: Says
+      order: 2
+      required: true
+      description: Quotes and statements they make out loud
+      format: bullets
+
+    - id: thinks
+      name: Thinks
+      order: 3
+      required: true
+      description: Internal thoughts they may not vocalize
+      format: bullets
+
+    - id: does
+      name: Does
+      order: 4
+      required: true
+      description: Observable actions and behaviors
+      format: bullets
+
+    - id: feels
+      name: Feels
+      order: 5
+      required: true
+      description: Emotions and feelings
+      format: bullets
+
+    - id: pains
+      name: Pains
+      order: 6
+      required: true
+      description: Fears, frustrations, obstacles
+      format: bullets
+
+    - id: gains
+      name: Gains
+      order: 7
+      required: true
+      description: Wants, needs, measures of success
+      format: bullets
+
+  required_fields:
+    - name: persona_name
+      type: string
+      description: Name of the persona this map describes
+      required: true
+    - name: context
+      type: string
+      description: Specific scenario or touchpoint being mapped
+      required: true
+
+prompt:
+  system_prompt: |
+    You are a UX researcher creating empathy maps to understand user perspectives.
+    Focus on the gap between what users say vs. what they actually think/feel/do.
+
+  task_prompt: |
+    Create an empathy map for {{PERSONA_NAME}} in the context of {{CONTEXT}}.
+
+    For each quadrant, provide 4-6 specific, realistic items:
+
+    **SAYS** - Direct quotes, statements they'd make
+    **THINKS** - Internal thoughts (may differ from what they say)
+    **DOES** - Observable behaviors and actions
+    **FEELS** - Emotions (often hidden)
+
+    Then synthesize:
+    **PAINS** - Fears, frustrations, obstacles
+    **GAINS** - Wants, needs, success measures
+
+  audience: UX designers and product teams
+  tone: empathetic
+
+constraints:
+  max_words: 400
+  density: standard
+
+output_formats:
+  - markdown
+  - yaml
+  - html
+
+examples:
+  - id: hobby-farmer-website
+    name: Frank Visiting Breeder Website
+    description: Empathy map for hobby farmer browsing a pig breeder's website
+    input:
+      persona_name: Hobby Farmer Frank
+      context: First visit to Goodhue Hawkins Boars website looking for breeding stock
+    output: |
+      # Empathy Map: Hobby Farmer Frank
+      **Context:** First visit to Goodhue Hawkins Boars website
+
+      ```
+      ┌─────────────────────────────────────────────────────────────┐
+      │                         THINKS                              │
+      │  • "Are these people legit or fly-by-night?"                │
+      │  • "Can I afford this? They never show prices"              │
+      │  • "Will these animals be healthy when they arrive?"        │
+      │  • "I don't want to look stupid asking basic questions"     │
+      └─────────────────────────────────────────────────────────────┘
+      ┌──────────────────────────┬──────────────────────────────────┐
+      │          SAYS            │             DOES                 │
+      │ • "Show me your prices"  │ • Scrolls looking for price list │
+      │ • "Where are you located"│ • Checks Google Maps distance    │
+      │ • "Do you have reviews?" │ • Searches Facebook for reviews  │
+      │ • "I'm just looking"     │ • Bookmarks page, doesn't call   │
+      └──────────────────────────┴──────────────────────────────────┘
+      ┌─────────────────────────────────────────────────────────────┐
+      │                          FEELS                              │
+      │  • Overwhelmed by options and breed information             │
+      │  • Anxious about making an expensive mistake                │
+      │  • Skeptical—been burned by online purchases before         │
+      │  • Hopeful about finding a good local source                │
+      └─────────────────────────────────────────────────────────────┘
+
+      ## Pains
+      - Lack of transparent pricing wastes time
+      - Can't verify breeder reputation easily
+      - Worried about animal health and transport stress
+      - Feels like an outsider to the "breeder community"
+
+      ## Gains
+      - Wants confidence in breeder expertise
+      - Needs clear pricing to budget properly
+      - Wants to see healthy animals before committing
+      - Values relationship with breeder for ongoing support
+      ```

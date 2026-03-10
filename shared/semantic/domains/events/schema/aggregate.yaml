@@ -1,0 +1,71 @@
+# Aggregate Root Schema
+# Entities that emit domain events
+
+entities:
+
+  AggregateRoot:
+    description: |
+      Base for domain aggregates that emit events.
+      Aggregates collect events during operations which are
+      published after successful persistence.
+    extends: Entity
+    properties:
+      aggregateId:
+        type: string
+        required: true
+        description: Unique identifier for this aggregate
+      version:
+        type: integer
+        default: 0
+        description: Optimistic concurrency version
+      pendingEvents:
+        type: list
+        itemType: DomainEvent
+        description: Events waiting to be published
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  EventSourcedAggregate:
+    description: |
+      Aggregate reconstructed from event history (Event Sourcing).
+      Maintains full history and can be rebuilt by replaying events.
+    extends: AggregateRoot
+    properties:
+      eventHistory:
+        type: list
+        itemType: DomainEvent
+        description: Complete event history for this aggregate
+      snapshotVersion:
+        type: integer
+        description: Version of last snapshot
+      snapshotData:
+        type: any
+        description: Serialized snapshot state
+
+  EventStore:
+    description: Persistent storage for event streams
+    extends: Entity
+    properties:
+      storeName:
+        type: string
+        required: true
+        description: Name of this event store
+      streams:
+        type: map
+        keyType: string
+        valueType: list
+        description: Map of aggregate ID to event list
+      globalSequence:
+        type: integer
+        default: 0
+        description: Global event sequence number
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true

@@ -1,0 +1,474 @@
+# Reaction Domain
+# Votes, ratings, reactions, awards
+# Version: 1.0.0
+
+domain:
+  name: reaction
+  version: "1.0.0"
+  status: production
+  description: User reactions - votes, ratings, emoji reactions, awards
+  dependencies: [core]
+  use_case: Social platforms, reviews, forums, e-commerce ratings
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Reaction:
+    description: A reaction to content (emoji, like, etc.)
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # What is being reacted to
+      subject_type:
+        type: string
+        required: true
+        description: Type of thing (post, comment, content, product)
+      subject_id:
+        type: uuid
+        required: true
+
+      # Reaction details
+      reaction_type:
+        type: ReactionType
+        required: true
+      emoji:
+        type: string
+        description: Emoji code if custom emoji reaction
+      custom_reaction_id:
+        type: string
+        description: FK to custom reaction definition
+
+      # Who reacted
+      user_id:
+        type: string
+        required: true
+      reacted_at:
+        type: datetime
+        required: true
+
+      # For reactions with value (super like, etc.)
+      weight:
+        type: integer
+        default: 1
+        description: Reaction weight (for weighted counting)
+
+  Vote:
+    description: Up/down vote on content
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # What is being voted on
+      subject_type:
+        type: string
+        required: true
+      subject_id:
+        type: uuid
+        required: true
+
+      # Vote details
+      direction:
+        type: VoteDirection
+        required: true
+      weight:
+        type: integer
+        default: 1
+        description: Vote weight (for weighted voting systems)
+
+      # Who voted
+      user_id:
+        type: string
+        required: true
+      voted_at:
+        type: datetime
+        required: true
+
+      # Vote history (if votes can be changed)
+      previous_direction:
+        type: VoteDirection
+        description: Previous vote direction if changed
+
+  Rating:
+    description: Numeric rating (stars, score, etc.)
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # What is being rated
+      subject_type:
+        type: string
+        required: true
+      subject_id:
+        type: uuid
+        required: true
+
+      # Rating details
+      rating_type:
+        type: RatingType
+        required: true
+      value:
+        type: decimal
+        required: true
+        description: Rating value
+      max_value:
+        type: decimal
+        required: true
+        description: Maximum possible rating
+      normalized_value:
+        type: decimal
+        description: Value normalized to 0-1 scale
+
+      # Multi-dimension ratings
+      dimensions:
+        type: array
+        items: RatingDimension
+        description: For multi-criteria ratings
+
+      # Who rated
+      user_id:
+        type: string
+        required: true
+      rated_at:
+        type: datetime
+        required: true
+
+      # Optional review
+      review_text:
+        type: string
+      review_title:
+        type: string
+
+      # Verification
+      verified:
+        type: boolean
+        default: false
+        description: Verified purchaser, etc.
+      verification_type:
+        type: string
+        description: How verified (purchase, attendance, etc.)
+
+      # Helpfulness
+      helpful_count:
+        type: integer
+        default: 0
+      not_helpful_count:
+        type: integer
+        default: 0
+
+      # Status
+      status:
+        type: RatingStatus
+        default: visible
+
+  RatingDimension:
+    description: A single dimension in multi-criteria rating
+    properties:
+      dimension:
+        type: string
+        required: true
+        description: What is being rated (quality, value, service)
+      value:
+        type: decimal
+        required: true
+      max_value:
+        type: decimal
+        required: true
+      weight:
+        type: decimal
+        default: 1.0
+        description: Weight in overall calculation
+
+  Award:
+    description: Special recognition award (gold, silver, helpful, etc.)
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # What is being awarded
+      subject_type:
+        type: string
+        required: true
+      subject_id:
+        type: uuid
+        required: true
+
+      # Award details
+      award_type_id:
+        type: string
+        required: true
+        description: FK to AwardType
+      message:
+        type: string
+        description: Optional message with award
+
+      # Who gave
+      giver_id:
+        type: string
+        required: true
+      giver_type:
+        type: GiverType
+        required: true
+        default: user
+      given_at:
+        type: datetime
+        required: true
+
+      # Cost (if awards cost points/credits)
+      cost:
+        type: integer
+        description: Cost in platform currency
+
+      # Visibility
+      anonymous:
+        type: boolean
+        default: false
+
+  AwardType:
+    description: Definition of an award type
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      icon:
+        type: string
+        description: Icon/emoji for award
+      image_url:
+        type: string
+        description: Award image
+
+      # Value
+      cost:
+        type: integer
+        description: Cost to give this award
+      value_to_recipient:
+        type: integer
+        description: Value recipient receives (karma, coins, etc.)
+
+      # Availability
+      category:
+        type: AwardCategory
+        required: true
+      is_premium:
+        type: boolean
+        default: false
+      limited:
+        type: boolean
+        default: false
+      available_count:
+        type: integer
+        description: How many available (for limited awards)
+
+      # Restrictions
+      min_user_level:
+        type: integer
+        description: Minimum user level to give
+      subject_types:
+        type: array
+        items: string
+        description: What types of content can receive this
+
+      status:
+        type: AwardTypeStatus
+        default: active
+
+  ReactionSummary:
+    description: Aggregated reaction counts for a subject
+    properties:
+      subject_type:
+        type: string
+        required: true
+      subject_id:
+        type: uuid
+        required: true
+
+      # Vote totals
+      upvotes:
+        type: integer
+        default: 0
+      downvotes:
+        type: integer
+        default: 0
+      vote_score:
+        type: integer
+        default: 0
+        description: upvotes - downvotes (or weighted)
+
+      # Reaction counts by type
+      reaction_counts:
+        type: object
+        description: "{like: 10, love: 5, laugh: 2}"
+      total_reactions:
+        type: integer
+        default: 0
+
+      # Rating summary
+      rating_count:
+        type: integer
+        default: 0
+      rating_sum:
+        type: decimal
+        default: 0
+      average_rating:
+        type: decimal
+      rating_distribution:
+        type: object
+        description: "{1: 5, 2: 3, 3: 10, 4: 25, 5: 50}"
+
+      # Award totals
+      award_count:
+        type: integer
+        default: 0
+      total_award_value:
+        type: integer
+        default: 0
+
+      # Last updated
+      updated_at:
+        type: datetime
+
+enums:
+
+  ReactionType:
+    values:
+      # Basic
+      - like
+      - love
+      - care
+      - haha
+      - wow
+      - sad
+      - angry
+
+      # Approval
+      - thumbs_up
+      - thumbs_down
+      - clap
+      - celebrate
+
+      # Informational
+      - helpful
+      - not_helpful
+      - informative
+      - insightful
+
+      # Emoji
+      - emoji
+      - custom
+
+      # Special
+      - bookmark
+      - save
+      - share
+
+  VoteDirection:
+    values:
+      - up
+      - down
+      - neutral            # Removed vote
+
+  RatingType:
+    values:
+      - stars              # 1-5 stars
+      - stars_10           # 1-10 stars
+      - percentage         # 0-100%
+      - thumbs             # Up/down only
+      - nps                # Net Promoter Score (0-10)
+      - likert             # Likert scale
+      - custom             # Custom scale
+
+  RatingStatus:
+    values:
+      - visible
+      - hidden
+      - pending_review
+      - flagged
+      - removed
+
+  GiverType:
+    values:
+      - user
+      - admin
+      - system
+      - sponsor
+
+  AwardCategory:
+    values:
+      - recognition        # Thanks, helpful, etc.
+      - achievement        # Best answer, top post
+      - premium            # Paid awards (gold, platinum)
+      - event              # Limited time event awards
+      - badge              # Achievement badges
+
+  AwardTypeStatus:
+    values:
+      - active
+      - inactive
+      - retired            # No longer given but displays
+      - limited_time       # Only available for period
+
+examples:
+
+  like_reaction:
+    subject_type: "post"
+    subject_id: "post_123"
+    reaction_type: like
+    user_id: "user_456"
+    reacted_at: "2025-01-15T10:00:00Z"
+
+  upvote:
+    subject_type: "comment"
+    subject_id: "comment_789"
+    direction: up
+    user_id: "user_456"
+    voted_at: "2025-01-15T10:05:00Z"
+
+  product_rating:
+    subject_type: "product"
+    subject_id: "product_abc"
+    rating_type: stars
+    value: 4
+    max_value: 5
+    dimensions:
+      - dimension: "quality"
+        value: 5
+        max_value: 5
+      - dimension: "value"
+        value: 4
+        max_value: 5
+      - dimension: "shipping"
+        value: 3
+        max_value: 5
+    user_id: "customer_xyz"
+    rated_at: "2025-01-15T10:10:00Z"
+    review_title: "Great product, slow shipping"
+    review_text: "The product itself is excellent..."
+    verified: true
+    verification_type: "verified_purchase"
+
+  gold_award:
+    subject_type: "post"
+    subject_id: "post_amazing"
+    award_type_id: "gold"
+    message: "This post deserves recognition!"
+    giver_id: "generous_user"
+    giver_type: user
+    given_at: "2025-01-15T12:00:00Z"
+    cost: 500
+    anonymous: false
+
+sources:
+  - "Reddit Voting & Awards System"
+  - "Facebook Reactions"
+  - "Amazon Product Reviews"
+  - "Stack Overflow Voting"

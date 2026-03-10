@@ -1,0 +1,201 @@
+# Naming Conventions Document
+# Category: standards
+# Complexity: simple
+
+id: naming-conventions
+name: Naming Conventions
+version: "1.0.0"
+description: Consistent naming rules for code, files, and resources
+category: standards
+complexity: simple
+created_at: "2025-12-10"
+updated_at: "2025-12-10"
+
+# -----------------------------------------
+# SDLC GATE ASSOCIATION
+# -----------------------------------------
+sdlc_gate:
+  phase: 8  # Implementation phase
+  gate_name: Code Standards Gate
+  purpose: Establish naming consistency before implementation
+  approval_required: false
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: overview
+      name: Overview
+      description: Purpose and scope of these naming conventions
+      required: true
+      format: prose
+      word_limit: 100
+
+    - id: general-principles
+      name: General Principles
+      description: Overarching naming philosophy
+      required: true
+      format: bullets
+
+    - id: files-directories
+      name: Files & Directories
+      description: File and folder naming rules
+      required: true
+      format: table
+      columns:
+        - Type
+        - Convention
+        - Example
+
+    - id: code-naming
+      name: Code Naming
+      description: Variables, functions, classes, etc.
+      required: true
+      format: table
+      columns:
+        - Element
+        - Convention
+        - Example
+
+    - id: database-naming
+      name: Database Naming
+      description: Tables, columns, indexes, etc.
+      required: false
+      format: table
+      columns:
+        - Element
+        - Convention
+        - Example
+
+    - id: api-naming
+      name: API Naming
+      description: Endpoints, parameters, headers
+      required: false
+      format: table
+      columns:
+        - Element
+        - Convention
+        - Example
+
+    - id: git-naming
+      name: Git Naming
+      description: Branches, commits, tags
+      required: false
+      format: table
+      columns:
+        - Element
+        - Convention
+        - Example
+
+    - id: anti-patterns
+      name: Anti-Patterns
+      description: What to avoid
+      required: true
+      format: bullets
+
+    - id: exceptions
+      name: Exceptions
+      description: When rules can be broken
+      required: false
+      format: bullets
+
+  required_inputs:
+    - name: project_name
+      type: string
+      description: Name of the project
+      required: true
+    - name: tech_stack
+      type: array
+      description: Technologies used (e.g., Python, React, PostgreSQL)
+      required: true
+    - name: existing_conventions
+      type: text
+      description: Any existing naming patterns to follow
+      required: false
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a senior developer establishing naming conventions for a project.
+
+    Your approach:
+    - Follow language/framework idioms
+    - Prioritize readability over brevity
+    - Be consistent above all else
+    - Provide clear examples
+
+    Writing style:
+    - Concise rules with examples
+    - Use tables for easy reference
+    - Include anti-patterns
+    - Practical, not dogmatic
+
+  task: |
+    Generate a Naming Conventions document for {{PROJECT_NAME}}.
+
+    Tech stack: {{TECH_STACK}}
+
+    Existing conventions to follow:
+    {{EXISTING_CONVENTIONS}}
+
+    Structure the document with:
+    1. **Overview** - Purpose of this document
+    2. **General Principles** - Philosophy (3-5 bullets)
+    3. **Files & Directories** - File naming (table)
+    4. **Code Naming** - Variables, functions, classes (table)
+    5. **Database Naming** - Tables, columns (if applicable)
+    6. **API Naming** - Endpoints, params (if applicable)
+    7. **Git Naming** - Branches, commits (if applicable)
+    8. **Anti-Patterns** - What to avoid
+    9. **Exceptions** - When rules can be broken
+
+    Total length: 400-1200 words.
+
+  tone: professional
+  reading_level: technical
+  density: dense
+
+# -----------------------------------------
+# VALIDATORS
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 400
+      max: 1200
+    severity: error
+    message: "Naming conventions must be 400-1200 words"
+
+  - id: has-examples
+    name: Has Examples
+    type: regex
+    rule:
+      pattern: "(e\\.g\\.|Example:|`[a-zA-Z_]+`)"
+      should_match: true
+    severity: warning
+    message: "Include examples for each convention"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 400
+  max_words: 1200
+  reading_level: technical
+  density: dense
+  output_formats:
+    - markdown
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - naming
+  - conventions
+  - standards
+  - code-style

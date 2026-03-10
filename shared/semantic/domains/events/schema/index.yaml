@@ -1,0 +1,17 @@
+# Events Domain - Index
+# Abstract pub/sub event architecture for domain-driven design
+
+domain: events
+version: "1.0.0"
+status: production
+description: Abstract domain events and pub/sub architecture for triggering actions based on conditions
+
+imports:
+  - ../core/schema/base.yaml
+
+schemas:
+  - event.yaml
+  - publisher.yaml
+  - handler.yaml
+  - subscription.yaml
+  - aggregate.yaml

@@ -1,0 +1,311 @@
+# Customer Profile (Value Proposition Canvas) Artifact Type
+# Source: Osterwalder et al. (2014) "Value Proposition Design", Strategyzer
+# Version: 1.0.0
+
+# Composes from shared/semantic/domains/user-research
+domain_types:
+  imports:
+    - user-research/Actor
+    - user-research/Motivation
+    - user-research/Pain
+    - user-research/Gain
+    - user-research/HiringCriteria
+    - user-research/FiringCriteria
+
+id: customer-profile-vpc
+name: Customer Profile (Value Proposition Canvas)
+description: |
+  The customer side of the Value Proposition Canvas from Strategyzer.
+  Captures Customer Jobs (functional, social, emotional), Pains, and Gains.
+  Pairs with Value Map to achieve product-market fit.
+category: assessment
+complexity: moderate
+version: "1.0.0"
+created_at: "2025-11-28"
+updated_at: "2025-11-28"
+
+tags:
+  - user-research
+  - strategyzer
+  - value-proposition-canvas
+  - vpc
+  - customer-profile
+  - jobs-pains-gains
+
+schema:
+  sections:
+    - id: customer_segment
+      name: Customer Segment
+      order: 1
+      required: true
+      description: Which customer segment this profile represents
+      format: prose
+
+    - id: customer_jobs
+      name: Customer Jobs
+      order: 2
+      required: true
+      description: |
+        Tasks customers are trying to complete, problems they're trying to solve,
+        or needs they're trying to satisfy. Three types: functional, social, emotional.
+      subsections:
+        - id: functional_jobs
+          name: Functional Jobs
+          order: 1
+          description: Practical tasks to accomplish
+        - id: social_jobs
+          name: Social Jobs
+          order: 2
+          description: How they want to be perceived by others
+        - id: emotional_jobs
+          name: Emotional Jobs
+          order: 3
+          description: Emotional states they seek
+        - id: supporting_jobs
+          name: Supporting Jobs
+          order: 4
+          description: Jobs in context of purchasing/consuming
+      format: bullets
+
+    - id: pains
+      name: Pains
+      order: 3
+      required: true
+      description: |
+        Negative outcomes, risks, and obstacles related to customer jobs.
+        What annoys customers before, during, and after getting the job done.
+      subsections:
+        - id: undesired_outcomes
+          name: Undesired Outcomes
+          order: 1
+          description: Problems and undesired characteristics
+        - id: obstacles
+          name: Obstacles
+          order: 2
+          description: What prevents or slows them down
+        - id: risks
+          name: Risks
+          order: 3
+          description: Potential negative outcomes they fear
+      format: bullets
+
+    - id: gains
+      name: Gains
+      order: 4
+      required: true
+      description: |
+        Outcomes and benefits customers want. Required, expected, desired, unexpected.
+      subsections:
+        - id: required_gains
+          name: Required Gains
+          order: 1
+          description: Minimum expectations, solution doesn't work without these
+        - id: expected_gains
+          name: Expected Gains
+          order: 2
+          description: Basic expectations, even from inferior solutions
+        - id: desired_gains
+          name: Desired Gains
+          order: 3
+          description: Beyond expectations, would love to have
+        - id: unexpected_gains
+          name: Unexpected Gains
+          order: 4
+          description: Beyond imagination, delighters
+      format: bullets
+
+    - id: job_ranking
+      name: Job Importance Ranking
+      order: 5
+      required: false
+      description: Jobs ranked by importance to customer
+      format: numbered
+
+    - id: pain_severity
+      name: Pain Severity Ranking
+      order: 6
+      required: false
+      description: Pains ranked by severity (extreme to moderate)
+      format: numbered
+
+    - id: gain_relevance
+      name: Gain Relevance Ranking
+      order: 7
+      required: false
+      description: Gains ranked by relevance (essential to nice-to-have)
+      format: numbered
+
+  required_fields:
+    - name: segment_name
+      type: string
+      required: true
+      description: Name of the customer segment
+    - name: business_context
+      type: string
+      required: true
+      description: The business/product context
+
+prompt:
+  system_prompt: |
+    You are a business strategist using the Strategyzer Value Proposition Canvas framework.
+    Create detailed customer profiles following Osterwalder's methodology.
+    Focus on the customer's perspective, not the product.
+
+  task_prompt: |
+    Create a Value Proposition Canvas Customer Profile for the {{SEGMENT_NAME}} segment
+    in the context of {{BUSINESS_CONTEXT}}.
+
+    **CUSTOMER JOBS** (what they're trying to get done)
+    - Functional jobs: Practical tasks and problems to solve (5-7)
+    - Social jobs: How they want to be perceived (2-3)
+    - Emotional jobs: Feelings they seek (2-3)
+    - Supporting jobs: Buying, co-creating, transferring (1-2)
+
+    **PAINS** (negative outcomes, risks, obstacles)
+    - Undesired outcomes: What can go wrong (3-4)
+    - Obstacles: What prevents or slows them (3-4)
+    - Risks: What they fear (2-3)
+
+    **GAINS** (outcomes and benefits wanted)
+    - Required gains: Must-haves (2-3)
+    - Expected gains: Standard expectations (3-4)
+    - Desired gains: Would love to have (3-4)
+    - Unexpected gains: Delighters (1-2)
+
+    Then rank:
+    - Top 3 most important jobs
+    - Top 3 most severe pains
+    - Top 3 most relevant gains
+
+  audience: Product managers, strategists, entrepreneurs
+  tone: analytical
+
+  constraints:
+    - Use customer's language, not business jargon
+    - Be specific to the segment, not generic
+    - Focus on the job, not the solution
+
+constraints:
+  max_words: 600
+  density: standard
+
+output_formats:
+  - markdown
+  - yaml
+  - json
+
+examples:
+  - id: hobby-farmer-vpc
+    name: Hobby Farmer Customer Profile
+    description: VPC Customer Profile for heritage livestock buyer
+    input:
+      segment_name: Hobby Farmer
+      business_context: Purchasing breeding stock from a heritage pig breeder
+    output: |
+      # Customer Profile: Hobby Farmer
+      **Context:** Purchasing heritage breeding stock
+
+      ```
+           ┌─────────────────────────────────────────────────┐
+           │              CUSTOMER PROFILE                   │
+           │                                                 │
+           │   ┌─────────┐  ┌─────────┐  ┌─────────┐        │
+           │   │  GAINS  │  │  JOBS   │  │  PAINS  │        │
+           │   └─────────┘  └─────────┘  └─────────┘        │
+           │                                                 │
+           └─────────────────────────────────────────────────┘
+      ```
+
+      ## Customer Jobs
+
+      ### Functional Jobs
+      1. Find healthy, quality breeding stock
+      2. Verify breeder reputation and animal health
+      3. Understand breed characteristics and requirements
+      4. Compare pricing across multiple breeders
+      5. Arrange transport or pickup logistics
+      6. Get animals registered (if applicable)
+      7. Learn how to care for new animals
+
+      ### Social Jobs
+      - Be respected as a knowledgeable farmer by peers
+      - Be seen as someone who cares about heritage breeds
+      - Avoid appearing naive or like a "city person playing farmer"
+
+      ### Emotional Jobs
+      - Feel confident about the investment decision
+      - Feel proud of the quality of animals
+      - Feel connected to agricultural traditions
+
+      ### Supporting Jobs
+      - Compare options without wasting breeder's time
+      - Get answers to questions before committing
+      - Transfer ownership/registration smoothly
+
+      ---
+
+      ## Pains
+
+      ### Undesired Outcomes
+      - Animals arrive sick or different than described
+      - Overpay due to lack of market knowledge
+      - Get stuck with poor genetics
+      - Waste time on breeders who aren't serious
+
+      ### Obstacles
+      - Can't verify breeder legitimacy online
+      - Pricing hidden behind "call for quote"
+      - No reviews or testimonials available
+      - Too far away for reasonable transport
+
+      ### Risks
+      - Animals die during transport
+      - Breeder disappears after sale (no support)
+      - Get scammed by fake breeder
+      - Neighbors complain about new livestock
+
+      ---
+
+      ## Gains
+
+      ### Required Gains
+      - Healthy animals that survive transport
+      - Clear pricing before committing time
+      - Legitimate, verifiable breeder
+
+      ### Expected Gains
+      - Good photos of actual animals
+      - Responsive communication
+      - Health records/vet checks
+      - Registration papers (if applicable)
+
+      ### Desired Gains
+      - Guidance on care and feeding
+      - Connection to breeder community
+      - Visit farm before buying
+      - Ongoing relationship for future purchases
+
+      ### Unexpected Gains
+      - Mentorship from experienced breeder
+      - Introduction to other buyers/community
+      - Help selling offspring later
+      - Discounts on future purchases
+
+      ---
+
+      ## Rankings
+
+      ### Top 3 Most Important Jobs
+      1. **Find healthy, quality breeding stock** — Foundational to everything
+      2. **Verify breeder reputation** — Trust is essential
+      3. **Understand breed requirements** — Ensures success
+
+      ### Top 3 Most Severe Pains
+      1. **Animals arrive sick** — Financial and emotional loss
+      2. **Hidden pricing** — Wastes time, feels manipulative
+      3. **Can't verify legitimacy** — Blocks decision-making
+
+      ### Top 3 Most Relevant Gains
+      1. **Healthy animals** — Required for success
+      2. **Clear pricing** — Enables budgeting and decision
+      3. **Ongoing support** — Reduces anxiety, builds relationship

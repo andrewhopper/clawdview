@@ -1,0 +1,182 @@
+# Jobs-to-Be-Done (JTBD) Artifact Type
+# Source: Christensen (2016) "Competing Against Luck", Ulwick (2016) "Jobs to be Done"
+# Version: 1.0.0
+
+# Composes from shared/semantic/domains/user-research
+domain_types:
+  imports:
+    - user-research/Actor
+    - user-research/Motivation
+    - user-research/HiringCriteria
+    - user-research/FiringCriteria
+
+id: jobs-to-be-done
+name: Jobs-to-Be-Done (JTBD)
+description: |
+  Framework for understanding why customers "hire" products/services.
+  Focuses on the progress customers want to make in their lives,
+  not product features. Includes functional, emotional, and social jobs.
+category: assessment
+complexity: moderate
+version: "1.0.0"
+created_at: "2025-11-28"
+updated_at: "2025-11-28"
+
+tags:
+  - user-research
+  - ux
+  - jtbd
+  - product-strategy
+  - customer-insight
+
+schema:
+  sections:
+    - id: context
+      name: Job Context
+      order: 1
+      required: true
+      description: The situation that triggers the job
+      format: prose
+
+    - id: main_job
+      name: Main Job Statement
+      order: 2
+      required: true
+      description: Core job in standard JTBD format
+      format: prose
+
+    - id: functional_jobs
+      name: Functional Jobs
+      order: 3
+      required: true
+      description: Practical tasks to accomplish
+      format: bullets
+
+    - id: emotional_jobs
+      name: Emotional Jobs
+      order: 4
+      required: true
+      description: How they want to feel
+      format: bullets
+
+    - id: social_jobs
+      name: Social Jobs
+      order: 5
+      required: true
+      description: How they want to be perceived
+      format: bullets
+
+    - id: hiring_criteria
+      name: Hiring Criteria
+      order: 6
+      required: true
+      description: What they evaluate when choosing a solution
+      format: bullets
+
+    - id: firing_criteria
+      name: Firing Criteria
+      order: 7
+      required: true
+      description: What would make them switch away
+      format: bullets
+
+    - id: current_solutions
+      name: Current Solutions
+      order: 8
+      required: false
+      description: How they solve this job today
+      format: bullets
+
+  required_fields:
+    - name: persona_name
+      type: string
+      description: Name of the persona
+      required: true
+    - name: business_context
+      type: string
+      description: The business/product context
+      required: true
+
+prompt:
+  system_prompt: |
+    You are a JTBD researcher identifying the jobs customers hire products to do.
+    Use the standard JTBD statement format: "When [situation], I want to [motivation], so I can [outcome]."
+    Distinguish between functional, emotional, and social dimensions.
+
+  task_prompt: |
+    Create a Jobs-to-Be-Done analysis for {{PERSONA_NAME}} in the context of {{BUSINESS_CONTEXT}}.
+
+    1. **Main Job Statement** - Use format: "When [situation], I want to [motivation], so I can [outcome]."
+
+    2. **Functional Jobs** - Practical tasks (3-5)
+       Format: "Minimize/Maximize [something]" or "Avoid [something]"
+
+    3. **Emotional Jobs** - How they want to feel (3-4)
+       Format: "Feel [emotion]" or "Avoid feeling [emotion]"
+
+    4. **Social Jobs** - How they want to be perceived (2-3)
+       Format: "Be seen as [quality]" or "Avoid being seen as [quality]"
+
+    5. **Hiring Criteria** - What makes them choose a solution (4-6)
+
+    6. **Firing Criteria** - What makes them switch away (3-4)
+
+  audience: Product managers and designers
+  tone: analytical
+
+constraints:
+  max_words: 400
+  density: dense
+
+output_formats:
+  - markdown
+  - yaml
+  - json
+
+examples:
+  - id: hobby-farmer-breeding-stock
+    name: Hobby Farmer Buying Breeding Stock
+    description: JTBD for purchasing heritage pigs
+    input:
+      persona_name: Hobby Farmer Frank
+      business_context: Purchasing breeding stock from Goodhue Hawkins Boars
+    output: |
+      # Jobs-to-Be-Done: Hobby Farmer Frank
+      **Context:** Purchasing heritage breeding stock
+
+      ## Main Job Statement
+      > "When I'm ready to start raising heritage pigs, I want to find a reputable breeder with healthy, quality stock, so I can build a sustainable small operation I'm proud of."
+
+      ## Functional Jobs
+      - Minimize risk of buying unhealthy animals
+      - Minimize time spent researching and vetting breeders
+      - Maximize genetic quality for breeding program
+      - Avoid overpaying due to lack of market knowledge
+      - Minimize transport stress on animals
+
+      ## Emotional Jobs
+      - Feel confident I'm making a smart investment
+      - Feel like I'm part of the heritage breed community
+      - Avoid feeling like a naive beginner being taken advantage of
+      - Feel proud showing my animals to neighbors/friends
+
+      ## Social Jobs
+      - Be seen as a knowledgeable, serious farmer (not a hobby dabbler)
+      - Be seen as someone who cares about animal welfare
+      - Avoid being seen as a city person "playing farmer"
+
+      ## Hiring Criteria (Why they'd choose this breeder)
+      - Transparent pricing visible on website
+      - Clear photos of actual animals and facilities
+      - Verifiable reviews/testimonials from other buyers
+      - Breeder is willing to talk on phone and answer questions
+      - Located within reasonable driving distance
+      - Offers support/guidance after purchase
+
+      ## Firing Criteria (Why they'd switch/leave)
+      - Hidden pricing requiring inquiry ("call for price")
+      - No photos or stock photos only
+      - No way to verify legitimacy
+      - Unresponsive to questions
+      - Animals arrive sick or misrepresented
+      - Feels pressured to buy

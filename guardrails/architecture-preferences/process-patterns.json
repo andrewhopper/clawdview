@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Architecture Preferences - Process Patterns",
+  "description": "Development and operational process patterns",
+  "version": "1.1.0",
+  "lastUpdated": "2025-11-17",
+  "strictnessLevels": {
+    "REQUIRED": "Must follow - blocks deployment/commits if violated",
+    "RECOMMENDED": "Should follow - generates warnings if violated",
+    "OPTIONAL": "Nice-to-have - generates suggestions only"
+  },
+  "categories": {
+    "parallel_execution": {
+      "description": "Patterns for running multiple processes or tasks concurrently",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Claude Code CLI Child Processes",
+          "version": "1.0.0",
+          "strictness": "REQUIRED",
+          "rationale": "Isolated execution prevents settings conflicts, enables true parallelization, autonomous agent execution",
+          "useCases": [
+            "multi-agent AI orchestration",
+            "parallel research tasks",
+            "autonomous agent workflows",
+            "isolated AI conversations"
+          ],
+          "keyPrinciples": [
+            "Each child process runs in isolated temp directory",
+            "Use --permission-mode bypassPermissions for autonomous execution",
+            "Use --output-format stream-json for real-time monitoring",
+            "Cleanup temp directories after completion",
+            "Use asyncio.gather for parallel execution"
+          ],
+          "criticalFlags": [
+            "--permission-mode bypassPermissions",
+            "--output-format stream-json",
+            "--print",
+            "--verbose",
+            "cwd=agent_work_dir"
+          ],
+          "exampleLocation": "prototypes/proto-company-researcher-uiwid-005/orchestrator.py",
+          "docsLocation": "CLAUDE.md#spawning-child-processes",
+          "approvedBy": "Andy Hopper",
+          "approvedDate": "2025-11-16",
+          "status": "approved"
+        }
+      ]
+    },
+    "agent_orchestration": {
+      "description": "Patterns for coordinating multiple AI agents",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Two-Phase Execution (Data Gathering → Synthesis)",
+          "version": "1.0.0",
+          "strictness": "RECOMMENDED",
+          "rationale": "Maximizes parallelization while respecting dependencies between agents",
+          "useCases": [
+            "research workflows",
+            "data collection and analysis",
+            "multi-source intelligence gathering"
+          ],
+          "keyPrinciples": [
+            "Phase 1: Run independent data-gathering agents in parallel",
+            "Phase 2: Run synthesis agents in parallel after data available",
+            "Copy context files to synthesis agent work directories",
+            "Document generational insights"
+          ],
+          "exampleLocation": "prototypes/proto-company-researcher-uiwid-005/orchestrator.py",
+          "docsLocation": "CLAUDE.md#two-phase-execution-pattern",
+          "approvedBy": "Andy Hopper",
+          "approvedDate": "2025-11-16",
+          "status": "approved"
+        }
+      ]
+    }
+  }
+}

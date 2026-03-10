@@ -1,0 +1,226 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Services",
+  "description": "Authentication, email, payments, and storage services",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "categories": {
+    "authentication": {
+      "description": "User authentication and authorization",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Clerk",
+          "version": "latest",
+          "rationale": "Complete auth solution, beautiful UI, Next.js integration, user management",
+          "useCases": [
+            "all web apps",
+            "rapid development",
+            "user management UI"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "AWS Cognito",
+          "version": "AWS",
+          "rationale": "AWS-native, SAML/OIDC, MFA, user pools, pay-as-you-go",
+          "useCases": [
+            "AWS apps",
+            "enterprise SSO",
+            "compliance requirements"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Auth.js (NextAuth)",
+          "version": "5.x",
+          "rationale": "Open source, flexible, OAuth providers, database sessions",
+          "useCases": [
+            "self-hosted",
+            "custom requirements",
+            "OAuth integration"
+          ]
+        }
+      ]
+    },
+    "email_sending": {
+      "description": "Transactional email services",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Resend",
+          "version": "API",
+          "rationale": "Developer-first, React Email support, simple API, excellent DX",
+          "useCases": [
+            "all projects",
+            "React email templates",
+            "developer experience"
+          ],
+          "docsUrl": "https://resend.com/docs",
+          "examplesUrl": "https://resend.com/docs/send-with-react"
+        },
+        {
+          "rank": 2,
+          "name": "AWS SES",
+          "version": "AWS",
+          "rationale": "AWS-native, affordable, high deliverability, production-ready",
+          "useCases": [
+            "AWS apps",
+            "high volume",
+            "cost optimization"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/ses/",
+          "examplesUrl": "https://docs.aws.amazon.com/ses/latest/dg/send-email.html"
+        },
+        {
+          "rank": 3,
+          "name": "Postmark",
+          "version": "API",
+          "rationale": "Transactional focus, high deliverability, excellent analytics",
+          "useCases": [
+            "critical emails",
+            "deliverability focus",
+            "detailed analytics"
+          ],
+          "docsUrl": "https://postmarkapp.com/developer",
+          "examplesUrl": "https://postmarkapp.com/developer/user-guide/send-email-with-api"
+        }
+      ]
+    },
+    "email_templating": {
+      "description": "Email template builders and frameworks",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "React Email",
+          "version": "latest",
+          "rationale": "Component-based, TypeScript support, great DX, preview server, used by Stripe/Vercel",
+          "useCases": [
+            "all transactional emails",
+            "type-safe templates",
+            "component reusability"
+          ],
+          "docsUrl": "https://react.email/docs/introduction",
+          "examplesUrl": "https://react.email/examples"
+        }
+      ]
+    },
+    "payments": {
+      "description": "Payment processing",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Stripe",
+          "version": "API",
+          "rationale": "Industry standard, excellent API, Stripe Elements, webhooks, subscriptions",
+          "useCases": [
+            "all payment needs",
+            "subscriptions",
+            "marketplaces"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "Lemon Squeezy",
+          "version": "API",
+          "rationale": "Merchant of record, handles VAT/taxes, simple pricing, developer-friendly",
+          "useCases": [
+            "digital products",
+            "SaaS",
+            "indie hackers",
+            "tax simplification"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Paddle",
+          "version": "API",
+          "rationale": "Merchant of record, B2B focus, tax compliance, localized payments",
+          "useCases": [
+            "B2B SaaS",
+            "international sales",
+            "tax compliance"
+          ]
+        }
+      ]
+    },
+    "storage": {
+      "description": "File and object storage",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS S3",
+          "version": "AWS",
+          "rationale": "Industry standard, highly available, lifecycle policies, CDN integration",
+          "useCases": [
+            "all file storage",
+            "static assets",
+            "backups",
+            "data lakes"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "Cloudflare R2",
+          "version": "API",
+          "rationale": "S3-compatible, no egress fees, affordable, fast global network",
+          "useCases": [
+            "cost optimization",
+            "high-bandwidth",
+            "CDN integration"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "UploadThing",
+          "version": "API",
+          "rationale": "Developer-first, Next.js integration, type-safe, simple pricing",
+          "useCases": [
+            "Next.js projects",
+            "user uploads",
+            "rapid prototyping"
+          ]
+        }
+      ]
+    },
+    "analytics": {
+      "description": "Product analytics and event tracking",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "PostHog",
+          "version": "latest",
+          "rationale": "Self-hosted or cloud, feature flags, session replay, privacy-friendly, all-in-one",
+          "useCases": [
+            "all projects",
+            "feature flags",
+            "session replay",
+            "privacy-conscious"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "Plausible",
+          "version": "latest",
+          "rationale": "Privacy-first, simple, lightweight, GDPR compliant, beautiful UI",
+          "useCases": [
+            "public websites",
+            "privacy-first",
+            "simple page analytics"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Mixpanel",
+          "version": "latest",
+          "rationale": "Advanced analytics, cohorts, funnels, retention analysis, A/B testing",
+          "useCases": [
+            "product analytics",
+            "growth hacking",
+            "complex funnels"
+          ]
+        }
+      ]
+    }
+  }
+}

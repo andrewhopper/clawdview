@@ -1,0 +1,80 @@
+# =============================================================================
+# Domain: DOMAIN_NAME
+# Version: 0.1.0
+# Status: development
+# Dependencies: core@^1.0.0
+# Created: YYYY-MM-DD
+# Updated: YYYY-MM-DD
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# =============================================================================
+
+domain:
+  name: DOMAIN_NAME
+  version: "0.1.0"
+  description: "DOMAIN_DESCRIPTION"
+  namespace: "https://protoflow.ai/ontology/DOMAIN_NAME#"
+  created_at: "YYYY-MM-DD"
+  updated_at: "YYYY-MM-DD"
+  dependencies:
+    core: "^1.0.0"
+
+  # Version history
+  changelog:
+    "0.1.0": "Initial development version"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  Entity1:
+    description: "Description of Entity1"
+    extends: core.Entity
+    properties:
+      id:
+        type: string
+        required: true
+        description: "Unique identifier"
+      name:
+        type: string
+        required: true
+        maxLength: 255
+        description: "Display name"
+      created_at:
+        type: datetime
+        required: true
+        description: "Creation timestamp"
+      updated_at:
+        type: datetime
+        required: true
+        description: "Last update timestamp"
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  # Entity1Status:
+  #   description: "Status of Entity1"
+  #   values:
+  #     - Active
+  #     - Inactive
+  #     - Pending
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+
+  Entity1Action:
+    type: create
+    description: "Create a new Entity1"
+    operatesOn: Entity1
+    params:
+      name:
+        type: string
+        required: true
+    returns: Entity1

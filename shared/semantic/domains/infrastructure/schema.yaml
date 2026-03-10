@@ -1,0 +1,561 @@
+# Infrastructure Domain Model
+# Cloud-agnostic infrastructure primitives for solution architecture
+
+domain:
+  name: infrastructure
+  version: "1.0.0"
+  description: Solution architecture components - compute, storage, network, messaging
+  dependencies: [core]
+  created_at: "2025-11-24"
+  updated_at: "2025-11-24"
+
+entities:
+
+  # ============================================
+  # COMPUTE
+  # ============================================
+
+  ComputeProvider:
+    description: Abstract base for all compute resources
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      providerType: { type: ComputeProviderType, required: true }
+      cpu: { type: integer, description: "vCPU count or CPU units" }
+      memory: { type: integer, description: "Memory in MB" }
+      region: { type: string }
+      availabilityZone: { type: string }
+      status: { type: HealthStatus, required: true }
+      tags: { type: object }
+      env: { type: object, description: "Environment variables" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Server:
+    description: Virtual machine or dedicated host compute
+    extends: ComputeProvider
+    properties:
+      instanceSize: { type: string, description: "t3.medium, large, etc." }
+      serverType: { type: ServerType, required: true }
+      os: { type: string, description: "Operating system" }
+      publicIp: { type: string }
+      privateIp: { type: string }
+      storage: { type: array, items: AttachedVolume }
+
+  AttachedVolume:
+    description: Storage volume attached to a server
+    properties:
+      volumeId: { type: string, required: true }
+      device: { type: string, description: "Device path (/dev/sda1)" }
+      size: { type: integer, description: "Size in GB" }
+      volumeType: { type: StorageType }
+
+  Container:
+    description: Containerized workload (Docker, K8s pod)
+    extends: ComputeProvider
+    properties:
+      image: { type: string, required: true, description: "Container image URL" }
+      imageTag: { type: string, default: "latest" }
+      ports: { type: array, items: PortMapping }
+      volumes: { type: array, items: VolumeMount }
+      restartPolicy: { type: string, enum: [always, on-failure, unless-stopped, never] }
+
+  PortMapping:
+    description: Container port mapping configuration
+    properties:
+      containerPort: { type: integer, required: true }
+      hostPort: { type: integer }
+      protocol: { type: string, default: "tcp", enum: [tcp, udp] }
+
+  VolumeMount:
+    description: Volume mount for container
+    properties:
+      mountPath: { type: string, required: true }
+      volumeSource: { type: string, required: true }
+      readOnly: { type: boolean, default: false }
+
+  ServerlessFunction:
+    description: Event-driven compute function (Lambda, Cloud Functions)
+    extends: ComputeProvider
+    properties:
+      runtime: { type: string, required: true, description: "python3.12, nodejs20, etc." }
+      handler: { type: string, required: true, description: "Entry point function" }
+      timeout: { type: integer, description: "Timeout in seconds" }
+      trigger: { type: string, description: "Event trigger source" }
+      layers: { type: array, items: string, description: "Function layers/dependencies" }
+
+  # ============================================
+  # STORAGE & DATA
+  # ============================================
+
+  Database:
+    description: Persistent relational or NoSQL database
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      engine: { type: DatabaseEngine, required: true }
+      version: { type: string }
+      instanceClass: { type: string, description: "db.t3.medium, etc." }
+      storageType: { type: StorageType }
+      allocatedStorage: { type: integer, description: "Storage in GB" }
+      multiAz: { type: boolean, default: false }
+      readReplicas: { type: integer, default: 0 }
+      backupRetention: { type: integer, description: "Retention days" }
+      encrypted: { type: boolean, default: true }
+      publiclyAccessible: { type: boolean, default: false }
+      endpoint: { type: string }
+      port: { type: integer }
+      status: { type: HealthStatus, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Cache:
+    description: In-memory caching layer (Redis, Memcached)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      engine: { type: CacheEngine, required: true }
+      version: { type: string }
+      nodeType: { type: string, description: "cache.t3.micro, etc." }
+      nodeCount: { type: integer, default: 1 }
+      port: { type: integer }
+      ttl: { type: integer, description: "Default TTL in seconds" }
+      evictionPolicy: { type: string }
+      encrypted: { type: boolean, default: true }
+      endpoint: { type: string }
+      status: { type: HealthStatus, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ObjectStorage:
+    description: Object/blob storage bucket (S3, GCS, Azure Blob)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      region: { type: string }
+      storageClass: { type: StorageClass }
+      versioning: { type: boolean, default: false }
+      encryption: { type: boolean, default: true }
+      publicAccess: { type: boolean, default: false }
+      lifecycleRules: { type: array, items: LifecycleRule }
+      cors: { type: array, items: CorsRule }
+      tags: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  LifecycleRule:
+    description: Storage lifecycle policy rule
+    properties:
+      id: { type: string }
+      enabled: { type: boolean, default: true }
+      prefix: { type: string }
+      transitions: { type: array, items: StorageTransition }
+      expiration: { type: integer, description: "Days until deletion" }
+
+  StorageTransition:
+    description: Transition to different storage class
+    properties:
+      days: { type: integer, required: true }
+      storageClass: { type: StorageClass, required: true }
+
+  CorsRule:
+    description: CORS configuration for object storage
+    properties:
+      allowedOrigins: { type: array, items: string }
+      allowedMethods: { type: array, items: string }
+      allowedHeaders: { type: array, items: string }
+      maxAgeSeconds: { type: integer }
+
+  # ============================================
+  # NETWORKING
+  # ============================================
+
+  Network:
+    description: Virtual network / VPC
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      cidrBlock: { type: string, required: true, description: "IP range (10.0.0.0/16)" }
+      region: { type: string }
+      subnets: { type: array, items: Subnet }
+      enableDnsSupport: { type: boolean, default: true }
+      enableDnsHostnames: { type: boolean, default: true }
+      tags: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Subnet:
+    description: Subnet within a network
+    properties:
+      id: { type: string, required: true }
+      name: { type: string }
+      cidrBlock: { type: string, required: true }
+      availabilityZone: { type: string }
+      isPublic: { type: boolean, default: false }
+      autoAssignPublicIp: { type: boolean, default: false }
+
+  LoadBalancer:
+    description: Traffic distribution layer (ALB, NLB, Gateway)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: LoadBalancerType, required: true }
+      scheme: { type: string, enum: [internet-facing, internal] }
+      ipAddressType: { type: string, enum: [ipv4, dualstack] }
+      algorithm: { type: string, description: "round-robin, least-connections, etc." }
+      listeners: { type: array, items: Listener }
+      targetGroups: { type: array, items: TargetGroup }
+      healthCheck: { type: HealthCheck }
+      dnsName: { type: string }
+      status: { type: HealthStatus, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Listener:
+    description: Load balancer listener configuration
+    properties:
+      port: { type: integer, required: true }
+      protocol: { type: string, required: true, enum: [HTTP, HTTPS, TCP, TLS, UDP] }
+      sslCertificate: { type: string }
+      defaultAction: { type: string }
+
+  TargetGroup:
+    description: Load balancer target group
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      port: { type: integer, required: true }
+      protocol: { type: string, required: true }
+      healthCheck: { type: HealthCheck }
+      targets: { type: array, items: string, description: "Target instance IDs" }
+
+  HealthCheck:
+    description: Health check configuration
+    properties:
+      protocol: { type: string, required: true }
+      port: { type: integer }
+      path: { type: string }
+      interval: { type: integer, description: "Interval in seconds" }
+      timeout: { type: integer, description: "Timeout in seconds" }
+      healthyThreshold: { type: integer, default: 2 }
+      unhealthyThreshold: { type: integer, default: 2 }
+
+  ApiGateway:
+    description: API management and routing layer
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ApiGatewayType, enum: [REST, HTTP, WebSocket] }
+      endpoint: { type: string }
+      authType: { type: string, enum: [none, api-key, jwt, iam, cognito, custom] }
+      rateLimit: { type: integer, description: "Requests per second" }
+      burstLimit: { type: integer }
+      cors: { type: boolean, default: false }
+      corsConfig: { type: CorsRule }
+      customDomain: { type: string }
+      stages: { type: array, items: ApiStage }
+      status: { type: HealthStatus, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ApiStage:
+    description: API deployment stage
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      throttling: { type: ThrottlingConfig }
+      caching: { type: boolean, default: false }
+
+  ThrottlingConfig:
+    description: API throttling configuration
+    properties:
+      rateLimit: { type: integer }
+      burstLimit: { type: integer }
+
+  DNS:
+    description: Domain name service configuration
+    properties:
+      id: { type: string, required: true }
+      zone: { type: string, required: true, description: "Domain name (example.com)" }
+      hostedZoneId: { type: string }
+      records: { type: array, items: DnsRecord }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  DnsRecord:
+    description: DNS record entry
+    properties:
+      name: { type: string, required: true }
+      type: { type: DnsRecordType, required: true }
+      value: { type: string, required: true }
+      ttl: { type: integer, default: 300, description: "TTL in seconds" }
+
+  CDN:
+    description: Content delivery network
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      origins: { type: array, items: CdnOrigin }
+      cachePolicy: { type: CachePolicy }
+      customDomain: { type: string }
+      sslCertificate: { type: string }
+      geoRestrictions: { type: array, items: string }
+      status: { type: HealthStatus, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CdnOrigin:
+    description: CDN origin server
+    properties:
+      id: { type: string, required: true }
+      domainName: { type: string, required: true }
+      path: { type: string }
+      protocol: { type: string, enum: [http-only, https-only, match-viewer] }
+
+  CachePolicy:
+    description: CDN caching policy
+    properties:
+      defaultTtl: { type: integer, description: "Default TTL in seconds" }
+      minTtl: { type: integer }
+      maxTtl: { type: integer }
+      queryStringBehavior: { type: string, enum: [none, whitelist, all] }
+      cookieBehavior: { type: string, enum: [none, whitelist, all] }
+
+  # ============================================
+  # MESSAGING & EVENTS
+  # ============================================
+
+  Queue:
+    description: Message queue for async processing
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: QueueType, required: true }
+      retentionPeriod: { type: integer, description: "Retention in seconds" }
+      visibilityTimeout: { type: integer, description: "Visibility timeout in seconds" }
+      maxReceiveCount: { type: integer, description: "Max receives before DLQ" }
+      deadLetterQueue: { type: string, description: "DLQ queue ID" }
+      encrypted: { type: boolean, default: true }
+      fifoThroughputLimit: { type: string, enum: [per-queue, per-message-group-id] }
+      status: { type: HealthStatus, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  EventBus:
+    description: Event bus for pub/sub messaging
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      topics: { type: array, items: Topic }
+      rules: { type: array, items: EventRule }
+      status: { type: HealthStatus, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Topic:
+    description: Pub/sub topic
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      subscriptions: { type: array, items: Subscription }
+      fifo: { type: boolean, default: false }
+      encrypted: { type: boolean, default: true }
+
+  Subscription:
+    description: Topic subscription
+    properties:
+      id: { type: string, required: true }
+      protocol: { type: SubscriptionProtocol, required: true }
+      endpoint: { type: string, required: true }
+      filterPolicy: { type: object }
+
+  EventRule:
+    description: Event routing rule
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      eventPattern: { type: object, description: "Event matching pattern" }
+      targets: { type: array, items: EventTarget }
+      enabled: { type: boolean, default: true }
+
+  EventTarget:
+    description: Event rule target
+    properties:
+      type: { type: string, required: true, description: "lambda, queue, http, etc." }
+      arn: { type: string, required: true }
+      input: { type: object, description: "Input transformation" }
+
+enums:
+
+  ComputeProviderType:
+    description: Type of compute provider
+    values:
+      - Server          # Virtual machine or dedicated host
+      - Container       # Containerized workload
+      - Serverless      # FaaS/Lambda function
+
+  ServerType:
+    description: Specific type of server instance
+    values:
+      - VM              # Virtual machine
+      - Spot            # Spot/preemptible instance
+      - Dedicated       # Dedicated host
+      - Reserved        # Reserved instance
+
+  DatabaseEngine:
+    description: Database engine type
+    values:
+      - Postgres
+      - MySQL
+      - MariaDB
+      - Oracle
+      - SQLServer
+      - DynamoDB
+      - MongoDB
+      - Cassandra
+      - Redis
+      - Neo4j
+
+  CacheEngine:
+    description: Cache engine type
+    values:
+      - Redis
+      - Memcached
+      - Valkey
+
+  StorageType:
+    description: Database storage type
+    values:
+      - gp3          # General purpose SSD
+      - gp2          # General purpose SSD (older)
+      - io2          # Provisioned IOPS SSD
+      - io1          # Provisioned IOPS SSD (older)
+      - magnetic     # Magnetic storage
+
+  StorageClass:
+    description: Object storage class
+    values:
+      - Standard
+      - InfrequentAccess
+      - Glacier
+      - GlacierDeepArchive
+      - OneZone
+      - IntelligentTiering
+
+  LoadBalancerType:
+    description: Load balancer type
+    values:
+      - Application    # Layer 7 (HTTP/HTTPS)
+      - Network        # Layer 4 (TCP/UDP)
+      - Gateway        # Layer 3 + appliances
+      - Classic        # Legacy
+
+  ApiGatewayType:
+    values:
+      - REST
+      - HTTP
+      - WebSocket
+
+  QueueType:
+    description: Message queue type
+    values:
+      - Standard       # At-least-once delivery
+      - FIFO           # Exactly-once delivery, ordered
+      - Priority       # Priority-based
+
+  SubscriptionProtocol:
+    description: Topic subscription protocol
+    values:
+      - HTTP
+      - HTTPS
+      - Email
+      - SMS
+      - Lambda
+      - SQS
+      - Webhook
+
+  DnsRecordType:
+    description: DNS record types
+    values:
+      - A              # IPv4 address
+      - AAAA           # IPv6 address
+      - CNAME          # Canonical name
+      - MX             # Mail exchange
+      - TXT            # Text record
+      - NS             # Name server
+      - SOA            # Start of authority
+      - SRV            # Service locator
+      - CAA            # Certificate authority
+
+  HealthStatus:
+    description: Component health status
+    values:
+      - Healthy
+      - Unhealthy
+      - Degraded
+      - Unknown
+      - Creating
+      - Deleting
+      - Failed
+
+actions:
+
+  CreateServer:
+    description: Provision a new compute server
+    parameters:
+      type: { type: ServerType, required: true }
+      instanceSize: { type: string, required: true }
+      region: { type: string }
+      os: { type: string }
+    result: Server
+
+  CreateDatabase:
+    description: Provision a new database instance
+    parameters:
+      engine: { type: DatabaseEngine, required: true }
+      name: { type: string, required: true }
+      instanceClass: { type: string, required: true }
+      allocatedStorage: { type: integer, required: true }
+      multiAz: { type: boolean, default: false }
+    result: Database
+
+  CreateQueue:
+    description: Create a new message queue
+    parameters:
+      name: { type: string, required: true }
+      type: { type: QueueType, default: Standard }
+      retentionPeriod: { type: integer }
+      deadLetterQueue: { type: string }
+    result: Queue
+
+  CreateLoadBalancer:
+    description: Create a load balancer
+    parameters:
+      name: { type: string, required: true }
+      type: { type: LoadBalancerType, required: true }
+      listeners: { type: array, items: Listener, required: true }
+      healthCheck: { type: HealthCheck }
+    result: LoadBalancer
+
+  CreateObjectStorage:
+    description: Create object storage bucket
+    parameters:
+      name: { type: string, required: true }
+      region: { type: string }
+      versioning: { type: boolean, default: false }
+      encryption: { type: boolean, default: true }
+    result: ObjectStorage
+
+  ScaleServer:
+    description: Scale compute resources up or down
+    parameters:
+      serverId: { type: string, required: true }
+      instanceSize: { type: string, required: true }
+    result: Server
+
+  ConfigureHealthCheck:
+    description: Configure health check for a resource
+    parameters:
+      targetId: { type: string, required: true }
+      healthCheck: { type: HealthCheck, required: true }
+    result: HealthCheck

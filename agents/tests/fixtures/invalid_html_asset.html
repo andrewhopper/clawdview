@@ -1,0 +1,40 @@
+<!-- File UUID: 732277ac-771e-4f2c-9ff9-3e121cdfa29b -->
+<!--
+  INVALID FIXTURE - Contains intentional design system violations for testing
+  This file should FAIL validation
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invalid Stats Card</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body style="background: #f5f5f5; padding: 32px;">
+
+  <!-- VIOLATION 1: Missing asset metadata header -->
+
+  <!-- VIOLATION 2: Raw hex colors instead of design tokens -->
+  <div style="background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 17px;">
+
+    <!-- VIOLATION 3: Magic spacing value (17px not in token scale) -->
+
+    <!-- VIOLATION 4: Inline styles instead of Tailwind classes -->
+    <p style="color: #666666; font-size: 14px;">Revenue</p>
+
+    <!-- VIOLATION 5: Raw hex color for text -->
+    <p style="color: #1a1a2e; font-size: 30px; font-weight: bold;">$12,450</p>
+
+    <!-- VIOLATION 6: Another raw hex color -->
+    <p style="color: #22c55e; font-size: 14px;">+12% from last month</p>
+  </div>
+
+  <!-- VIOLATION 7: Multiple primary CTAs (should be single focal point) -->
+  <div style="margin-top: 20px;">
+    <button style="background: #3b82f6; color: white; padding: 12px 24px;">Primary Action</button>
+    <button style="background: #3b82f6; color: white; padding: 12px 24px;">Another Primary</button>
+    <button style="background: #3b82f6; color: white; padding: 12px 24px;">Third Primary</button>
+  </div>
+
+</body>
+</html>

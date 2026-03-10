@@ -1,0 +1,172 @@
+{
+  "domain": "data-pipeline",
+  "version": "1.0.0",
+  "description": "Comprehensive data pipeline and ETL domain model covering orchestration, transformations, data quality, lineage, and observability",
+  "languages": ["typescript"],
+  "changelog": {
+    "1.0.0": "Initial release with pipeline orchestration, ETL/ELT workflows, data sources/destinations, transformations (SQL/Python/Spark/dbt), data quality checks, data profiling, lineage tracking, CDC streams, monitoring/alerting, data catalog, and metadata management"
+  },
+  "entities": [
+    "Pipeline",
+    "Schedule",
+    "Task",
+    "PipelineRun",
+    "TaskRun",
+    "DataSource",
+    "DataDestination",
+    "ConnectionConfig",
+    "SourceSchema",
+    "TableConfig",
+    "DestinationSchema",
+    "PartitionSpec",
+    "Transformation",
+    "TransformationLogic",
+    "DataModel",
+    "ColumnDefinition",
+    "DataQualityCheck",
+    "QualityRule",
+    "QualityCheckResult",
+    "DataTest",
+    "DataProfile",
+    "ColumnProfile",
+    "ValueFrequency",
+    "ColumnCorrelation",
+    "DataLineage",
+    "LineageEdge",
+    "ColumnLineage",
+    "CDCStream",
+    "ChangeEvent",
+    "DataObservability",
+    "ObservabilityMetric",
+    "DataAlert",
+    "AlertCondition",
+    "NotificationConfig",
+    "DataIncident",
+    "SLA",
+    "DataCatalog",
+    "DatasetMetadata",
+    "DatasetStatistics",
+    "GlossaryTerm",
+    "RetryPolicy",
+    "RunMetrics",
+    "TaskMetrics",
+    "LogEntry"
+  ],
+  "enums": [
+    "PipelineType",
+    "ScheduleType",
+    "TaskType",
+    "TriggerRule",
+    "RunType",
+    "RunStatus",
+    "DataSourceType",
+    "DataDestinationType",
+    "ExtractionMode",
+    "LoadMode",
+    "AuthType",
+    "TransformationType",
+    "TransformationLanguage",
+    "MaterializationType",
+    "ModelType",
+    "QualityCheckType",
+    "RuleType",
+    "ComparisonOperator",
+    "QualityStatus",
+    "TestType",
+    "Severity",
+    "CaptureMode",
+    "OperationType",
+    "LineageRelationship",
+    "MetricType",
+    "AlertType",
+    "AggregationType",
+    "NotificationChannel",
+    "IncidentStatus",
+    "DataClassification",
+    "DataFormat",
+    "PartitionStrategy",
+    "LogLevel"
+  ],
+  "features": {
+    "orchestration": [
+      "Pipeline scheduling with cron, interval, and event-driven triggers",
+      "Task dependencies and parallel execution",
+      "Retry policies with exponential backoff",
+      "SLA monitoring and alerting"
+    ],
+    "etl": [
+      "Multiple extraction modes: full, incremental, CDC, snapshot",
+      "Load modes: append, overwrite, upsert, SCD type 1/2",
+      "20+ data source types (databases, warehouses, APIs, files)",
+      "15+ destination types (warehouses, lakes, databases)"
+    ],
+    "transformations": [
+      "SQL, Python, Spark, dbt transformations",
+      "Materialization: views, tables, incremental, ephemeral",
+      "dbt-style staging/intermediate/mart models",
+      "Jinja templating support"
+    ],
+    "data_quality": [
+      "Quality checks: completeness, uniqueness, validity, consistency",
+      "Rule types: not null, unique, range, regex, foreign key",
+      "Data profiling with column statistics and correlations",
+      "dbt-style data tests with severity levels",
+      "Blocking vs non-blocking checks"
+    ],
+    "lineage": [
+      "End-to-end data lineage tracking",
+      "Column-level lineage",
+      "Upstream and downstream dependencies",
+      "Transformation tracking"
+    ],
+    "cdc": [
+      "Change data capture: log-based, trigger, timestamp",
+      "Real-time change event streaming",
+      "Operation types: insert, update, delete",
+      "Transaction tracking with sequence numbers"
+    ],
+    "observability": [
+      "Pipeline and task metrics (duration, throughput, errors)",
+      "Data freshness and latency monitoring",
+      "Cost tracking",
+      "Alerting for failures, quality issues, SLA breaches",
+      "Incident management"
+    ],
+    "catalog": [
+      "Dataset metadata and discovery",
+      "Business glossary with terms and definitions",
+      "Data classification (public, confidential, PII, PHI)",
+      "Schema and statistics tracking"
+    ]
+  },
+  "patterns": {
+    "airflow": "Task orchestration with dependencies and triggers",
+    "dbt": "Data modeling with staging/intermediate/mart layers",
+    "glue": "ETL with data catalog and crawlers",
+    "fivetran": "Automated data replication with CDC",
+    "great_expectations": "Data quality validation and profiling"
+  },
+  "generated": {
+    "typescript": {
+      "file": "generated/typescript/data-pipeline.types.ts",
+      "exports": [
+        "Pipeline",
+        "Task",
+        "PipelineRun",
+        "DataSource",
+        "DataDestination",
+        "Transformation",
+        "DataQualityCheck",
+        "DataLineage",
+        "CDCStream",
+        "DataAlert",
+        "DataCatalog",
+        "PipelineType",
+        "RunStatus",
+        "LoadMode",
+        "MaterializationType",
+        "QualityCheckType"
+      ]
+    }
+  }
+}

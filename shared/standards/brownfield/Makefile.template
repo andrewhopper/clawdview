@@ -1,0 +1,165 @@
+# ============================================================================
+# Makefile Template for Brownfield Projects
+# ============================================================================
+# Copy this file to your project root as `Makefile`
+# Requirements:
+#   - make setup: One-command project setup
+#   - make run: Start the application
+#   - make test: Run test suite
+#   - make lint: Run linters/formatters
+#   - make clean: Remove build artifacts
+#   - make build: Create production build
+# ============================================================================
+
+.PHONY: setup run test lint clean build help seed migrate
+
+# Default target
+.DEFAULT_GOAL := help
+
+# Project variables (customize these)
+PYTHON := python3
+PIP := pip
+VENV := .venv
+APP_MODULE := main:app
+
+# ============================================================================
+# CORE TARGETS (Required)
+# ============================================================================
+
+help:  ## Show this help message
+	@echo "Available targets:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
+setup:  ## Initial project setup (run once after cloning)
+	@echo "Setting up project..."
+	@# Create virtual environment if it doesn't exist
+	@test -d $(VENV) || $(PYTHON) -m venv $(VENV)
+	@# Install dependencies
+	@$(VENV)/bin/pip install --upgrade pip
+	@$(VENV)/bin/pip install -r requirements.txt
+	@# Copy example.env if .env doesn't exist
+	@test -f .env || (test -f example.env && cp example.env .env) || true
+	@# Run database migrations
+	@# $(MAKE) migrate
+	@echo ""
+	@echo "Setup complete! Next steps:"
+	@echo "  1. Edit .env with your configuration"
+	@echo "  2. Run 'make run' to start the application"
+
+run:  ## Run the application
+	$(VENV)/bin/python main.py
+	# For FastAPI: $(VENV)/bin/uvicorn $(APP_MODULE) --reload --host 0.0.0.0 --port 8000
+	# For Flask: $(VENV)/bin/flask run --debug
+	# For Django: $(VENV)/bin/python manage.py runserver
+
+test:  ## Run tests
+	$(VENV)/bin/pytest -v --tb=short
+	# With coverage: $(VENV)/bin/pytest --cov=src --cov-report=html
+
+lint:  ## Run linters and formatters
+	$(VENV)/bin/ruff check .
+	$(VENV)/bin/ruff format --check .
+	# Optional type checking:
+	# $(VENV)/bin/mypy src/
+
+lint-fix:  ## Auto-fix linting issues
+	$(VENV)/bin/ruff check --fix .
+	$(VENV)/bin/ruff format .
+
+clean:  ## Clean build artifacts and caches
+	rm -rf __pycache__ .pytest_cache .mypy_cache .ruff_cache
+	rm -rf *.egg-info dist build
+	rm -rf .coverage htmlcov
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+
+build:  ## Build for production
+	$(VENV)/bin/python -m build
+	# For Docker: docker build -t myapp .
+
+# ============================================================================
+# DATABASE TARGETS (Customize for your ORM)
+# ============================================================================
+
+migrate:  ## Run database migrations
+	# Django: $(VENV)/bin/python manage.py migrate
+	# Alembic: $(VENV)/bin/alembic upgrade head
+	# SQLAlchemy: $(VENV)/bin/python scripts/migrate.py
+	@echo "No migrations configured"
+
+seed:  ## Seed the database with test data
+	# $(VENV)/bin/python scripts/seed.py
+	# Django: $(VENV)/bin/python manage.py loaddata fixtures/seed.json
+	@echo "No seed script configured"
+
+db-reset:  ## Reset database (DESTRUCTIVE)
+	@echo "This will delete all data. Are you sure? [y/N]"
+	@read -r REPLY; \
+	if [ "$$REPLY" = "y" ] || [ "$$REPLY" = "Y" ]; then \
+		$(MAKE) clean-db && $(MAKE) migrate && $(MAKE) seed; \
+	fi
+
+# ============================================================================
+# DEVELOPMENT TARGETS
+# ============================================================================
+
+dev:  ## Run in development mode with auto-reload
+	$(VENV)/bin/uvicorn $(APP_MODULE) --reload --host 0.0.0.0 --port 8000
+
+install:  ## Install a new package (usage: make install PKG=package-name)
+	$(VENV)/bin/pip install $(PKG)
+	$(VENV)/bin/pip freeze > requirements.txt
+	@echo "Added $(PKG) to requirements.txt"
+
+shell:  ## Open Python shell with project context
+	$(VENV)/bin/python
+	# For Django: $(VENV)/bin/python manage.py shell
+	# For IPython: $(VENV)/bin/ipython
+
+# ============================================================================
+# DEPLOYMENT TARGETS
+# ============================================================================
+
+docker-build:  ## Build Docker image
+	docker build -t myapp:latest .
+
+docker-run:  ## Run Docker container
+	docker run -p 8000:8000 --env-file .env myapp:latest
+
+deploy:  ## Deploy to production
+	@echo "Deployment not configured"
+	# Add your deployment commands here
+
+# ============================================================================
+# QUALITY TARGETS
+# ============================================================================
+
+security:  ## Run security scan
+	$(VENV)/bin/pip-audit
+	# $(VENV)/bin/bandit -r src/
+
+audit:  ## Run brownfield audit
+	@echo "Run: /brownfield-audit $(shell pwd)"
+
+check: lint test security  ## Run all checks (lint, test, security)
+	@echo "All checks passed!"
+
+# ============================================================================
+# NODE.JS TARGETS (uncomment if hybrid project)
+# ============================================================================
+
+# npm-setup:
+# 	npm install
+
+# npm-run:
+# 	npm start
+
+# npm-test:
+# 	npm test
+
+# npm-lint:
+# 	npm run lint
+
+# npm-build:
+# 	npm run build

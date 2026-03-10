@@ -1,0 +1,199 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-19",
+  "rules": [
+    {
+      "id": "no-branches-commit-to-main",
+      "level": "ALWAYS",
+      "category": "git",
+      "description": "Commit directly to main/current branch, no new branches",
+      "context": {
+        "when": ["committing code"],
+        "unless": ["user explicitly requests branch"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Direct commits to current branch",
+        "alternative": "Only create branch if user explicitly requests"
+      },
+      "rationale": "Simplified workflow for prototyping, user manages branching strategy",
+      "examples": [
+        {
+          "scenario": "User: 'Commit the changes'",
+          "correct": "git add . && git commit -m 'message'",
+          "incorrect": "git checkout -b feature/new-feature && git commit"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "no-force-push-to-main",
+      "level": "NEVER",
+      "category": "git",
+      "description": "Never force push to main/master without explicit request",
+      "context": {
+        "when": ["pushing to remote"],
+        "destructive": true
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "git push --force to main/master",
+        "message": "Force push to main destructive. Warn user if requested."
+      },
+      "rationale": "Prevent history rewriting on shared branches, data loss prevention",
+      "examples": [
+        {
+          "scenario": "Push fails due to diverged history",
+          "correct": "Explain conflict, suggest pull or ask user how to proceed",
+          "incorrect": "Automatically run git push --force"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "never-skip-hooks",
+      "level": "NEVER",
+      "category": "git",
+      "description": "Never use --no-verify or --no-gpg-sign unless explicitly requested",
+      "context": {
+        "when": ["committing changes"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "Skip git hooks (--no-verify, --no-gpg-sign)",
+        "alternative": "Let hooks run, fix issues if they fail"
+      },
+      "rationale": "Hooks enforce quality/security standards, bypassing defeats purpose",
+      "examples": [
+        {
+          "scenario": "Pre-commit hook fails on linting",
+          "correct": "Fix linting errors, then commit",
+          "incorrect": "git commit --no-verify to bypass"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "only-commit-when-asked",
+      "level": "NEVER",
+      "category": "git",
+      "description": "Never create commits unless user explicitly requests",
+      "context": {
+        "when": ["made code changes"],
+        "unless": ["user said 'commit', 'push', or similar"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "Proactive git commits",
+        "message": "Only commit when user explicitly asks"
+      },
+      "rationale": "User controls commit timing, may want to review/test first",
+      "examples": [
+        {
+          "scenario": "Just finished implementing feature",
+          "correct": "Mention work complete, wait for user to request commit",
+          "incorrect": "Automatically run git add && git commit"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "git-commit-message-format",
+      "level": "MUST",
+      "category": "git",
+      "description": "Use HEREDOC for git commit messages",
+      "context": {
+        "when": ["creating git commits"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "HEREDOC format for commit messages",
+        "message": "git commit -m \"$(cat <<'EOF'\\nMessage here\\nEOF\\n)\""
+      },
+      "rationale": "Ensures proper formatting, handles multi-line messages, avoids quote escaping",
+      "examples": [
+        {
+          "scenario": "Committing with message",
+          "correct": "git commit -m \"$(cat <<'EOF'\\nfeat: Add auth\\nEOF\\n)\"",
+          "incorrect": "git commit -m 'feat: Add auth' (quote issues if message complex)"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "check-authorship-before-amend",
+      "level": "ALWAYS",
+      "category": "git",
+      "description": "Check commit author before amending",
+      "context": {
+        "when": ["using git commit --amend"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Check git log -1 --format='%an %ae' before amend",
+        "message": "Never amend other developers' commits"
+      },
+      "rationale": "Amending others' commits rewrites their history, collaboration issue",
+      "examples": [
+        {
+          "scenario": "Need to amend commit after pre-commit hook changes",
+          "correct": "Check author matches current user, then amend",
+          "incorrect": "Blindly amend without checking author"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "retry-network-operations",
+      "level": "SHOULD",
+      "category": "git",
+      "description": "Retry git push/pull/fetch on network failures (4x exponential backoff)",
+      "context": {
+        "when": ["git push fails", "git pull fails", "git fetch fails"],
+        "unless": ["non-network error like conflict, auth failure"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Exponential backoff retry (2s, 4s, 8s, 16s)",
+        "message": "Network error. Retrying with backoff..."
+      },
+      "rationale": "Transient network failures common, auto-retry improves success rate",
+      "examples": [
+        {
+          "scenario": "git push fails with network timeout",
+          "correct": "Wait 2s, retry. If fails, wait 4s, retry. Continue up to 4 attempts.",
+          "incorrect": "Immediately give up after first network failure"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    }
+  ]
+}

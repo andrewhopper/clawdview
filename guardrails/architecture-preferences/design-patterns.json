@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Architecture Preferences - Design Patterns",
+  "description": "Code-level design patterns and best practices",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-16",
+  "categories": {
+    "creational_patterns": {
+      "description": "Object creation patterns",
+      "preferences": []
+    },
+    "structural_patterns": {
+      "description": "Object composition patterns",
+      "preferences": []
+    },
+    "behavioral_patterns": {
+      "description": "Object interaction patterns",
+      "preferences": []
+    },
+    "code_organization": {
+      "description": "Code structure and organization patterns",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Service Layer Pattern",
+          "version": "1.0.0",
+          "rationale": "Separates business logic from controllers, improves testability and reusability",
+          "useCases": [
+            "API development",
+            "complex business logic",
+            "multi-endpoint shared logic"
+          ],
+          "keyPrinciples": [
+            "Controllers handle HTTP concerns only",
+            "Services contain business logic",
+            "Services are framework-agnostic",
+            "Services are easily testable"
+          ],
+          "exampleLocation": "shared/standards/code/nodejs/",
+          "docsLocation": "shared/standards/code/README.md",
+          "status": "approved"
+        }
+      ]
+    }
+  }
+}

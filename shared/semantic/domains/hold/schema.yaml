@@ -1,0 +1,420 @@
+# Hold Domain Model
+# Time-bound reservation holds with expiration and conversion
+# Extends capacity domain with hold lifecycle management
+
+domain:
+  name: hold
+  version: "1.0.0"
+  description: Time-bound holds on resources with expiration, extension, and conversion to confirmed reservations
+  dependencies: [core, capacity]
+  use_case: Shopping cart holds, ticket holds, hotel room holds, appointment slots
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  # ============================================
+  # HOLD POLICY
+  # ============================================
+
+  HoldPolicy:
+    description: Policy governing hold behavior for a resource type
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      resourceType: { type: string, required: true, description: "What this policy applies to" }
+      # Duration
+      defaultDurationSeconds: { type: integer, required: true, description: "Default hold duration" }
+      minDurationSeconds: { type: integer, required: true }
+      maxDurationSeconds: { type: integer, required: true }
+      # Extensions
+      extensionsAllowed: { type: integer, required: true, default: 0 }
+      extensionDurationSeconds: { type: integer }
+      extensionRequiresAuth: { type: boolean, default: false }
+      # Limits
+      maxHoldsPerUser: { type: integer, description: "Max concurrent holds per user" }
+      maxHoldsPerSession: { type: integer, description: "Max holds per anonymous session" }
+      maxQuantityPerHold: { type: integer, description: "Max units per single hold" }
+      # Behavior
+      autoReleaseOnExpiry: { type: boolean, required: true, default: true }
+      notifyBeforeExpiry: { type: boolean, default: true }
+      notifyBeforeExpirySeconds: { type: integer, default: 300 }
+      # Conversion
+      requiresPaymentToConvert: { type: boolean, default: true }
+      conversionWindowSeconds: { type: integer, description: "Time after hold to complete conversion" }
+      # Priority
+      priorityRules: { type: array, items: HoldPriorityRule }
+      # Status
+      isActive: { type: boolean, required: true, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  HoldPriorityRule:
+    description: Rule for determining hold priority (who gets displaced first)
+    properties:
+      id: { type: uuid, required: true }
+      policyId: { type: uuid, required: true }
+      condition: { type: string, required: true, description: "member_tier, hold_age, etc." }
+      conditionValue: { type: string }
+      priorityScore: { type: integer, required: true, description: "Higher = harder to displace" }
+      sortOrder: { type: integer, required: true }
+
+  # ============================================
+  # HOLD LIFECYCLE
+  # ============================================
+
+  Hold:
+    description: A time-bound hold on a resource
+    properties:
+      id: { type: uuid, required: true }
+      policyId: { type: uuid, required: true, description: "FK to HoldPolicy" }
+      # Resource reference
+      resourceType: { type: string, required: true }
+      resourceId: { type: string, required: true, description: "FK to held resource" }
+      resourcePoolId: { type: uuid, description: "FK to capacity:CapacityPool" }
+      quantity: { type: integer, required: true, minimum: 1 }
+      # Holder
+      holderId: { type: string, required: true }
+      holderType: { type: HolderType, required: true }
+      holderContext: { type: object, description: "Session info, device, etc." }
+      # Time bounds
+      createdAt: { type: datetime, required: true }
+      expiresAt: { type: datetime, required: true }
+      originalExpiresAt: { type: datetime, required: true }
+      # Extensions
+      extensionCount: { type: integer, required: true, default: 0 }
+      lastExtendedAt: { type: datetime }
+      # State
+      status: { type: HoldStatus, required: true, default: active }
+      # Conversion
+      convertedAt: { type: datetime }
+      conversionId: { type: string, description: "ID of resulting reservation/order" }
+      conversionType: { type: string, description: "reservation, order, booking" }
+      # Release
+      releasedAt: { type: datetime }
+      releaseReason: { type: ReleaseReason }
+      releasedBy: { type: string }
+      # Priority
+      priorityScore: { type: integer, default: 0 }
+      # External reference
+      externalReference: { type: string, description: "Cart ID, session ID, etc." }
+      metadata: { type: object }
+      updatedAt: { type: datetime, required: true }
+
+  HoldExtension:
+    description: Record of a hold extension
+    properties:
+      id: { type: uuid, required: true }
+      holdId: { type: uuid, required: true }
+      previousExpiresAt: { type: datetime, required: true }
+      newExpiresAt: { type: datetime, required: true }
+      extensionSeconds: { type: integer, required: true }
+      reason: { type: string }
+      requestedBy: { type: string }
+      grantedAt: { type: datetime, required: true }
+
+  # ============================================
+  # HOLD QUEUE (for high-demand scenarios)
+  # ============================================
+
+  HoldQueue:
+    description: Queue for users waiting to get a hold when capacity exhausted
+    properties:
+      id: { type: uuid, required: true }
+      resourceType: { type: string, required: true }
+      resourceId: { type: string, required: true }
+      # Configuration
+      maxQueueSize: { type: integer }
+      queuePolicy: { type: QueuePolicy, required: true, default: fifo }
+      offerDurationSeconds: { type: integer, required: true, description: "How long offer is valid" }
+      autoOffer: { type: boolean, required: true, default: true }
+      # Status
+      isActive: { type: boolean, required: true, default: true }
+      currentSize: { type: integer, required: true, default: 0 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  HoldQueueEntry:
+    description: Entry in a hold queue
+    properties:
+      id: { type: uuid, required: true }
+      queueId: { type: uuid, required: true }
+      # Requester
+      requesterId: { type: string, required: true }
+      requesterType: { type: HolderType, required: true }
+      quantity: { type: integer, required: true, minimum: 1 }
+      # Position
+      position: { type: integer, required: true }
+      joinedAt: { type: datetime, required: true }
+      # Priority (for non-FIFO queues)
+      priorityScore: { type: integer, default: 0 }
+      priorityReason: { type: string }
+      # Offer
+      offeredAt: { type: datetime }
+      offerExpiresAt: { type: datetime }
+      # State
+      status: { type: QueueEntryStatus, required: true, default: waiting }
+      # Result
+      resultHoldId: { type: uuid, description: "FK to Hold if offer accepted" }
+      exitedAt: { type: datetime }
+      exitReason: { type: QueueExitReason }
+      metadata: { type: object }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # HOLD NOTIFICATIONS
+  # ============================================
+
+  HoldNotification:
+    description: Notification about hold status
+    properties:
+      id: { type: uuid, required: true }
+      holdId: { type: uuid, required: true }
+      notificationType: { type: HoldNotificationType, required: true }
+      # Delivery
+      channel: { type: NotificationChannel, required: true }
+      recipientId: { type: string, required: true }
+      recipientAddress: { type: string, description: "Email, phone, etc." }
+      # Content
+      subject: { type: string }
+      body: { type: string }
+      # Status
+      scheduledFor: { type: datetime, required: true }
+      sentAt: { type: datetime }
+      deliveredAt: { type: datetime }
+      status: { type: NotificationStatus, required: true, default: pending }
+      # Error
+      errorMessage: { type: string }
+      retryCount: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+enums:
+
+  HolderType:
+    values:
+      - user          # Authenticated user
+      - session       # Anonymous session
+      - guest         # Guest checkout
+      - system        # System process
+      - agent         # Booking agent
+      - partner       # Partner system
+      - api           # API client
+
+  HoldStatus:
+    values:
+      - active        # Hold is active
+      - expiring_soon # Expiry warning sent
+      - expired       # Timed out without conversion
+      - converted     # Successfully converted to reservation
+      - released      # Manually released
+      - cancelled     # Cancelled by holder
+      - displaced     # Displaced by higher priority
+      - failed        # Failed to create (payment issue, etc.)
+
+  ReleaseReason:
+    values:
+      - expired           # Timed out
+      - user_cancelled    # User cancelled
+      - user_abandoned    # User left without action
+      - converted         # Converted to reservation
+      - payment_failed    # Payment didn't go through
+      - payment_timeout   # Payment timed out
+      - displaced         # Higher priority took it
+      - system_release    # System released
+      - policy_violation  # Violated hold policy
+      - resource_unavailable # Resource became unavailable
+      - duplicate         # Duplicate hold detected
+
+  QueuePolicy:
+    values:
+      - fifo          # First in, first out
+      - priority      # By priority score
+      - lottery       # Random selection
+      - weighted_lottery # Random weighted by priority
+      - hybrid        # FIFO with priority boost
+
+  QueueEntryStatus:
+    values:
+      - waiting       # In queue
+      - offered       # Offer extended
+      - accepted      # Offer accepted, hold created
+      - declined      # Offer declined
+      - expired       # Offer expired
+      - cancelled     # Left queue
+      - removed       # Removed by system
+
+  QueueExitReason:
+    values:
+      - offer_accepted   # Got hold
+      - offer_declined   # Declined offer
+      - offer_expired    # Didn't respond in time
+      - user_cancelled   # Left queue
+      - queue_closed     # Queue was closed
+      - timeout          # Max wait time exceeded
+      - removed          # Removed by admin
+
+  HoldNotificationType:
+    values:
+      - hold_created     # Hold successfully created
+      - hold_extended    # Hold was extended
+      - expiring_soon    # Hold expiring warning
+      - expired          # Hold has expired
+      - converted        # Hold converted to reservation
+      - released         # Hold was released
+      - queue_joined     # Joined wait queue
+      - queue_position   # Queue position update
+      - offer_available  # Offer ready to accept
+      - offer_expiring   # Offer about to expire
+
+  NotificationChannel:
+    values:
+      - email
+      - sms
+      - push
+      - in_app
+      - webhook
+
+  NotificationStatus:
+    values:
+      - pending
+      - scheduled
+      - sent
+      - delivered
+      - failed
+      - cancelled
+
+actions:
+
+  # Hold lifecycle
+  CreateHold:
+    description: Create a new hold on a resource
+    parameters:
+      policyId: { type: uuid, required: true }
+      resourceType: { type: string, required: true }
+      resourceId: { type: string, required: true }
+      quantity: { type: integer, required: true }
+      holderId: { type: string, required: true }
+      holderType: { type: HolderType, required: true }
+      durationSeconds: { type: integer, description: "Override policy default" }
+      externalReference: { type: string }
+    result: Hold
+    idempotent: false
+
+  ExtendHold:
+    description: Extend a hold's expiration
+    parameters:
+      holdId: { type: uuid, required: true }
+      additionalSeconds: { type: integer }
+      reason: { type: string }
+    result: Hold
+    idempotent: false
+
+  ConvertHold:
+    description: Convert hold to confirmed reservation
+    parameters:
+      holdId: { type: uuid, required: true }
+      conversionType: { type: string, required: true }
+      conversionId: { type: string, required: true }
+    result: Hold
+    idempotent: true
+
+  ReleaseHold:
+    description: Release a hold
+    parameters:
+      holdId: { type: uuid, required: true }
+      reason: { type: ReleaseReason, required: true }
+      releasedBy: { type: string }
+    result: Hold
+    idempotent: true
+
+  # Queue operations
+  JoinHoldQueue:
+    description: Join queue for a hold
+    parameters:
+      queueId: { type: uuid, required: true }
+      requesterId: { type: string, required: true }
+      requesterType: { type: HolderType, required: true }
+      quantity: { type: integer, required: true }
+      priorityScore: { type: integer }
+    result: HoldQueueEntry
+    idempotent: false
+
+  LeaveHoldQueue:
+    description: Leave a hold queue
+    parameters:
+      entryId: { type: uuid, required: true }
+      reason: { type: string }
+    result: HoldQueueEntry
+    idempotent: true
+
+  AcceptHoldOffer:
+    description: Accept an offer from the queue
+    parameters:
+      entryId: { type: uuid, required: true }
+    result: Hold
+    idempotent: true
+
+  DeclineHoldOffer:
+    description: Decline an offer from the queue
+    parameters:
+      entryId: { type: uuid, required: true }
+      reason: { type: string }
+    result: HoldQueueEntry
+    idempotent: true
+
+  # Queries
+  GetHold:
+    description: Get hold by ID
+    parameters:
+      holdId: { type: uuid, required: true }
+    result: Hold
+    idempotent: true
+
+  GetHoldsForHolder:
+    description: Get all holds for a holder
+    parameters:
+      holderId: { type: string, required: true }
+      status: { type: HoldStatus }
+      resourceType: { type: string }
+    result: { type: array, items: Hold }
+    idempotent: true
+
+  GetQueuePosition:
+    description: Get position in hold queue
+    parameters:
+      entryId: { type: uuid, required: true }
+    result: { type: object, description: "Position and estimated wait" }
+    idempotent: true
+
+relationships:
+  - type: many_to_one
+    from: Hold
+    to: HoldPolicy
+    foreign_key: policyId
+    description: Holds follow a policy
+
+  - type: one_to_many
+    from: Hold
+    to: HoldExtension
+    foreign_key: holdId
+    description: A hold can have multiple extensions
+
+  - type: one_to_many
+    from: HoldQueue
+    to: HoldQueueEntry
+    foreign_key: queueId
+    description: A queue has many entries
+
+  - type: one_to_many
+    from: Hold
+    to: HoldNotification
+    foreign_key: holdId
+    description: A hold triggers notifications
+
+  - type: one_to_one
+    from: HoldQueueEntry
+    to: Hold
+    foreign_key: resultHoldId
+    description: Queue entry may result in a hold

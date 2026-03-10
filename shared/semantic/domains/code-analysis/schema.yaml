@@ -1,0 +1,406 @@
+# Code Analysis Domain Model
+# For auto-doc generator and code analysis tools
+
+name: CodeAnalysis
+version: "1.0.0"
+updated: "2025-12-04"
+description: Domain models for analyzing source code structure, git history, and generating documentation
+
+types:
+  # ===================
+  # CODE STRUCTURE
+  # ===================
+
+  CodeFile:
+    description: "A source code file"
+    properties:
+      uuid:
+        type: string
+        format: uuid
+        required: true
+      path:
+        type: string
+        required: true
+        description: "Absolute path to file"
+      relative_path:
+        type: string
+        required: true
+        description: "Path relative to project root"
+      language:
+        type: Language
+        required: true
+      lines_of_code:
+        type: integer
+        required: true
+      summary:
+        type: string
+        required: false
+        description: "LLM-generated summary"
+      classes:
+        type: array
+        items: CodeClass
+        required: false
+      functions:
+        type: array
+        items: CodeFunction
+        required: false
+      imports:
+        type: array
+        items: Import
+        required: false
+      content_hash:
+        type: string
+        required: true
+        description: "SHA256 hash of file content"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  CodeClass:
+    description: "A class or type definition"
+    properties:
+      uuid:
+        type: string
+        format: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      file_uuid:
+        type: string
+        format: uuid
+        required: true
+      docstring:
+        type: string
+        required: false
+      methods:
+        type: array
+        items: CodeFunction
+        required: false
+      attributes:
+        type: array
+        items: Attribute
+        required: false
+      extends:
+        type: array
+        items: string
+        required: false
+        description: "Parent classes"
+      implements:
+        type: array
+        items: string
+        required: false
+        description: "Implemented interfaces"
+      line_start:
+        type: integer
+        required: true
+      line_end:
+        type: integer
+        required: true
+
+  CodeFunction:
+    description: "A function or method"
+    properties:
+      uuid:
+        type: string
+        format: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      file_uuid:
+        type: string
+        format: uuid
+        required: true
+      class_uuid:
+        type: string
+        format: uuid
+        required: false
+        description: "Parent class if this is a method"
+      parameters:
+        type: array
+        items: Parameter
+        required: false
+      return_type:
+        type: string
+        required: false
+      docstring:
+        type: string
+        required: false
+      is_async:
+        type: boolean
+        default: false
+      line_start:
+        type: integer
+        required: true
+      line_end:
+        type: integer
+        required: true
+
+  Import:
+    description: "An import statement"
+    properties:
+      module:
+        type: string
+        required: true
+      names:
+        type: array
+        items: string
+        required: false
+        description: "Specific names imported (from X import a, b)"
+      alias:
+        type: string
+        required: false
+      is_relative:
+        type: boolean
+        default: false
+
+  Parameter:
+    description: "A function parameter"
+    properties:
+      name:
+        type: string
+        required: true
+      type:
+        type: string
+        required: false
+      default:
+        type: string
+        required: false
+
+  Attribute:
+    description: "A class attribute"
+    properties:
+      name:
+        type: string
+        required: true
+      type:
+        type: string
+        required: false
+      visibility:
+        type: Visibility
+        default: public
+
+  # ===================
+  # GIT HISTORY
+  # ===================
+
+  GitCommit:
+    description: "A git commit"
+    properties:
+      hash:
+        type: string
+        required: true
+      short_hash:
+        type: string
+        required: true
+      author_name:
+        type: string
+        required: true
+      author_email:
+        type: string
+        required: true
+      date:
+        type: datetime
+        required: true
+      message:
+        type: string
+        required: true
+      files_changed:
+        type: integer
+        required: true
+      insertions:
+        type: integer
+        required: false
+      deletions:
+        type: integer
+        required: false
+
+  Milestone:
+    description: "A significant point in project history (LLM-detected)"
+    properties:
+      uuid:
+        type: string
+        format: uuid
+        required: true
+      commit_hash:
+        type: string
+        required: true
+      date:
+        type: datetime
+        required: true
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      milestone_type:
+        type: MilestoneType
+        required: true
+      significance:
+        type: integer
+        min: 1
+        max: 10
+        description: "1-10 importance score"
+
+  # ===================
+  # DIAGRAMS
+  # ===================
+
+  DiagramData:
+    description: "Data for rendering a diagram via diagram-craft"
+    properties:
+      uuid:
+        type: string
+        format: uuid
+        required: true
+      diagram_type:
+        type: DiagramType
+        required: true
+      title:
+        type: string
+        required: true
+      nodes:
+        type: array
+        items: DiagramNode
+        required: true
+      edges:
+        type: array
+        items: DiagramEdge
+        required: true
+      metadata:
+        type: object
+        required: false
+
+  DiagramNode:
+    description: "A node in a diagram"
+    properties:
+      id:
+        type: string
+        required: true
+      label:
+        type: string
+        required: true
+      type:
+        type: string
+        required: false
+        description: "Node type for styling"
+      data:
+        type: object
+        required: false
+        description: "Additional data (fields for ERD, etc.)"
+      position:
+        type: Position
+        required: false
+
+  DiagramEdge:
+    description: "An edge connecting nodes"
+    properties:
+      id:
+        type: string
+        required: true
+      source:
+        type: string
+        required: true
+      target:
+        type: string
+        required: true
+      label:
+        type: string
+        required: false
+      type:
+        type: string
+        required: false
+        description: "Edge type (inheritance, composition, etc.)"
+
+  Position:
+    description: "2D position for layout"
+    properties:
+      x:
+        type: number
+        required: true
+      y:
+        type: number
+        required: true
+
+  # ===================
+  # ENUMS
+  # ===================
+
+  Language:
+    description: "Supported programming languages"
+    enum:
+      - python
+      - typescript
+      - javascript
+      - java
+      - go
+      - rust
+      - other
+
+  Visibility:
+    description: "Member visibility"
+    enum:
+      - public
+      - private
+      - protected
+
+  MilestoneType:
+    description: "Types of project milestones"
+    enum:
+      - initial_commit
+      - major_feature
+      - refactor
+      - breaking_change
+      - release
+      - documentation
+      - infrastructure
+
+  DiagramType:
+    description: "Types of diagrams"
+    enum:
+      - class_diagram
+      - sequence_diagram
+      - component_diagram
+      - dependency_graph
+      - timeline
+
+# ===================
+# RELATIONSHIPS
+# ===================
+
+relationships:
+  - from: CodeClass
+    to: CodeFile
+    type: belongs_to
+    via: file_uuid
+
+  - from: CodeFunction
+    to: CodeFile
+    type: belongs_to
+    via: file_uuid
+
+  - from: CodeFunction
+    to: CodeClass
+    type: belongs_to
+    via: class_uuid
+    optional: true
+
+  - from: Milestone
+    to: GitCommit
+    type: references
+    via: commit_hash
+
+  - from: DiagramNode
+    to: DiagramData
+    type: belongs_to
+    implicit: true
+
+  - from: DiagramEdge
+    to: DiagramData
+    type: belongs_to
+    implicit: true

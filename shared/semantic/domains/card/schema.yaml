@@ -1,0 +1,546 @@
+# Card Domain Model
+# Universal card structure and presentation primitives
+# Reusable for feeds, dashboards, approval flows, e-commerce, task management
+
+domain:
+  name: card
+  version: "1.1.0"
+  description: Universal card structure, layout, and presentation with review options and quick regeneration controls
+  dependencies: [core]
+  use_case: Social feeds, approval UIs, dashboards, RLHF interfaces, AI content generation with style adjustments
+  created_at: "2025-12-01"
+  updated_at: "2025-12-01"
+
+entities:
+
+  # ============================================
+  # CORE CARD STRUCTURE
+  # ============================================
+
+  Card:
+    description: A self-contained UI container with content, actions, and metadata
+    properties:
+      id: { type: uuid, required: true }
+      type: { type: CardType, required: true }
+      title: { type: string, maxLength: 100 }
+      subtitle: { type: string, maxLength: 200 }
+      sections: { type: array, items: CardSection, required: true }
+      actions: { type: array, items: CardAction }
+      metadata: { type: CardMetadata }
+      state: { type: CardState, required: true }
+      priority: { type: decimal, min: 0.0, max: 1.0, description: "For queue ordering" }
+      expiresAt: { type: datetime }
+      sourceRef: { type: ExternalRef, description: "What created this card" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CardSection:
+    description: A logical section within a card (header, body, footer, media, etc.)
+    properties:
+      id: { type: string, required: true, description: "Unique within card" }
+      type: { type: SectionType, required: true }
+      blocks: { type: array, items: ContentBlock, required: true }
+      layout: { type: LayoutHint }
+      isCollapsible: { type: boolean, default: false }
+      isCollapsed: { type: boolean, default: false }
+      background: { type: BackgroundStyle }
+
+  ContentBlock:
+    description: Atomic content unit within a section
+    discriminator: blockType
+    properties:
+      id: { type: string, required: true }
+      blockType: { type: BlockType, required: true }
+
+  # ============================================
+  # CONTENT BLOCK TYPES
+  # ============================================
+
+  TextBlock:
+    description: Plain or formatted text
+    extends: ContentBlock
+    properties:
+      text: { type: string, required: true }
+      format: { type: TextFormat, default: Plain }
+      maxLines: { type: integer, description: "Truncate after N lines" }
+      isTruncated: { type: boolean }
+
+  RichTextBlock:
+    description: Markdown or HTML content
+    extends: ContentBlock
+    properties:
+      content: { type: string, required: true }
+      format: { type: RichTextFormat, required: true }
+      sanitized: { type: boolean, required: true, default: false }
+
+  CodeBlock:
+    description: Syntax-highlighted code
+    extends: ContentBlock
+    properties:
+      code: { type: string, required: true }
+      language: { type: string, required: true }
+      lineNumbers: { type: boolean, default: true }
+      highlightLines: { type: array, items: integer }
+      filename: { type: string }
+
+  ImageBlock:
+    description: Single image with alt text
+    extends: ContentBlock
+    properties:
+      url: { type: uri, required: true }
+      altText: { type: string, required: true }
+      caption: { type: string }
+      aspectRatio: { type: decimal }
+      thumbnailUrl: { type: uri }
+      blurHash: { type: string, description: "For progressive loading" }
+
+  ImageGalleryBlock:
+    description: Multiple images in a gallery
+    extends: ContentBlock
+    properties:
+      images: { type: array, items: GalleryImage, required: true }
+      layout: { type: GalleryLayout, required: true }
+      currentIndex: { type: integer, default: 0 }
+
+  VideoBlock:
+    description: Video player
+    extends: ContentBlock
+    properties:
+      url: { type: uri, required: true }
+      thumbnailUrl: { type: uri }
+      duration: { type: integer, description: "Seconds" }
+      autoplay: { type: boolean, default: false }
+      muted: { type: boolean, default: false }
+
+  AudioBlock:
+    description: Audio player
+    extends: ContentBlock
+    properties:
+      url: { type: uri, required: true }
+      title: { type: string }
+      artist: { type: string }
+      duration: { type: integer, description: "Seconds" }
+      waveformUrl: { type: uri, description: "Waveform visualization" }
+      autoplay: { type: boolean, default: false }
+
+  TableBlock:
+    description: Structured tabular data
+    extends: ContentBlock
+    properties:
+      headers: { type: array, items: TableHeader, required: true }
+      rows: { type: array, items: TableRow, required: true }
+      sortable: { type: boolean, default: false }
+      sortBy: { type: string, description: "Column key" }
+      sortDirection: { type: SortDirection }
+
+  KeyValueBlock:
+    description: Key-value pairs (metadata, specs, properties)
+    extends: ContentBlock
+    properties:
+      items: { type: array, items: KeyValuePair, required: true }
+      layout: { type: KeyValueLayout, default: Vertical }
+
+  ListBlock:
+    description: Bulleted or numbered list
+    extends: ContentBlock
+    properties:
+      items: { type: array, items: ListItem, required: true }
+      ordered: { type: boolean, default: false }
+      dense: { type: boolean, default: false }
+
+  ChartBlock:
+    description: Data visualization (bar, line, pie, etc.)
+    extends: ContentBlock
+    properties:
+      chartType: { type: ChartType, required: true }
+      data: { type: object, required: true, description: "Chart.js / Recharts compatible data" }
+      config: { type: object, description: "Chart-specific configuration" }
+
+  BadgeBlock:
+    description: Status badges, tags, labels
+    extends: ContentBlock
+    properties:
+      badges: { type: array, items: Badge, required: true }
+      layout: { type: BadgeLayout, default: Inline }
+
+  ComparisonBlock:
+    description: Side-by-side comparison (before/after, option A vs B)
+    extends: ContentBlock
+    properties:
+      left: { type: ComparisonItem, required: true }
+      right: { type: ComparisonItem, required: true }
+      differences: { type: array, items: Difference }
+
+  QuoteBlock:
+    description: Blockquote or pull quote
+    extends: ContentBlock
+    properties:
+      text: { type: string, required: true }
+      attribution: { type: string }
+      url: { type: uri }
+
+  DividerBlock:
+    description: Visual separator
+    extends: ContentBlock
+    properties:
+      style: { type: DividerStyle, default: Solid }
+      thickness: { type: integer, default: 1 }
+
+  ReviewOptionsBlock:
+    description: Multiple choice review options (approve/reject, choose between 2-5 options)
+    extends: ContentBlock
+    properties:
+      promptText: { type: string, required: true, description: "What is being asked?" }
+      options: { type: array, items: ReviewOption, required: true, minItems: 2, maxItems: 5 }
+      allowMultiple: { type: boolean, default: false, description: "Can select multiple?" }
+      selectedOptionIds: { type: array, items: string }
+      layout: { type: OptionsLayout, default: Vertical }
+
+  RegenerateOptionsBlock:
+    description: Quick style adjustment buttons for one-tap regeneration (more funky, more creative, etc.)
+    extends: ContentBlock
+    properties:
+      promptText: { type: string, default: "Adjust and regenerate:" }
+      styleOptions: { type: array, items: StyleOption, required: true, minItems: 2, maxItems: 8 }
+      regenerateActionId: { type: string, required: true, description: "Action to trigger on selection" }
+      layout: { type: RegenerateLayout, default: Grid }
+
+  # ============================================
+  # CARD ACTIONS
+  # ============================================
+
+  CardAction:
+    description: Actionable element on a card (button, link, swipe handler)
+    properties:
+      id: { type: string, required: true }
+      label: { type: string, required: true }
+      type: { type: ActionType, required: true }
+      style: { type: ActionStyle, default: Primary }
+      icon: { type: string }
+      keyboardShortcut: { type: KeyboardShortcut }
+      gestureType: { type: string, description: "FK to gesture:GestureType if gesture-triggered" }
+      swipeDirection: { type: string, description: "FK to gesture:SwipeDirection if swipe action" }
+      isDestructive: { type: boolean, default: false }
+      isDisabled: { type: boolean, default: false }
+      confirmationRequired: { type: boolean, default: false }
+      confirmationMessage: { type: string }
+      targetUrl: { type: uri }
+      actionPayload: { type: object, description: "Action-specific data" }
+
+  # ============================================
+  # CARD METADATA & PRESENTATION
+  # ============================================
+
+  CardMetadata:
+    description: Rendering hints and accessibility metadata
+    properties:
+      scanTimeSeconds: { type: integer, description: "Expected time to scan card" }
+      density: { type: CardDensity, default: Normal }
+      theme: { type: ThemeHint, default: Auto }
+      elevation: { type: integer, min: 0, max: 5, default: 1, description: "Shadow depth" }
+      borderRadius: { type: integer, description: "px" }
+      isPinned: { type: boolean, default: false }
+      isArchived: { type: boolean, default: false }
+      tags: { type: array, items: string }
+      accessibility: { type: AccessibilityMetadata }
+
+  AccessibilityMetadata:
+    properties:
+      label: { type: string, required: true, description: "Screen reader label" }
+      hint: { type: string }
+      role: { type: string, description: "ARIA role" }
+      isHeading: { type: boolean, default: false }
+
+  LayoutHint:
+    description: Non-prescriptive layout suggestions (implementer can override)
+    properties:
+      arrangement: { type: Arrangement, default: Vertical }
+      alignment: { type: Alignment, default: Start }
+      spacing: { type: Spacing, default: Normal }
+      padding: { type: Spacing, default: Normal }
+      fillWidth: { type: boolean, default: false }
+
+  BackgroundStyle:
+    properties:
+      color: { type: string, description: "Hex color" }
+      gradient: { type: Gradient }
+      imageUrl: { type: uri }
+      opacity: { type: decimal, min: 0.0, max: 1.0, default: 1.0 }
+
+  Gradient:
+    properties:
+      type: { type: GradientType, required: true }
+      colors: { type: array, items: string, required: true, description: "Hex colors" }
+      angle: { type: integer, description: "Degrees for linear gradient" }
+
+  # ============================================
+  # SUPPORTING VALUE OBJECTS
+  # ============================================
+
+  GalleryImage:
+    properties:
+      url: { type: uri, required: true }
+      altText: { type: string, required: true }
+      caption: { type: string }
+      thumbnailUrl: { type: uri }
+
+  TableHeader:
+    properties:
+      key: { type: string, required: true }
+      label: { type: string, required: true }
+      sortable: { type: boolean, default: false }
+      align: { type: Alignment, default: Start }
+
+  TableRow:
+    properties:
+      cells: { type: object, required: true, description: "Map<key, value>" }
+      isHighlighted: { type: boolean, default: false }
+
+  KeyValuePair:
+    properties:
+      key: { type: string, required: true }
+      value: { type: string, required: true }
+      icon: { type: string }
+      url: { type: uri }
+
+  ListItem:
+    properties:
+      text: { type: string, required: true }
+      icon: { type: string }
+      checked: { type: boolean, description: "For checkbox lists" }
+      nested: { type: array, items: ListItem }
+
+  Badge:
+    properties:
+      label: { type: string, required: true }
+      color: { type: string, description: "Hex color" }
+      variant: { type: BadgeVariant, default: Default }
+
+  ComparisonItem:
+    properties:
+      label: { type: string, required: true }
+      content: { type: array, items: ContentBlock, required: true }
+
+  Difference:
+    properties:
+      path: { type: string, required: true, description: "What changed" }
+      type: { type: DifferenceType, required: true }
+      before: { type: string }
+      after: { type: string }
+
+  ReviewOption:
+    description: A single option in a review choice set
+    properties:
+      id: { type: string, required: true }
+      label: { type: string, required: true, maxLength: 50 }
+      description: { type: string, maxLength: 200 }
+      icon: { type: string, description: "Icon name/emoji" }
+      keyboardShortcut: { type: KeyboardShortcut }
+      swipeDirection: { type: string, description: "FK to gesture:SwipeDirection" }
+      color: { type: string, description: "Hex color for visual emphasis" }
+      value: { type: string, required: true, description: "Programmatic value" }
+      isRecommended: { type: boolean, default: false }
+      isDestructive: { type: boolean, default: false }
+
+  StyleOption:
+    description: Quick style adjustment for regeneration (e.g., 'more funky', 'more art deco')
+    properties:
+      id: { type: string, required: true }
+      label: { type: string, required: true, maxLength: 40, description: "e.g., 'More Funky', 'Less Formal'" }
+      icon: { type: string, description: "Icon name/emoji" }
+      dimensionId: { type: string, description: "FK to human-task:FeedbackDimension if mapped" }
+      adjustmentDirection: { type: AdjustmentDirection, required: true, description: "More or Less" }
+      adjustmentValue: { type: decimal, min: -1.0, max: 1.0, description: "Normalized adjustment (-1 to 1)" }
+      previewUrl: { type: uri, description: "Optional preview image" }
+      color: { type: string, description: "Hex color for button styling" }
+
+  KeyboardShortcut:
+    description: Keyboard combination for triggering an action
+    properties:
+      key: { type: string, required: true, description: "Main key: a-z, 0-9, Enter, Escape, Space, ArrowUp, etc." }
+      modifiers: { type: array, items: KeyModifier, description: "Cmd, Ctrl, Alt, Shift" }
+      displayLabel: { type: string, description: "Human-friendly display (e.g., '⌘K', 'Ctrl+S')" }
+
+  ExternalRef:
+    description: Reference to entity in another domain
+    properties:
+      domain: { type: string, required: true }
+      entity: { type: string, required: true }
+      id: { type: string, required: true }
+
+enums:
+
+  # Card Types
+  CardType:
+    values:
+      - Text          # Plain text content
+      - Media         # Image/video focused
+      - Article       # Blog post, news article
+      - Product       # E-commerce product
+      - Profile       # User/person profile
+      - Task          # Todo, approval item
+      - Metric        # Dashboard metric/KPI
+      - Quote         # Testimonial, review
+      - Comparison    # A/B comparison
+      - Form          # Input form
+      - Custom        # Application-specific
+
+  # Section Types
+  SectionType:
+    values:
+      - Header
+      - Body
+      - Footer
+      - Media
+      - Actions
+      - Metadata
+      - Custom
+
+  # Block Types
+  BlockType:
+    values:
+      - Text
+      - RichText
+      - Code
+      - Image
+      - ImageGallery
+      - Video
+      - Audio
+      - Table
+      - KeyValue
+      - List
+      - Chart
+      - Badge
+      - Comparison
+      - Quote
+      - Divider
+      - ReviewOptions
+      - RegenerateOptions
+
+  # Text Formats
+  TextFormat:
+    values: [Plain, Bold, Italic, Monospace, Strikethrough, Underline]
+
+  RichTextFormat:
+    values: [Markdown, HTML, PlainText]
+
+  # Layout
+  Arrangement:
+    values: [Vertical, Horizontal, Grid, Masonry]
+
+  Alignment:
+    values: [Start, Center, End, Stretch, SpaceBetween, SpaceAround]
+
+  Spacing:
+    values: [None, Compact, Normal, Relaxed, Loose]
+
+  GalleryLayout:
+    values: [Carousel, Grid, Masonry, Stack]
+
+  KeyValueLayout:
+    values: [Vertical, Horizontal, Grid]
+
+  BadgeLayout:
+    values: [Inline, Stack, Grid]
+
+  # Styles
+  CardDensity:
+    values: [Compact, Normal, Comfortable, Spacious]
+
+  ThemeHint:
+    values: [Auto, Light, Dark, System]
+
+  ActionType:
+    values:
+      - Navigate
+      - Submit
+      - Approve
+      - Reject
+      - Defer
+      - Delete
+      - Share
+      - Like
+      - Save
+      - Edit
+      - Custom
+
+  ActionStyle:
+    values: [Primary, Secondary, Tertiary, Danger, Success, Link]
+
+  BadgeVariant:
+    values: [Default, Outlined, Filled, Dot]
+
+  DividerStyle:
+    values: [Solid, Dashed, Dotted]
+
+  ChartType:
+    values: [Line, Bar, Pie, Donut, Area, Scatter, Radar]
+
+  SortDirection:
+    values: [Ascending, Descending]
+
+  DifferenceType:
+    values: [Added, Removed, Modified, Unchanged]
+
+  GradientType:
+    values: [Linear, Radial, Conic]
+
+  # Review Options
+  OptionsLayout:
+    values: [Vertical, Horizontal, Grid, Inline]
+
+  RegenerateLayout:
+    values: [Grid, Carousel, Inline, Pills]
+
+  AdjustmentDirection:
+    values:
+      - More          # Increase dimension
+      - Less          # Decrease dimension
+      - Toggle        # Binary toggle
+
+  # Keyboard
+  KeyModifier:
+    values: [Cmd, Ctrl, Alt, Shift, Meta, Option]
+
+  # Card State
+  CardState:
+    values:
+      - Draft         # Not yet ready
+      - Active        # Ready to display
+      - Loading       # Content loading
+      - Error         # Failed to load
+      - Archived      # Hidden but retained
+      - Deleted       # Soft deleted
+
+actions:
+
+  CreateCard:
+    description: Create a new card
+    parameters:
+      type: { type: CardType, required: true }
+      title: { type: string }
+      sections: { type: array, items: CardSection, required: true }
+      actions: { type: array, items: CardAction }
+      metadata: { type: CardMetadata }
+    result: Card
+    permission: card:create
+    idempotent: false
+
+  UpdateCard:
+    description: Update card content or state
+    parameters:
+      id: { type: uuid, required: true }
+      sections: { type: array, items: CardSection }
+      state: { type: CardState }
+      metadata: { type: CardMetadata }
+    result: Card
+    permission: card:update
+    idempotent: false
+
+  ArchiveCard:
+    description: Archive a card (soft delete)
+    parameters:
+      id: { type: uuid, required: true }
+    result: Card
+    permission: card:archive
+    idempotent: true

@@ -1,0 +1,113 @@
+# Event Subscription Schema
+# Pub/sub subscription management
+
+enums:
+
+  DeliveryMode:
+    description: How events are delivered to subscribers
+    values:
+      - push        # Events pushed to subscriber endpoint
+      - pull        # Subscriber polls for events
+      - streaming   # Continuous event stream
+
+  AckMode:
+    description: Acknowledgment mode for event delivery
+    values:
+      - auto        # Acknowledged on receive
+      - manual      # Subscriber must acknowledge
+      - batch       # Batch acknowledgment
+
+entities:
+
+  EventSubscription:
+    description: Subscription to receive events from the bus
+    extends: Entity
+    properties:
+      subscriptionId:
+        type: string
+        required: true
+        description: Unique subscription identifier
+      subscriberName:
+        type: string
+        required: true
+        description: Name of the subscribing service/component
+      eventTypes:
+        type: list
+        itemType: string
+        description: Event types to receive (empty = all)
+      filter:
+        type: EventFilter
+        description: Optional filter for events
+      priority:
+        type: integer
+        default: 0
+        description: Processing priority (higher = first)
+      deliveryMode:
+        type: DeliveryMode
+        default: push
+      ackMode:
+        type: AckMode
+        default: auto
+      endpoint:
+        type: string
+        description: Delivery endpoint URL (for push mode)
+      active:
+        type: boolean
+        default: true
+        description: Whether subscription is active
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  EventBus:
+    description: Central hub for publishing and subscribing to events
+    extends: Entity
+    properties:
+      busName:
+        type: string
+        required: true
+        description: Unique name for this event bus
+      subscriptions:
+        type: list
+        itemType: EventSubscription
+        description: Active subscriptions
+      maxHistorySize:
+        type: integer
+        default: 1000
+        description: Maximum events to retain in history
+      enableDeadLetter:
+        type: boolean
+        default: true
+        description: Whether to capture failed events
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  DeadLetterEntry:
+    description: Event that failed processing
+    properties:
+      event:
+        type: DomainEvent
+        required: true
+        description: The failed event
+      error:
+        type: string
+        required: true
+        description: Error message
+      failedAt:
+        type: datetime
+        required: true
+        description: When the failure occurred
+      handlerName:
+        type: string
+        description: Handler that failed
+      retryCount:
+        type: integer
+        default: 0
+        description: Number of retry attempts

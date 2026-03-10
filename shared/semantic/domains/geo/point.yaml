@@ -1,0 +1,370 @@
+# Geo Domain: Point & Coordinate Systems
+# Foundation for all spatial data
+# Version: 1.0.0
+
+domain: geo-point
+version: "1.0.0"
+status: production
+description: Geographic points, coordinates, and reference systems
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Core Point Types
+  # ---------------------------------------------------------------------------
+
+  Point:
+    description: A point in geographic space
+    fields:
+      latitude:
+        type: float
+        required: true
+        constraints:
+          min: -90
+          max: 90
+        description: Latitude in decimal degrees (WGS84)
+      longitude:
+        type: float
+        required: true
+        constraints:
+          min: -180
+          max: 180
+        description: Longitude in decimal degrees (WGS84)
+      altitude:
+        type: float
+        required: false
+        description: Altitude in meters (above/below reference)
+      altitude_reference:
+        type: AltitudeReference
+        required: false
+        default: MSL
+        description: Reference datum for altitude
+      crs:
+        type: string
+        required: false
+        default: "EPSG:4326"
+        description: Coordinate Reference System identifier
+      accuracy_horizontal:
+        type: float
+        required: false
+        description: Horizontal accuracy in meters (radius of 68% confidence)
+      accuracy_vertical:
+        type: float
+        required: false
+        description: Vertical accuracy in meters (68% confidence)
+
+  Point3D:
+    description: Point with required altitude
+    extends: Point
+    fields:
+      altitude:
+        type: float
+        required: true
+        description: Altitude in meters
+
+  ProjectedPoint:
+    description: Point in a projected coordinate system (meters)
+    fields:
+      x:
+        type: float
+        required: true
+        description: Easting in meters
+      y:
+        type: float
+        required: true
+        description: Northing in meters
+      z:
+        type: float
+        required: false
+        description: Height in meters
+      crs:
+        type: string
+        required: true
+        description: Projected CRS (e.g., "EPSG:32610" for UTM Zone 10N)
+      zone:
+        type: string
+        required: false
+        description: UTM zone if applicable (e.g., "10N")
+
+  # ---------------------------------------------------------------------------
+  # Coordinate Reference Systems
+  # ---------------------------------------------------------------------------
+
+  CoordinateReferenceSystem:
+    description: Definition of a coordinate reference system
+    fields:
+      code:
+        type: string
+        required: true
+        description: EPSG code or identifier (e.g., "EPSG:4326")
+      name:
+        type: string
+        required: true
+        description: Human-readable name
+      type:
+        type: CRSType
+        required: true
+        description: Geographic, projected, or compound
+      datum:
+        type: string
+        required: false
+        description: Geodetic datum (e.g., "WGS84", "NAD83")
+      projection:
+        type: ProjectionType
+        required: false
+        description: Map projection if projected CRS
+      units:
+        type: CoordinateUnits
+        required: true
+        description: Units of measurement
+      bounds:
+        type: object
+        required: false
+        description: Valid bounds for this CRS
+        fields:
+          min_x:
+            type: float
+          max_x:
+            type: float
+          min_y:
+            type: float
+          max_y:
+            type: float
+
+  # ---------------------------------------------------------------------------
+  # Grid Systems (for spatial indexing)
+  # ---------------------------------------------------------------------------
+
+  MapTile:
+    description: Slippy map tile coordinates (OSM/Google style)
+    fields:
+      z:
+        type: integer
+        required: true
+        constraints:
+          min: 0
+          max: 22
+        description: Zoom level
+      x:
+        type: integer
+        required: true
+        description: Tile X coordinate
+      y:
+        type: integer
+        required: true
+        description: Tile Y coordinate
+      tms:
+        type: boolean
+        required: false
+        default: false
+        description: TMS Y-axis flip (true = Y origin at bottom)
+
+  Quadkey:
+    description: Bing Maps quadkey encoding
+    fields:
+      key:
+        type: string
+        required: true
+        description: Quadkey string (e.g., "0231010")
+      level:
+        type: integer
+        required: false
+        description: Derived zoom level (length of key)
+
+  H3Cell:
+    description: Uber H3 hexagonal grid cell
+    fields:
+      index:
+        type: string
+        required: true
+        description: H3 index as hex string (e.g., "8928308280fffff")
+      resolution:
+        type: integer
+        required: true
+        constraints:
+          min: 0
+          max: 15
+        description: H3 resolution (0=coarsest, 15=finest)
+      center:
+        type: Point
+        required: false
+        description: Cell center point
+
+  S2Cell:
+    description: Google S2 geometry cell
+    fields:
+      id:
+        type: string
+        required: true
+        description: S2 cell ID as hex string
+      level:
+        type: integer
+        required: true
+        constraints:
+          min: 0
+          max: 30
+        description: S2 level (0=coarsest, 30=finest)
+      token:
+        type: string
+        required: false
+        description: Compact S2 token representation
+
+  Geohash:
+    description: Geohash encoding for spatial indexing
+    fields:
+      hash:
+        type: string
+        required: true
+        description: Geohash string (e.g., "9q8yy")
+      precision:
+        type: integer
+        required: true
+        constraints:
+          min: 1
+          max: 12
+        description: Precision level (characters in hash)
+      bounds:
+        type: object
+        required: false
+        description: Bounding box of this geohash cell
+
+  # ---------------------------------------------------------------------------
+  # What3Words (human-friendly location)
+  # ---------------------------------------------------------------------------
+
+  What3Words:
+    description: What3Words address (3m x 3m squares)
+    fields:
+      words:
+        type: string
+        required: true
+        description: Three word address (e.g., "filled.count.soap")
+      language:
+        type: string
+        required: false
+        default: "en"
+        description: Language code for words
+      point:
+        type: Point
+        required: false
+        description: Center point of the square
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  CRSType:
+    description: Type of coordinate reference system
+    values:
+      - GEOGRAPHIC    # Lat/lng on ellipsoid (e.g., WGS84)
+      - PROJECTED     # Flat map projection (e.g., UTM)
+      - GEOCENTRIC    # Earth-centered XYZ
+      - COMPOUND      # Horizontal + vertical combined
+      - LOCAL         # Local engineering CRS
+
+  ProjectionType:
+    description: Map projection types
+    values:
+      - MERCATOR              # Web Mercator (EPSG:3857)
+      - TRANSVERSE_MERCATOR   # UTM zones
+      - LAMBERT_CONFORMAL     # US State Plane
+      - ALBERS_EQUAL_AREA     # Area-preserving
+      - STEREOGRAPHIC         # Polar regions
+      - EQUIRECTANGULAR       # Simple lat/lng to x/y
+
+  CoordinateUnits:
+    description: Units for coordinates
+    values:
+      - DEGREES         # Decimal degrees
+      - RADIANS         # Radians
+      - METERS          # Meters (projected)
+      - FEET            # US Survey Feet
+      - US_SURVEY_FEET  # US Survey Feet (slightly different)
+
+  AltitudeReference:
+    description: Vertical datum reference
+    values:
+      - MSL         # Mean Sea Level (EGM96/EGM2008)
+      - WGS84       # WGS84 ellipsoid height
+      - AGL         # Above Ground Level
+      - HAE         # Height Above Ellipsoid
+      - NAVD88      # North American Vertical Datum 1988
+      - LOCAL       # Local reference (building floor, etc.)
+
+  CardinalDirection:
+    description: Cardinal and intercardinal directions
+    values:
+      - N     # North
+      - NE    # Northeast
+      - E     # East
+      - SE    # Southeast
+      - S     # South
+      - SW    # Southwest
+      - W     # West
+      - NW    # Northwest
+
+  Hemisphere:
+    description: Geographic hemisphere
+    values:
+      - NORTHERN
+      - SOUTHERN
+      - EASTERN
+      - WESTERN
+
+# =============================================================================
+# WELL-KNOWN CRS DEFINITIONS
+# =============================================================================
+
+well_known_crs:
+
+  WGS84:
+    code: "EPSG:4326"
+    name: "WGS 84"
+    type: GEOGRAPHIC
+    datum: "WGS84"
+    units: DEGREES
+    description: GPS standard, most common for global data
+
+  WEB_MERCATOR:
+    code: "EPSG:3857"
+    name: "Web Mercator"
+    type: PROJECTED
+    datum: "WGS84"
+    projection: MERCATOR
+    units: METERS
+    description: Google Maps, OpenStreetMap, web mapping
+
+  UTM_ZONE_10N:
+    code: "EPSG:32610"
+    name: "UTM Zone 10N"
+    type: PROJECTED
+    datum: "WGS84"
+    projection: TRANSVERSE_MERCATOR
+    units: METERS
+    description: US West Coast (California, Oregon, Washington)
+
+  NAD83:
+    code: "EPSG:4269"
+    name: "NAD83"
+    type: GEOGRAPHIC
+    datum: "NAD83"
+    units: DEGREES
+    description: North American Datum 1983
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "EPSG Registry: https://epsg.io/"
+  - "OGC Simple Features: https://www.ogc.org/standards/sfa"
+  - "H3: https://h3geo.org/"
+  - "S2 Geometry: https://s2geometry.io/"
+  - "What3Words: https://what3words.com/"
+  - "GeoJSON RFC 7946"

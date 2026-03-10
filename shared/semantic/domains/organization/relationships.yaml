@@ -1,0 +1,40 @@
+# relationships.yaml - Organization Domain Entity Relationships
+# Generated: 2025-11-24
+# Status: PENDING APPROVAL
+
+relationships:
+  # Organization -> Addresses
+  - type: one_to_many
+    from: Organization
+    to: OrganizationAddress
+    foreign_key: organization_id
+    cascade_delete: true
+
+  # Organization -> Contacts
+  - type: one_to_many
+    from: Organization
+    to: OrganizationContact
+    foreign_key: organization_id
+    cascade_delete: true
+
+  # Organization -> Organization (parent-subsidiary)
+  - type: one_to_many
+    from: Organization
+    to: Organization
+    foreign_key: parent_organization_id
+    cascade_delete: false
+    description: "Parent-subsidiary hierarchy"
+
+  # Organization relationships (many-to-many via OrganizationRelationship)
+  - type: many_to_many
+    from: Organization
+    to: Organization
+    through: OrganizationRelationship
+    description: "Business relationships between organizations"
+
+# External domain references
+external_references:
+  - entity: User
+    domain: auth
+    description: "Organization can have employees/contacts as Users"
+    usage: "User.organization_id references Organization.id"

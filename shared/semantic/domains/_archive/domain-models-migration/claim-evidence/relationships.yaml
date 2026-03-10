@@ -1,0 +1,52 @@
+# relationships.yaml - Claim/Evidence Domain Relationships
+# Generated: 2025-11-25
+# Status: PENDING APPROVAL
+
+relationships:
+  - type: one_to_many
+    from: Claim
+    to: Claim
+    foreign_key: parent_claim_id
+    description: "Hierarchical claim structure (parent-child)"
+
+  - type: many_to_one
+    from: Claim
+    to: Source
+    foreign_key: source_id
+    description: "Claim originates from a source"
+
+  - type: many_to_one
+    from: Evidence
+    to: Source
+    foreign_key: source_id
+    description: "Evidence comes from a source"
+
+  - type: many_to_many
+    from: Claim
+    to: Evidence
+    through: ClaimEvidenceLink
+    description: "Claims are supported/refuted by evidence"
+
+  - type: one_to_many
+    from: ClaimEvidenceLink
+    to: ConfidenceScore
+    foreign_key: confidence_score_id
+    description: "Link has confidence assessment"
+
+  - type: many_to_many
+    from: Claim
+    to: Claim
+    through: ClaimRelationship
+    description: "Claims can relate to other claims"
+
+  - type: polymorphic_one_to_many
+    to: ConfidenceScore
+    polymorphic_type: entity_type
+    polymorphic_id: entity_id
+    description: "Confidence scores can apply to claims, evidence, or links"
+
+  - type: one_to_many
+    from: Evidence
+    to: TemporalRelevance
+    foreign_key: evidence_id
+    description: "Evidence can have multiple temporal relevance assessments over time"

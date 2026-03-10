@@ -1,0 +1,191 @@
+# LLM Model Domain Model
+# Model definitions, capabilities, pricing, and providers
+# Source: OpenAI, Anthropic, AWS Bedrock documentation
+
+domain:
+  name: llm-model
+  version: "1.0.0"
+  description: LLM model definitions, capabilities, pricing, and provider configurations
+  dependencies: [core]
+  sources:
+    - "OpenAI Models API"
+    - "Anthropic Claude Models"
+    - "AWS Bedrock Model Catalog"
+    - "RouteLLM: lmsys.org/blog/2024-07-01-routellm"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  Model:
+    description: An LLM model definition with capabilities and constraints
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      provider: { type: Provider, required: true }
+      family: { type: ModelFamily }
+      version: { type: string }
+      contextWindow: { type: integer, required: true, description: "Max tokens in context" }
+      maxOutputTokens: { type: integer, description: "Max tokens in response" }
+      capabilities: { type: array, items: ModelCapability }
+      modalities: { type: array, items: Modality }
+      pricing: { type: ModelPricing }
+      releaseDate: { type: date }
+      deprecationDate: { type: date }
+      isAvailable: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Provider:
+    description: LLM provider/vendor
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ProviderType, required: true }
+      apiEndpoint: { type: uri }
+      authMethod: { type: AuthMethod }
+      rateLimits: { type: RateLimits }
+      region: { type: string, description: "Geographic region" }
+
+  ModelPricing:
+    description: Cost structure for model usage
+    properties:
+      inputTokenPrice: { type: decimal, required: true, description: "Cost per 1M input tokens" }
+      outputTokenPrice: { type: decimal, required: true, description: "Cost per 1M output tokens" }
+      cacheWritePrice: { type: decimal, description: "Cost per 1M cached write tokens" }
+      cacheReadPrice: { type: decimal, description: "Cost per 1M cached read tokens" }
+      currency: { type: string, default: "USD" }
+      effectiveDate: { type: date }
+
+  RateLimits:
+    description: API rate limiting configuration
+    properties:
+      requestsPerMinute: { type: integer }
+      tokensPerMinute: { type: integer }
+      tokensPerDay: { type: integer }
+      concurrentRequests: { type: integer }
+
+  ModelBenchmark:
+    description: Performance benchmark scores for a model
+    properties:
+      modelId: { type: string, required: true }
+      benchmarkName: { type: string, required: true, description: "MMLU, HumanEval, etc." }
+      score: { type: decimal, required: true }
+      percentile: { type: decimal }
+      evaluationDate: { type: date }
+      source: { type: string }
+
+  ModelComparison:
+    description: Pairwise comparison between models (for routing)
+    properties:
+      id: { type: string, required: true }
+      strongModelId: { type: string, required: true }
+      weakModelId: { type: string, required: true }
+      taskCategory: { type: TaskCategory }
+      strongWinRate: { type: decimal, description: "0-1 win rate for strong model" }
+      costRatio: { type: decimal, description: "Strong/weak cost ratio" }
+      source: { type: string, description: "Chatbot Arena, internal eval, etc." }
+
+  ModelEndpoint:
+    description: Specific API endpoint for a model
+    properties:
+      id: { type: string, required: true }
+      modelId: { type: string, required: true }
+      providerId: { type: string, required: true }
+      endpointUrl: { type: uri, required: true }
+      deploymentType: { type: DeploymentType }
+      isActive: { type: boolean, default: true }
+      healthStatus: { type: HealthStatus }
+      latencyP50Ms: { type: integer, description: "Median latency in ms" }
+      latencyP99Ms: { type: integer, description: "99th percentile latency" }
+
+enums:
+
+  ProviderType:
+    description: Type of LLM provider
+    values:
+      - Cloud         # Hosted API (OpenAI, Anthropic, etc.)
+      - Bedrock       # AWS Bedrock
+      - Azure         # Azure OpenAI
+      - VertexAI      # Google Vertex AI
+      - SelfHosted    # On-premise deployment
+      - OpenSource    # Open-source models (Ollama, vLLM)
+
+  ModelFamily:
+    description: Model family/series
+    values:
+      - GPT           # OpenAI GPT series
+      - Claude        # Anthropic Claude series
+      - Gemini        # Google Gemini
+      - Llama         # Meta Llama
+      - Mistral       # Mistral AI
+      - Command       # Cohere Command
+      - Jurassic      # AI21 Jurassic
+      - Custom        # Custom fine-tuned
+
+  ModelCapability:
+    description: Specific capabilities a model supports
+    values:
+      - TextGeneration
+      - CodeGeneration
+      - FunctionCalling
+      - ToolUse
+      - Vision
+      - Audio
+      - Embedding
+      - Reasoning
+      - ExtendedThinking
+      - Streaming
+      - BatchProcessing
+      - PromptCaching
+      - StructuredOutput
+      - JSONMode
+
+  Modality:
+    description: Input/output modalities supported
+    values:
+      - Text
+      - Image
+      - Audio
+      - Video
+      - File
+      - Code
+
+  TaskCategory:
+    description: Categories of tasks for model comparison
+    values:
+      - Reasoning
+      - Coding
+      - Math
+      - Writing
+      - Analysis
+      - Summarization
+      - Translation
+      - QA
+      - Creative
+      - Factual
+
+  AuthMethod:
+    description: Authentication method for API access
+    values:
+      - APIKey
+      - OAuth2
+      - IAMRole
+      - ServiceAccount
+      - Certificate
+
+  DeploymentType:
+    description: How the model is deployed
+    values:
+      - Serverless    # On-demand, no provisioning
+      - Provisioned   # Reserved capacity
+      - Dedicated     # Isolated infrastructure
+      - Edge          # Edge deployment
+
+  HealthStatus:
+    description: Current health of an endpoint
+    values:
+      - Healthy
+      - Degraded
+      - Unhealthy
+      - Unknown

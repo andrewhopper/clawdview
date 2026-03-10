@@ -1,0 +1,158 @@
+# =============================================================================
+# Domain: remarkable-sync
+# Version: 0.3.0
+# Status: development
+# Dependencies: data-sync@^1.0.0
+# Created: 2025-12-01
+# Updated: 2025-12-01
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# =============================================================================
+#
+# PURPOSE: reMarkable tablet sync - minimal extension of data-sync
+# PATTERN: Only add reMarkable-specific concepts, reuse everything else
+#
+# Inherits from data-sync:
+#   - SyncEndpoint, SyncStream, SyncPolicy, ConflictPolicy
+#   - EntitySyncState, SyncConflict, ChangeEvent
+#   - SyncJob, SyncCheckpoint
+#   - All enums: EntitySyncStatus, SyncDirection, ChangeOperation, etc.
+#
+# =============================================================================
+
+domain:
+  name: remarkable-sync
+  version: "0.3.0"
+  description: "reMarkable tablet sync - extends data-sync domain"
+  namespace: "https://protoflow.ai/ontology/remarkable-sync#"
+  created_at: "2025-12-01"
+  updated_at: "2025-12-01"
+  dependencies:
+    data-sync: "^1.0.0"
+
+  changelog:
+    "0.1.0": "Initial monolithic version"
+    "0.2.0": "Refactored with storage interfaces (deleted)"
+    "0.3.0": "Simplified to extend data-sync domain"
+
+# =============================================================================
+# REMARKABLE-SPECIFIC ENDPOINT
+# =============================================================================
+
+entities:
+
+  ReMarkableEndpoint:
+    description: "reMarkable Cloud as a sync endpoint"
+    extends: data-sync.SyncEndpoint
+    properties:
+      # Inherited: id, name, type, role, connectionConfig, authConfig, status, etc.
+      device_token:
+        type: string
+        required: true
+        description: "Device authentication token from rmapi"
+      user_token:
+        type: string
+        required: false
+        description: "User session token (refreshable)"
+      device_id:
+        type: string
+        required: false
+        description: "reMarkable device identifier"
+    defaults:
+      type: "remarkable_cloud"  # Added to data-sync.EndpointType
+      role: "bidirectional"
+
+# =============================================================================
+# REMARKABLE-SPECIFIC ENUMS
+# =============================================================================
+
+enums:
+
+  DocumentFormat:
+    description: "reMarkable document formats"
+    values:
+      - pdf       # PDF with annotations baked in on export
+      - epub      # E-book format
+      - rm        # Native reMarkable strokes/lines
+      - notebook  # reMarkable notebook (multi-page)
+
+# =============================================================================
+# REMARKABLE-SPECIFIC METADATA
+# Attached to data-sync.ChangeEvent or data-sync.EntitySyncState
+# =============================================================================
+
+value_objects:
+
+  ReMarkableMetadata:
+    description: "reMarkable-specific metadata for synced documents"
+    properties:
+      format:
+        type: DocumentFormat
+        required: true
+      has_annotations:
+        type: boolean
+        default: false
+        description: "Has handwritten annotations"
+      page_count:
+        type: integer
+        description: "Number of pages"
+      parent_folder:
+        type: string
+        description: "Parent folder path on reMarkable"
+      last_opened_page:
+        type: integer
+        description: "Last viewed page number"
+
+# =============================================================================
+# ACTIONS (reMarkable-specific wrappers around data-sync actions)
+# =============================================================================
+
+actions:
+
+  PullFromReMarkable:
+    description: "Download document from reMarkable to target endpoint"
+    extends: data-sync.StartStream
+    params:
+      document_path:
+        type: string
+        required: true
+        description: "Path on reMarkable (e.g., /Notes/meeting)"
+      target_endpoint_id:
+        type: uuid
+        required: true
+        description: "FK to target SyncEndpoint (local, S3, etc.)"
+      export_format:
+        type: DocumentFormat
+        default: pdf
+        description: "Format to export as"
+    returns: data-sync.SyncJob
+
+  PushToReMarkable:
+    description: "Upload document from source endpoint to reMarkable"
+    extends: data-sync.StartStream
+    params:
+      source_endpoint_id:
+        type: uuid
+        required: true
+      source_path:
+        type: string
+        required: true
+      target_folder:
+        type: string
+        default: "/"
+        description: "Destination folder on reMarkable"
+    returns: data-sync.SyncJob
+
+# =============================================================================
+# EXTENSION TO data-sync.EndpointType
+# =============================================================================
+#
+# NOTE: remarkable_cloud should be added to data-sync.EndpointType enum
+# Either via:
+#   1. PR to data-sync domain
+#   2. Local extension mechanism (if supported)
+#
+# For now, we document the intent:
+#
+# data-sync.EndpointType += remarkable_cloud
+#
+# =============================================================================

@@ -1,0 +1,282 @@
+# =============================================================================
+# Process Net - Level 3: Execution Semantics
+# Actions, queries, and the priority queue
+# =============================================================================
+
+schema_version: "1.0.0"
+layer: execution
+imports:
+  - ./primitives.yaml
+  - ./structure.yaml
+
+# =============================================================================
+# ENABLED TRANSITIONS (The Priority Queue)
+# =============================================================================
+
+queries:
+
+  EnabledTransition:
+    description: |
+      A transition that CAN fire from current marking.
+      This is the atomic element of the priority queue.
+    properties:
+      transition_id: { type: string, required: true }
+      transition_name: { type: string }
+
+      # Token availability
+      input_places: { type: array, items: PlaceTokenStatus }
+      all_inputs_satisfied: { type: boolean, required: true }
+
+      # Guard status
+      guards: { type: array, items: GuardResult }
+      all_guards_passed: { type: boolean, required: true }
+
+      # Overall enablement
+      is_enabled: { type: boolean, required: true }
+      blocking_reason: { type: string }
+
+      # Priority for agent selection
+      priority: { type: integer, default: 50 }
+      priority_factors: { type: array, items: PriorityFactor }
+
+      # Execution hints
+      action_type: { type: ActionType, required: true }
+      requires_human: { type: boolean, default: false }
+      estimated_duration_ms: { type: integer }
+
+  PlaceTokenStatus:
+    description: Token availability at an input place
+    properties:
+      place_id: { type: string, required: true }
+      place_name: { type: string }
+      tokens_required: { type: integer, required: true }
+      tokens_available: { type: integer, required: true }
+      satisfied: { type: boolean, required: true }
+
+  PriorityFactor:
+    description: A factor that influenced priority score
+    properties:
+      name: { type: string, required: true }
+      modifier: { type: integer, required: true }
+      reason: { type: string }
+
+  EnabledSet:
+    description: |
+      The complete set of enabled transitions at a marking.
+      This IS the priority queue for agent decision-making.
+    properties:
+      case_id: { type: string, required: true }
+      marking_id: { type: string, required: true }
+      evaluated_at: { type: datetime, required: true }
+
+      # The queue
+      transitions: { type: array, items: EnabledTransition }
+      total_enabled: { type: integer, required: true }
+
+      # State info
+      is_deadlocked: { type: boolean }
+      is_completed: { type: boolean }
+
+enums:
+
+  ActionType:
+    description: What kind of work this transition represents
+    values:
+      - automatic     # System fires immediately (no work)
+      - task          # Work to be performed
+      - approval      # Human decision required
+      - wait          # Waiting for external event
+      - choice        # Agent must choose path (XOR-split)
+      - parallel      # All paths taken (AND-split)
+
+# =============================================================================
+# ACTIONS (Operations on the net)
+# =============================================================================
+
+actions:
+
+  # ---------------------------------------------------------------------------
+  # NET DEFINITION
+  # ---------------------------------------------------------------------------
+
+  CreateNet:
+    description: Define a new Petri net
+    parameters:
+      name: { type: string, required: true }
+      places: { type: array, items: Place, required: true }
+      transitions: { type: array, items: Transition, required: true }
+      arcs: { type: array, items: Arc, required: true }
+      guards: { type: array, items: Guard }
+      initial_marking: { type: Marking }
+    result: Net
+
+  CreateWorkflowNet:
+    description: Define a workflow net with source/sink validation
+    parameters:
+      name: { type: string, required: true }
+      places: { type: array, items: Place, required: true }
+      transitions: { type: array, items: Transition, required: true }
+      arcs: { type: array, items: Arc, required: true }
+      source_place_id: { type: string, required: true }
+      sink_place_id: { type: string, required: true }
+    result: WorkflowNet
+    validation:
+      - "source_place has no incoming arcs"
+      - "sink_place has no outgoing arcs"
+      - "all nodes on path from source to sink"
+
+  VerifySoundness:
+    description: |
+      Check if a workflow net is sound:
+      - Every marking reachable from initial can reach final
+      - Final marking has exactly one token in sink
+      - No dead transitions
+    parameters:
+      net_id: { type: string, required: true }
+    result:
+      is_sound: { type: boolean }
+      reachable_markings: { type: integer }
+      dead_transitions: { type: array, items: string }
+      issues: { type: array, items: string }
+
+  # ---------------------------------------------------------------------------
+  # CASE EXECUTION
+  # ---------------------------------------------------------------------------
+
+  StartCase:
+    description: Create a new case with token at source place
+    parameters:
+      net_id: { type: string, required: true }
+      attributes: { type: object, description: "Colored token attributes" }
+      correlation_id: { type: string }
+    result: Case
+    emits: CaseStartedEvent
+
+  GetEnabledTransitions:
+    description: |
+      Return all transitions that CAN fire given current marking.
+      This is the priority queue of possible next actions.
+    parameters:
+      case_id: { type: string, required: true }
+      context: { type: object, description: "Additional context for guard evaluation" }
+    result: EnabledSet
+
+  Fire:
+    description: |
+      Fire a transition if enabled. Atomic operation:
+      1. Check all input places have sufficient tokens
+      2. Evaluate guards
+      3. Consume tokens from input places
+      4. Produce tokens in output places
+      5. Record firing event
+    parameters:
+      case_id: { type: string, required: true }
+      transition_id: { type: string, required: true }
+      actor_id: { type: string }
+      actor_type: { type: ActorType }
+      context: { type: object }
+    result: Firing
+    emits: TransitionFiredEvent
+    preconditions:
+      - "transition is in GetEnabledTransitions result"
+      - "all guards pass with given context"
+
+  SuspendCase:
+    description: Pause case execution
+    parameters:
+      case_id: { type: string, required: true }
+      reason: { type: string }
+    result: Case
+    emits: CaseSuspendedEvent
+
+  ResumeCase:
+    description: Resume suspended case
+    parameters:
+      case_id: { type: string, required: true }
+    result: Case
+    emits: CaseResumedEvent
+
+  # ---------------------------------------------------------------------------
+  # EVENT SOURCING / REPLAY
+  # ---------------------------------------------------------------------------
+
+  GetFirings:
+    description: Get firing history for a case
+    parameters:
+      case_id: { type: string, required: true }
+      from_sequence: { type: integer, default: 0 }
+      to_sequence: { type: integer }
+    result: { type: array, items: Firing }
+
+  ReplayTo:
+    description: |
+      Reconstruct case state by replaying firings up to sequence N.
+      Event sourcing replay.
+    parameters:
+      case_id: { type: string, required: true }
+      target_sequence: { type: integer, required: true }
+    result: Case
+
+  ForkCase:
+    description: |
+      Create new case by forking from a checkpoint.
+      Copies firings up to sequence, starts new execution.
+    parameters:
+      source_case_id: { type: string, required: true }
+      fork_at_sequence: { type: integer, required: true }
+      new_attributes: { type: object, description: "Override attributes for fork" }
+    result: Case
+    emits: CaseForkedEvent
+
+# =============================================================================
+# EVENTS (For event sourcing)
+# =============================================================================
+
+events:
+
+  CaseStartedEvent:
+    properties:
+      case_id: { type: string, required: true }
+      net_id: { type: string, required: true }
+      initial_marking: { type: Marking }
+      attributes: { type: object }
+      timestamp: { type: datetime, required: true }
+
+  TransitionFiredEvent:
+    properties:
+      case_id: { type: string, required: true }
+      firing_id: { type: string, required: true }
+      transition_id: { type: string, required: true }
+      sequence: { type: integer, required: true }
+      marking_before: { type: Marking }
+      marking_after: { type: Marking }
+      actor_id: { type: string }
+      actor_type: { type: ActorType }
+      timestamp: { type: datetime, required: true }
+
+  CaseSuspendedEvent:
+    properties:
+      case_id: { type: string, required: true }
+      current_marking: { type: Marking }
+      reason: { type: string }
+      timestamp: { type: datetime, required: true }
+
+  CaseResumedEvent:
+    properties:
+      case_id: { type: string, required: true }
+      timestamp: { type: datetime, required: true }
+
+  CaseCompletedEvent:
+    properties:
+      case_id: { type: string, required: true }
+      final_marking: { type: Marking }
+      total_firings: { type: integer }
+      duration_ms: { type: integer }
+      timestamp: { type: datetime, required: true }
+
+  CaseForkedEvent:
+    properties:
+      new_case_id: { type: string, required: true }
+      source_case_id: { type: string, required: true }
+      forked_at_sequence: { type: integer, required: true }
+      timestamp: { type: datetime, required: true }

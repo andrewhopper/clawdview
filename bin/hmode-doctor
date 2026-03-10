@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# hmode-doctor: Validate hmode installation
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HMODE_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$HMODE_DIR")"
+
+ERRORS=0
+WARNINGS=0
+
+check() {
+  local label="$1" path="$2"
+  if [ -e "$path" ]; then
+    echo "  ✓ $label"
+  else
+    echo "  ✗ $label (missing: $path)"
+    ERRORS=$((ERRORS + 1))
+  fi
+}
+
+check_symlink() {
+  local label="$1" path="$2" target="$3"
+  if [ -L "$path" ]; then
+    local actual
+    actual=$(readlink "$path")
+    if [ "$actual" = "$target" ]; then
+      echo "  ✓ $label -> $target"
+    else
+      echo "  ✗ $label -> $actual (expected: $target)"
+      ERRORS=$((ERRORS + 1))
+    fi
+  elif [ -e "$path" ]; then
+    echo "  ~ $label exists but is not a symlink (copy mode?)"
+    WARNINGS=$((WARNINGS + 1))
+  else
+    echo "  ✗ $label (missing)"
+    ERRORS=$((ERRORS + 1))
+  fi
+}
+
+cd "$PROJECT_ROOT"
+
+echo "hmode doctor - checking installation..."
+echo ""
+echo "Project root: $PROJECT_ROOT"
+echo "hmode dir: $HMODE_DIR"
+echo ""
+
+echo "Core files:"
+check "hmode/CLAUDE.md" "hmode/CLAUDE.md"
+check "hmode/bin/hmode-init" "hmode/bin/hmode-init"
+check "hmode/docs/" "hmode/docs"
+check "hmode/commands/" "hmode/commands"
+check "hmode/skills/" "hmode/skills"
+check "hmode/agents/" "hmode/agents"
+check "hmode/guardrails/" "hmode/guardrails"
+check "hmode/shared/" "hmode/shared"
+
+echo ""
+echo "Symlinks:"
+check_symlink "CLAUDE.md" "CLAUDE.md" "hmode/CLAUDE.md"
+check_symlink ".claude/commands" ".claude/commands" "../hmode/commands"
+check_symlink ".claude/skills" ".claude/skills" "../hmode/skills"
+check_symlink ".claude/agents" ".claude/agents" "../hmode/agents"
+
+echo ""
+echo ".gitignore entries:"
+for entry in "CLAUDE.md" ".claude/commands" ".claude/skills" ".claude/agents"; do
+  if grep -qxF "$entry" .gitignore 2>/dev/null; then
+    echo "  ✓ $entry in .gitignore"
+  else
+    echo "  ✗ $entry NOT in .gitignore"
+    WARNINGS=$((WARNINGS + 1))
+  fi
+done
+
+echo ""
+echo "Local override:"
+if [ -f ".claude/CLAUDE.md" ]; then
+  echo "  ✓ .claude/CLAUDE.md exists ($(wc -l < .claude/CLAUDE.md) lines)"
+else
+  echo "  ~ .claude/CLAUDE.md not found (optional)"
+fi
+
+echo ""
+echo "Post-checkout hook:"
+if [ -f ".git/hooks/post-checkout" ] && grep -qF "hmode-init" ".git/hooks/post-checkout"; then
+  echo "  ✓ post-checkout hook installed"
+else
+  echo "  ~ post-checkout hook not installed (run hmode-init to install)"
+  WARNINGS=$((WARNINGS + 1))
+fi
+
+echo ""
+echo "Freshness:"
+if command -v git >/dev/null 2>&1 && [ -d ".git" ]; then
+  last_update=$(git log -1 --format=%at -- hmode/ 2>/dev/null || echo "0")
+  if [ "$last_update" != "0" ]; then
+    now=$(date +%s)
+    age=$(( (now - last_update) / 86400 ))
+    if [ "$age" -gt 90 ]; then
+      echo "  ⚠ hmode/ last updated $age days ago (consider: git subtree pull)"
+      WARNINGS=$((WARNINGS + 1))
+    elif [ "$age" -gt 30 ]; then
+      echo "  ~ hmode/ last updated $age days ago"
+    else
+      echo "  ✓ hmode/ updated $age days ago"
+    fi
+  else
+    echo "  ~ Could not determine hmode age"
+  fi
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
+  echo "All checks passed!"
+elif [ $ERRORS -eq 0 ]; then
+  echo "$WARNINGS warning(s), 0 errors"
+else
+  echo "$ERRORS error(s), $WARNINGS warning(s)"
+  echo "Run: hmode/bin/hmode-init to fix"
+  exit 1
+fi

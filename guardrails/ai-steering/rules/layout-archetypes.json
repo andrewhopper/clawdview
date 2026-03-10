@@ -1,0 +1,378 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-07",
+  "description": "Machine-readable catalog of page layout archetypes. AI MUST select an archetype before generating any full-page layout. Each archetype defines required elements, layout skeleton, and quality constraints.",
+  "archetypes": [
+    {
+      "id": "dashboard",
+      "pageType": "WEBAPP",
+      "name": "Dashboard",
+      "description": "Data-dense overview with metrics, charts, and action items",
+      "skeleton": {
+        "layout": "sidebar-main",
+        "regions": ["header", "sidebar-nav", "toolbar", "primary-content"],
+        "cssGrid": "grid-template-columns: 240px 1fr; grid-template-rows: 56px 48px 1fr"
+      },
+      "requiredElements": [
+        {"element": "header-bar", "maxHeight": "56px", "contains": ["logo", "search", "user-menu"]},
+        {"element": "sidebar-nav", "maxWidth": "240px", "contains": ["nav-links", "collapse-toggle"]},
+        {"element": "toolbar", "maxHeight": "48px", "contains": ["filters", "date-range", "actions"]},
+        {"element": "primary-content", "minHeight": "calc(100vh - 104px)", "contains": ["stat-cards", "chart-or-table"]}
+      ],
+      "prohibitedElements": ["hero-image", "decorative-gradient", "marketing-cta"],
+      "constraints": {
+        "maxHierarchyDepth": 2,
+        "maxPrimaryCTAs": 0,
+        "heroAllowed": false,
+        "aboveFoldBudget": {
+          "header": "56px",
+          "toolbar": "48px",
+          "remainingForContent": "calc(100vh - 104px)"
+        }
+      },
+      "examples": {
+        "correct": "56px header → 48px toolbar with date picker + filters → stat cards row → data table filling viewport",
+        "incorrect": "400px hero with gradient background and 'Welcome to Dashboard' in 72px font"
+      }
+    },
+    {
+      "id": "data-table",
+      "pageType": "WEBAPP",
+      "name": "Data Table / List View",
+      "description": "Filterable, sortable tabular data with bulk actions",
+      "skeleton": {
+        "layout": "sidebar-main",
+        "regions": ["header", "sidebar-nav", "toolbar", "table-content", "pagination"],
+        "cssGrid": "grid-template-columns: 240px 1fr; grid-template-rows: 56px 48px 1fr 48px"
+      },
+      "requiredElements": [
+        {"element": "header-bar", "maxHeight": "56px", "contains": ["logo", "search", "user-menu"]},
+        {"element": "toolbar", "maxHeight": "48px", "contains": ["search-filter", "bulk-actions", "view-toggle"]},
+        {"element": "table-header", "maxHeight": "40px", "contains": ["column-headers", "sort-controls"]},
+        {"element": "table-body", "minHeight": "400px", "contains": ["data-rows"]},
+        {"element": "pagination", "maxHeight": "48px", "contains": ["page-controls", "row-count"]}
+      ],
+      "prohibitedElements": ["hero-image", "decorative-gradient"],
+      "constraints": {
+        "maxHierarchyDepth": 2,
+        "maxPrimaryCTAs": 1,
+        "heroAllowed": false,
+        "minVisibleRows": 8
+      },
+      "examples": {
+        "correct": "Header → toolbar with search + Add button → table header → 10+ data rows visible → pagination bar",
+        "incorrect": "Large title section, then 3 visible rows with lots of whitespace between them"
+      }
+    },
+    {
+      "id": "form-page",
+      "pageType": "WEBAPP",
+      "name": "Form / Settings Page",
+      "description": "Input-heavy page for data entry, configuration, or profile editing",
+      "skeleton": {
+        "layout": "sidebar-main-constrained",
+        "regions": ["header", "sidebar-nav", "form-header", "form-body", "form-actions"],
+        "cssGrid": "grid-template-columns: 240px minmax(0, 720px); grid-template-rows: 56px auto 1fr auto"
+      },
+      "requiredElements": [
+        {"element": "header-bar", "maxHeight": "56px", "contains": ["logo", "breadcrumb", "user-menu"]},
+        {"element": "form-header", "maxHeight": "64px", "contains": ["page-title", "description"]},
+        {"element": "form-body", "maxWidth": "720px", "contains": ["form-sections", "input-groups"]},
+        {"element": "form-actions", "maxHeight": "64px", "contains": ["save-button", "cancel-link"]}
+      ],
+      "prohibitedElements": ["hero-image", "decorative-gradient", "marketing-cta"],
+      "constraints": {
+        "maxHierarchyDepth": 2,
+        "maxPrimaryCTAs": 1,
+        "heroAllowed": false,
+        "maxFormWidth": "720px",
+        "sectionGrouping": "required"
+      },
+      "examples": {
+        "correct": "Header → breadcrumb → page title (text-xl) → grouped form sections with labels → sticky Save/Cancel bar",
+        "incorrect": "Full-width form with 72px title, decorative dividers, and fields stretching to 1200px"
+      }
+    },
+    {
+      "id": "documentation",
+      "pageType": "DOCUMENTATION",
+      "name": "Documentation / Knowledge Base",
+      "description": "Long-form content with sidebar navigation and TOC",
+      "skeleton": {
+        "layout": "sidebar-content-toc",
+        "regions": ["header", "sidebar-nav", "content-body", "toc-sidebar"],
+        "cssGrid": "grid-template-columns: 240px 1fr 200px; grid-template-rows: 48px 1fr"
+      },
+      "requiredElements": [
+        {"element": "header-bar", "maxHeight": "48px", "contains": ["logo", "search", "version-selector"]},
+        {"element": "sidebar-nav", "maxWidth": "240px", "contains": ["section-tree", "collapse-toggle"]},
+        {"element": "content-body", "maxWidth": "800px", "contains": ["article-content", "code-blocks"]},
+        {"element": "toc-sidebar", "maxWidth": "200px", "contains": ["on-this-page-links"]}
+      ],
+      "prohibitedElements": ["hero-image", "decorative-gradient", "marketing-cta"],
+      "constraints": {
+        "maxHierarchyDepth": 2,
+        "maxPrimaryCTAs": 0,
+        "heroAllowed": false,
+        "maxContentWidth": "800px",
+        "searchRequired": true
+      },
+      "examples": {
+        "correct": "48px header with search → sidebar TOC → article content starting at line 1 → right-rail on-this-page",
+        "incorrect": "200px hero with product logo and tagline before any documentation content"
+      }
+    },
+    {
+      "id": "marketing-landing",
+      "pageType": "MARKETING",
+      "name": "Marketing Landing Page",
+      "description": "Conversion-focused page with hero, value props, social proof, and CTA",
+      "skeleton": {
+        "layout": "full-width-sections",
+        "regions": ["nav", "hero", "value-props", "features", "social-proof", "cta", "footer"],
+        "cssGrid": "grid-template-columns: 1fr; grid-template-rows: repeat(auto-fill, auto)"
+      },
+      "requiredElements": [
+        {"element": "nav-bar", "maxHeight": "64px", "contains": ["logo", "nav-links", "cta-button"]},
+        {"element": "hero", "maxHeight": "60vh", "contains": ["headline", "value-prop", "cta-button"]},
+        {"element": "value-props", "contains": ["3-to-4-cards", "icons-or-illustrations"]},
+        {"element": "social-proof", "contains": ["testimonials-or-logos"]},
+        {"element": "final-cta", "contains": ["cta-button", "supporting-text"]},
+        {"element": "footer", "maxHeight": "200px", "contains": ["links", "legal"]}
+      ],
+      "prohibitedElements": [],
+      "constraints": {
+        "maxHierarchyDepth": 3,
+        "maxPrimaryCTAs": 2,
+        "heroAllowed": true,
+        "heroMaxHeight": "60vh",
+        "heroMustContain": ["headline", "value-proposition", "cta-button"],
+        "ctaVisibleAboveFold": true
+      },
+      "examples": {
+        "correct": "64px nav → hero at 55vh with headline + value prop + CTA + product screenshot → features grid → testimonials → CTA → footer",
+        "incorrect": "100vh hero with abstract gradient, company name in 96px, 'Learn More' below the fold"
+      }
+    },
+    {
+      "id": "product-page",
+      "pageType": "PRODUCT",
+      "name": "Product Detail Page",
+      "description": "Product evaluation page with specs, media, and purchase/trial CTA",
+      "skeleton": {
+        "layout": "full-width-sections",
+        "regions": ["nav", "product-hero", "specs", "comparison", "pricing", "cta", "footer"],
+        "cssGrid": "grid-template-columns: 1fr; grid-template-rows: repeat(auto-fill, auto)"
+      },
+      "requiredElements": [
+        {"element": "nav-bar", "maxHeight": "64px", "contains": ["logo", "nav-links", "cta-button"]},
+        {"element": "product-hero", "maxHeight": "40vh", "contains": ["product-name", "key-features", "cta-button", "product-image"]},
+        {"element": "specs-section", "contains": ["feature-grid-or-list", "technical-details"]},
+        {"element": "pricing-section", "contains": ["price-cards", "comparison-table"]},
+        {"element": "footer", "maxHeight": "200px", "contains": ["links", "legal"]}
+      ],
+      "prohibitedElements": [],
+      "constraints": {
+        "maxHierarchyDepth": 3,
+        "maxPrimaryCTAs": 2,
+        "heroAllowed": true,
+        "heroMaxHeight": "40vh",
+        "heroMustContain": ["product-name", "key-features", "cta-button"],
+        "specsBeforePricing": true
+      },
+      "examples": {
+        "correct": "Nav → 40vh hero with product image + features + Try Free CTA → spec grid → pricing cards → footer",
+        "incorrect": "Full-screen artistic hero with no product info, pricing buried at bottom"
+      }
+    },
+    {
+      "id": "auth-page",
+      "pageType": "WEBAPP",
+      "name": "Authentication Page",
+      "description": "Sign in, sign up, forgot password, or MFA verification",
+      "skeleton": {
+        "layout": "centered-card",
+        "regions": ["background", "auth-card"],
+        "cssGrid": "display: flex; justify-content: center; align-items: center; min-height: 100vh"
+      },
+      "requiredElements": [
+        {"element": "auth-card", "maxWidth": "400px", "contains": ["logo", "form-fields", "submit-button", "alt-action-link"]},
+        {"element": "form-fields", "contains": ["email-input", "password-input"]},
+        {"element": "submit-button", "contains": ["primary-action"]},
+        {"element": "alt-action", "contains": ["toggle-sign-in-sign-up", "forgot-password"]}
+      ],
+      "prohibitedElements": ["hero-image", "sidebar-nav", "feature-grid"],
+      "constraints": {
+        "maxHierarchyDepth": 1,
+        "maxPrimaryCTAs": 1,
+        "heroAllowed": false,
+        "maxCardWidth": "400px",
+        "centeredLayout": true
+      },
+      "examples": {
+        "correct": "Centered 400px card: logo → email → password → Sign In button → 'Don't have an account? Sign Up' link",
+        "incorrect": "Full landing page with hero, features section, then a sign-in form buried at the bottom"
+      }
+    },
+    {
+      "id": "onboarding-wizard",
+      "pageType": "WEBAPP",
+      "name": "Onboarding / Wizard / Multi-Step",
+      "description": "Step-by-step guided flow with progress indicator",
+      "skeleton": {
+        "layout": "centered-stepped",
+        "regions": ["header", "progress-bar", "step-content", "step-actions"],
+        "cssGrid": "grid-template-columns: 1fr; grid-template-rows: 56px 48px 1fr 64px; max-width: 640px; margin: 0 auto"
+      },
+      "requiredElements": [
+        {"element": "header-bar", "maxHeight": "56px", "contains": ["logo", "exit-link"]},
+        {"element": "progress-indicator", "maxHeight": "48px", "contains": ["step-numbers-or-bar", "step-labels"]},
+        {"element": "step-content", "maxWidth": "640px", "contains": ["step-title", "form-or-selection"]},
+        {"element": "step-actions", "maxHeight": "64px", "contains": ["back-button", "next-button"]}
+      ],
+      "prohibitedElements": ["hero-image", "sidebar-nav", "marketing-cta"],
+      "constraints": {
+        "maxHierarchyDepth": 2,
+        "maxPrimaryCTAs": 1,
+        "heroAllowed": false,
+        "maxContentWidth": "640px",
+        "progressIndicatorRequired": true
+      },
+      "examples": {
+        "correct": "Header → progress bar (Step 2 of 4) → centered form with step title → Back + Continue buttons",
+        "incorrect": "No progress indicator, all steps visible at once, 1200px wide form"
+      }
+    },
+    {
+      "id": "content-article",
+      "pageType": "DOCUMENTATION",
+      "name": "Article / Blog Post",
+      "description": "Long-form content with optional author info and related articles",
+      "skeleton": {
+        "layout": "centered-content",
+        "regions": ["nav", "article-header", "article-body", "author-bio", "related", "footer"],
+        "cssGrid": "grid-template-columns: 1fr min(720px, 90vw) 1fr; grid-template-rows: auto"
+      },
+      "requiredElements": [
+        {"element": "nav-bar", "maxHeight": "64px", "contains": ["logo", "nav-links"]},
+        {"element": "article-header", "maxHeight": "200px", "contains": ["title", "date", "author", "reading-time"]},
+        {"element": "article-body", "maxWidth": "720px", "contains": ["prose-content", "images", "code-blocks"]},
+        {"element": "footer", "maxHeight": "200px", "contains": ["links", "legal"]}
+      ],
+      "prohibitedElements": [],
+      "constraints": {
+        "maxHierarchyDepth": 3,
+        "maxPrimaryCTAs": 1,
+        "heroAllowed": true,
+        "heroMaxHeight": "300px",
+        "maxContentWidth": "720px"
+      },
+      "examples": {
+        "correct": "Nav → article title + metadata (date, author, 5 min read) → prose content at 720px max → related articles",
+        "incorrect": "Full-bleed hero image at 100vh, then article starting below the fold"
+      }
+    },
+    {
+      "id": "search-results",
+      "pageType": "WEBAPP",
+      "name": "Search Results",
+      "description": "Query-driven results list with filters and sorting",
+      "skeleton": {
+        "layout": "filters-sidebar-results",
+        "regions": ["header", "search-bar", "filters-sidebar", "results-list", "pagination"],
+        "cssGrid": "grid-template-columns: 240px 1fr; grid-template-rows: 56px 56px 1fr 48px"
+      },
+      "requiredElements": [
+        {"element": "header-bar", "maxHeight": "56px", "contains": ["logo", "user-menu"]},
+        {"element": "search-bar", "maxHeight": "56px", "contains": ["search-input", "search-button"]},
+        {"element": "filters-sidebar", "maxWidth": "240px", "contains": ["filter-groups", "clear-all"]},
+        {"element": "results-list", "contains": ["result-cards", "result-count"]},
+        {"element": "pagination", "maxHeight": "48px", "contains": ["page-controls"]}
+      ],
+      "prohibitedElements": ["hero-image", "decorative-gradient"],
+      "constraints": {
+        "maxHierarchyDepth": 2,
+        "maxPrimaryCTAs": 0,
+        "heroAllowed": false,
+        "searchBarProminence": "top",
+        "minVisibleResults": 5
+      },
+      "examples": {
+        "correct": "Header → prominent search bar → filter sidebar + results list (10+ items) → pagination",
+        "incorrect": "Search bar hidden in header, hero image, then 3 oversized result cards"
+      }
+    },
+    {
+      "id": "pricing-page",
+      "pageType": "PRODUCT",
+      "name": "Pricing / Plans Page",
+      "description": "Plan comparison with feature matrix and tier selection",
+      "skeleton": {
+        "layout": "full-width-sections",
+        "regions": ["nav", "pricing-header", "plan-cards", "feature-comparison", "faq", "footer"],
+        "cssGrid": "grid-template-columns: 1fr; grid-template-rows: repeat(auto-fill, auto)"
+      },
+      "requiredElements": [
+        {"element": "nav-bar", "maxHeight": "64px", "contains": ["logo", "nav-links"]},
+        {"element": "pricing-header", "maxHeight": "120px", "contains": ["title", "billing-toggle"]},
+        {"element": "plan-cards", "contains": ["2-to-4-plan-cards", "recommended-badge"]},
+        {"element": "feature-comparison", "contains": ["comparison-table-or-grid"]},
+        {"element": "footer", "maxHeight": "200px", "contains": ["links", "legal"]}
+      ],
+      "prohibitedElements": ["hero-image"],
+      "constraints": {
+        "maxHierarchyDepth": 2,
+        "maxPrimaryCTAs": 1,
+        "heroAllowed": false,
+        "recommendedPlanHighlight": true,
+        "planCardsAboveFold": true,
+        "maxPlanCards": 4
+      },
+      "examples": {
+        "correct": "Nav → 'Choose your plan' + Monthly/Annual toggle → 3 plan cards (middle highlighted) → feature comparison table → FAQ",
+        "incorrect": "Large hero, plans below the fold, no recommended plan highlighted, 6 plan tiers"
+      }
+    },
+    {
+      "id": "empty-state",
+      "pageType": "WEBAPP",
+      "name": "Empty State / Zero Data",
+      "description": "First-use or no-data state with guidance to populate",
+      "skeleton": {
+        "layout": "sidebar-main-centered",
+        "regions": ["header", "sidebar-nav", "empty-content"],
+        "cssGrid": "grid-template-columns: 240px 1fr; grid-template-rows: 56px 1fr"
+      },
+      "requiredElements": [
+        {"element": "header-bar", "maxHeight": "56px", "contains": ["logo", "search", "user-menu"]},
+        {"element": "sidebar-nav", "maxWidth": "240px", "contains": ["nav-links"]},
+        {"element": "empty-content", "contains": ["illustration-or-icon", "title", "description", "primary-action-button"]}
+      ],
+      "prohibitedElements": ["hero-image", "marketing-cta"],
+      "constraints": {
+        "maxHierarchyDepth": 2,
+        "maxPrimaryCTAs": 1,
+        "heroAllowed": false,
+        "illustrationMaxHeight": "200px",
+        "actionButtonRequired": true
+      },
+      "examples": {
+        "correct": "Header + sidebar → centered: 120px illustration + 'No projects yet' + 'Create your first project to get started' + [Create Project] button",
+        "incorrect": "Completely blank main area with no guidance, or a marketing pitch for the product"
+      }
+    }
+  ],
+  "usage": {
+    "selectionRule": "AI MUST select an archetype from this catalog BEFORE generating any full-page layout. Selection is based on pageType + user intent.",
+    "fallbackRule": "If no archetype matches, ask the user to describe the page purpose. Do NOT generate a generic layout.",
+    "compositionRule": "Archetypes define the page skeleton. Individual elements within regions use the design system component library.",
+    "overrideRule": "User can override archetype constraints with explicit instruction (e.g., 'I want a hero on this dashboard'). Log the override."
+  },
+  "metadata": {
+    "approvedBy": "Andrew Hopper",
+    "approvedDate": "2026-03-07",
+    "status": "approved",
+    "namespace": "@protoflow/ux",
+    "researchBasis": "External research: Mobbin, Every Layout, web.dev patterns, Open UI, csslayout.io. Internal: 40 seed variants + 12 design system templates."
+  }
+}

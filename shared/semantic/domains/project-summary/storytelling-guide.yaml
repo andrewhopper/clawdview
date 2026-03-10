@@ -1,0 +1,261 @@
+# =============================================================================
+# Storytelling Guide for Project Capsules
+# Version: 1.0.0
+# Purpose: Transform capsule data into compelling narratives
+# =============================================================================
+
+domain: project-storytelling
+version: "1.0.0"
+description: |
+  Frameworks for transforming Lean Canvas capsules into memorable stories.
+  Stories are 22x more memorable than facts alone.
+
+# =============================================================================
+# PIXAR STORY SPINE (Primary Framework)
+# =============================================================================
+
+pixar_story_spine:
+  source: "Kenn Adams, popularized by Pixar/Emma Coats (2012)"
+  usage: |
+    Transform any capsule into a 7-beat narrative arc.
+    Maps directly to capsule fields.
+
+  beats:
+    1_once_upon_a_time:
+      prompt: "Once upon a time, there was..."
+      maps_to: customer + early_adopter
+      purpose: Introduce protagonist in their situation
+      tip: Name them. Make them specific. "Sarah, a project manager in Seattle"
+
+    2_every_day:
+      prompt: "Every day..."
+      maps_to: problem + alternatives
+      purpose: Show the struggle, failed workarounds
+      tip: Show frustration with current alternatives
+
+    3_until_one_day:
+      prompt: "Until one day..."
+      maps_to: solution (first encounter)
+      purpose: The inciting incident - discovery of solution
+      tip: Make it feel like luck or discovery, not a sales pitch
+
+    4_because_of_this_1:
+      prompt: "Because of this..."
+      maps_to: features[0]
+      purpose: First positive change
+      tip: Show immediate relief or improvement
+
+    5_because_of_this_2:
+      prompt: "And because of this..."
+      maps_to: features[1], innovations
+      purpose: Cascading benefits, deeper value emerges
+      tip: Show how initial win leads to bigger wins
+
+    6_until_finally:
+      prompt: "Until finally..."
+      maps_to: core_benefit (realized)
+      purpose: The transformation complete
+      tip: Show emotional shift, not just functional outcome
+
+    7_ever_since:
+      prompt: "And ever since that day..."
+      maps_to: vision
+      purpose: New normal, lasting change
+      tip: End on the emotional outcome (autonomy, peace, possibility)
+
+  capsule_to_story_map:
+    customer: "Once upon a time" protagonist
+    problem: "Every day" struggle
+    alternatives: "Every day" failed attempts
+    solution: "Until one day" discovery
+    features: "Because of this" sequence
+    core_benefit: "Until finally" transformation
+    vision: "Ever since that day" new world
+
+# =============================================================================
+# HERO'S JOURNEY (Deep Structure)
+# =============================================================================
+
+heros_journey:
+  source: "Joseph Campbell, The Hero with a Thousand Faces (1949)"
+  usage: |
+    Underlying structure when you need emotional depth.
+    Your customer is the hero; your product is the guide/tool.
+
+  stages:
+    ordinary_world:
+      maps_to: customer + problem
+      note: "Show the 'before' state with its frustrations"
+
+    call_to_adventure:
+      maps_to: discovery of solution
+      note: "Something must change"
+
+    meeting_the_mentor:
+      maps_to: your product/service
+      note: "Product is the helper, NOT the hero"
+
+    crossing_threshold:
+      maps_to: first use of solution
+      note: "Commitment to trying something new"
+
+    tests_allies_enemies:
+      maps_to: alternatives (what didn't work)
+      note: "Previous failed attempts add credibility"
+
+    transformation:
+      maps_to: core_benefit realized
+      note: "The customer is changed"
+
+    return_with_elixir:
+      maps_to: vision
+      note: "New capabilities, new identity"
+
+  key_insight: |
+    Your customer is Luke Skywalker.
+    Your product is the lightsaber.
+    Never make your product the hero of the story.
+
+# =============================================================================
+# TOASTMASTERS TECHNIQUES
+# =============================================================================
+
+toastmasters:
+  source: "Toastmasters International"
+
+  foundational_phrase:
+    description: "Memorable tagline audience can repeat"
+    max_words: 10
+    maps_to: uvp
+    examples:
+      - "A familiar voice that never forgets"
+      - "Type words, get a voice"
+      - "Code from any browser"
+
+  three_part_structure:
+    introduction: "Hook with the problem"
+    body: "Three points (alternatives tried, solution found, transformation)"
+    conclusion: "Call to action / vision"
+
+  dissociative_technique:
+    description: "Step away from story to make observations"
+    usage: "Pause narrative to highlight key insight, then resume"
+    example: |
+      "Sarah would hang up feeling guilty. [pause]
+      That guilt? It never goes away. It follows you to work,
+      to dinner, to sleep. [resume story]
+      Until one day..."
+
+  memory_anchors:
+    description: "Pause + gesture at key moments"
+    usage: "Create rhythm and emphasis"
+
+# =============================================================================
+# BUSINESS STORYTELLING (POPP Framework)
+# =============================================================================
+
+popp_framework:
+  source: "Business pitch decks"
+  acronym: "Pain, Opportunity, Plan, Proof"
+
+  mapping:
+    pain: problem field
+    opportunity: core_benefit field
+    plan: solution + features
+    proof: status + innovations
+
+# =============================================================================
+# EMOTIONAL HOOKS
+# =============================================================================
+
+emotional_triggers:
+  source: "Self-Determination Theory + Maslow"
+
+  outcome_emotions:
+    autonomy:
+      trigger: "Freedom from constraint"
+      phrases:
+        - "could finally..."
+        - "no longer had to..."
+        - "was free to..."
+
+    competence:
+      trigger: "Ability to achieve"
+      phrases:
+        - "could actually..."
+        - "finally able to..."
+        - "started shipping..."
+
+    relatedness:
+      trigger: "Connection with others"
+      phrases:
+        - "without losing touch..."
+        - "stayed connected..."
+        - "brought them closer..."
+
+    safety:
+      trigger: "Peace of mind"
+      phrases:
+        - "could rest easy..."
+        - "the worry lifted..."
+        - "knew everything was okay..."
+
+    simplicity:
+      trigger: "Reduced friction"
+      phrases:
+        - "as easy as..."
+        - "with one command..."
+        - "just worked..."
+
+# =============================================================================
+# QUICK REFERENCE: Capsule → Story Conversion
+# =============================================================================
+
+conversion_checklist:
+  - step: 1
+    action: "Name your protagonist (from customer field)"
+    bad: "A developer"
+    good: "Dev, a developer who..."
+
+  - step: 2
+    action: "Show daily frustration (from problem + alternatives)"
+    bad: "There was a problem with X"
+    good: "Every day, they struggled with X, tried Y (didn't work), tried Z (too expensive)"
+
+  - step: 3
+    action: "Make discovery feel organic (solution)"
+    bad: "Then they found our product"
+    good: "Until one day, they typed a URL and..."
+
+  - step: 4
+    action: "Show cascading benefits (features → core_benefit)"
+    bad: "The product had these features"
+    good: "Because of this... and because of this... until finally..."
+
+  - step: 5
+    action: "End on emotional outcome (vision)"
+    bad: "The product worked well"
+    good: "And ever since that day, they could finally..."
+
+# =============================================================================
+# ANTI-PATTERNS
+# =============================================================================
+
+avoid:
+  - pattern: "Making product the hero"
+    fix: "Customer is hero, product is tool"
+
+  - pattern: "Starting with solution"
+    fix: "Start with problem/struggle"
+
+  - pattern: "Listing features"
+    fix: "Show transformation through features"
+
+  - pattern: "Abstract customer"
+    fix: "Name them, give them a city, a job"
+
+  - pattern: "Happy ending only"
+    fix: "Show the struggle first, earn the resolution"
+
+  - pattern: "Telling not showing"
+    fix: "Use specific moments, dialogue, actions"

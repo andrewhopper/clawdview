@@ -1,0 +1,812 @@
+# Economic Domain: Actors
+# Entities that provide or consume value (humans, machines, AI, organizations)
+# Version: 1.0.0
+
+domain: economic-actor
+version: "1.0.0"
+status: production
+description: Economic actors - any entity that can provide or consume value
+dependencies:
+  - core
+
+# =============================================================================
+# DESIGN PHILOSOPHY
+# =============================================================================
+#
+# An "actor" is anything that participates in economic exchange:
+# - Provides value (worker, machine, AI, service)
+# - Consumes value (employer, customer, subscriber)
+# - Can be both (contractor provides labor, consumes payment)
+#
+# This abstraction allows the same models to represent:
+# - Human employee working hourly
+# - Robot on a factory floor
+# - AI agent processing requests
+# - SaaS service providing features
+# - Freelancer on multiple projects
+#
+# =============================================================================
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Economic Actor (abstract base)
+  # ---------------------------------------------------------------------------
+
+  EconomicActor:
+    description: Any entity that participates in economic exchange
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      actor_type:
+        type: ActorType
+        required: true
+      actor_class:
+        type: ActorClass
+        required: true
+        description: Human, machine, AI, organization, or hybrid
+      status:
+        type: ActorStatus
+        required: true
+        default: ACTIVE
+      capabilities:
+        type: array
+        items:
+          type: Capability
+        required: false
+        description: What this actor can do/provide
+      availability:
+        type: Availability
+        required: false
+      cost_model:
+        type: CostModel
+        required: false
+        description: How this actor's value is priced
+      owner_id:
+        type: string
+        required: false
+        description: Owning entity (org owns machine, person owns AI agent)
+      metadata:
+        type: object
+        required: false
+      created_at:
+        type: datetime
+        required: false
+      updated_at:
+        type: datetime
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Human Actor
+  # ---------------------------------------------------------------------------
+
+  HumanActor:
+    description: Human individual as economic actor
+    extends: EconomicActor
+    fields:
+      person_id:
+        type: string
+        required: false
+        description: Link to Person entity
+      employment_type:
+        type: EmploymentType
+        required: false
+      job_title:
+        type: string
+        required: false
+      department:
+        type: string
+        required: false
+      skills:
+        type: array
+        items:
+          type: Skill
+        required: false
+      certifications:
+        type: array
+        items:
+          type: Certification
+        required: false
+      work_location:
+        type: WorkLocation
+        required: false
+      timezone:
+        type: string
+        required: false
+      manager_id:
+        type: string
+        required: false
+      tax_classification:
+        type: TaxClassification
+        required: false
+
+  Skill:
+    description: Skill or competency
+    fields:
+      name:
+        type: string
+        required: true
+      level:
+        type: SkillLevel
+        required: false
+      years_experience:
+        type: float
+        required: false
+      verified:
+        type: boolean
+        required: false
+        default: false
+      verified_by:
+        type: string
+        required: false
+
+  Certification:
+    description: Professional certification
+    fields:
+      name:
+        type: string
+        required: true
+      issuer:
+        type: string
+        required: false
+      issued_date:
+        type: date
+        required: false
+      expiry_date:
+        type: date
+        required: false
+      credential_id:
+        type: string
+        required: false
+
+  WorkLocation:
+    description: Where actor performs work
+    fields:
+      type:
+        type: WorkLocationType
+        required: true
+      address:
+        type: Address
+        required: false
+      timezone:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Machine Actor
+  # ---------------------------------------------------------------------------
+
+  MachineActor:
+    description: Physical machine or robot as economic actor
+    extends: EconomicActor
+    fields:
+      machine_type:
+        type: MachineType
+        required: true
+      manufacturer:
+        type: string
+        required: false
+      model:
+        type: string
+        required: false
+      serial_number:
+        type: string
+        required: false
+      location:
+        type: Point
+        required: false
+      operational_hours:
+        type: OperationalHours
+        required: false
+      maintenance_schedule:
+        type: MaintenanceSchedule
+        required: false
+      power_consumption_kw:
+        type: float
+        required: false
+      throughput:
+        type: Throughput
+        required: false
+        description: Units produced/processed per time
+      depreciation:
+        type: Depreciation
+        required: false
+
+  Throughput:
+    description: Production/processing capacity
+    fields:
+      rate:
+        type: float
+        required: true
+      unit:
+        type: string
+        required: true
+        description: What is being counted (units, items, requests)
+      period:
+        type: TimePeriod
+        required: true
+        description: Per second, minute, hour, day
+
+  MaintenanceSchedule:
+    description: Scheduled maintenance requirements
+    fields:
+      interval_hours:
+        type: float
+        required: false
+      interval_days:
+        type: integer
+        required: false
+      last_maintenance:
+        type: datetime
+        required: false
+      next_maintenance:
+        type: datetime
+        required: false
+      maintenance_duration_hours:
+        type: float
+        required: false
+
+  Depreciation:
+    description: Asset depreciation model
+    fields:
+      method:
+        type: DepreciationMethod
+        required: true
+      purchase_cost:
+        type: Money
+        required: false
+      salvage_value:
+        type: Money
+        required: false
+      useful_life_years:
+        type: float
+        required: false
+      current_book_value:
+        type: Money
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # AI/Software Actor
+  # ---------------------------------------------------------------------------
+
+  AIActor:
+    description: AI model, agent, or software service as economic actor
+    extends: EconomicActor
+    fields:
+      ai_type:
+        type: AIType
+        required: true
+      provider:
+        type: string
+        required: false
+        description: OpenAI, Anthropic, AWS, custom, etc.
+      model_id:
+        type: string
+        required: false
+        description: Specific model identifier
+      version:
+        type: string
+        required: false
+      endpoint:
+        type: string
+        required: false
+        description: API endpoint or service URL
+      rate_limits:
+        type: RateLimits
+        required: false
+      pricing_model:
+        type: AIPricingModel
+        required: false
+      context_window:
+        type: integer
+        required: false
+        description: Token context window (for LLMs)
+      latency_ms:
+        type: float
+        required: false
+        description: Typical response latency
+
+  RateLimits:
+    description: Rate limiting constraints
+    fields:
+      requests_per_minute:
+        type: integer
+        required: false
+      requests_per_day:
+        type: integer
+        required: false
+      tokens_per_minute:
+        type: integer
+        required: false
+      concurrent_requests:
+        type: integer
+        required: false
+
+  AIPricingModel:
+    description: Pricing model for AI services
+    fields:
+      input_cost_per_1k_tokens:
+        type: Money
+        required: false
+      output_cost_per_1k_tokens:
+        type: Money
+        required: false
+      cost_per_request:
+        type: Money
+        required: false
+      cost_per_image:
+        type: Money
+        required: false
+      cost_per_minute_audio:
+        type: Money
+        required: false
+      monthly_base_fee:
+        type: Money
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Organization Actor
+  # ---------------------------------------------------------------------------
+
+  OrganizationActor:
+    description: Organization as economic actor (company, department, team)
+    extends: EconomicActor
+    fields:
+      organization_type:
+        type: OrganizationType
+        required: true
+      legal_name:
+        type: string
+        required: false
+      tax_id:
+        type: string
+        required: false
+      industry:
+        type: string
+        required: false
+      parent_org_id:
+        type: string
+        required: false
+      member_count:
+        type: integer
+        required: false
+      billing_address:
+        type: Address
+        required: false
+      payment_terms:
+        type: PaymentTerms
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Capability (what an actor can do)
+  # ---------------------------------------------------------------------------
+
+  Capability:
+    description: Something an actor can provide
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      category:
+        type: CapabilityCategory
+        required: false
+      description:
+        type: string
+        required: false
+      unit_of_measure:
+        type: string
+        required: false
+        description: How capability is measured
+      capacity:
+        type: float
+        required: false
+        description: Maximum output per period
+      capacity_period:
+        type: TimePeriod
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Availability
+  # ---------------------------------------------------------------------------
+
+  Availability:
+    description: When an actor is available
+    fields:
+      type:
+        type: AvailabilityType
+        required: true
+      schedule:
+        type: WeeklySchedule
+        required: false
+        description: Regular weekly schedule
+      exceptions:
+        type: array
+        items:
+          type: AvailabilityException
+        required: false
+      utilization_target:
+        type: float
+        required: false
+        constraints:
+          min: 0
+          max: 100
+        description: Target utilization percentage
+      current_utilization:
+        type: float
+        required: false
+
+  WeeklySchedule:
+    description: Regular weekly availability
+    fields:
+      timezone:
+        type: string
+        required: true
+      periods:
+        type: array
+        items:
+          type: SchedulePeriod
+        required: true
+
+  SchedulePeriod:
+    description: Single availability period
+    fields:
+      day:
+        type: DayOfWeek
+        required: true
+      start_time:
+        type: string
+        required: true
+        description: HH:MM format
+      end_time:
+        type: string
+        required: true
+        description: HH:MM format
+
+  AvailabilityException:
+    description: Exception to regular schedule
+    fields:
+      date:
+        type: date
+        required: true
+      available:
+        type: boolean
+        required: true
+      reason:
+        type: string
+        required: false
+      start_time:
+        type: string
+        required: false
+      end_time:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Cost Model
+  # ---------------------------------------------------------------------------
+
+  CostModel:
+    description: How an actor's value is priced
+    fields:
+      model_type:
+        type: CostModelType
+        required: true
+      rates:
+        type: array
+        items:
+          type: Rate
+        required: false
+      minimum_charge:
+        type: Money
+        required: false
+      currency:
+        type: string
+        required: false
+        default: "USD"
+
+  Rate:
+    description: Single rate definition
+    fields:
+      name:
+        type: string
+        required: true
+      rate_type:
+        type: RateType
+        required: true
+      amount:
+        type: Money
+        required: true
+      unit:
+        type: string
+        required: false
+        description: Per hour, per token, per unit, etc.
+      effective_from:
+        type: datetime
+        required: false
+      effective_until:
+        type: datetime
+        required: false
+      conditions:
+        type: array
+        items:
+          type: RateCondition
+        required: false
+        description: When this rate applies
+
+  RateCondition:
+    description: Condition for rate applicability
+    fields:
+      type:
+        type: RateConditionType
+        required: true
+      operator:
+        type: string
+        required: false
+      value:
+        type: string
+        required: false
+      description:
+        type: string
+        required: false
+
+  OperationalHours:
+    description: When machine/resource operates
+    fields:
+      hours_per_day:
+        type: float
+        required: false
+      days_per_week:
+        type: float
+        required: false
+      uptime_target:
+        type: float
+        required: false
+        description: Target uptime percentage
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  ActorType:
+    description: Specific type of economic actor
+    values:
+      # Human
+      - EMPLOYEE
+      - CONTRACTOR
+      - FREELANCER
+      - CONSULTANT
+      - TEMP_WORKER
+      - INTERN
+      - VOLUNTEER
+      # Machine
+      - ROBOT
+      - VEHICLE
+      - EQUIPMENT
+      - SENSOR
+      - IOT_DEVICE
+      # AI/Software
+      - AI_MODEL
+      - AI_AGENT
+      - SOFTWARE_SERVICE
+      - API
+      - BOT
+      # Organization
+      - COMPANY
+      - DEPARTMENT
+      - TEAM
+      - VENDOR
+      - PARTNER
+
+  ActorClass:
+    description: High-level classification of actor
+    values:
+      - HUMAN           # Biological human
+      - MACHINE         # Physical machine/robot
+      - AI              # AI model or agent
+      - SOFTWARE        # Non-AI software service
+      - ORGANIZATION    # Group of actors
+      - HYBRID          # Combination (human + AI assist)
+
+  ActorStatus:
+    description: Current status of actor
+    values:
+      - ACTIVE          # Available for work
+      - INACTIVE        # Not currently available
+      - ON_LEAVE        # Temporary absence (human)
+      - MAINTENANCE     # Under maintenance (machine)
+      - SUSPENDED       # Temporarily suspended
+      - TERMINATED      # No longer active
+      - PENDING         # Awaiting activation
+
+  EmploymentType:
+    description: Type of employment relationship
+    values:
+      - FULL_TIME
+      - PART_TIME
+      - CONTRACT
+      - FREELANCE
+      - TEMPORARY
+      - SEASONAL
+      - INTERNSHIP
+      - VOLUNTEER
+
+  TaxClassification:
+    description: Tax classification (US-centric, extend as needed)
+    values:
+      - W2              # US Employee
+      - 1099            # US Independent contractor
+      - CORP_TO_CORP    # Corporation to corporation
+      - INTERNATIONAL   # International worker
+      - EXEMPT          # Tax exempt
+
+  WorkLocationType:
+    description: Type of work location
+    values:
+      - ONSITE          # At employer location
+      - REMOTE          # Work from anywhere
+      - HYBRID          # Mix of onsite and remote
+      - FIELD           # Multiple locations (field work)
+      - CLIENT_SITE     # At client location
+
+  SkillLevel:
+    description: Proficiency level
+    values:
+      - BEGINNER
+      - INTERMEDIATE
+      - ADVANCED
+      - EXPERT
+      - MASTER
+
+  MachineType:
+    description: Type of machine
+    values:
+      - INDUSTRIAL_ROBOT
+      - COLLABORATIVE_ROBOT
+      - CNC_MACHINE
+      - 3D_PRINTER
+      - CONVEYOR
+      - AGV             # Automated Guided Vehicle
+      - DRONE
+      - SERVER
+      - SENSOR_ARRAY
+      - CUSTOM
+
+  AIType:
+    description: Type of AI actor
+    values:
+      - LLM             # Large Language Model
+      - VISION_MODEL    # Computer vision
+      - SPEECH_MODEL    # Speech recognition/synthesis
+      - EMBEDDING_MODEL # Embeddings
+      - MULTIMODAL      # Multiple modalities
+      - AGENT           # Autonomous agent
+      - WORKFLOW        # Automated workflow
+      - CUSTOM
+
+  OrganizationType:
+    description: Type of organization
+    values:
+      - CORPORATION
+      - LLC
+      - PARTNERSHIP
+      - SOLE_PROPRIETOR
+      - NON_PROFIT
+      - GOVERNMENT
+      - DEPARTMENT
+      - TEAM
+      - PROJECT
+
+  CapabilityCategory:
+    description: Category of capability
+    values:
+      - LABOR           # Human work
+      - COMPUTE         # Processing power
+      - MANUFACTURING   # Physical production
+      - TRANSPORT       # Moving things
+      - ANALYSIS        # Data analysis
+      - COMMUNICATION   # Communication services
+      - CREATIVE        # Creative work
+      - TECHNICAL       # Technical skills
+      - ADMINISTRATIVE  # Admin tasks
+
+  AvailabilityType:
+    description: Type of availability model
+    values:
+      - ALWAYS_ON       # 24/7 (machines, cloud services)
+      - SCHEDULED       # Fixed schedule
+      - ON_DEMAND       # Available when requested
+      - BUSINESS_HOURS  # Standard business hours
+      - CUSTOM
+
+  CostModelType:
+    description: How costs are calculated
+    values:
+      - HOURLY          # Per hour
+      - DAILY           # Per day
+      - FIXED_SALARY    # Fixed periodic amount
+      - PER_UNIT        # Per unit of output
+      - PER_REQUEST     # Per request/call
+      - PER_TOKEN       # Per token (AI)
+      - TIERED          # Volume tiers
+      - SUBSCRIPTION    # Fixed periodic subscription
+      - USAGE_BASED     # Variable based on usage
+      - HYBRID          # Combination of models
+
+  RateType:
+    description: Type of rate
+    values:
+      - STANDARD        # Normal rate
+      - OVERTIME        # Overtime premium
+      - WEEKEND         # Weekend rate
+      - HOLIDAY         # Holiday rate
+      - NIGHT_SHIFT     # Night differential
+      - EMERGENCY       # Rush/emergency rate
+      - DISCOUNTED      # Discounted rate
+      - PREMIUM         # Premium rate
+
+  RateConditionType:
+    description: Type of rate condition
+    values:
+      - TIME_OF_DAY     # Based on time
+      - DAY_OF_WEEK     # Based on day
+      - VOLUME          # Based on quantity
+      - DURATION        # Based on duration
+      - PROJECT_TYPE    # Based on project
+      - CLIENT_TYPE     # Based on client
+      - SKILL_LEVEL     # Based on required skill
+
+  TimePeriod:
+    description: Time period for rates
+    values:
+      - SECOND
+      - MINUTE
+      - HOUR
+      - DAY
+      - WEEK
+      - MONTH
+      - QUARTER
+      - YEAR
+
+  DepreciationMethod:
+    description: Asset depreciation method
+    values:
+      - STRAIGHT_LINE
+      - DECLINING_BALANCE
+      - DOUBLE_DECLINING
+      - SUM_OF_YEARS
+      - UNITS_OF_PRODUCTION
+
+  DayOfWeek:
+    description: Days of the week
+    values:
+      - MONDAY
+      - TUESDAY
+      - WEDNESDAY
+      - THURSDAY
+      - FRIDAY
+      - SATURDAY
+      - SUNDAY
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "IRS Employment Classifications"
+  - "FLSA (Fair Labor Standards Act)"
+  - "ISO 22400 (Manufacturing KPIs)"
+  - "OpenAI/Anthropic Pricing Models"
+  - "GAAP Depreciation Methods"

@@ -1,0 +1,225 @@
+# TTS Domain Model Schema
+# Source of truth - generates Pydantic models
+# Version: 1.2.0
+
+domain: tts
+version: "1.2.0"
+description: Text-to-speech service for kids' story voiceovers
+
+# -----------------------------
+# ENUMS
+# -----------------------------
+enums:
+  AudioFormat:
+    description: Supported audio output formats
+    values:
+      - mp3
+      - wav
+      - ogg
+
+  VoiceGender:
+    description: Voice gender classification
+    values:
+      - male
+      - female
+      - neutral
+
+  VoiceAge:
+    description: Voice age classification
+    values:
+      - child
+      - young
+      - adult
+      - elderly
+
+  TTSProvider:
+    description: Supported TTS provider backends
+    values:
+      - elevenlabs
+      - cartesia
+      - deepgram
+      - openai
+
+# -----------------------------
+# ENTITIES
+# -----------------------------
+entities:
+  VoiceSettings:
+    description: Fine-grained voice control parameters (provider-specific)
+    fields:
+      stability:
+        type: float
+        description: Voice consistency (0.0-1.0, ElevenLabs)
+        required: false
+      similarity_boost:
+        type: float
+        description: Voice similarity enhancement (0.0-1.0, ElevenLabs)
+        required: false
+      style:
+        type: float
+        description: Expressiveness/style intensity (0.0-1.0, ElevenLabs)
+        required: false
+      speed:
+        type: float
+        description: Speech rate multiplier (0.5-2.0)
+        default: 1.0
+
+  Voice:
+    description: Voice configuration for TTS synthesis
+    fields:
+      id:
+        type: str
+        description: Provider-specific voice identifier
+        required: true
+      name:
+        type: str
+        description: Human-readable voice name
+        required: true
+      provider:
+        type: TTSProvider
+        description: TTS provider for this voice
+        required: false
+      model_id:
+        type: str
+        description: Provider model (eleven_turbo_v2, sonic-3, aura-2)
+        required: false
+      gender:
+        type: VoiceGender
+        description: Voice gender
+        required: false
+      age:
+        type: VoiceAge
+        description: Voice age group
+        required: false
+      language:
+        type: str
+        description: ISO language code (en, en-US)
+        default: "en"
+      description:
+        type: str
+        description: Voice description
+        required: false
+      settings:
+        type: VoiceSettings
+        description: Fine-grained voice control
+        required: false
+
+  Speaker:
+    description: Named speaker with assigned voice
+    fields:
+      name:
+        type: str
+        description: Speaker name (Narrator, Wolf, Pig)
+        required: true
+      voice:
+        type: Voice
+        description: Assigned voice for this speaker
+        required: false
+      voice_id:
+        type: str
+        description: Voice ID (alternative to voice object)
+        required: false
+
+  Passage:
+    description: Single segment of text spoken by one speaker
+    fields:
+      text:
+        type: str
+        description: Text content to synthesize
+        required: true
+      speaker:
+        type: Speaker
+        description: Speaker for this passage
+        required: true
+      order:
+        type: int
+        description: Order in conversation sequence
+        default: 0
+      pause_before_ms:
+        type: int
+        description: Pause before this passage in milliseconds
+        default: 0
+      pause_after_ms:
+        type: int
+        description: Pause after this passage in milliseconds
+        default: 500
+      speed:
+        type: float
+        description: Speed override for this passage (0.5-2.0)
+        required: false
+
+  Conversation:
+    description: Multi-voice conversation with ordered passages
+    fields:
+      title:
+        type: str
+        description: Story/conversation title
+        required: true
+      passages:
+        type: list[Passage]
+        description: Ordered list of passages
+        required: true
+      speakers:
+        type: list[Speaker]
+        description: All speakers in this conversation
+        required: false
+      output_format:
+        type: AudioFormat
+        description: Output audio format
+        default: mp3
+      default_provider:
+        type: TTSProvider
+        description: Default TTS provider for all voices
+        required: false
+
+  SynthesisRequest:
+    description: Request to synthesize text (V1 simple)
+    fields:
+      text:
+        type: str
+        description: Text to synthesize
+        required: true
+      voice_id:
+        type: str
+        description: Voice ID to use
+        required: true
+      provider:
+        type: TTSProvider
+        description: TTS provider to use
+        default: elevenlabs
+      model_id:
+        type: str
+        description: Provider-specific model ID
+        required: false
+      output_format:
+        type: AudioFormat
+        description: Output format
+        default: mp3
+      output_path:
+        type: str
+        description: Local path to save audio
+        required: false
+      speed:
+        type: float
+        description: Speech rate (0.5-2.0)
+        default: 1.0
+
+  SynthesisResult:
+    description: Result of synthesis
+    fields:
+      success:
+        type: bool
+        description: Whether synthesis succeeded
+        required: true
+      audio_path:
+        type: str
+        description: Path to generated audio file
+        required: false
+      duration_ms:
+        type: int
+        description: Audio duration in milliseconds
+        required: false
+      error:
+        type: str
+        description: Error message if failed
+        required: false

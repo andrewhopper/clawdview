@@ -1,0 +1,658 @@
+# Penalty Domain Model
+# Consequences for cancellations, no-shows, late arrivals
+# Includes fees, refunds, credits, and penalty waivers
+
+domain:
+  name: penalty
+  version: "1.0.0"
+  description: Financial consequences for cancellations, no-shows, and policy violations with tiered fees and refund policies
+  dependencies: [core, finance]
+  use_case: Hotel cancellation fees, gym no-show penalties, flight change fees, event ticket policies
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  # ============================================
+  # PENALTY POLICIES
+  # ============================================
+
+  PenaltyPolicy:
+    description: Policy defining penalties for a resource type
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      resourceType: { type: string, required: true }
+      # Applicability
+      appliesTo: { type: array, items: string, description: "Resource IDs or 'all'" }
+      excludes: { type: array, items: string, description: "Excluded resource IDs" }
+      # Rules
+      cancellationPolicy: { type: CancellationPolicy }
+      noShowPolicy: { type: NoShowPolicy }
+      latePolicy: { type: LatePolicy }
+      modificationPolicy: { type: ModificationPolicy }
+      # Overrides
+      memberOverrides: { type: array, items: MemberOverride }
+      # Status
+      isActive: { type: boolean, required: true, default: true }
+      effectiveFrom: { type: datetime }
+      effectiveUntil: { type: datetime }
+      # Metadata
+      displayText: { type: string, description: "User-facing policy summary" }
+      legalText: { type: string, description: "Full legal terms" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CancellationPolicy:
+    description: Rules for cancellation penalties
+    properties:
+      id: { type: uuid, required: true }
+      policyId: { type: uuid, required: true }
+      # Time-based tiers
+      tiers: { type: array, items: CancellationTier, required: true }
+      # Defaults
+      defaultPenaltyType: { type: PenaltyType, required: true }
+      defaultPenaltyAmount: { type: number }
+      defaultPenaltyPercent: { type: number }
+      # Refund method
+      refundMethod: { type: RefundMethod, required: true }
+      refundProcessingDays: { type: integer, default: 5 }
+      # Credit option
+      allowCreditInsteadOfRefund: { type: boolean, default: true }
+      creditBonusPercent: { type: number, default: 0, description: "Bonus for choosing credit" }
+      creditValidityDays: { type: integer, default: 365 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CancellationTier:
+    description: Time-based cancellation penalty tier
+    properties:
+      id: { type: uuid, required: true }
+      cancellationPolicyId: { type: uuid, required: true }
+      # Time window
+      hoursBeforeStart: { type: integer, required: true, description: "Hours before event/check-in" }
+      hoursBeforeEnd: { type: integer, description: "End of tier (null = up to next tier)" }
+      # Penalty
+      penaltyType: { type: PenaltyType, required: true }
+      penaltyAmount: { type: number, description: "Fixed amount" }
+      penaltyPercent: { type: number, description: "Percentage of total" }
+      penaltyNights: { type: integer, description: "For hotels: number of nights" }
+      # Refund
+      refundPercent: { type: number, required: true, description: "% refunded" }
+      # Display
+      tierName: { type: string, description: "Free cancellation, 50% refund, etc." }
+      sortOrder: { type: integer, required: true }
+
+  NoShowPolicy:
+    description: Rules for no-show penalties
+    properties:
+      id: { type: uuid, required: true }
+      policyId: { type: uuid, required: true }
+      # Grace period
+      graceMinutes: { type: integer, default: 15, description: "Minutes late before no-show" }
+      # Penalty
+      penaltyType: { type: PenaltyType, required: true }
+      penaltyAmount: { type: number }
+      penaltyPercent: { type: number }
+      # Consequences
+      chargeFullAmount: { type: boolean, default: true }
+      releaseToWaitlist: { type: boolean, default: true }
+      releaseAfterMinutes: { type: integer, default: 15 }
+      # Strike system
+      useStrikeSystem: { type: boolean, default: false }
+      strikesBeforeBan: { type: integer, default: 3 }
+      strikeExpiryDays: { type: integer, default: 90 }
+      # Notification
+      notifyBeforeRelease: { type: boolean, default: true }
+      notifyMinutesBefore: { type: integer, default: 5 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  LatePolicy:
+    description: Rules for late arrival penalties
+    properties:
+      id: { type: uuid, required: true }
+      policyId: { type: uuid, required: true }
+      # Grace period
+      graceMinutes: { type: integer, default: 10 }
+      # Tiers
+      tiers: { type: array, items: LateTier }
+      # Consequences
+      reduceServiceTime: { type: boolean, default: true }
+      refuseEntryAfterMinutes: { type: integer }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  LateTier:
+    description: Time-based late fee tier
+    properties:
+      id: { type: uuid, required: true }
+      latePolicyId: { type: uuid, required: true }
+      minutesLate: { type: integer, required: true }
+      penaltyAmount: { type: number }
+      penaltyPercent: { type: number }
+      serviceReductionMinutes: { type: integer }
+      sortOrder: { type: integer, required: true }
+
+  ModificationPolicy:
+    description: Rules for booking modifications
+    properties:
+      id: { type: uuid, required: true }
+      policyId: { type: uuid, required: true }
+      # Allowed changes
+      allowDateChange: { type: boolean, default: true }
+      allowTimeChange: { type: boolean, default: true }
+      allowQuantityChange: { type: boolean, default: true }
+      allowUpgrade: { type: boolean, default: true }
+      allowDowngrade: { type: boolean, default: false }
+      # Limits
+      maxModifications: { type: integer }
+      modificationDeadlineHours: { type: integer }
+      # Fees
+      modificationFee: { type: number, default: 0 }
+      modificationFeePercent: { type: number }
+      upgradeFeeType: { type: FeeType }
+      downgradePenaltyPercent: { type: number }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  MemberOverride:
+    description: Policy override for member tiers
+    properties:
+      id: { type: uuid, required: true }
+      policyId: { type: uuid, required: true }
+      memberTier: { type: string, required: true }
+      # Overrides
+      freeCancellationHours: { type: integer }
+      penaltyReductionPercent: { type: number }
+      waiveNoShowPenalty: { type: boolean }
+      waiveModificationFee: { type: boolean }
+      extraGraceMinutes: { type: integer }
+      priority: { type: integer, required: true }
+
+  # ============================================
+  # PENALTY INSTANCES
+  # ============================================
+
+  Penalty:
+    description: An assessed penalty instance
+    properties:
+      id: { type: uuid, required: true }
+      policyId: { type: uuid, required: true }
+      # Reference
+      reservationType: { type: string, required: true }
+      reservationId: { type: string, required: true }
+      customerId: { type: string, required: true }
+      # Type
+      penaltyType: { type: PenaltyReason, required: true }
+      # Amounts
+      originalAmount: { type: number, required: true }
+      currency: { type: string, required: true }
+      waivedAmount: { type: number, default: 0 }
+      adjustedAmount: { type: number, default: 0 }
+      finalAmount: { type: number, required: true }
+      # Calculation
+      calculationDetails: { type: PenaltyCalculation }
+      tierApplied: { type: string }
+      # Status
+      status: { type: PenaltyStatus, required: true, default: assessed }
+      assessedAt: { type: datetime, required: true }
+      # Waiver
+      waiverRequest: { type: WaiverRequest }
+      # Collection
+      chargedAt: { type: datetime }
+      chargeMethod: { type: string }
+      chargeTransactionId: { type: string }
+      # Dispute
+      disputedAt: { type: datetime }
+      disputeReason: { type: string }
+      disputeResolution: { type: string }
+      resolvedAt: { type: datetime }
+      # Metadata
+      notes: { type: string }
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PenaltyCalculation:
+    description: Details of how penalty was calculated
+    properties:
+      id: { type: uuid, required: true }
+      penaltyId: { type: uuid, required: true }
+      # Inputs
+      reservationTotal: { type: number, required: true }
+      hoursBeforeStart: { type: number }
+      minutesLate: { type: number }
+      # Tier
+      tierName: { type: string }
+      tierHoursThreshold: { type: number }
+      # Calculation
+      baseAmount: { type: number, required: true }
+      percentApplied: { type: number }
+      fixedAmount: { type: number }
+      memberDiscount: { type: number }
+      promoDiscount: { type: number }
+      finalAmount: { type: number, required: true }
+      # Formula
+      formula: { type: string, description: "Human-readable calculation" }
+
+  # ============================================
+  # REFUNDS & CREDITS
+  # ============================================
+
+  Refund:
+    description: Refund issued after cancellation
+    properties:
+      id: { type: uuid, required: true }
+      penaltyId: { type: uuid }
+      reservationId: { type: string, required: true }
+      customerId: { type: string, required: true }
+      # Amounts
+      originalPayment: { type: number, required: true }
+      penaltyAmount: { type: number, default: 0 }
+      refundAmount: { type: number, required: true }
+      currency: { type: string, required: true }
+      # Method
+      refundMethod: { type: RefundMethod, required: true }
+      refundToOriginal: { type: boolean, default: true }
+      # Status
+      status: { type: RefundStatus, required: true, default: pending }
+      requestedAt: { type: datetime, required: true }
+      processedAt: { type: datetime }
+      completedAt: { type: datetime }
+      # Transaction
+      transactionId: { type: string }
+      processorResponse: { type: object }
+      # Failure
+      failureReason: { type: string }
+      retryCount: { type: integer, default: 0 }
+      # Metadata
+      notes: { type: string }
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Credit:
+    description: Account credit issued in lieu of refund
+    properties:
+      id: { type: uuid, required: true }
+      customerId: { type: string, required: true }
+      # Source
+      sourceType: { type: CreditSource, required: true }
+      sourceId: { type: string, required: true, description: "Refund ID, waiver ID, etc." }
+      # Amount
+      originalAmount: { type: number, required: true }
+      bonusAmount: { type: number, default: 0 }
+      totalAmount: { type: number, required: true }
+      remainingAmount: { type: number, required: true }
+      currency: { type: string, required: true }
+      # Validity
+      issuedAt: { type: datetime, required: true }
+      expiresAt: { type: datetime }
+      # Restrictions
+      restrictedToResourceType: { type: string }
+      restrictedToResourceIds: { type: array, items: string }
+      minPurchaseAmount: { type: number }
+      # Status
+      status: { type: CreditStatus, required: true, default: active }
+      # Redemptions
+      redemptions: { type: array, items: CreditRedemption }
+      # Metadata
+      notes: { type: string }
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CreditRedemption:
+    description: Usage of a credit
+    properties:
+      id: { type: uuid, required: true }
+      creditId: { type: uuid, required: true }
+      reservationId: { type: string, required: true }
+      amountUsed: { type: number, required: true }
+      remainingAfter: { type: number, required: true }
+      redeemedAt: { type: datetime, required: true }
+
+  # ============================================
+  # WAIVERS
+  # ============================================
+
+  WaiverRequest:
+    description: Request to waive a penalty
+    properties:
+      id: { type: uuid, required: true }
+      penaltyId: { type: uuid, required: true }
+      requestedBy: { type: string, required: true }
+      requestedAt: { type: datetime, required: true }
+      # Request
+      reason: { type: WaiverReason, required: true }
+      reasonDetails: { type: string }
+      evidenceUrls: { type: array, items: string }
+      requestedWaiverPercent: { type: number }
+      # Decision
+      status: { type: WaiverStatus, required: true, default: pending }
+      decidedBy: { type: string }
+      decidedAt: { type: datetime }
+      approvedWaiverPercent: { type: number }
+      approvedWaiverAmount: { type: number }
+      decisionReason: { type: string }
+      # Auto-decision
+      autoDecided: { type: boolean, default: false }
+      autoDecisionRule: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # STRIKES
+  # ============================================
+
+  Strike:
+    description: Strike against a customer for policy violation
+    properties:
+      id: { type: uuid, required: true }
+      customerId: { type: string, required: true }
+      # Source
+      violationType: { type: PenaltyReason, required: true }
+      penaltyId: { type: uuid }
+      reservationId: { type: string }
+      # Strike
+      issuedAt: { type: datetime, required: true }
+      expiresAt: { type: datetime }
+      # Status
+      status: { type: StrikeStatus, required: true, default: active }
+      removedAt: { type: datetime }
+      removalReason: { type: string }
+      # Context
+      notes: { type: string }
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CustomerPenaltyHistory:
+    description: Summary of customer's penalty history
+    properties:
+      id: { type: uuid, required: true }
+      customerId: { type: string, required: true }
+      # Counts
+      totalPenalties: { type: integer, required: true, default: 0 }
+      totalWaivers: { type: integer, default: 0 }
+      activeStrikes: { type: integer, default: 0 }
+      totalStrikes: { type: integer, default: 0 }
+      # Amounts
+      totalPenaltyAmount: { type: number, default: 0 }
+      totalWaivedAmount: { type: number, default: 0 }
+      # By type
+      cancellationCount: { type: integer, default: 0 }
+      noShowCount: { type: integer, default: 0 }
+      lateCount: { type: integer, default: 0 }
+      # Status
+      isBanned: { type: boolean, default: false }
+      bannedAt: { type: datetime }
+      banReason: { type: string }
+      banExpiresAt: { type: datetime }
+      # Computed
+      reliabilityScore: { type: number, description: "0-100 reliability score" }
+      lastUpdatedAt: { type: datetime, required: true }
+
+enums:
+
+  PenaltyType:
+    values:
+      - fixed           # Fixed amount
+      - percentage      # Percentage of total
+      - nights          # Number of nights (hotels)
+      - tiered          # Based on timing tier
+      - full            # Full amount
+      - none            # No penalty
+
+  PenaltyReason:
+    values:
+      - cancellation    # Booking cancellation
+      - no_show         # Failed to arrive
+      - late_arrival    # Arrived late
+      - early_departure # Left early
+      - modification    # Booking change
+      - damage          # Property damage
+      - policy_violation # Other policy violation
+
+  PenaltyStatus:
+    values:
+      - assessed        # Penalty calculated
+      - waiver_pending  # Waiver requested
+      - waived          # Fully waived
+      - partially_waived # Partially waived
+      - charged         # Successfully charged
+      - charge_failed   # Charge failed
+      - disputed        # Under dispute
+      - resolved        # Dispute resolved
+      - written_off     # Written off
+
+  RefundMethod:
+    values:
+      - original_payment # Refund to original payment method
+      - bank_transfer    # Bank transfer
+      - credit           # Account credit
+      - check            # Physical check
+      - store_credit     # Store/service credit
+      - crypto           # Cryptocurrency
+
+  RefundStatus:
+    values:
+      - pending         # Awaiting processing
+      - processing      # Being processed
+      - completed       # Successfully refunded
+      - failed          # Refund failed
+      - cancelled       # Refund cancelled
+
+  CreditSource:
+    values:
+      - cancellation_refund
+      - waiver_compensation
+      - goodwill
+      - promotion
+      - referral
+      - complaint_resolution
+      - system_error
+
+  CreditStatus:
+    values:
+      - active          # Can be used
+      - partially_used  # Some remaining
+      - exhausted       # Fully used
+      - expired         # Past expiry
+      - cancelled       # Cancelled
+
+  WaiverReason:
+    values:
+      - medical         # Medical emergency
+      - family_emergency # Family emergency
+      - weather         # Weather/natural disaster
+      - travel_disruption # Flight cancelled, etc.
+      - service_issue   # Problem with service
+      - first_offense   # First-time violation
+      - loyal_customer  # Long-time customer
+      - technical_error # System error
+      - miscommunication # Booking misunderstanding
+      - other           # Other reason
+
+  WaiverStatus:
+    values:
+      - pending         # Awaiting decision
+      - approved        # Fully approved
+      - partially_approved # Partial waiver
+      - denied          # Denied
+      - escalated       # Escalated for review
+      - auto_approved   # Automatically approved
+      - auto_denied     # Automatically denied
+
+  StrikeStatus:
+    values:
+      - active          # Currently active
+      - expired         # Past expiry date
+      - removed         # Manually removed
+      - appealed        # Under appeal
+
+  FeeType:
+    values:
+      - fixed           # Fixed amount
+      - percentage      # Percentage
+      - difference      # Price difference
+      - none            # No fee
+
+actions:
+
+  # Policy management
+  CreatePenaltyPolicy:
+    description: Create a new penalty policy
+    parameters:
+      name: { type: string, required: true }
+      resourceType: { type: string, required: true }
+      cancellationPolicy: { type: CancellationPolicy }
+      noShowPolicy: { type: NoShowPolicy }
+    result: PenaltyPolicy
+    idempotent: false
+
+  # Penalty operations
+  AssessPenalty:
+    description: Calculate and assess a penalty
+    parameters:
+      policyId: { type: uuid, required: true }
+      reservationId: { type: string, required: true }
+      customerId: { type: string, required: true }
+      penaltyReason: { type: PenaltyReason, required: true }
+      eventTime: { type: datetime }
+    result: Penalty
+    idempotent: false
+
+  ChargePenalty:
+    description: Charge the penalty to customer
+    parameters:
+      penaltyId: { type: uuid, required: true }
+      paymentMethodId: { type: string }
+    result: Penalty
+    idempotent: true
+
+  # Waiver operations
+  RequestWaiver:
+    description: Request penalty waiver
+    parameters:
+      penaltyId: { type: uuid, required: true }
+      reason: { type: WaiverReason, required: true }
+      reasonDetails: { type: string }
+      evidenceUrls: { type: array, items: string }
+    result: WaiverRequest
+    idempotent: false
+
+  DecideWaiver:
+    description: Approve or deny waiver request
+    parameters:
+      waiverId: { type: uuid, required: true }
+      approved: { type: boolean, required: true }
+      waiverPercent: { type: number }
+      reason: { type: string }
+    result: WaiverRequest
+    idempotent: true
+
+  # Refund operations
+  ProcessRefund:
+    description: Process a refund
+    parameters:
+      refundId: { type: uuid, required: true }
+    result: Refund
+    idempotent: true
+
+  # Credit operations
+  IssueCredit:
+    description: Issue account credit
+    parameters:
+      customerId: { type: string, required: true }
+      amount: { type: number, required: true }
+      sourceType: { type: CreditSource, required: true }
+      sourceId: { type: string, required: true }
+      expiryDays: { type: integer }
+    result: Credit
+    idempotent: false
+
+  RedeemCredit:
+    description: Use credit on a reservation
+    parameters:
+      creditId: { type: uuid, required: true }
+      reservationId: { type: string, required: true }
+      amount: { type: number, required: true }
+    result: CreditRedemption
+    idempotent: false
+
+  # Strike operations
+  IssueStrike:
+    description: Issue a strike to customer
+    parameters:
+      customerId: { type: string, required: true }
+      violationType: { type: PenaltyReason, required: true }
+      penaltyId: { type: uuid }
+      expiryDays: { type: integer }
+    result: Strike
+    idempotent: false
+
+  RemoveStrike:
+    description: Remove a strike
+    parameters:
+      strikeId: { type: uuid, required: true }
+      reason: { type: string, required: true }
+    result: Strike
+    idempotent: true
+
+  # Queries
+  CalculatePenaltyPreview:
+    description: Preview penalty without assessing
+    parameters:
+      policyId: { type: uuid, required: true }
+      reservationTotal: { type: number, required: true }
+      hoursBeforeStart: { type: number }
+      memberTier: { type: string }
+    result: PenaltyCalculation
+    idempotent: true
+
+  GetCustomerPenaltyHistory:
+    description: Get customer's penalty history
+    parameters:
+      customerId: { type: string, required: true }
+    result: CustomerPenaltyHistory
+    idempotent: true
+
+relationships:
+  - type: one_to_one
+    from: PenaltyPolicy
+    to: CancellationPolicy
+    foreign_key: policyId
+    description: Policy has one cancellation policy
+
+  - type: one_to_one
+    from: PenaltyPolicy
+    to: NoShowPolicy
+    foreign_key: policyId
+    description: Policy has one no-show policy
+
+  - type: one_to_many
+    from: CancellationPolicy
+    to: CancellationTier
+    foreign_key: cancellationPolicyId
+    description: Cancellation policy has many tiers
+
+  - type: one_to_many
+    from: Penalty
+    to: Refund
+    foreign_key: penaltyId
+    description: Penalty may result in refund
+
+  - type: one_to_one
+    from: Penalty
+    to: WaiverRequest
+    foreign_key: penaltyId
+    description: Penalty may have waiver request
+
+  - type: one_to_many
+    from: Credit
+    to: CreditRedemption
+    foreign_key: creditId
+    description: Credit can have multiple redemptions

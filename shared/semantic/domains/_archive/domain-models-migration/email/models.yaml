@@ -1,0 +1,297 @@
+# models.yaml - Email Domain Models
+# Generated: 2025-11-24
+# Status: PENDING APPROVAL
+
+entities:
+  Email:
+    description: "Email message entity"
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique identifier"
+      message_id:
+        type: string
+        required: false
+        max_length: 255
+        description: "RFC 5322 Message-ID header"
+      thread_id:
+        type: uuid
+        required: false
+        references: EmailThread.id
+        description: "Conversation thread this email belongs to"
+      in_reply_to_id:
+        type: uuid
+        required: false
+        references: Email.id
+        description: "Email this is replying to"
+      subject:
+        type: string
+        required: true
+        max_length: 500
+      body_text:
+        type: text
+        required: false
+        description: "Plain text version"
+      body_html:
+        type: text
+        required: false
+        description: "HTML version"
+      from_address:
+        type: string
+        required: true
+        max_length: 255
+        format: email
+      from_name:
+        type: string
+        required: false
+        max_length: 255
+      reply_to:
+        type: string
+        required: false
+        max_length: 255
+        format: email
+      priority:
+        type: enum
+        enum_ref: EmailPriority
+        required: true
+        default: normal
+      status:
+        type: enum
+        enum_ref: EmailStatus
+        required: true
+        default: draft
+      sent_at:
+        type: datetime
+        required: false
+      delivered_at:
+        type: datetime
+        required: false
+      opened_at:
+        type: datetime
+        required: false
+        description: "First time opened (if tracking enabled)"
+      is_read:
+        type: boolean
+        required: true
+        default: false
+      is_starred:
+        type: boolean
+        required: true
+        default: false
+      is_archived:
+        type: boolean
+        required: true
+        default: false
+      folder:
+        type: string
+        required: false
+        max_length: 100
+        description: "Inbox, Sent, Drafts, etc."
+      user_id:
+        type: uuid
+        required: false
+        references: User.id
+        description: "Owner of this email (internal user)"
+      external_id:
+        type: string
+        required: false
+        max_length: 255
+        description: "ID from external email provider (Gmail, Outlook, etc.)"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [thread_id]
+      - [status]
+      - [sent_at]
+      - [user_id]
+      - [from_address]
+
+  EmailRecipient:
+    description: "To/CC/BCC recipients of an email"
+    properties:
+      id:
+        type: uuid
+        required: true
+      email_id:
+        type: uuid
+        required: true
+        references: Email.id
+      recipient_type:
+        type: enum
+        enum_ref: RecipientType
+        required: true
+      email_address:
+        type: string
+        required: true
+        max_length: 255
+        format: email
+      display_name:
+        type: string
+        required: false
+        max_length: 255
+      user_id:
+        type: uuid
+        required: false
+        references: User.id
+        description: "If recipient is internal user"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [email_id]
+      - [email_address]
+      - [recipient_type]
+
+  EmailAttachment:
+    description: "File attached to email"
+    properties:
+      id:
+        type: uuid
+        required: true
+      email_id:
+        type: uuid
+        required: true
+        references: Email.id
+      filename:
+        type: string
+        required: true
+        max_length: 255
+      content_type:
+        type: string
+        required: true
+        max_length: 100
+        description: "MIME type (e.g., application/pdf)"
+      size_bytes:
+        type: integer
+        required: true
+      storage_url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "S3 or file storage URL"
+      content_id:
+        type: string
+        required: false
+        max_length: 255
+        description: "Content-ID for inline images"
+      is_inline:
+        type: boolean
+        required: true
+        default: false
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [email_id]
+
+  EmailThread:
+    description: "Conversation thread grouping related emails"
+    properties:
+      id:
+        type: uuid
+        required: true
+      subject:
+        type: string
+        required: true
+        max_length: 500
+        description: "Thread subject (from first email)"
+      participants:
+        type: json
+        required: false
+        description: "Array of participant email addresses"
+      message_count:
+        type: integer
+        required: true
+        default: 0
+      last_message_at:
+        type: datetime
+        required: false
+      is_archived:
+        type: boolean
+        required: true
+        default: false
+      user_id:
+        type: uuid
+        required: false
+        references: User.id
+        description: "Owner of this thread"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [user_id]
+      - [last_message_at]
+
+  EmailLabel:
+    description: "Custom labels/tags for emails (Gmail-style)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 100
+      color:
+        type: string
+        required: false
+        max_length: 7
+        description: "Hex color code"
+      user_id:
+        type: uuid
+        required: true
+        references: User.id
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [user_id]
+
+  EmailLabelAssignment:
+    description: "Many-to-many: emails can have multiple labels"
+    properties:
+      id:
+        type: uuid
+        required: true
+      email_id:
+        type: uuid
+        required: true
+        references: Email.id
+      label_id:
+        type: uuid
+        required: true
+        references: EmailLabel.id
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [email_id]
+      - [label_id]

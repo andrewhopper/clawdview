@@ -1,0 +1,49 @@
+# Identity Entities
+
+entities:
+
+  Principal:
+    extends: core.Entity
+    description: Any authenticated entity that can be granted permissions
+    properties:
+      username:
+        type: string
+        required: true
+        minLength: 3
+        maxLength: 64
+        pattern: "^[a-zA-Z0-9_.-]+$"
+      displayName:
+        type: string
+      isActive:
+        type: boolean
+        required: true
+        default: true
+      createdAt:
+        type: datetime
+      lastLoginAt:
+        type: datetime
+      roles:
+        type: Role[]
+      credentials:
+        type: Credential[]
+
+  User:
+    extends: Principal
+    description: Human user identity
+    properties:
+      email:
+        type: string
+        required: true
+        pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      firstName:
+        type: string
+      lastName:
+        type: string
+
+  ServiceAccount:
+    extends: Principal
+    description: Non-human identity for services
+    properties:
+      serviceType:
+        type: string
+        description: Type of service (api, worker, etc.)

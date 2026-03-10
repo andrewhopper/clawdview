@@ -1,0 +1,16 @@
+@prefix domain: <http://hopperlabs.ai/ontology/DOMAIN_NAME#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================
+# DOMAIN_NAME SHACL Validation Rules
+# ============================================
+
+domain:Entity1Shape a sh:NodeShape ;
+    sh:targetClass domain:Entity1 ;
+    sh:property [
+        sh:path domain:property1 ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:message "property1 is required"
+    ] .

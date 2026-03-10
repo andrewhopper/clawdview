@@ -1,0 +1,40 @@
+{
+  "name": "verify-domain-usage",
+  "description": "Verify shared domain model usage across projects - reports compliance scores",
+  "version": "1.0.0",
+  "handler": "skill.py",
+  "arguments": {
+    "category": {
+      "description": "Project category to scan",
+      "type": "string",
+      "enum": ["personal", "work", "shared", "oss", "unspecified"],
+      "required": false
+    },
+    "format": {
+      "description": "Output format",
+      "type": "string",
+      "enum": ["text", "json"],
+      "default": "text",
+      "required": false
+    },
+    "output": {
+      "description": "Output file path (default: stdout)",
+      "type": "string",
+      "required": false
+    }
+  },
+  "examples": [
+    {
+      "command": "/verify-domain-usage",
+      "description": "Scan all projects for domain model usage"
+    },
+    {
+      "command": "/verify-domain-usage --category personal",
+      "description": "Scan only personal projects"
+    },
+    {
+      "command": "/verify-domain-usage --format json --output report.json",
+      "description": "Generate JSON report and save to file"
+    }
+  ]
+}

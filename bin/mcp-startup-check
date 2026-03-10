@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# File UUID: 2d3e4f5g-6h7i-8j9k-0l1m-2n3o4p5q6r7s
+
+# MCP Startup Verification Script
+# Runs comprehensive checks on MCP configuration at session start
+
+set -euo pipefail
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+issues_found=false
+
+echo
+echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}  MCP STARTUP VERIFICATION${NC}"
+echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+echo
+
+# Check 1: Configuration Audit
+echo -e "${YELLOW}→${NC} Running configuration audit..."
+if "$SCRIPT_DIR/audit-mcp-config" > /tmp/mcp-audit.log 2>&1; then
+    echo -e "${GREEN}✓${NC} Configuration audit passed"
+else
+    echo -e "${RED}✗${NC} Configuration audit found issues"
+    echo "  See: /tmp/mcp-audit.log"
+    issues_found=true
+fi
+
+# Check 2: Environment Variables
+echo -e "${YELLOW}→${NC} Checking environment variables..."
+if "$SCRIPT_DIR/mcp-env-check" > /tmp/mcp-env.log 2>&1; then
+    echo -e "${GREEN}✓${NC} All required environment variables are set"
+else
+    echo -e "${RED}✗${NC} Missing environment variables"
+    echo "  Run: bin/mcp-env-check"
+    issues_found=true
+fi
+
+# Check 3: Server Health (non-blocking)
+echo -e "${YELLOW}→${NC} Checking server health..."
+if "$SCRIPT_DIR/mcp-health-check" > /tmp/mcp-health.log 2>&1; then
+    echo -e "${GREEN}✓${NC} All MCP servers are healthy"
+else
+    echo -e "${YELLOW}⚠${NC}  Some MCP servers have warnings"
+    echo "  Run: bin/mcp-health-check"
+fi
+
+# Check 4: Backup status
+echo -e "${YELLOW}→${NC} Checking backup status..."
+BACKUP_DIR="$HOME/.claude/backups"
+if [ -d "$BACKUP_DIR" ]; then
+    backup_count=$(ls -1 "$BACKUP_DIR"/settings_*.json 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$backup_count" -gt 0 ]; then
+        latest_backup=$(ls -1t "$BACKUP_DIR"/settings_*.json 2>/dev/null | head -1)
+        backup_age=$(($(date +%s) - $(stat -f %m "$latest_backup")))
+        days_old=$((backup_age / 86400))
+
+        if [ $days_old -gt 7 ]; then
+            echo -e "${YELLOW}⚠${NC}  Last backup is $days_old days old"
+            echo "  Run: bin/mcp-backup-config"
+        else
+            echo -e "${GREEN}✓${NC} Recent backup exists ($days_old days old)"
+        fi
+    else
+        echo -e "${YELLOW}⚠${NC}  No backups found"
+        echo "  Run: bin/mcp-backup-config"
+    fi
+else
+    echo -e "${YELLOW}⚠${NC}  No backup directory found"
+    echo "  Run: bin/mcp-backup-config"
+fi
+
+echo
+echo -e "${BLUE}───────────────────────────────────────────────────────────${NC}"
+echo
+
+if [ "$issues_found" = true ]; then
+    echo -e "${RED}✗ Issues detected${NC}"
+    echo
+    echo "Quick fixes:"
+    echo "  1. bin/audit-mcp-config    # Detailed configuration report"
+    echo "  2. bin/mcp-env-check       # Check environment variables"
+    echo "  3. bin/mcp-health-check    # Check server health"
+    echo "  4. bin/mcp-backup-config   # Create backup"
+    echo
+    exit 1
+else
+    echo -e "${GREEN}✓ All checks passed - MCP is ready${NC}"
+    echo
+fi

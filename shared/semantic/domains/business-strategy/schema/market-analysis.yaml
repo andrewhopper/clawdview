@@ -1,0 +1,316 @@
+# Market Analysis & Business Model Entities
+# Source: Market sizing frameworks, Porter's Five Forces, Business Model Generation
+
+entities:
+
+  # ============================================
+  # MARKET RESEARCH
+  # ============================================
+
+  MarketResearch:
+    description: Comprehensive market analysis including sizing, trends, and competitive landscape
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      marketSizing: { type: MarketSizing, required: true }
+      trends: { type: array, items: MarketTrend }
+      competitiveAnalysis: { type: CompetitiveAnalysis }
+      regulations: { type: array, items: RegulatoryFactor }
+      barriers: { type: array, items: MarketBarrier }
+      sources: { type: array, items: string, description: "Research sources and citations" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  MarketSizing:
+    description: TAM/SAM/SOM market sizing analysis
+    properties:
+      id: { type: string, required: true }
+      tam: { type: MarketSize, required: true, description: "Total Addressable Market" }
+      sam: { type: MarketSize, required: true, description: "Serviceable Addressable Market" }
+      som: { type: MarketSize, required: true, description: "Serviceable Obtainable Market" }
+      methodology: { type: MarketSizingMethodology, required: true }
+      assumptions: { type: array, items: string }
+      dataDate: { type: date }
+
+  MarketSize:
+    description: Market size with value and growth rate
+    properties:
+      value: { type: Money, required: true }
+      unitCount: { type: number, description: "Number of potential customers/units" }
+      growthRate: { type: number, description: "Annual growth rate percentage" }
+      timeframe: { type: string, description: "Year or period (e.g., '2024', '2025-2030')" }
+      confidence: { type: ConfidenceLevel }
+
+  MarketTrend:
+    description: Market trend or shift affecting the industry
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      impact: { type: TrendImpact, required: true }
+      timeframe: { type: TrendTimeframe }
+      evidence: { type: array, items: string }
+
+  CompetitiveAnalysis:
+    description: Analysis of competitive landscape
+    properties:
+      id: { type: string, required: true }
+      competitors: { type: array, items: Competitor, required: true }
+      marketConcentration: { type: MarketConcentration }
+      competitiveIntensity: { type: CompetitiveIntensity }
+      substitutes: { type: array, items: Substitute }
+      portersFiveForces: { type: PortersFiveForces }
+
+  Competitor:
+    description: A competitor in the market
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: CompetitorType, required: true }
+      marketShare: { type: number, description: "Percentage of market" }
+      strengths: { type: array, items: string }
+      weaknesses: { type: array, items: string }
+      pricing: { type: string }
+      differentiation: { type: string }
+      fundingStage: { type: string }
+      website: { type: string }
+
+  Substitute:
+    description: Alternative solution or substitute product
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      threatLevel: { type: ThreatLevel }
+      switchingCost: { type: SwitchingCost }
+
+  PortersFiveForces:
+    description: Porter's Five Forces analysis
+    source: "Competitive Strategy (Porter, 1980)"
+    properties:
+      threatOfNewEntrants: { type: ForceRating, required: true }
+      threatOfSubstitutes: { type: ForceRating, required: true }
+      bargainingPowerOfBuyers: { type: ForceRating, required: true }
+      bargainingPowerOfSuppliers: { type: ForceRating, required: true }
+      competitiveRivalry: { type: ForceRating, required: true }
+      analysis: { type: string }
+
+  RegulatoryFactor:
+    description: Regulatory or compliance consideration
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      impact: { type: RegulatoryImpact }
+      jurisdiction: { type: array, items: string }
+      complianceCost: { type: string }
+
+  MarketBarrier:
+    description: Barrier to market entry
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: BarrierType, required: true }
+      severity: { type: BarrierSeverity }
+      mitigationStrategy: { type: string }
+
+  # ============================================
+  # TARGET MARKET
+  # ============================================
+
+  TargetMarket:
+    description: Defined target market with segments and personas
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      segments: { type: array, items: MarketSegment, required: true }
+      idealCustomerProfile: { type: IdealCustomerProfile }
+      personas: { type: array, items: BuyerPersona }
+      geographies: { type: array, items: string }
+      verticals: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  MarketSegment:
+    description: A distinct segment within the target market
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      size: { type: number, description: "Number of potential customers" }
+      priority: { type: SegmentPriority, required: true }
+      characteristics: { type: array, items: string }
+      needs: { type: array, items: string }
+      behaviors: { type: array, items: string }
+      acquisitionCost: { type: Money }
+      lifetimeValue: { type: Money }
+
+  IdealCustomerProfile:
+    description: ICP - characteristics of ideal customer (B2B focused)
+    properties:
+      id: { type: string, required: true }
+      companySize: { type: string, description: "Employee count range" }
+      revenue: { type: string, description: "Revenue range" }
+      industries: { type: array, items: string }
+      technographics: { type: array, items: string, description: "Tech stack indicators" }
+      firmographics: { type: array, items: string }
+      painPoints: { type: array, items: string }
+      buyingProcess: { type: string }
+      decisionMakers: { type: array, items: string }
+      budget: { type: string }
+      buyingTriggers: { type: array, items: string }
+      disqualifiers: { type: array, items: string }
+
+  BuyerPersona:
+    description: Fictional representation of ideal buyer
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true, description: "Persona name (e.g., 'Technical Tim')" }
+      role: { type: string, required: true }
+      demographics: { type: PersonaDemographics }
+      goals: { type: array, items: string }
+      challenges: { type: array, items: string }
+      motivations: { type: array, items: string }
+      objections: { type: array, items: string }
+      informationSources: { type: array, items: string }
+      buyingRole: { type: BuyingRole }
+      quote: { type: string, description: "Representative quote capturing mindset" }
+
+  PersonaDemographics:
+    description: Demographic information for a persona
+    properties:
+      ageRange: { type: string }
+      education: { type: string }
+      experience: { type: string }
+      title: { type: string }
+      department: { type: string }
+
+  # ============================================
+  # BUSINESS MODEL
+  # ============================================
+
+  BusinessModel:
+    description: How the business creates, delivers, and captures value
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      type: { type: BusinessModelType, required: true }
+      revenueModel: { type: RevenueModel, required: true }
+      pricingStrategy: { type: PricingStrategy, required: true }
+      goToMarket: { type: GoToMarketStrategy }
+      salesModel: { type: SalesModel }
+      unitEconomics: { type: UnitEconomics }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  RevenueModel:
+    description: How the business generates revenue
+    properties:
+      id: { type: string, required: true }
+      primaryModel: { type: RevenueModelType, required: true }
+      secondaryModels: { type: array, items: RevenueModelType }
+      streams: { type: array, items: RevenueStream }
+      projections: { type: array, items: RevenueProjection }
+
+  RevenueStream:
+    description: Individual source of revenue
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: RevenueModelType, required: true }
+      percentage: { type: number, description: "Percentage of total revenue" }
+      description: { type: string }
+      frequency: { type: RevenueFrequency }
+
+  RevenueProjection:
+    description: Revenue projection for a time period
+    properties:
+      period: { type: string, required: true }
+      amount: { type: Money, required: true }
+      assumptions: { type: array, items: string }
+      confidence: { type: ConfidenceLevel }
+
+  PricingStrategy:
+    description: Product/service pricing approach
+    properties:
+      id: { type: string, required: true }
+      type: { type: PricingType, required: true }
+      tiers: { type: array, items: PricingTier }
+      basePrice: { type: Money }
+      discountStrategy: { type: string }
+      competitivePosition: { type: PricingPosition }
+      valueMetric: { type: string, description: "What customers pay for (seats, usage, etc.)" }
+
+  PricingTier:
+    description: A pricing tier or plan
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      price: { type: Money, required: true }
+      frequency: { type: BillingFrequency, required: true }
+      features: { type: array, items: string }
+      limits: { type: array, items: string }
+      targetSegment: { type: string }
+
+  GoToMarketStrategy:
+    description: Strategy for bringing product to market
+    properties:
+      id: { type: string, required: true }
+      approach: { type: GTMApproach, required: true }
+      channels: { type: array, items: GTMChannel }
+      phases: { type: array, items: GTMPhase }
+      launchStrategy: { type: string }
+      partnerships: { type: array, items: string }
+
+  GTMChannel:
+    description: Go-to-market channel
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ChannelType, required: true }
+      cost: { type: Money }
+      expectedCAC: { type: Money }
+      priority: { type: ChannelPriority }
+
+  GTMPhase:
+    description: Phase in go-to-market execution
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      objectives: { type: array, items: string }
+      successMetrics: { type: array, items: string }
+      order: { type: number }
+
+  SalesModel:
+    description: Sales approach and structure
+    properties:
+      id: { type: string, required: true }
+      type: { type: SalesModelType, required: true }
+      averageDealSize: { type: Money }
+      salesCycleLength: { type: string }
+      touchpoints: { type: number, description: "Average touches to close" }
+      conversionRates: { type: array, items: ConversionRate }
+
+  ConversionRate:
+    description: Conversion rate between funnel stages
+    properties:
+      fromStage: { type: string, required: true }
+      toStage: { type: string, required: true }
+      rate: { type: number, required: true }
+
+  UnitEconomics:
+    description: Per-unit financial metrics
+    properties:
+      id: { type: string, required: true }
+      cac: { type: Money, required: true, description: "Customer Acquisition Cost" }
+      ltv: { type: Money, required: true, description: "Customer Lifetime Value" }
+      ltvCacRatio: { type: number }
+      paybackPeriod: { type: number, description: "Months to recover CAC" }
+      grossMargin: { type: number, description: "Percentage" }
+      churnRate: { type: number, description: "Monthly or annual churn percentage" }
+      arpu: { type: Money, description: "Average Revenue Per User" }
+      arpa: { type: Money, description: "Average Revenue Per Account" }

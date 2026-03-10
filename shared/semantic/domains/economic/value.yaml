@@ -1,0 +1,174 @@
+# Economic Domain: Value
+# What is exchanged - quantity + unit
+# Version: 1.0.0
+
+domain: economic-value
+version: "1.0.0"
+status: production
+description: Abstract representation of value - anything that can be exchanged
+dependencies:
+  - core
+
+# =============================================================================
+# DESIGN PHILOSOPHY
+# =============================================================================
+#
+# Value is the most fundamental economic primitive:
+# - A quantity of something
+# - Measured in a unit
+# - Can be tangible (goods) or intangible (time, access, tokens)
+# - Can be money (currency) or non-money
+#
+# Examples:
+# - 8 hours of labor
+# - 50,000 tokens
+# - $100 USD
+# - 500 kg of steel
+# - 1 logo design
+# - 30 days of access
+#
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Value (the core primitive)
+  # ---------------------------------------------------------------------------
+
+  Value:
+    description: A quantity of something that can be exchanged
+    fields:
+      quantity:
+        type: float
+        required: true
+        description: How much
+      unit:
+        type: string
+        required: true
+        description: Unit of measure (hours, tokens, USD, kg, units)
+      value_type:
+        type: ValueType
+        required: true
+        description: Category of value
+      currency:
+        type: string
+        required: false
+        description: ISO 4217 currency code if monetary (USD, EUR, etc.)
+      description:
+        type: string
+        required: false
+        description: What specifically (e.g., "senior engineer hours", "GPT-4 tokens")
+
+  # ---------------------------------------------------------------------------
+  # Money (specialized Value for currency)
+  # ---------------------------------------------------------------------------
+
+  Money:
+    description: Monetary value
+    extends: Value
+    fields:
+      currency:
+        type: string
+        required: true
+        description: ISO 4217 currency code
+      # quantity is the amount
+      # unit is always the currency code
+
+  # ---------------------------------------------------------------------------
+  # Conversion Rate
+  # ---------------------------------------------------------------------------
+
+  ConversionRate:
+    description: Rate to convert between two values
+    fields:
+      from_unit:
+        type: string
+        required: true
+      to_unit:
+        type: string
+        required: true
+      rate:
+        type: float
+        required: true
+        description: 1 from_unit = rate to_units
+      effective_at:
+        type: datetime
+        required: false
+      source:
+        type: string
+        required: false
+        description: Where rate came from (market, agreement, etc.)
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  ValueType:
+    description: Category of value
+    values:
+      - CURRENCY        # Money (USD, EUR, BTC)
+      - TIME            # Duration (hours, days)
+      - LABOR           # Work performed (hours, but contextualized)
+      - OUTPUT          # Deliverables (units, items, documents)
+      - ACCESS          # Right to use (seats, licenses, days)
+      - DATA            # Data volume (bytes, tokens, records)
+      - CAPACITY        # Throughput (requests, ops, bandwidth)
+      - MATERIAL        # Physical goods (kg, liters, units)
+      - ENERGY          # Power (kWh, joules)
+      - SPACE           # Area/volume (sqft, cubic meters)
+      - CREDIT          # Abstract credits/points
+
+# =============================================================================
+# COMMON UNITS (reference)
+# =============================================================================
+
+common_units:
+
+  time:
+    - second
+    - minute
+    - hour
+    - day
+    - week
+    - month
+    - year
+
+  data:
+    - byte
+    - KB
+    - MB
+    - GB
+    - TB
+    - token
+    - record
+
+  currency:
+    - USD
+    - EUR
+    - GBP
+    - JPY
+    - CNY
+    - BTC
+    - ETH
+
+  physical:
+    - unit
+    - piece
+    - kg
+    - lb
+    - liter
+    - gallon
+    - meter
+    - foot
+    - sqft
+    - sqm
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "ISO 4217 (Currency codes)"
+  - "SI Units"

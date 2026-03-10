@@ -1,0 +1,648 @@
+# Geo Domain: Places & Points of Interest
+# Named locations, addresses, landmarks, and semantic places
+# Version: 1.0.0
+
+domain: geo-place
+version: "1.0.0"
+status: production
+description: Named places, addresses, points of interest, and semantic locations
+dependencies:
+  - geo-point
+  - geo-shape
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Abstract Place (foundation)
+  # ---------------------------------------------------------------------------
+
+  Place:
+    description: Abstract representation of a place in the world
+    fields:
+      id:
+        type: string
+        required: true
+        description: Unique identifier
+      name:
+        type: string
+        required: true
+        description: Primary name
+      alternate_names:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Alternative names, translations, abbreviations
+      place_type:
+        type: PlaceType
+        required: true
+        description: Category of place
+      location:
+        type: Point
+        required: false
+        description: Representative point (centroid, entrance, etc.)
+      bounds:
+        type: BoundingBox
+        required: false
+        description: Bounding box containing the place
+      geometry:
+        type: Geometry
+        required: false
+        description: Full geometry (polygon, multipolygon)
+      parent:
+        type: Place
+        required: false
+        description: Containing place (city contains neighborhood)
+      timezone:
+        type: string
+        required: false
+        description: IANA timezone (e.g., "America/Los_Angeles")
+      metadata:
+        type: object
+        required: false
+        description: Additional properties
+
+  # ---------------------------------------------------------------------------
+  # Address
+  # ---------------------------------------------------------------------------
+
+  Address:
+    description: Structured postal/physical address
+    fields:
+      formatted:
+        type: string
+        required: false
+        description: Full formatted address string
+      street_number:
+        type: string
+        required: false
+        description: Building/house number
+      street_name:
+        type: string
+        required: false
+        description: Street name
+      street_type:
+        type: string
+        required: false
+        description: Street suffix (St, Ave, Blvd, etc.)
+      unit:
+        type: string
+        required: false
+        description: Apartment, suite, unit number
+      neighborhood:
+        type: string
+        required: false
+        description: Neighborhood or district
+      city:
+        type: string
+        required: false
+        description: City or municipality
+      county:
+        type: string
+        required: false
+        description: County or parish
+      state:
+        type: string
+        required: false
+        description: State, province, or region
+      state_code:
+        type: string
+        required: false
+        description: State/province abbreviation (e.g., "CA")
+      postal_code:
+        type: string
+        required: false
+        description: ZIP or postal code
+      country:
+        type: string
+        required: false
+        description: Country name
+      country_code:
+        type: string
+        required: false
+        description: ISO 3166-1 alpha-2 code (e.g., "US")
+      location:
+        type: Point
+        required: false
+        description: Geocoded point
+      accuracy:
+        type: GeocodeAccuracy
+        required: false
+        description: Geocoding accuracy level
+      plus_code:
+        type: string
+        required: false
+        description: Google Plus Code (Open Location Code)
+
+  # ---------------------------------------------------------------------------
+  # Point of Interest (POI)
+  # ---------------------------------------------------------------------------
+
+  PointOfInterest:
+    description: Named location with semantic meaning
+    extends: Place
+    aliases: [POI, Landmark]
+    fields:
+      category:
+        type: POICategory
+        required: true
+        description: Primary category
+      subcategories:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Additional category tags
+      address:
+        type: Address
+        required: false
+        description: Street address if applicable
+      contact:
+        type: ContactInfo
+        required: false
+        description: Phone, email, website
+      hours:
+        type: OperatingHours
+        required: false
+        description: Business hours
+      rating:
+        type: float
+        required: false
+        constraints:
+          min: 0
+          max: 5
+        description: Average rating (0-5 scale)
+      review_count:
+        type: integer
+        required: false
+        description: Number of reviews
+      price_level:
+        type: PriceLevel
+        required: false
+        description: Price indicator ($, $$, $$$, $$$$)
+      attributes:
+        type: array
+        items:
+          type: POIAttribute
+        required: false
+        description: Features (wheelchair accessible, WiFi, etc.)
+      photos:
+        type: array
+        items:
+          type: string
+        required: false
+        description: Photo URLs
+      external_ids:
+        type: object
+        required: false
+        description: IDs from external sources
+        fields:
+          google_place_id:
+            type: string
+          osm_id:
+            type: string
+          foursquare_id:
+            type: string
+          yelp_id:
+            type: string
+
+  ContactInfo:
+    description: Contact information for a place
+    fields:
+      phone:
+        type: string
+        required: false
+      email:
+        type: string
+        required: false
+      website:
+        type: string
+        required: false
+      social:
+        type: object
+        required: false
+        description: Social media handles
+
+  OperatingHours:
+    description: Business operating hours
+    fields:
+      periods:
+        type: array
+        items:
+          type: HoursPeriod
+        required: true
+      timezone:
+        type: string
+        required: false
+      special_hours:
+        type: array
+        items:
+          type: SpecialHours
+        required: false
+        description: Holidays, special events
+
+  HoursPeriod:
+    description: Single operating period
+    fields:
+      day:
+        type: DayOfWeek
+        required: true
+      open:
+        type: string
+        required: true
+        description: Opening time (HH:MM, 24hr)
+      close:
+        type: string
+        required: true
+        description: Closing time (HH:MM, 24hr)
+
+  SpecialHours:
+    description: Special hours for specific dates
+    fields:
+      date:
+        type: string
+        required: true
+        description: ISO date (YYYY-MM-DD)
+      is_closed:
+        type: boolean
+        required: false
+      open:
+        type: string
+        required: false
+      close:
+        type: string
+        required: false
+      reason:
+        type: string
+        required: false
+        description: Holiday name or reason
+
+  POIAttribute:
+    description: Feature or attribute of a POI
+    fields:
+      key:
+        type: string
+        required: true
+        description: Attribute identifier
+      value:
+        type: string
+        required: false
+        description: Attribute value (if not boolean)
+      available:
+        type: boolean
+        required: false
+        default: true
+
+  # ---------------------------------------------------------------------------
+  # Administrative Regions
+  # ---------------------------------------------------------------------------
+
+  AdministrativeRegion:
+    description: Political/administrative boundary
+    extends: Place
+    fields:
+      admin_level:
+        type: AdminLevel
+        required: true
+        description: Administrative hierarchy level
+      iso_code:
+        type: string
+        required: false
+        description: ISO 3166 code if applicable
+      fips_code:
+        type: string
+        required: false
+        description: US FIPS code
+      population:
+        type: integer
+        required: false
+      area_sq_km:
+        type: float
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Natural Features
+  # ---------------------------------------------------------------------------
+
+  NaturalFeature:
+    description: Natural geographic feature
+    extends: Place
+    fields:
+      feature_class:
+        type: NaturalFeatureClass
+        required: true
+      elevation_meters:
+        type: float
+        required: false
+        description: Peak elevation or average elevation
+      prominence_meters:
+        type: float
+        required: false
+        description: Topographic prominence (for peaks)
+
+  WaterFeature:
+    description: Body of water
+    extends: NaturalFeature
+    fields:
+      water_type:
+        type: WaterType
+        required: true
+      surface_area_sq_km:
+        type: float
+        required: false
+      max_depth_meters:
+        type: float
+        required: false
+      salinity:
+        type: Salinity
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Transport Infrastructure
+  # ---------------------------------------------------------------------------
+
+  TransportHub:
+    description: Transportation facility
+    extends: Place
+    fields:
+      transport_type:
+        type: TransportType
+        required: true
+      codes:
+        type: object
+        required: false
+        fields:
+          iata:
+            type: string
+            description: Airport IATA code (e.g., "SFO")
+          icao:
+            type: string
+            description: Airport ICAO code (e.g., "KSFO")
+          unlocode:
+            type: string
+            description: UN/LOCODE for ports
+          station_code:
+            type: string
+            description: Rail station code
+      runways:
+        type: integer
+        required: false
+        description: Number of runways (airports)
+      terminals:
+        type: integer
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Geocoding Result
+  # ---------------------------------------------------------------------------
+
+  GeocodeResult:
+    description: Result from geocoding/reverse geocoding
+    fields:
+      query:
+        type: string
+        required: false
+        description: Original search query
+      location:
+        type: Point
+        required: true
+        description: Geocoded point
+      address:
+        type: Address
+        required: false
+        description: Structured address
+      place:
+        type: Place
+        required: false
+        description: Matched place
+      accuracy:
+        type: GeocodeAccuracy
+        required: true
+      confidence:
+        type: float
+        required: false
+        constraints:
+          min: 0
+          max: 1
+        description: Confidence score (0-1)
+      bounds:
+        type: BoundingBox
+        required: false
+        description: Suggested viewport
+      provider:
+        type: string
+        required: false
+        description: Geocoding service used
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  PlaceType:
+    description: High-level place categories
+    values:
+      - COUNTRY
+      - STATE
+      - COUNTY
+      - CITY
+      - NEIGHBORHOOD
+      - POSTAL_CODE
+      - STREET
+      - ADDRESS
+      - POI
+      - NATURAL_FEATURE
+      - WATER_FEATURE
+      - TRANSPORT_HUB
+      - INTERSECTION
+      - UNKNOWN
+
+  POICategory:
+    description: Point of interest categories
+    values:
+      # Food & Drink
+      - RESTAURANT
+      - CAFE
+      - BAR
+      - BAKERY
+      - GROCERY
+      # Lodging
+      - HOTEL
+      - MOTEL
+      - HOSTEL
+      - CAMPGROUND
+      # Transport
+      - AIRPORT
+      - TRAIN_STATION
+      - BUS_STATION
+      - FERRY_TERMINAL
+      - PARKING
+      - GAS_STATION
+      - EV_CHARGING
+      # Services
+      - BANK
+      - ATM
+      - POST_OFFICE
+      - HOSPITAL
+      - PHARMACY
+      - DOCTOR
+      - DENTIST
+      # Shopping
+      - SHOPPING_MALL
+      - DEPARTMENT_STORE
+      - SUPERMARKET
+      - CONVENIENCE_STORE
+      # Entertainment
+      - MOVIE_THEATER
+      - MUSEUM
+      - PARK
+      - ZOO
+      - AQUARIUM
+      - AMUSEMENT_PARK
+      # Sports
+      - GYM
+      - STADIUM
+      - GOLF_COURSE
+      - SKI_RESORT
+      # Education
+      - SCHOOL
+      - UNIVERSITY
+      - LIBRARY
+      # Government
+      - CITY_HALL
+      - COURTHOUSE
+      - POLICE
+      - FIRE_STATION
+      # Religious
+      - CHURCH
+      - MOSQUE
+      - SYNAGOGUE
+      - TEMPLE
+      # Other
+      - LANDMARK
+      - MONUMENT
+      - CEMETERY
+      - OTHER
+
+  AdminLevel:
+    description: Administrative hierarchy levels
+    values:
+      - COUNTRY          # Level 0
+      - STATE            # Level 1 (state, province, region)
+      - COUNTY           # Level 2 (county, district, prefecture)
+      - MUNICIPALITY     # Level 3 (city, town, township)
+      - DISTRICT         # Level 4 (borough, ward)
+      - NEIGHBORHOOD     # Level 5
+      - BLOCK            # Level 6
+
+  NaturalFeatureClass:
+    description: Natural geographic feature types
+    values:
+      - MOUNTAIN
+      - HILL
+      - VALLEY
+      - PLAIN
+      - PLATEAU
+      - CANYON
+      - CAVE
+      - CLIFF
+      - BEACH
+      - ISLAND
+      - PENINSULA
+      - CAPE
+      - FOREST
+      - DESERT
+      - GLACIER
+      - VOLCANO
+
+  WaterType:
+    description: Types of water bodies
+    values:
+      - OCEAN
+      - SEA
+      - GULF
+      - BAY
+      - STRAIT
+      - LAKE
+      - POND
+      - RESERVOIR
+      - RIVER
+      - STREAM
+      - CREEK
+      - CANAL
+      - WATERFALL
+      - SPRING
+      - WETLAND
+      - LAGOON
+
+  Salinity:
+    description: Water salinity classification
+    values:
+      - FRESH       # < 0.5 ppt
+      - BRACKISH    # 0.5-30 ppt
+      - SALINE      # 30-50 ppt
+      - HYPERSALINE # > 50 ppt
+
+  TransportType:
+    description: Transportation facility types
+    values:
+      - AIRPORT
+      - HELIPORT
+      - SEAPLANE_BASE
+      - TRAIN_STATION
+      - SUBWAY_STATION
+      - BUS_STATION
+      - FERRY_TERMINAL
+      - SEAPORT
+      - MARINA
+      - TRUCK_STOP
+
+  GeocodeAccuracy:
+    description: Geocoding precision level
+    values:
+      - ROOFTOP         # Exact building location
+      - RANGE_INTERPOLATED  # Interpolated along street
+      - GEOMETRIC_CENTER    # Center of area
+      - APPROXIMATE         # Approximate location
+      - STREET             # Street level only
+      - POSTAL_CODE        # ZIP/postal code centroid
+      - CITY               # City centroid
+      - STATE              # State centroid
+      - COUNTRY            # Country centroid
+
+  PriceLevel:
+    description: Price indicator for businesses
+    values:
+      - FREE
+      - INEXPENSIVE    # $
+      - MODERATE       # $$
+      - EXPENSIVE      # $$$
+      - VERY_EXPENSIVE # $$$$
+
+  DayOfWeek:
+    description: Days of the week
+    values:
+      - MONDAY
+      - TUESDAY
+      - WEDNESDAY
+      - THURSDAY
+      - FRIDAY
+      - SATURDAY
+      - SUNDAY
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "Google Places API: https://developers.google.com/maps/documentation/places"
+  - "OpenStreetMap: https://www.openstreetmap.org/"
+  - "GeoNames: https://www.geonames.org/"
+  - "Foursquare Places API: https://developer.foursquare.com/"
+  - "ISO 3166: https://www.iso.org/iso-3166-country-codes.html"
+  - "FIPS codes: https://www.census.gov/library/reference/code-lists/ansi.html"

@@ -1,0 +1,223 @@
+# models.yaml - Organization Domain Models
+# Generated: 2025-11-24
+# Status: PENDING APPROVAL
+
+entities:
+  Organization:
+    description: "Company, business, institution, or entity"
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique identifier"
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Legal or common name"
+      display_name:
+        type: string
+        required: false
+        max_length: 255
+        description: "Short/brand name (if different from legal name)"
+      organization_type:
+        type: enum
+        enum_ref: OrganizationType
+        required: true
+      industry:
+        type: enum
+        enum_ref: Industry
+        required: false
+      size:
+        type: enum
+        enum_ref: OrganizationSize
+        required: false
+      employee_count:
+        type: integer
+        required: false
+        description: "Approximate number of employees"
+      annual_revenue:
+        type: decimal
+        required: false
+        precision: 15
+        scale: 2
+        description: "Annual revenue in USD"
+      founded_year:
+        type: integer
+        required: false
+      website:
+        type: string
+        required: false
+        max_length: 500
+        format: url
+      description:
+        type: text
+        required: false
+      parent_organization_id:
+        type: uuid
+        required: false
+        references: Organization.id
+        description: "Parent company (for subsidiaries)"
+      status:
+        type: enum
+        enum_ref: OrganizationStatus
+        required: true
+        default: active
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [name]
+      - [organization_type]
+      - [industry]
+      - [status]
+
+  OrganizationAddress:
+    description: "Physical or mailing address for organization"
+    properties:
+      id:
+        type: uuid
+        required: true
+      organization_id:
+        type: uuid
+        required: true
+        references: Organization.id
+      address_type:
+        type: enum
+        enum_ref: AddressType
+        required: true
+      label:
+        type: string
+        required: false
+        max_length: 100
+        description: "e.g., 'HQ', 'West Coast Office', 'Billing'"
+      street_address_1:
+        type: string
+        required: true
+        max_length: 255
+      street_address_2:
+        type: string
+        required: false
+        max_length: 255
+      city:
+        type: string
+        required: true
+        max_length: 100
+      state_province:
+        type: string
+        required: false
+        max_length: 100
+      postal_code:
+        type: string
+        required: false
+        max_length: 20
+      country:
+        type: string
+        required: true
+        max_length: 2
+        description: "ISO 3166-1 alpha-2 country code"
+      is_primary:
+        type: boolean
+        required: true
+        default: false
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [organization_id]
+      - [address_type]
+
+  OrganizationContact:
+    description: "Contact methods for organization"
+    properties:
+      id:
+        type: uuid
+        required: true
+      organization_id:
+        type: uuid
+        required: true
+        references: Organization.id
+      contact_type:
+        type: enum
+        enum_ref: ContactType
+        required: true
+      value:
+        type: string
+        required: true
+        max_length: 255
+        description: "Email, phone, social handle, etc."
+      label:
+        type: string
+        required: false
+        max_length: 100
+        description: "e.g., 'Support', 'Sales', 'Main Office'"
+      is_primary:
+        type: boolean
+        required: true
+        default: false
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [organization_id]
+      - [contact_type]
+
+  OrganizationRelationship:
+    description: "Relationship between two organizations"
+    properties:
+      id:
+        type: uuid
+        required: true
+      from_organization_id:
+        type: uuid
+        required: true
+        references: Organization.id
+      to_organization_id:
+        type: uuid
+        required: true
+        references: Organization.id
+      relationship_type:
+        type: enum
+        enum_ref: RelationshipType
+        required: true
+      status:
+        type: enum
+        enum_ref: RelationshipStatus
+        required: true
+        default: active
+      started_at:
+        type: date
+        required: false
+      ended_at:
+        type: date
+        required: false
+      notes:
+        type: text
+        required: false
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [from_organization_id]
+      - [to_organization_id]
+      - [relationship_type]

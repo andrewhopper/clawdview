@@ -1,0 +1,125 @@
+# Project Domain Model
+# Represents a project in the monorepo
+
+name: Project
+version: "1.0.0"
+updated: "2025-12-03"
+
+types:
+  Project:
+    description: "A project in the monorepo"
+    properties:
+      uuid:
+        type: string
+        format: uuid
+        required: true
+        description: "Unique identifier for the project"
+
+      id:
+        type: string
+        required: true
+        description: "Short ID from folder name (e.g., 't9x2k-189')"
+
+      name:
+        type: string
+        required: true
+        description: "Human-readable project name"
+
+      folder:
+        type: string
+        required: true
+        description: "Project folder path relative to monorepo root"
+
+      classification:
+        type: ProjectClassification
+        required: true
+        description: "work, personal, shared, or oss"
+
+      status:
+        type: ProjectStatus
+        required: true
+        description: "Current project status"
+
+      phase:
+        type: integer
+        required: false
+        description: "Current SDLC phase (1-9)"
+
+      description:
+        type: string
+        required: false
+        description: "Brief project description"
+
+      tech_stack:
+        type: array
+        items: string
+        required: false
+        description: "Technologies used"
+
+      created_at:
+        type: datetime
+        required: true
+
+      updated_at:
+        type: datetime
+        required: true
+
+  ProjectClassification:
+    description: "Project classification"
+    enum:
+      - work
+      - personal
+      - shared
+      - oss
+
+  ProjectStatus:
+    description: "Project status"
+    enum:
+      - idea
+      - active
+      - paused
+      - completed
+      - archived
+
+  ProjectAssetSummary:
+    description: "Summary of assets for a project"
+    properties:
+      project_uuid:
+        type: string
+        format: uuid
+        required: true
+
+      total_assets:
+        type: integer
+        required: true
+        default: 0
+
+      diagrams:
+        type: integer
+        required: true
+        default: 0
+
+      documents:
+        type: integer
+        required: true
+        default: 0
+
+      images:
+        type: integer
+        required: true
+        default: 0
+
+      last_asset_created:
+        type: datetime
+        required: false
+
+relationships:
+  - from: Project
+    to: Asset
+    type: has_many
+    via: project_uuid
+
+  - from: Project
+    to: ProjectAssetSummary
+    type: has_one
+    via: project_uuid

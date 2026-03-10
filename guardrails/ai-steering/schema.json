@@ -1,0 +1,291 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AI Steering Rule Schema",
+  "description": "Schema for defining AI behavior steering rules with context matching and constraint levels",
+  "version": "2.0.0",
+  "type": "object",
+  "required": ["version", "lastUpdated", "rules"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version (semver)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "description": "Last update date (ISO 8601)",
+      "format": "date"
+    },
+    "rules": {
+      "type": "array",
+      "description": "List of steering rules",
+      "items": {
+        "$ref": "#/definitions/rule"
+      }
+    }
+  },
+  "definitions": {
+    "rule": {
+      "type": "object",
+      "required": ["uuid", "id", "version", "level", "category", "description", "action"],
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Globally unique identifier (UUID v4) for rule, immutable across versions",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "id": {
+          "type": "string",
+          "description": "Human-readable rule identifier (kebab-case), can change across versions",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "version": {
+          "type": "string",
+          "description": "Rule version (semver) - MAJOR.MINOR.PATCH",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "level": {
+          "type": "string",
+          "enum": ["NEVER", "ALWAYS", "MUST", "MUST_NOT", "SHOULD", "SHOULD_NOT", "PREFER", "AVOID"],
+          "description": "Constraint level (priority order: NEVER > ALWAYS > MUST > MUST_NOT > SHOULD > SHOULD_NOT > PREFER > AVOID)"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["tool_usage", "code_generation", "file_operations", "communication", "workflow", "git", "performance", "security", "testing"],
+          "description": "Rule category for organization"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable rule description",
+          "minLength": 10,
+          "maxLength": 200
+        },
+        "context": {
+          "$ref": "#/definitions/context",
+          "description": "When this rule applies"
+        },
+        "action": {
+          "$ref": "#/definitions/action",
+          "description": "What to do when rule triggers"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Why this rule exists"
+        },
+        "examples": {
+          "type": "array",
+          "description": "Example scenarios",
+          "items": {
+            "$ref": "#/definitions/example"
+          }
+        },
+        "metadata": {
+          "$ref": "#/definitions/metadata",
+          "description": "Approval and tracking info"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "description": "Context matching conditions",
+      "properties": {
+        "when": {
+          "type": "array",
+          "description": "Conditions that must ALL be true (AND logic)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unless": {
+          "type": "array",
+          "description": "Conditions that deactivate rule (exception cases)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "phase": {
+          "type": "array",
+          "description": "SDLC phases where rule applies",
+          "items": {
+            "type": "string",
+            "enum": [
+              "PHASE_1_SEED",
+              "PHASE_2_RESEARCH",
+              "PHASE_3_EXPANSION",
+              "PHASE_4_ANALYSIS",
+              "PHASE_5_SELECTION",
+              "PHASE_6_DESIGN",
+              "PHASE_7_TEST_DESIGN",
+              "PHASE_8_IMPLEMENTATION",
+              "PHASE_8.5_VALIDATION",
+              "PHASE_9_REFINEMENT",
+              "DIVERGENT",
+              "SPIKE"
+            ]
+          }
+        },
+        "filePattern": {
+          "type": "string",
+          "description": "Glob pattern for file matching"
+        },
+        "fileCount": {
+          "type": "object",
+          "description": "File count thresholds",
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "taskType": {
+          "type": "array",
+          "description": "Intent detection task types",
+          "items": {
+            "type": "string",
+            "enum": ["Question", "Chore", "Task", "Brainstorm", "New Script", "New Artifact", "New Idea", "New Project"]
+          }
+        },
+        "toolInvolved": {
+          "type": "array",
+          "description": "Tools this rule applies to",
+          "items": {
+            "type": "string",
+            "enum": ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "Task", "TodoWrite", "WebFetch", "WebSearch", "SlashCommand", "Skill"]
+          }
+        },
+        "destructive": {
+          "type": "boolean",
+          "description": "Whether operation is destructive (delete, force push, etc.)"
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["directive", "target"],
+      "description": "Action to take when rule applies",
+      "properties": {
+        "directive": {
+          "type": "string",
+          "enum": ["use", "avoid", "confirm", "require", "prohibit", "prefer", "paraphrase"],
+          "description": "Type of action"
+        },
+        "target": {
+          "type": "string",
+          "description": "What the directive applies to"
+        },
+        "alternative": {
+          "type": "string",
+          "description": "Suggested alternative if target avoided/prohibited"
+        },
+        "message": {
+          "type": "string",
+          "description": "Message to display when rule triggers"
+        }
+      }
+    },
+    "example": {
+      "type": "object",
+      "required": ["scenario", "correct"],
+      "properties": {
+        "scenario": {
+          "type": "string",
+          "description": "User request or situation"
+        },
+        "correct": {
+          "type": "string",
+          "description": "Correct AI behavior"
+        },
+        "incorrect": {
+          "type": "string",
+          "description": "Incorrect AI behavior (anti-pattern)"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Rule approval and tracking",
+      "properties": {
+        "approvedBy": {
+          "type": "string",
+          "description": "Person who approved rule"
+        },
+        "approvedDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Approval date"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "approved", "deprecated", "experimental"],
+          "description": "Rule lifecycle status"
+        },
+        "deprecatedBy": {
+          "type": "string",
+          "description": "UUID of rule that replaces this one (if deprecated)",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "relatedRules": {
+          "type": "array",
+          "description": "UUIDs of related rules",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          }
+        },
+        "changelog": {
+          "type": "array",
+          "description": "Version history for this rule",
+          "items": {
+            "$ref": "#/definitions/changelogEntry"
+          }
+        },
+        "source": {
+          "type": "string",
+          "description": "Source repository URL (for remote rules)",
+          "format": "uri"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Rule namespace (e.g., @protoflow/core, @company/custom)",
+          "pattern": "^@[a-z0-9-]+/[a-z0-9-]+$"
+        }
+      }
+    },
+    "changelogEntry": {
+      "type": "object",
+      "required": ["version", "date", "changes"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Version number (semver)",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Change date (ISO 8601)"
+        },
+        "changes": {
+          "type": "array",
+          "description": "List of changes in this version",
+          "items": {
+            "type": "string"
+          }
+        },
+        "author": {
+          "type": "string",
+          "description": "Person who made the change"
+        },
+        "breaking": {
+          "type": "boolean",
+          "description": "Whether this is a breaking change"
+        }
+      }
+    }
+  }
+}

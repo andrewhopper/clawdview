@@ -1,0 +1,94 @@
+# Auth Actions
+
+actions:
+
+  Authenticate:
+    type: create
+    description: Verify credentials and create session
+    operatesOn: Session
+    permission: auth:login
+    idempotent: false
+    params:
+      username: { type: string, required: true }
+      credential: { type: string, required: true }
+      authMethod: { type: AuthMethod, default: Password }
+      mfaCode: { type: string }
+    returns: Session
+    errors:
+      - INVALID_CREDENTIALS
+      - ACCOUNT_LOCKED
+      - ACCOUNT_DISABLED
+      - MFA_REQUIRED
+
+  RefreshSession:
+    type: update
+    description: Exchange refresh token for new access token
+    operatesOn: Session
+    permission: auth:refresh
+    idempotent: false
+    params:
+      refreshToken: { type: string, required: true }
+    returns: Session
+    errors:
+      - INVALID_REFRESH_TOKEN
+      - SESSION_REVOKED
+      - SESSION_EXPIRED
+
+  RevokeSession:
+    type: delete
+    description: Invalidate session (logout)
+    operatesOn: Session
+    permission: auth:logout
+    idempotent: true
+    params:
+      sessionId: { type: string, required: true }
+    errors:
+      - SESSION_NOT_FOUND
+
+  Authorize:
+    type: read
+    description: Check if principal has permission
+    operatesOn: Permission
+    permission: auth:check
+    idempotent: true
+    params:
+      principalId: { type: string, required: true }
+      permission: { type: string, required: true }
+      resourceId: { type: string }
+    returns: boolean
+    errors:
+      - INVALID_TOKEN
+      - PERMISSION_DENIED
+
+  AssignRole:
+    type: update
+    description: Grant role to principal
+    operatesOn: Principal
+    permission: auth:manage_roles
+    idempotent: true
+    params:
+      principalId: { type: string, required: true }
+      roleName: { type: string, required: true }
+    returns: Principal
+    errors:
+      - PRINCIPAL_NOT_FOUND
+      - ROLE_NOT_FOUND
+      - INSUFFICIENT_PERMISSIONS
+
+  CreateUser:
+    type: create
+    description: Register new user account
+    operatesOn: User
+    permission: auth:create_user
+    idempotent: false
+    params:
+      email: { type: string, required: true }
+      username: { type: string }
+      password: { type: string, required: true }
+      displayName: { type: string }
+      roles: { type: string[] }
+    returns: User
+    errors:
+      - USERNAME_TAKEN
+      - EMAIL_TAKEN
+      - INVALID_PASSWORD

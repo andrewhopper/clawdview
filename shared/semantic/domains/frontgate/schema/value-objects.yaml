@@ -1,0 +1,155 @@
+# Frontgate Value Objects
+# Version: 1.0.0
+# Atomic, reusable components for file organization
+#
+# IMPORTS:
+#   human-task: TaskDecision, Actor, ActionType
+#   gesture: SwipeDirection (for UI bindings)
+#   core: Entity
+
+value_objects:
+
+  # ============================================
+  # FILE SYSTEM PRIMITIVES
+  # ============================================
+
+  File:
+    description: |
+      Represents a file in the file system.
+      Atomic value object for all file operations.
+    properties:
+      path:
+        type: string
+        required: true
+        description: Absolute or relative file path
+      name:
+        type: string
+        required: true
+        description: Filename with extension
+      stem:
+        type: string
+        description: Filename without extension
+      suffix:
+        type: string
+        description: File extension including dot (e.g., ".md")
+      size:
+        type: integer
+        description: File size in bytes
+      is_directory:
+        type: boolean
+        default: false
+      created_at:
+        type: datetime
+        description: File creation timestamp
+      modified_at:
+        type: datetime
+        description: File modification timestamp
+
+  # ============================================
+  # RULE COMPONENTS (for FileRule composition)
+  # ============================================
+
+  FileScope:
+    description: |
+      Defines which files a rule applies to.
+      Atomic component reusable across rules.
+    properties:
+      include:
+        type: string[]
+        required: true
+        description: Glob patterns to include (e.g., "**/*.md")
+      exclude:
+        type: string[]
+        default: []
+        description: Glob patterns to exclude (e.g., "**/README.md")
+      path_context:
+        type: string
+        description: Only apply when file is in this directory context
+
+  Destination:
+    description: |
+      Target location for file placement.
+      Atomic component for routing files.
+    properties:
+      path:
+        type: string
+        required: true
+        description: Target directory path (can use templates)
+      naming_template:
+        type: string
+        default: "{original}"
+        description: |
+          Template for filename. Variables:
+          - {original}: Original filename
+          - {stem}: Filename without extension
+          - {suffix}: File extension
+          - {uuid}: Generated 6-char hex UUID
+          - {date}: Current date YYYY-MM-DD
+
+  AutoFix:
+    description: |
+      Automatic remediation configuration.
+      Atomic component for self-healing behavior.
+    properties:
+      enabled:
+        type: boolean
+        default: false
+        description: Whether auto-fix is enabled
+      type:
+        type: AutoFixType
+        default: rename
+        description: Type of fix to apply
+      template:
+        type: string
+        description: Template for rename/move operations
+      prompt:
+        type: boolean
+        default: true
+        description: Ask user before applying fix
+      auto_cleanup_days:
+        type: integer
+        description: Days before auto-deleting quarantined files
+
+  # ============================================
+  # TRIAGE (composes with human-task patterns)
+  # ============================================
+  # NOTE: Triage decisions use human-task:TaskDecision pattern
+  # with file-specific input. See entities.yaml for FileTriage.
+
+  FileTriageInput:
+    description: |
+      Input payload for file triage task.
+      Maps to human-task:TaskInput.payload schema.
+    properties:
+      file:
+        type: File
+        required: true
+        description: The file being triaged
+      violation:
+        type: Violation
+        required: true
+        description: The rule violation that triggered triage
+      suggested_destination:
+        type: Destination
+        description: AI-suggested destination
+      suggested_rule:
+        type: FileRule
+        description: AI-suggested rule to learn
+
+  # Gesture bindings for triage UI (references gesture domain)
+  TriageGestureBinding:
+    description: |
+      Maps gestures to triage actions.
+      References gesture:SwipeDirection and human-task:ActionType.
+    properties:
+      gesture:
+        type: string
+        required: true
+        description: "FK to gesture:SwipeDirection or gesture:GestureType"
+      action:
+        type: string
+        required: true
+        description: "FK to human-task:ActionType (approve, reject, defer, delete)"
+      keyboard_shortcut:
+        type: string
+        description: "e.g., 'y', 'n', 's', 'd'"

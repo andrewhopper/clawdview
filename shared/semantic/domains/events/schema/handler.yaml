@@ -1,0 +1,157 @@
+# Event Handler Schema
+# Patterns for handling domain events with conditions
+
+enums:
+
+  ConditionOperator:
+    description: Operators for event condition matching
+    values:
+      - equals
+      - not_equals
+      - greater_than
+      - less_than
+      - greater_or_equal
+      - less_or_equal
+      - contains
+      - starts_with
+      - ends_with
+      - matches_regex
+      - in_list
+      - not_in_list
+      - is_null
+      - is_not_null
+
+  ConditionLogic:
+    description: How multiple conditions are combined
+    values:
+      - all   # AND - all conditions must match
+      - any   # OR - at least one must match
+      - none  # NOT - none can match
+
+entities:
+
+  EventCondition:
+    description: Single condition for filtering events
+    properties:
+      field:
+        type: string
+        required: true
+        description: Event field to evaluate (supports dot notation)
+      operator:
+        type: ConditionOperator
+        required: true
+        description: Comparison operator
+      value:
+        type: any
+        description: Value to compare against
+      caseSensitive:
+        type: boolean
+        default: true
+        description: Case sensitivity for string comparisons
+
+  EventFilter:
+    description: Composite filter with multiple conditions
+    properties:
+      conditions:
+        type: list
+        itemType: EventCondition
+        description: List of conditions to evaluate
+      logic:
+        type: ConditionLogic
+        default: all
+        description: How conditions are combined
+      nestedFilters:
+        type: list
+        itemType: EventFilter
+        description: Nested filter groups for complex logic
+
+  EventHandler:
+    description: Handler that processes matching events
+    extends: Entity
+    properties:
+      handlerName:
+        type: string
+        required: true
+        description: Unique name for this handler
+      eventTypes:
+        type: list
+        itemType: string
+        required: true
+        description: Event types this handler subscribes to
+      filter:
+        type: EventFilter
+        description: Optional filter to narrow matching events
+      priority:
+        type: integer
+        default: 0
+        description: Execution order (higher = first)
+      async:
+        type: boolean
+        default: true
+        description: Whether handler runs asynchronously
+      enabled:
+        type: boolean
+        default: true
+        description: Whether handler is active
+      action:
+        type: string
+        required: true
+        description: Action to execute when event matches
+      actionConfig:
+        type: map
+        keyType: string
+        valueType: any
+        description: Configuration passed to the action
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true
+
+  ConditionalTrigger:
+    description: |
+      Declarative trigger that fires actions when conditions are met.
+      Example: "When RefundRequested AND amount > 1000 THEN escalate_to_manager"
+    extends: Entity
+    properties:
+      triggerName:
+        type: string
+        required: true
+        description: Human-readable trigger name
+      description:
+        type: string
+        description: What this trigger does
+      eventTypes:
+        type: list
+        itemType: string
+        required: true
+        description: Events that can activate this trigger
+      conditions:
+        type: EventFilter
+        required: true
+        description: Conditions that must be met
+      actions:
+        type: list
+        itemType: string
+        required: true
+        description: Actions to execute when triggered
+      priority:
+        type: integer
+        default: 0
+        description: Execution priority
+      enabled:
+        type: boolean
+        default: true
+      cooldownSeconds:
+        type: integer
+        description: Minimum seconds between firings
+      maxFiringsPerHour:
+        type: integer
+        description: Rate limit for trigger
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+        required: true

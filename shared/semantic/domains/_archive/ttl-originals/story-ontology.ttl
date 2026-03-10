@@ -1,0 +1,771 @@
+@prefix story: <http://hopperlabs.ai/domain/story#> .
+@prefix schema: <http://schema.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# ============================================
+# Story Domain Ontology
+# Canonical model for narrative story generation
+# Based on analysis of 10 classic children's books
+# ============================================
+
+# ----------------
+# CORE ENTITIES
+# ----------------
+
+story:Story a owl:Class ;
+    rdfs:label "Story" ;
+    rdfs:comment "Complete narrative with metadata, genre, status, and timeline" .
+
+story:Character a owl:Class ;
+    rdfs:label "Character" ;
+    rdfs:comment "Person, animal, or entity in story with role, traits, and transformations over time" .
+
+story:Scene a owl:Class ;
+    rdfs:label "Scene" ;
+    rdfs:comment "Individual scene or chapter with location, characters, time, and events" .
+
+story:Location a owl:Class ;
+    rdfs:label "Location" ;
+    rdfs:comment "Physical or imaginary place where scenes occur" .
+
+story:Object a owl:Class ;
+    rdfs:label "Object" ;
+    rdfs:comment "Physical item or prop in story, may be symbolic or imaginary" .
+
+story:Plot a owl:Class ;
+    rdfs:label "Plot" ;
+    rdfs:comment "Plot structure with acts, turning points, and climax" .
+
+story:Theme a owl:Class ;
+    rdfs:label "Theme" ;
+    rdfs:comment "Thematic element or message (love, friendship, courage)" .
+
+story:Conflict a owl:Class ;
+    rdfs:label "Conflict" ;
+    rdfs:comment "Central conflict driving the narrative" .
+
+story:Dialogue a owl:Class ;
+    rdfs:label "Dialogue" ;
+    rdfs:comment "Character speech with speaker, content, and emotion" .
+
+story:Arc a owl:Class ;
+    rdfs:label "Arc" ;
+    rdfs:comment "Character or story arc with beginning, middle, and end" .
+
+# ----------------
+# TIME MODELING (High Priority)
+# ----------------
+
+story:TimePoint a owl:Class ;
+    rdfs:label "Time Point" ;
+    rdfs:comment "Specific moment or period in story timeline (childhood, age 8, elderly, Monday)" .
+
+story:CharacterAtTime a owl:Class ;
+    rdfs:label "Character At Time" ;
+    rdfs:comment "Character appearance and state at specific time point (boy as child vs elderly)" .
+
+story:StoryTimeline a owl:Class ;
+    rdfs:label "Story Timeline" ;
+    rdfs:comment "Overall timeline of story with key time points and duration" .
+
+story:TimeOfDay a owl:Class ;
+    rdfs:label "Time Of Day" ;
+    rdfs:comment "Specific time within a day (7:00 PM, morning, dusk)" .
+
+story:Season a owl:Class ;
+    rdfs:label "Season" ;
+    rdfs:comment "Season when scene occurs or story takes place" .
+
+story:SeasonalProgression a owl:Class ;
+    rdfs:label "Seasonal Progression" ;
+    rdfs:comment "Progression of seasons throughout story" .
+
+# ----------------
+# TRANSFORMATION (High Priority)
+# ----------------
+
+story:Transformation a owl:Class ;
+    rdfs:label "Transformation" ;
+    rdfs:comment "Physical or state transformation of character or object over time" .
+
+story:TransformationType a owl:Class ;
+    rdfs:label "Transformation Type" ;
+    owl:oneOf (story:Metamorphosis story:Aging story:MagicalTransformation
+               story:ImaginaryCreation story:EnvironmentalChange) .
+
+story:Metamorphosis a story:TransformationType ;
+    rdfs:label "Metamorphosis" .
+
+story:Aging a story:TransformationType ;
+    rdfs:label "Aging" .
+
+story:MagicalTransformation a story:TransformationType ;
+    rdfs:label "Magical Transformation" .
+
+story:ImaginaryCreation a story:TransformationType ;
+    rdfs:label "Imaginary Creation" .
+
+story:EnvironmentalChange a story:TransformationType ;
+    rdfs:label "Environmental Change" .
+
+# ----------------
+# REALITY STATUS (High Priority)
+# ----------------
+
+story:RealityStatus a owl:Class ;
+    rdfs:label "Reality Status" ;
+    rdfs:comment "Whether element is real, imaginary, or perspective-dependent" .
+
+# ----------------
+# REPETITIVE PATTERNS (Medium Priority)
+# ----------------
+
+story:RepetitivePattern a owl:Class ;
+    rdfs:label "Repetitive Pattern" ;
+    rdfs:comment "Repeated scene, dialogue, or structure with variations (Green Eggs and Ham)" .
+
+story:Variation a owl:Class ;
+    rdfs:label "Variation" ;
+    rdfs:comment "Individual variation of repetitive pattern" .
+
+story:PatternType a owl:Class ;
+    rdfs:label "Pattern Type" ;
+    owl:oneOf (story:Refrain story:Ritual story:QuestionAnswer story:Escalation) .
+
+story:Refrain a story:PatternType ;
+    rdfs:label "Refrain" .
+
+story:Ritual a story:PatternType ;
+    rdfs:label "Ritual" .
+
+story:QuestionAnswer a story:PatternType ;
+    rdfs:label "Question Answer" .
+
+story:Escalation a story:PatternType ;
+    rdfs:label "Escalation" .
+
+# ----------------
+# OBJECT INVENTORIES (Medium Priority)
+# ----------------
+
+story:ObjectInventory a owl:Class ;
+    rdfs:label "Object Inventory" ;
+    rdfs:comment "Catalog of all objects in a location (Goodnight Moon)" .
+
+story:CatalogedObject a owl:Class ;
+    rdfs:label "Cataloged Object" ;
+    rdfs:comment "Object with position and significance in inventory" .
+
+# ----------------
+# SYMBOLIC OBJECTS (Medium Priority)
+# ----------------
+
+story:Symbol a owl:Class ;
+    rdfs:label "Symbol" ;
+    rdfs:comment "Symbolic concept or meaning represented by object" .
+
+# ----------------
+# ANTHROPOMORPHIC TRAITS (Medium Priority)
+# ----------------
+
+story:AnthropomorphicTrait a owl:Class ;
+    rdfs:label "Anthropomorphic Trait" ;
+    owl:oneOf (story:Speech story:Clothing story:HumanEmotions
+               story:WalksUpright story:UsesTools) .
+
+story:Speech a story:AnthropomorphicTrait ;
+    rdfs:label "Speech" .
+
+story:Clothing a story:AnthropomorphicTrait ;
+    rdfs:label "Clothing" .
+
+story:HumanEmotions a story:AnthropomorphicTrait ;
+    rdfs:label "Human Emotions" .
+
+story:WalksUpright a story:AnthropomorphicTrait ;
+    rdfs:label "Walks Upright" .
+
+story:UsesTools a story:AnthropomorphicTrait ;
+    rdfs:label "Uses Tools" .
+
+# ----------------
+# CHARACTER GROUPS (Medium Priority)
+# ----------------
+
+story:CharacterGroup a owl:Class ;
+    rdfs:label "Character Group" ;
+    rdfs:comment "Group of related characters (siblings, family, team)" .
+
+story:GroupMember a owl:Class ;
+    rdfs:label "Group Member" ;
+    rdfs:comment "Individual member of character group with distinctive traits" .
+
+# ----------------
+# ENUMS
+# ----------------
+
+story:StoryStatus a owl:Class ;
+    rdfs:label "Story Status" ;
+    owl:oneOf (story:Draft story:InProgress story:Complete story:Published) .
+
+story:Draft a story:StoryStatus ;
+    rdfs:label "Draft" .
+
+story:InProgress a story:StoryStatus ;
+    rdfs:label "In Progress" .
+
+story:Complete a story:StoryStatus ;
+    rdfs:label "Complete" .
+
+story:Published a story:StoryStatus ;
+    rdfs:label "Published" .
+
+story:CharacterRole a owl:Class ;
+    rdfs:label "Character Role" ;
+    owl:oneOf (story:Protagonist story:Antagonist story:Supporting story:Minor) .
+
+story:Protagonist a story:CharacterRole ;
+    rdfs:label "Protagonist" .
+
+story:Antagonist a story:CharacterRole ;
+    rdfs:label "Antagonist" .
+
+story:Supporting a story:CharacterRole ;
+    rdfs:label "Supporting" .
+
+story:Minor a story:CharacterRole ;
+    rdfs:label "Minor" .
+
+story:CharacterType a owl:Class ;
+    rdfs:label "Character Type" ;
+    owl:oneOf (story:Human story:Animal story:AnthropomorphicAnimal
+               story:InanimateObject story:Imaginary story:Mythical) .
+
+story:Human a story:CharacterType ;
+    rdfs:label "Human" .
+
+story:Animal a story:CharacterType ;
+    rdfs:label "Animal" .
+
+story:AnthropomorphicAnimal a story:CharacterType ;
+    rdfs:label "Anthropomorphic Animal" .
+
+story:InanimateObject a story:CharacterType ;
+    rdfs:label "Inanimate Object" .
+
+story:Imaginary a story:CharacterType ;
+    rdfs:label "Imaginary" .
+
+story:Mythical a story:CharacterType ;
+    rdfs:label "Mythical" .
+
+story:ConflictType a owl:Class ;
+    rdfs:label "Conflict Type" ;
+    owl:oneOf (story:PersonVsPerson story:PersonVsNature story:PersonVsSelf story:PersonVsSociety) .
+
+story:PersonVsPerson a story:ConflictType ;
+    rdfs:label "Person vs Person" .
+
+story:PersonVsNature a story:ConflictType ;
+    rdfs:label "Person vs Nature" .
+
+story:PersonVsSelf a story:ConflictType ;
+    rdfs:label "Person vs Self" .
+
+story:PersonVsSociety a story:ConflictType ;
+    rdfs:label "Person vs Society" .
+
+story:GenreType a owl:Class ;
+    rdfs:label "Genre Type" ;
+    owl:oneOf (story:Fantasy story:SciFi story:Romance story:Thriller
+               story:Mystery story:Horror story:Literary story:Historical) .
+
+story:Fantasy a story:GenreType ;
+    rdfs:label "Fantasy" .
+
+story:SciFi a story:GenreType ;
+    rdfs:label "Science Fiction" .
+
+story:Romance a story:GenreType ;
+    rdfs:label "Romance" .
+
+story:Thriller a story:GenreType ;
+    rdfs:label "Thriller" .
+
+story:Mystery a story:GenreType ;
+    rdfs:label "Mystery" .
+
+story:Horror a story:GenreType ;
+    rdfs:label "Horror" .
+
+story:Literary a story:GenreType ;
+    rdfs:label "Literary" .
+
+story:Historical a story:GenreType ;
+    rdfs:label "Historical" .
+
+story:LocationType a owl:Class ;
+    rdfs:label "Location Type" ;
+    owl:oneOf (story:Landmark story:Building story:Park story:Street
+               story:Natural story:Indoor story:Outdoor) .
+
+story:Landmark a story:LocationType ;
+    rdfs:label "Landmark" .
+
+story:Building a story:LocationType ;
+    rdfs:label "Building" .
+
+story:Park a story:LocationType ;
+    rdfs:label "Park" .
+
+story:Street a story:LocationType ;
+    rdfs:label "Street" .
+
+story:Natural a story:LocationType ;
+    rdfs:label "Natural" .
+
+story:Indoor a story:LocationType ;
+    rdfs:label "Indoor" .
+
+story:Outdoor a story:LocationType ;
+    rdfs:label "Outdoor" .
+
+story:ObjectType a owl:Class ;
+    rdfs:label "Object Type" ;
+    owl:oneOf (story:Prop story:Weapon story:Vehicle story:Artifact
+               story:NaturalObject story:SymbolicObject) .
+
+story:Prop a story:ObjectType ;
+    rdfs:label "Prop" .
+
+story:Weapon a story:ObjectType ;
+    rdfs:label "Weapon" .
+
+story:Vehicle a story:ObjectType ;
+    rdfs:label "Vehicle" .
+
+story:Artifact a story:ObjectType ;
+    rdfs:label "Artifact" .
+
+story:NaturalObject a story:ObjectType ;
+    rdfs:label "Natural Object" .
+
+story:SymbolicObject a story:ObjectType ;
+    rdfs:label "Symbolic Object" .
+
+story:LifeStage a owl:Class ;
+    rdfs:label "Life Stage" ;
+    owl:oneOf (story:Infant story:Toddler story:Child story:Preteen
+               story:Teenager story:YoungAdult story:MiddleAged story:Elderly) .
+
+story:Infant a story:LifeStage ;
+    rdfs:label "Infant" .
+
+story:Toddler a story:LifeStage ;
+    rdfs:label "Toddler" .
+
+story:Child a story:LifeStage ;
+    rdfs:label "Child" .
+
+story:Preteen a story:LifeStage ;
+    rdfs:label "Preteen" .
+
+story:Teenager a story:LifeStage ;
+    rdfs:label "Teenager" .
+
+story:YoungAdult a story:LifeStage ;
+    rdfs:label "Young Adult" .
+
+story:MiddleAged a story:LifeStage ;
+    rdfs:label "Middle Aged" .
+
+story:Elderly a story:LifeStage ;
+    rdfs:label "Elderly" .
+
+# ----------------
+# STORY PROPERTIES
+# ----------------
+
+story:title a owl:DatatypeProperty ;
+    rdfs:domain story:Story ;
+    rdfs:range xsd:string ;
+    rdfs:label "Title" .
+
+story:author a owl:DatatypeProperty ;
+    rdfs:domain story:Story ;
+    rdfs:range xsd:string ;
+    rdfs:label "Author" .
+
+story:status a owl:ObjectProperty ;
+    rdfs:domain story:Story ;
+    rdfs:range story:StoryStatus ;
+    rdfs:label "Status" .
+
+story:genre a owl:ObjectProperty ;
+    rdfs:domain story:Story ;
+    rdfs:range story:GenreType ;
+    rdfs:label "Genre" .
+
+story:hasTimeline a owl:ObjectProperty ;
+    rdfs:domain story:Story ;
+    rdfs:range story:StoryTimeline ;
+    rdfs:label "Has Timeline" .
+
+story:hasCharacter a owl:ObjectProperty ;
+    rdfs:domain story:Story ;
+    rdfs:range story:Character ;
+    rdfs:label "Has Character" .
+
+story:hasScene a owl:ObjectProperty ;
+    rdfs:domain story:Story ;
+    rdfs:range story:Scene ;
+    rdfs:label "Has Scene" .
+
+story:hasTheme a owl:ObjectProperty ;
+    rdfs:domain story:Story ;
+    rdfs:range story:Theme ;
+    rdfs:label "Has Theme" .
+
+# ----------------
+# CHARACTER PROPERTIES
+# ----------------
+
+story:characterName a owl:DatatypeProperty ;
+    rdfs:domain story:Character ;
+    rdfs:range xsd:string ;
+    rdfs:label "Character Name" .
+
+story:characterType a owl:ObjectProperty ;
+    rdfs:domain story:Character ;
+    rdfs:range story:CharacterType ;
+    rdfs:label "Character Type" .
+
+story:role a owl:ObjectProperty ;
+    rdfs:domain story:Character ;
+    rdfs:range story:CharacterRole ;
+    rdfs:label "Role" .
+
+story:species a owl:DatatypeProperty ;
+    rdfs:domain story:Character ;
+    rdfs:range xsd:string ;
+    rdfs:label "Species" ;
+    rdfs:comment "Biological species (mallard duck, barn spider, rabbit)" .
+
+story:hasAnthropomorphicTrait a owl:ObjectProperty ;
+    rdfs:domain story:Character ;
+    rdfs:range story:AnthropomorphicTrait ;
+    rdfs:label "Has Anthropomorphic Trait" .
+
+story:appearanceAtTime a owl:ObjectProperty ;
+    rdfs:domain story:Character ;
+    rdfs:range story:CharacterAtTime ;
+    rdfs:label "Appearance At Time" .
+
+story:memberOfGroup a owl:ObjectProperty ;
+    rdfs:domain story:Character ;
+    rdfs:range story:CharacterGroup ;
+    rdfs:label "Member Of Group" .
+
+# ----------------
+# TIME PROPERTIES
+# ----------------
+
+story:timestamp a owl:DatatypeProperty ;
+    rdfs:domain story:TimePoint ;
+    rdfs:range xsd:string ;
+    rdfs:label "Timestamp" ;
+    rdfs:comment "Can be datetime, descriptive (childhood, elderly), or day (Monday)" .
+
+story:timeDescription a owl:DatatypeProperty ;
+    rdfs:domain story:TimePoint ;
+    rdfs:range xsd:string ;
+    rdfs:label "Time Description" .
+
+story:season a owl:ObjectProperty ;
+    rdfs:domain story:TimePoint ;
+    rdfs:range story:Season ;
+    rdfs:label "Season" .
+
+story:timeOfDay a owl:ObjectProperty ;
+    rdfs:domain story:TimePoint ;
+    rdfs:range story:TimeOfDay ;
+    rdfs:label "Time Of Day" .
+
+story:duration a owl:DatatypeProperty ;
+    rdfs:domain story:StoryTimeline ;
+    rdfs:range xsd:string ;
+    rdfs:label "Duration" ;
+    rdfs:comment "Total duration of story (one day, one year, a lifetime)" .
+
+story:hasTimePoint a owl:ObjectProperty ;
+    rdfs:domain story:StoryTimeline ;
+    rdfs:range story:TimePoint ;
+    rdfs:label "Has Time Point" .
+
+# ----------------
+# CHARACTER AT TIME PROPERTIES
+# ----------------
+
+story:atTimePoint a owl:ObjectProperty ;
+    rdfs:domain story:CharacterAtTime ;
+    rdfs:range story:TimePoint ;
+    rdfs:label "At Time Point" .
+
+story:age a owl:DatatypeProperty ;
+    rdfs:domain story:CharacterAtTime ;
+    rdfs:range xsd:string ;
+    rdfs:label "Age" ;
+    rdfs:comment "Can be number (8), range (7-8), or stage (childhood, elderly)" .
+
+story:lifeStage a owl:ObjectProperty ;
+    rdfs:domain story:CharacterAtTime ;
+    rdfs:range story:LifeStage ;
+    rdfs:label "Life Stage" .
+
+story:physicalDescription a owl:DatatypeProperty ;
+    rdfs:domain story:CharacterAtTime ;
+    rdfs:range xsd:string ;
+    rdfs:label "Physical Description" .
+
+story:emotionalState a owl:DatatypeProperty ;
+    rdfs:domain story:CharacterAtTime ;
+    rdfs:range xsd:string ;
+    rdfs:label "Emotional State" .
+
+# ----------------
+# TRANSFORMATION PROPERTIES
+# ----------------
+
+story:transformationType a owl:ObjectProperty ;
+    rdfs:domain story:Transformation ;
+    rdfs:range story:TransformationType ;
+    rdfs:label "Transformation Type" .
+
+story:fromState a owl:DatatypeProperty ;
+    rdfs:domain story:Transformation ;
+    rdfs:range xsd:string ;
+    rdfs:label "From State" .
+
+story:toState a owl:DatatypeProperty ;
+    rdfs:domain story:Transformation ;
+    rdfs:range xsd:string ;
+    rdfs:label "To State" .
+
+story:transformationDuration a owl:DatatypeProperty ;
+    rdfs:domain story:Transformation ;
+    rdfs:range xsd:string ;
+    rdfs:label "Transformation Duration" .
+
+story:trigger a owl:DatatypeProperty ;
+    rdfs:domain story:Transformation ;
+    rdfs:range xsd:string ;
+    rdfs:label "Trigger" ;
+    rdfs:comment "What causes the transformation" .
+
+# ----------------
+# LOCATION PROPERTIES
+# ----------------
+
+story:locationName a owl:DatatypeProperty ;
+    rdfs:domain story:Location ;
+    rdfs:range xsd:string ;
+    rdfs:label "Location Name" .
+
+story:locationType a owl:ObjectProperty ;
+    rdfs:domain story:Location ;
+    rdfs:range story:LocationType ;
+    rdfs:label "Location Type" .
+
+story:locationDescription a owl:DatatypeProperty ;
+    rdfs:domain story:Location ;
+    rdfs:range xsd:string ;
+    rdfs:label "Location Description" .
+
+story:isRealWorld a owl:DatatypeProperty ;
+    rdfs:domain story:Location ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Is Real World" .
+
+story:city a owl:DatatypeProperty ;
+    rdfs:domain story:Location ;
+    rdfs:range xsd:string ;
+    rdfs:label "City" .
+
+story:state a owl:DatatypeProperty ;
+    rdfs:domain story:Location ;
+    rdfs:range xsd:string ;
+    rdfs:label "State" .
+
+story:country a owl:DatatypeProperty ;
+    rdfs:domain story:Location ;
+    rdfs:range xsd:string ;
+    rdfs:label "Country" .
+
+story:realityStatus a owl:ObjectProperty ;
+    rdfs:domain story:Location ;
+    rdfs:range story:RealityStatus ;
+    rdfs:label "Reality Status" .
+
+story:hasInventory a owl:ObjectProperty ;
+    rdfs:domain story:Location ;
+    rdfs:range story:ObjectInventory ;
+    rdfs:label "Has Inventory" .
+
+# ----------------
+# OBJECT PROPERTIES
+# ----------------
+
+story:objectName a owl:DatatypeProperty ;
+    rdfs:domain story:Object ;
+    rdfs:range xsd:string ;
+    rdfs:label "Object Name" .
+
+story:objectType a owl:ObjectProperty ;
+    rdfs:domain story:Object ;
+    rdfs:range story:ObjectType ;
+    rdfs:label "Object Type" .
+
+story:objectDescription a owl:DatatypeProperty ;
+    rdfs:domain story:Object ;
+    rdfs:range xsd:string ;
+    rdfs:label "Object Description" .
+
+story:isSymbolic a owl:DatatypeProperty ;
+    rdfs:domain story:Object ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Is Symbolic" .
+
+story:symbolism a owl:DatatypeProperty ;
+    rdfs:domain story:Object ;
+    rdfs:range xsd:string ;
+    rdfs:label "Symbolism" .
+
+story:symbolizes a owl:ObjectProperty ;
+    rdfs:domain story:Object ;
+    rdfs:range story:Symbol ;
+    rdfs:label "Symbolizes" .
+
+story:createdBy a owl:ObjectProperty ;
+    rdfs:domain story:Object ;
+    rdfs:range story:Character ;
+    rdfs:label "Created By" ;
+    rdfs:comment "Character who imagined or created object (Harold draws moon)" .
+
+story:creationMethod a owl:DatatypeProperty ;
+    rdfs:domain story:Object ;
+    rdfs:range xsd:string ;
+    rdfs:label "Creation Method" ;
+    rdfs:comment "How object was created (drawn with purple crayon)" .
+
+# ----------------
+# SCENE PROPERTIES
+# ----------------
+
+story:sceneTitle a owl:DatatypeProperty ;
+    rdfs:domain story:Scene ;
+    rdfs:range xsd:string ;
+    rdfs:label "Scene Title" .
+
+story:sceneNumber a owl:DatatypeProperty ;
+    rdfs:domain story:Scene ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Scene Number" .
+
+story:sceneContent a owl:DatatypeProperty ;
+    rdfs:domain story:Scene ;
+    rdfs:range xsd:string ;
+    rdfs:label "Scene Content" .
+
+story:takesPlaceAt a owl:ObjectProperty ;
+    rdfs:domain story:Scene ;
+    rdfs:range story:Location ;
+    rdfs:label "Takes Place At" .
+
+story:containsObject a owl:ObjectProperty ;
+    rdfs:domain story:Scene ;
+    rdfs:range story:Object ;
+    rdfs:label "Contains Object" .
+
+story:featuresCharacter a owl:ObjectProperty ;
+    rdfs:domain story:Scene ;
+    rdfs:range story:Character ;
+    rdfs:label "Features Character" .
+
+story:atTime a owl:ObjectProperty ;
+    rdfs:domain story:Scene ;
+    rdfs:range story:TimePoint ;
+    rdfs:label "At Time" .
+
+story:isRepetition a owl:DatatypeProperty ;
+    rdfs:domain story:Scene ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Is Repetition" .
+
+story:partOfPattern a owl:ObjectProperty ;
+    rdfs:domain story:Scene ;
+    rdfs:range story:RepetitivePattern ;
+    rdfs:label "Part Of Pattern" .
+
+# ----------------
+# REPETITIVE PATTERN PROPERTIES
+# ----------------
+
+story:patternType a owl:ObjectProperty ;
+    rdfs:domain story:RepetitivePattern ;
+    rdfs:range story:PatternType ;
+    rdfs:label "Pattern Type" .
+
+story:baseContent a owl:DatatypeProperty ;
+    rdfs:domain story:RepetitivePattern ;
+    rdfs:range xsd:string ;
+    rdfs:label "Base Content" ;
+    rdfs:comment "Base text that repeats (Would you eat them...)" .
+
+story:hasVariation a owl:ObjectProperty ;
+    rdfs:domain story:RepetitivePattern ;
+    rdfs:range story:Variation ;
+    rdfs:label "Has Variation" .
+
+story:occurrences a owl:DatatypeProperty ;
+    rdfs:domain story:RepetitivePattern ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Occurrences" ;
+    rdfs:comment "Number of times pattern occurs" .
+
+# ----------------
+# VARIATION PROPERTIES
+# ----------------
+
+story:variationContent a owl:DatatypeProperty ;
+    rdfs:domain story:Variation ;
+    rdfs:range xsd:string ;
+    rdfs:label "Variation Content" .
+
+story:variationOrder a owl:DatatypeProperty ;
+    rdfs:domain story:Variation ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Variation Order" .
+
+# ----------------
+# CHARACTER GROUP PROPERTIES
+# ----------------
+
+story:groupName a owl:DatatypeProperty ;
+    rdfs:domain story:CharacterGroup ;
+    rdfs:range xsd:string ;
+    rdfs:label "Group Name" .
+
+story:hasMember a owl:ObjectProperty ;
+    rdfs:domain story:CharacterGroup ;
+    rdfs:range story:GroupMember ;
+    rdfs:label "Has Member" .
+
+story:distinctiveTraits a owl:DatatypeProperty ;
+    rdfs:domain story:GroupMember ;
+    rdfs:range xsd:string ;
+    rdfs:label "Distinctive Traits" ;
+    rdfs:comment "Individual traits that distinguish from siblings (inquisitive, sleepy)" .

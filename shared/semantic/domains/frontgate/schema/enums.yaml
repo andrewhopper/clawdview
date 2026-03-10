@@ -1,0 +1,79 @@
+# Frontgate Domain Enums
+# Version: 1.0.0
+# File-system specific enumerations
+
+enums:
+
+  AutoFixType:
+    description: Type of automatic remediation action
+    values:
+      - name: move
+        description: Move file to correct location
+      - name: rename
+        description: Rename file in place
+      - name: delete
+        description: Delete the file
+      - name: quarantine
+        description: Move to quarantine zone
+
+  QuarantineReason:
+    description: Why a file was quarantined
+    values:
+      - name: unknown_type
+        description: No rule matches this file type
+      - name: no_uuid
+        description: Missing required UUID in filename
+      - name: wrong_location
+        description: File in prohibited location
+      - name: temp_file
+        description: Detected as temporary file
+
+  EventSource:
+    description: Source that detected the file event
+    values:
+      - name: daemon
+        description: Watchdog daemon detected change
+      - name: git_hook
+        description: Git pre-commit hook
+      - name: claude_hook
+        description: Claude Code hook
+      - name: manual
+        description: Manual scan or check
+
+  TriageAction:
+    description: User action during triage session
+    values:
+      - name: accept
+        description: Accept suggested action
+      - name: skip
+        description: Skip this file for now
+      - name: edit
+        description: Edit destination or rule
+      - name: delete
+        description: Delete the file
+      - name: learn
+        description: Create rule from this decision
+
+  Resolution:
+    description: How a quarantine entry was resolved
+    values:
+      - name: moved
+        description: File moved to correct location
+      - name: deleted
+        description: File was deleted
+      - name: rule_created
+        description: New rule learned from this file
+      - name: ignored
+        description: User chose to ignore
+
+  OperatingMode:
+    description: Frontgate enforcement mode
+    values:
+      - name: strict
+        description: Block all violations
+      - name: permissive
+        description: Warn but allow
+      - name: learning
+        description: Prompt to create rules
+      - name: audit
+        description: Log only, no action

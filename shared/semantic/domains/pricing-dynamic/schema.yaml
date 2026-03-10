@@ -1,0 +1,608 @@
+# Dynamic Pricing Domain Model
+# Price varies by demand, time, segment, and conditions
+# Foundation for surge pricing, revenue management, yield optimization
+
+domain:
+  name: pricing-dynamic
+  version: "1.0.0"
+  description: Dynamic pricing rules, demand-based pricing, time-based pricing, and segment-based pricing strategies
+  dependencies: [core, finance]
+  use_case: Hotel yield management, airline pricing, surge pricing, event ticket pricing, time-of-use rates
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  # ============================================
+  # PRICING CONFIGURATION
+  # ============================================
+
+  PricingConfig:
+    description: Root pricing configuration for a resource
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      resourceType: { type: string, required: true }
+      resourceId: { type: string, description: "Specific resource or null for type-wide" }
+      # Base price
+      basePrice: { type: number, required: true }
+      currency: { type: string, required: true }
+      # Pricing model
+      pricingModel: { type: PricingModel, required: true }
+      # Rules
+      rules: { type: array, items: uuid, description: "FK to PricingRule[]" }
+      ruleEvaluationOrder: { type: RuleEvaluation, required: true, default: first_match }
+      # Bounds
+      minPrice: { type: number, description: "Floor price" }
+      maxPrice: { type: number, description: "Ceiling price" }
+      maxIncreasePct: { type: number, description: "Max % increase from base" }
+      maxDecreasePct: { type: number, description: "Max % decrease from base" }
+      # Status
+      isActive: { type: boolean, required: true, default: true }
+      effectiveFrom: { type: datetime }
+      effectiveUntil: { type: datetime }
+      # Audit
+      version: { type: integer, required: true, default: 1 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # PRICING RULES
+  # ============================================
+
+  PricingRule:
+    description: A rule that modifies price based on conditions
+    properties:
+      id: { type: uuid, required: true }
+      configId: { type: uuid, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      # Conditions
+      conditions: { type: array, items: PricingCondition, required: true }
+      conditionLogic: { type: ConditionLogic, required: true, default: all }
+      # Effect
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+      # Stacking
+      stackable: { type: boolean, default: true }
+      stackGroup: { type: string, description: "Rules in same group don't stack" }
+      priority: { type: integer, required: true, default: 0 }
+      # Limits
+      maxApplications: { type: integer, description: "Max times rule can apply" }
+      currentApplications: { type: integer, default: 0 }
+      # Schedule
+      isActive: { type: boolean, required: true, default: true }
+      activeFrom: { type: datetime }
+      activeUntil: { type: datetime }
+      activeDaysOfWeek: { type: array, items: string }
+      activeTimeStart: { type: time }
+      activeTimeEnd: { type: time }
+      # Metadata
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PricingCondition:
+    description: A condition that must be met for rule to apply
+    properties:
+      id: { type: uuid, required: true }
+      ruleId: { type: uuid, required: true }
+      conditionType: { type: ConditionType, required: true }
+      # Parameters
+      attribute: { type: string, required: true }
+      operator: { type: ComparisonOperator, required: true }
+      value: { type: string, required: true }
+      valueType: { type: ValueType, required: true }
+      # For range conditions
+      minValue: { type: string }
+      maxValue: { type: string }
+      sortOrder: { type: integer, required: true }
+
+  # ============================================
+  # DEMAND-BASED PRICING
+  # ============================================
+
+  DemandPricingConfig:
+    description: Configuration for demand-based dynamic pricing
+    properties:
+      id: { type: uuid, required: true }
+      configId: { type: uuid, required: true }
+      # Demand tracking
+      demandMetric: { type: DemandMetric, required: true }
+      demandWindow: { type: string, required: true, description: "Duration for demand calculation" }
+      # Thresholds
+      thresholds: { type: array, items: DemandThreshold, required: true }
+      # Smoothing
+      smoothingEnabled: { type: boolean, default: true }
+      smoothingFactor: { type: number, default: 0.3 }
+      maxChangePerInterval: { type: number, description: "Max % change per update" }
+      # Update frequency
+      updateIntervalMinutes: { type: integer, required: true, default: 15 }
+      lastUpdatedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  DemandThreshold:
+    description: Demand level to price adjustment mapping
+    properties:
+      id: { type: uuid, required: true }
+      demandConfigId: { type: uuid, required: true }
+      # Threshold
+      thresholdType: { type: ThresholdType, required: true }
+      thresholdValue: { type: number, required: true }
+      # Adjustment
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+      # Display
+      tierName: { type: string, description: "Normal, Busy, Surge, etc." }
+      sortOrder: { type: integer, required: true }
+
+  DemandSnapshot:
+    description: Point-in-time demand measurement
+    properties:
+      id: { type: uuid, required: true }
+      demandConfigId: { type: uuid, required: true }
+      # Measurement
+      snapshotTime: { type: datetime, required: true }
+      demandValue: { type: number, required: true }
+      demandMetric: { type: DemandMetric, required: true }
+      # Computed
+      occupancyPercent: { type: number }
+      bookingVelocity: { type: number }
+      searchToBookRatio: { type: number }
+      # Result
+      appliedThreshold: { type: string }
+      priceMultiplier: { type: number, required: true }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # TIME-BASED PRICING
+  # ============================================
+
+  TimePricingConfig:
+    description: Configuration for time-based pricing
+    properties:
+      id: { type: uuid, required: true }
+      configId: { type: uuid, required: true }
+      # Time rules
+      advanceBookingRules: { type: array, items: AdvanceBookingRule }
+      seasonalRules: { type: array, items: SeasonalRule }
+      dayOfWeekRules: { type: array, items: DayOfWeekRule }
+      timeOfDayRules: { type: array, items: TimeOfDayRule }
+      # Special dates
+      specialDateRules: { type: array, items: SpecialDateRule }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AdvanceBookingRule:
+    description: Price adjustment based on booking lead time
+    properties:
+      id: { type: uuid, required: true }
+      timePricingId: { type: uuid, required: true }
+      name: { type: string, required: true }
+      # Timing
+      minDaysAhead: { type: integer, required: true }
+      maxDaysAhead: { type: integer }
+      # Adjustment
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+      sortOrder: { type: integer, required: true }
+
+  SeasonalRule:
+    description: Seasonal price adjustment
+    properties:
+      id: { type: uuid, required: true }
+      timePricingId: { type: uuid, required: true }
+      name: { type: string, required: true }
+      # Period
+      startMonth: { type: integer, required: true, minimum: 1, maximum: 12 }
+      startDay: { type: integer, required: true, minimum: 1, maximum: 31 }
+      endMonth: { type: integer, required: true, minimum: 1, maximum: 12 }
+      endDay: { type: integer, required: true, minimum: 1, maximum: 31 }
+      # Or named season
+      seasonName: { type: string, description: "peak, shoulder, off-peak" }
+      # Adjustment
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+      sortOrder: { type: integer, required: true }
+
+  DayOfWeekRule:
+    description: Day of week price adjustment
+    properties:
+      id: { type: uuid, required: true }
+      timePricingId: { type: uuid, required: true }
+      daysOfWeek: { type: array, items: string, required: true }
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+
+  TimeOfDayRule:
+    description: Time of day price adjustment
+    properties:
+      id: { type: uuid, required: true }
+      timePricingId: { type: uuid, required: true }
+      name: { type: string, required: true }
+      startTime: { type: time, required: true }
+      endTime: { type: time, required: true }
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+
+  SpecialDateRule:
+    description: Special date price adjustment (holidays, events)
+    properties:
+      id: { type: uuid, required: true }
+      timePricingId: { type: uuid, required: true }
+      name: { type: string, required: true }
+      # Date specification
+      dateType: { type: SpecialDateType, required: true }
+      specificDate: { type: date, description: "For one-time dates" }
+      recurringMonth: { type: integer, description: "For annual dates" }
+      recurringDay: { type: integer }
+      recurringWeek: { type: integer, description: "1-5 for week of month" }
+      recurringDayOfWeek: { type: string, description: "For floating holidays" }
+      # Duration
+      durationDays: { type: integer, default: 1 }
+      includeEve: { type: boolean, default: false }
+      # Adjustment
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+      priority: { type: integer, required: true }
+
+  # ============================================
+  # SEGMENT PRICING
+  # ============================================
+
+  SegmentPricingConfig:
+    description: Configuration for customer segment pricing
+    properties:
+      id: { type: uuid, required: true }
+      configId: { type: uuid, required: true }
+      # Segments
+      segments: { type: array, items: PricingSegment, required: true }
+      # Default
+      defaultSegment: { type: string, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PricingSegment:
+    description: A customer segment with specific pricing
+    properties:
+      id: { type: uuid, required: true }
+      segmentConfigId: { type: uuid, required: true }
+      segmentId: { type: string, required: true }
+      segmentName: { type: string, required: true }
+      # Criteria
+      criteria: { type: array, items: SegmentCriterion }
+      # Pricing
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+      # Rules
+      additionalRules: { type: array, items: uuid, description: "Segment-specific rules" }
+      # Visibility
+      showOriginalPrice: { type: boolean, default: true }
+      discountLabel: { type: string, description: "Member Price, Senior Discount, etc." }
+      priority: { type: integer, required: true }
+
+  SegmentCriterion:
+    description: Criterion for segment membership
+    properties:
+      id: { type: uuid, required: true }
+      segmentId: { type: uuid, required: true }
+      attribute: { type: string, required: true }
+      operator: { type: ComparisonOperator, required: true }
+      value: { type: string, required: true }
+
+  # ============================================
+  # PRICE CALCULATION
+  # ============================================
+
+  PriceCalculation:
+    description: Record of a price calculation
+    properties:
+      id: { type: uuid, required: true }
+      configId: { type: uuid, required: true }
+      # Request
+      requestTime: { type: datetime, required: true }
+      resourceId: { type: string, required: true }
+      quantity: { type: integer, required: true }
+      customerId: { type: string }
+      customerSegment: { type: string }
+      # Context
+      bookingDate: { type: datetime }
+      serviceDate: { type: datetime }
+      context: { type: object, description: "Additional context" }
+      # Calculation
+      basePrice: { type: number, required: true }
+      adjustments: { type: array, items: PriceAdjustment }
+      subtotal: { type: number, required: true }
+      taxes: { type: array, items: TaxItem }
+      fees: { type: array, items: FeeItem }
+      finalPrice: { type: number, required: true }
+      currency: { type: string, required: true }
+      # Validity
+      validUntil: { type: datetime }
+      quoteId: { type: string }
+      # Metadata
+      calculationVersion: { type: string }
+      createdAt: { type: datetime, required: true }
+
+  PriceAdjustment:
+    description: Individual price adjustment in calculation
+    properties:
+      id: { type: uuid, required: true }
+      calculationId: { type: uuid, required: true }
+      # Source
+      ruleId: { type: uuid }
+      ruleName: { type: string, required: true }
+      ruleType: { type: string, required: true }
+      # Adjustment
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+      priceBeforeAdjustment: { type: number, required: true }
+      priceAfterAdjustment: { type: number, required: true }
+      # Display
+      displayLabel: { type: string }
+      isVisible: { type: boolean, default: true }
+      sortOrder: { type: integer, required: true }
+
+  TaxItem:
+    description: Tax applied to price
+    properties:
+      id: { type: uuid, required: true }
+      calculationId: { type: uuid, required: true }
+      taxName: { type: string, required: true }
+      taxRate: { type: number, required: true }
+      taxableAmount: { type: number, required: true }
+      taxAmount: { type: number, required: true }
+      taxCode: { type: string }
+
+  FeeItem:
+    description: Fee applied to price
+    properties:
+      id: { type: uuid, required: true }
+      calculationId: { type: uuid, required: true }
+      feeName: { type: string, required: true }
+      feeType: { type: FeeType, required: true }
+      feeAmount: { type: number, required: true }
+      isOptional: { type: boolean, default: false }
+      isRefundable: { type: boolean, default: true }
+
+enums:
+
+  PricingModel:
+    values:
+      - fixed           # Single fixed price
+      - tiered          # Price tiers by quantity
+      - dynamic         # Demand-based pricing
+      - time_based      # Time-based pricing
+      - segment         # Customer segment pricing
+      - auction         # Auction/bidding
+      - negotiated      # Negotiated pricing
+      - hybrid          # Combination of models
+
+  RuleEvaluation:
+    values:
+      - first_match     # Apply first matching rule
+      - highest_priority # Apply highest priority match
+      - stack_all       # Stack all matching rules
+      - best_for_customer # Choose best price for customer
+      - best_for_business # Choose best price for business
+
+  AdjustmentType:
+    values:
+      - percentage_increase   # Increase by %
+      - percentage_decrease   # Decrease by %
+      - fixed_increase        # Add fixed amount
+      - fixed_decrease        # Subtract fixed amount
+      - multiplier            # Multiply by factor
+      - set_price             # Override to specific price
+      - set_minimum           # Set minimum price
+      - set_maximum           # Set maximum price
+
+  ConditionType:
+    values:
+      - demand          # Demand-based
+      - time            # Time-based
+      - segment         # Customer segment
+      - quantity        # Quantity-based
+      - attribute       # Resource attribute
+      - context         # Context attribute
+      - composite       # Combination
+
+  ComparisonOperator:
+    values:
+      - equals
+      - not_equals
+      - greater_than
+      - greater_or_equal
+      - less_than
+      - less_or_equal
+      - between
+      - not_between
+      - in
+      - not_in
+      - contains
+      - starts_with
+      - ends_with
+      - regex
+
+  ValueType:
+    values:
+      - string
+      - number
+      - boolean
+      - date
+      - datetime
+      - array
+
+  ConditionLogic:
+    values:
+      - all             # AND - all conditions must match
+      - any             # OR - any condition matches
+      - none            # NOT - no conditions match
+      - custom          # Custom expression
+
+  DemandMetric:
+    values:
+      - occupancy_rate      # Current occupancy %
+      - booking_velocity    # Bookings per time unit
+      - search_volume       # Search/browse activity
+      - conversion_rate     # Search to book ratio
+      - remaining_capacity  # Absolute remaining
+      - days_to_service     # Days until service date
+      - competitor_price    # Competitor pricing
+      - forecast_demand     # ML-predicted demand
+
+  ThresholdType:
+    values:
+      - above             # Above threshold
+      - below             # Below threshold
+      - between           # Between two values
+      - percentile        # Percentile-based
+
+  SpecialDateType:
+    values:
+      - one_time          # Specific date (2024-12-25)
+      - annual_fixed      # Same date every year
+      - annual_floating   # Third Monday of January
+      - event             # Named event/holiday
+      - custom            # Custom rule
+
+  FeeType:
+    values:
+      - service           # Service fee
+      - booking           # Booking fee
+      - processing        # Processing fee
+      - cleaning          # Cleaning fee
+      - resort            # Resort fee
+      - facility          # Facility fee
+      - insurance         # Insurance
+      - environmental     # Environmental fee
+      - other             # Other fee
+
+actions:
+
+  # Configuration
+  CreatePricingConfig:
+    description: Create pricing configuration
+    parameters:
+      name: { type: string, required: true }
+      resourceType: { type: string, required: true }
+      basePrice: { type: number, required: true }
+      currency: { type: string, required: true }
+      pricingModel: { type: PricingModel, required: true }
+    result: PricingConfig
+    idempotent: false
+
+  AddPricingRule:
+    description: Add a pricing rule
+    parameters:
+      configId: { type: uuid, required: true }
+      name: { type: string, required: true }
+      conditions: { type: array, items: PricingCondition, required: true }
+      adjustmentType: { type: AdjustmentType, required: true }
+      adjustmentValue: { type: number, required: true }
+      priority: { type: integer }
+    result: PricingRule
+    idempotent: false
+
+  # Price calculation
+  CalculatePrice:
+    description: Calculate price for a request
+    parameters:
+      configId: { type: uuid, required: true }
+      resourceId: { type: string, required: true }
+      quantity: { type: integer, required: true }
+      serviceDate: { type: datetime, required: true }
+      customerId: { type: string }
+      context: { type: object }
+    result: PriceCalculation
+    idempotent: true
+
+  GetPriceQuote:
+    description: Get a price quote with validity period
+    parameters:
+      configId: { type: uuid, required: true }
+      resourceId: { type: string, required: true }
+      quantity: { type: integer, required: true }
+      serviceDate: { type: datetime, required: true }
+      customerId: { type: string }
+      validityMinutes: { type: integer, default: 30 }
+    result: PriceCalculation
+    idempotent: true
+
+  # Demand pricing
+  UpdateDemandSnapshot:
+    description: Record current demand snapshot
+    parameters:
+      demandConfigId: { type: uuid, required: true }
+      demandValue: { type: number, required: true }
+      occupancyPercent: { type: number }
+      bookingVelocity: { type: number }
+    result: DemandSnapshot
+    idempotent: false
+
+  # Queries
+  GetCurrentPrice:
+    description: Get current price for a resource
+    parameters:
+      resourceId: { type: string, required: true }
+      serviceDate: { type: datetime }
+      customerId: { type: string }
+    result: { type: object, description: "Current price info" }
+    idempotent: true
+
+  GetPriceHistory:
+    description: Get historical prices
+    parameters:
+      resourceId: { type: string, required: true }
+      startDate: { type: datetime, required: true }
+      endDate: { type: datetime, required: true }
+    result: { type: array, items: PriceCalculation }
+    idempotent: true
+
+  PreviewPriceChange:
+    description: Preview effect of rule change
+    parameters:
+      configId: { type: uuid, required: true }
+      proposedRule: { type: PricingRule, required: true }
+      sampleSize: { type: integer, default: 100 }
+    result: { type: object, description: "Impact analysis" }
+    idempotent: true
+
+relationships:
+  - type: one_to_many
+    from: PricingConfig
+    to: PricingRule
+    foreign_key: configId
+    description: Config has many rules
+
+  - type: one_to_many
+    from: PricingRule
+    to: PricingCondition
+    foreign_key: ruleId
+    description: Rule has many conditions
+
+  - type: one_to_one
+    from: PricingConfig
+    to: DemandPricingConfig
+    foreign_key: configId
+    description: Config may have demand pricing
+
+  - type: one_to_one
+    from: PricingConfig
+    to: TimePricingConfig
+    foreign_key: configId
+    description: Config may have time pricing
+
+  - type: one_to_one
+    from: PricingConfig
+    to: SegmentPricingConfig
+    foreign_key: configId
+    description: Config may have segment pricing
+
+  - type: one_to_many
+    from: PricingConfig
+    to: PriceCalculation
+    foreign_key: configId
+    description: Config produces calculations

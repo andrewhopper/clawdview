@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# Claude AWS Guard Check
+# Validates AWS commands against account guard configuration
+# Returns 0 if allowed, 1 if blocked
+#
+# Usage: claude-aws-guard-check [account-id]
+#        claude-aws-guard-check current  # Check current credentials
+#
+
+GUARD_CONFIG="${HOME}/.aws-account-guard.conf"
+
+# Load configuration
+if [[ ! -f "$GUARD_CONFIG" ]]; then
+    echo "ERROR: No guard configuration found"
+    echo "Run: aws-account-guard-setup"
+    exit 2
+fi
+
+source "$GUARD_CONFIG"
+
+# Get account to check
+if [[ "$1" == "current" ]] || [[ -z "$1" ]]; then
+    CHECK_ACCOUNT=$(aws sts get-caller-identity --query Account --output text 2>/dev/null)
+    if [[ -z "$CHECK_ACCOUNT" ]]; then
+        echo "ERROR: No AWS credentials configured"
+        exit 2
+    fi
+else
+    CHECK_ACCOUNT="$1"
+fi
+
+# Check if account is allowed
+if [[ " ${ALLOWED_AWS_ACCOUNTS[@]} " =~ " ${CHECK_ACCOUNT} " ]]; then
+    echo "ALLOWED"
+    echo "Computer: $COMPUTER_TYPE"
+    echo "Account: $CHECK_ACCOUNT"
+    exit 0
+else
+    echo "BLOCKED"
+    echo "Computer: $COMPUTER_TYPE"
+    echo "Account: $CHECK_ACCOUNT"
+    echo "Allowed: ${ALLOWED_AWS_ACCOUNTS[*]}"
+    exit 1
+fi

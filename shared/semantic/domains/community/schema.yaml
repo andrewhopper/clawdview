@@ -1,0 +1,659 @@
+# Community Domain
+# Groups, membership, roles, moderation
+# Version: 1.0.0
+
+domain:
+  name: community
+  version: "1.0.0"
+  status: production
+  description: Online communities - groups, membership, roles, moderation
+  dependencies: [core]
+  use_case: Forums, social platforms, Discord-style communities, subreddits
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Community:
+    description: A community/group of members with shared interests
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      slug:
+        type: string
+        required: true
+        description: URL-friendly identifier
+      description:
+        type: string
+      tagline:
+        type: string
+        description: Short tagline/subtitle
+
+      # Type and visibility
+      community_type:
+        type: CommunityType
+        required: true
+      visibility:
+        type: CommunityVisibility
+        required: true
+        default: public
+
+      # Branding
+      icon:
+        type: MediaObject
+      banner:
+        type: MediaObject
+      primary_color:
+        type: string
+      theme:
+        type: string
+
+      # Hierarchy
+      parent_community_id:
+        type: uuid
+        description: FK to parent community (for sub-communities)
+
+      # Categories/topics
+      categories:
+        type: array
+        items: string
+      tags:
+        type: array
+        items: string
+
+      # Rules
+      rules:
+        type: array
+        items: CommunityRule
+
+      # Settings
+      settings:
+        type: CommunitySettings
+
+      # Stats (denormalized)
+      member_count:
+        type: integer
+        default: 0
+      active_member_count:
+        type: integer
+        default: 0
+      post_count:
+        type: integer
+        default: 0
+      online_count:
+        type: integer
+        default: 0
+
+      # Status
+      status:
+        type: CommunityStatus
+        required: true
+        default: active
+
+      # Founding
+      created_by:
+        type: string
+        required: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  CommunityRule:
+    description: A rule for the community
+    properties:
+      id:
+        type: uuid
+        required: true
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      sequence:
+        type: integer
+        required: true
+      category:
+        type: RuleCategory
+      violation_action:
+        type: ViolationAction
+        description: Default action for violating this rule
+
+  CommunitySettings:
+    description: Configuration settings for a community
+    properties:
+      # Posting
+      allow_posts:
+        type: boolean
+        default: true
+      allow_comments:
+        type: boolean
+        default: true
+      allow_media:
+        type: boolean
+        default: true
+      allow_links:
+        type: boolean
+        default: true
+      allow_polls:
+        type: boolean
+        default: true
+      require_post_flair:
+        type: boolean
+        default: false
+
+      # Content types
+      allowed_post_types:
+        type: array
+        items: string
+        description: "[text, link, image, video, poll]"
+
+      # Restrictions
+      post_karma_requirement:
+        type: integer
+        default: 0
+      comment_karma_requirement:
+        type: integer
+        default: 0
+      account_age_requirement:
+        type: integer
+        description: Minimum account age in days
+      approved_posters_only:
+        type: boolean
+        default: false
+
+      # Moderation
+      spam_filter_strength:
+        type: FilterStrength
+        default: medium
+      require_post_approval:
+        type: boolean
+        default: false
+      require_comment_approval:
+        type: boolean
+        default: false
+
+      # Features
+      wiki_enabled:
+        type: boolean
+        default: false
+      events_enabled:
+        type: boolean
+        default: false
+      chat_enabled:
+        type: boolean
+        default: false
+
+  CommunityMember:
+    description: A member of a community
+    properties:
+      id:
+        type: uuid
+        required: true
+      community_id:
+        type: uuid
+        required: true
+      user_id:
+        type: string
+        required: true
+
+      # Role
+      role:
+        type: MemberRole
+        required: true
+        default: member
+      custom_roles:
+        type: array
+        items: string
+        description: FK to CustomRole IDs
+
+      # Status
+      status:
+        type: MemberStatus
+        required: true
+        default: active
+
+      # Dates
+      joined_at:
+        type: datetime
+        required: true
+      approved_at:
+        type: datetime
+      approved_by:
+        type: string
+      last_active_at:
+        type: datetime
+
+      # Display
+      flair:
+        type: string
+        description: User flair in this community
+      flair_css:
+        type: string
+      nickname:
+        type: string
+        description: Community-specific nickname
+
+      # Engagement (denormalized)
+      post_count:
+        type: integer
+        default: 0
+      comment_count:
+        type: integer
+        default: 0
+      karma:
+        type: integer
+        default: 0
+        description: Community-specific karma
+
+      # Restrictions
+      muted_until:
+        type: datetime
+      restricted_until:
+        type: datetime
+
+  CustomRole:
+    description: Custom role defined by community
+    properties:
+      id:
+        type: uuid
+        required: true
+      community_id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      color:
+        type: string
+        description: Role color (hex)
+      icon:
+        type: string
+        description: Role icon/emoji
+      position:
+        type: integer
+        description: Hierarchy position (higher = more authority)
+
+      # Permissions
+      permissions:
+        type: array
+        items: Permission
+
+      # Assignment
+      auto_assign:
+        type: boolean
+        default: false
+      auto_assign_criteria:
+        type: object
+        description: Criteria for auto-assignment
+
+      status:
+        type: RoleStatus
+        default: active
+
+  Moderation:
+    description: Moderation action taken
+    properties:
+      id:
+        type: uuid
+        required: true
+      community_id:
+        type: uuid
+        required: true
+
+      # What was moderated
+      subject_type:
+        type: string
+        required: true
+        description: post, comment, user
+      subject_id:
+        type: uuid
+        required: true
+
+      # Action
+      action:
+        type: ModerationAction
+        required: true
+      reason:
+        type: string
+        required: true
+      rule_violated_id:
+        type: uuid
+        description: FK to CommunityRule
+
+      # Who
+      moderator_id:
+        type: string
+        required: true
+      moderated_at:
+        type: datetime
+        required: true
+
+      # Duration (for temporary actions)
+      duration:
+        type: Duration
+      expires_at:
+        type: datetime
+
+      # User notification
+      notify_user:
+        type: boolean
+        default: true
+      notification_message:
+        type: string
+
+      # Appeal
+      appealable:
+        type: boolean
+        default: true
+      appealed:
+        type: boolean
+        default: false
+      appeal_id:
+        type: uuid
+
+      # Status
+      status:
+        type: ModerationStatus
+        required: true
+        default: active
+      reversed_at:
+        type: datetime
+      reversed_by:
+        type: string
+      reverse_reason:
+        type: string
+
+  Ban:
+    description: Ban of a user from community
+    properties:
+      id:
+        type: uuid
+        required: true
+      community_id:
+        type: uuid
+        required: true
+      user_id:
+        type: string
+        required: true
+
+      ban_type:
+        type: BanType
+        required: true
+      reason:
+        type: string
+        required: true
+      internal_notes:
+        type: string
+        description: Mod-only notes
+
+      # Duration
+      permanent:
+        type: boolean
+        default: false
+      expires_at:
+        type: datetime
+
+      # Who
+      banned_by:
+        type: string
+        required: true
+      banned_at:
+        type: datetime
+        required: true
+
+      # Status
+      status:
+        type: BanStatus
+        required: true
+        default: active
+      unbanned_at:
+        type: datetime
+      unbanned_by:
+        type: string
+
+  Report:
+    description: User report of content/user
+    properties:
+      id:
+        type: uuid
+        required: true
+      community_id:
+        type: uuid
+        required: true
+
+      # What is reported
+      subject_type:
+        type: string
+        required: true
+      subject_id:
+        type: uuid
+        required: true
+
+      # Report details
+      reason:
+        type: ReportReason
+        required: true
+      custom_reason:
+        type: string
+        description: For "other" reason
+      details:
+        type: string
+
+      # Who reported
+      reporter_id:
+        type: string
+        required: true
+      reported_at:
+        type: datetime
+        required: true
+
+      # Resolution
+      status:
+        type: ReportStatus
+        required: true
+        default: pending
+      resolved_at:
+        type: datetime
+      resolved_by:
+        type: string
+      resolution:
+        type: ReportResolution
+      resolution_notes:
+        type: string
+
+      # Linked moderation action
+      moderation_id:
+        type: uuid
+        description: FK to Moderation if action taken
+
+enums:
+
+  CommunityType:
+    values:
+      - public            # Anyone can see and join
+      - restricted        # Anyone can see, request to join
+      - private           # Invite only, hidden
+      - premium           # Paid membership
+
+  CommunityVisibility:
+    values:
+      - public            # Listed, searchable
+      - unlisted          # Not listed, accessible via link
+      - private           # Members only
+
+  CommunityStatus:
+    values:
+      - active
+      - restricted        # Limited functionality
+      - quarantined       # Warning before entry
+      - banned            # Completely disabled
+      - archived
+
+  RuleCategory:
+    values:
+      - content           # What can be posted
+      - behavior          # How to behave
+      - spam              # Spam/self-promotion rules
+      - safety            # Safety/harassment
+      - legal             # Legal requirements
+      - other
+
+  FilterStrength:
+    values:
+      - off
+      - low
+      - medium
+      - high
+      - all               # All posts require approval
+
+  MemberRole:
+    values:
+      - owner             # Community owner
+      - admin             # Full admin permissions
+      - moderator         # Content moderation
+      - trusted           # Trusted member (extra permissions)
+      - member            # Regular member
+      - pending           # Awaiting approval
+      - restricted        # Limited permissions
+
+  MemberStatus:
+    values:
+      - active
+      - pending           # Awaiting approval
+      - muted             # Cannot post/comment
+      - restricted        # Limited actions
+      - banned            # Banned from community
+      - left              # Left voluntarily
+
+  Permission:
+    values:
+      - manage_community  # Edit community settings
+      - manage_members    # Approve/remove members
+      - manage_roles      # Create/edit roles
+      - moderate_content  # Remove/approve content
+      - ban_users         # Ban/unban users
+      - manage_rules      # Edit community rules
+      - manage_flair      # Manage post/user flair
+      - pin_posts         # Pin/unpin posts
+      - lock_threads      # Lock/unlock threads
+      - view_reports      # See reported content
+      - view_modlog       # See moderation log
+      - manage_wiki       # Edit wiki
+
+  RoleStatus:
+    values:
+      - active
+      - inactive
+
+  ModerationAction:
+    values:
+      - remove            # Remove content
+      - approve           # Approve content
+      - spam              # Mark as spam
+      - lock              # Lock thread
+      - unlock            # Unlock thread
+      - pin               # Pin content
+      - unpin             # Unpin content
+      - warn              # Warn user
+      - mute              # Mute user
+      - unmute            # Unmute user
+      - ban               # Ban user
+      - unban             # Unban user
+      - restrict          # Restrict user
+
+  ModerationStatus:
+    values:
+      - active            # Action in effect
+      - expired           # Temporary action expired
+      - reversed          # Manually reversed
+      - appealed          # Under appeal
+
+  ViolationAction:
+    values:
+      - warn
+      - remove
+      - mute_1h
+      - mute_24h
+      - mute_7d
+      - ban_temp
+      - ban_permanent
+
+  BanType:
+    values:
+      - full              # Cannot view or participate
+      - participate       # Can view, cannot participate
+      - shadow            # Can post but hidden from others
+
+  BanStatus:
+    values:
+      - active
+      - expired
+      - lifted            # Manually lifted
+
+  ReportReason:
+    values:
+      - spam
+      - harassment
+      - hate_speech
+      - violence
+      - misinformation
+      - self_harm
+      - illegal
+      - copyright
+      - impersonation
+      - rule_violation
+      - other
+
+  ReportStatus:
+    values:
+      - pending
+      - in_review
+      - resolved
+      - dismissed
+
+  ReportResolution:
+    values:
+      - action_taken      # Moderation action taken
+      - no_violation      # Not a violation
+      - duplicate         # Already reported/handled
+      - invalid           # Invalid/bad faith report
+
+examples:
+
+  tech_community:
+    name: "Tech Enthusiasts"
+    slug: "tech-enthusiasts"
+    description: "A community for discussing technology"
+    community_type: public
+    visibility: public
+    rules:
+      - title: "Be respectful"
+        description: "Treat all members with respect"
+        sequence: 1
+        category: behavior
+      - title: "No spam"
+        description: "No self-promotion or spam"
+        sequence: 2
+        category: spam
+    settings:
+      allow_posts: true
+      allow_media: true
+      spam_filter_strength: medium
+    member_count: 15000
+    status: active
+
+sources:
+  - "Reddit Community Model"
+  - "Discord Server Model"
+  - "Discourse Community"
+  - "Facebook Groups"

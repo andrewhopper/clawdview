@@ -1,0 +1,22 @@
+# Contact Information
+
+entities:
+
+  ContactInfo:
+    description: Ways to reach an individual or organization
+    properties:
+      email:
+        type: string
+        pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      phone:
+        type: string
+        description: E.164 format recommended
+      phoneType:
+        type: PhoneType
+      website:
+        type: uri
+
+enums:
+
+  PhoneType:
+    values: [Mobile, Landline, Fax, TollFree]

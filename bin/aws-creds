@@ -1,0 +1,7 @@
+#!/bin/bash
+# AWS Credential Helper
+# Usage: eval $(aws-creds) OR source <(aws-creds)
+# Resolves credentials: isengardcli → aws sso → env vars
+
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+python3 "$SCRIPT_DIR/shared/storage/aws_credentials.py" "$@"

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Architecture Preferences - Integration Patterns",
+  "description": "Patterns for system integration and communication",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-16",
+  "categories": {
+    "api_patterns": {
+      "description": "API design and communication patterns",
+      "preferences": []
+    },
+    "messaging_patterns": {
+      "description": "Asynchronous messaging patterns",
+      "preferences": []
+    },
+    "data_sync_patterns": {
+      "description": "Data synchronization and replication patterns",
+      "preferences": []
+    },
+    "authentication_patterns": {
+      "description": "Authentication and authorization integration patterns",
+      "preferences": []
+    }
+  }
+}

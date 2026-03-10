@@ -1,0 +1,449 @@
+# Domain: Spatial Zone
+# Physical spaces, zones, and entity tracking within them
+# Use cases: Video monitoring, floor plan tracking, geofencing
+
+domain:
+  name: spatial-zone
+  version: "1.0.0"
+  description: Physical zones and entity tracking within bounded spaces
+  layer: domain
+  dependencies:
+    - primitive-spatial    # BoundingBox, SpatialContainer, Point2D
+    - primitive-event      # Detection events
+    - primitive-actor      # TrackedEntity extends Actor
+    - primitive-quantity   # Measurements
+  created_at: "2025-12-04"
+  updated_at: "2025-12-04"
+
+entities:
+
+  # ============================================
+  # FLOOR PLANS & ZONES
+  # ============================================
+
+  FloorPlan:
+    extends: SpatialContainer  # From primitive-spatial
+    description: Root container representing a physical space
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        description: Name of the floor plan
+      bounds:
+        type: BoundingBox  # From primitive-spatial
+        required: true
+      zones:
+        type: array
+        items: Zone
+        description: Zones within this floor plan
+      backgroundImage:
+        type: string
+        description: URL to floor plan image
+      scale:
+        type: Scale
+        description: Conversion from pixels to real units
+      metadata:
+        type: object
+
+  Zone:
+    extends: SpatialContainer  # From primitive-spatial
+    description: Named region within a floor plan
+    properties:
+      id:
+        type: uuid
+        required: true
+      floorPlanId:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        description: Human-readable zone name
+      bounds:
+        type: BoundingBox | Polygon2D  # From primitive-spatial
+        required: true
+      zoneType:
+        type: ZoneType
+        required: true
+      accessLevel:
+        type: AccessLevel
+        default: public
+      schedule:
+        type: AccessSchedule
+        description: Time-based access rules
+      capacity:
+        type: integer
+        description: Maximum occupancy
+      color:
+        type: string
+        description: Display color (hex)
+      icon:
+        type: string
+        description: Icon identifier
+
+  Scale:
+    description: Conversion factor between coordinate units and real-world units
+    properties:
+      pixelsPerUnit:
+        type: number
+        required: true
+        description: How many pixels per real-world unit
+      unit:
+        type: SpatialUnit  # From primitive-spatial
+        default: meter
+        description: Real-world unit
+
+  AccessSchedule:
+    description: Time-based access rules for a zone
+    properties:
+      defaultAccess:
+        type: AccessLevel
+        description: Access level when no rules apply
+      rules:
+        type: array
+        items: AccessRule
+
+  AccessRule:
+    description: Time-based access rule
+    properties:
+      daysOfWeek:
+        type: array
+        items: DayOfWeek
+        description: Days this rule applies
+      startTime:
+        type: string
+        format: time
+        description: Start time (HH:MM)
+      endTime:
+        type: string
+        format: time
+        description: End time (HH:MM)
+      accessLevel:
+        type: AccessLevel
+
+  # ============================================
+  # TRACKED ENTITIES
+  # ============================================
+
+  TrackedEntity:
+    extends: Actor  # From primitive-actor
+    description: An entity being tracked in physical space
+    properties:
+      id:
+        type: uuid
+        required: true
+      trackingId:
+        type: string
+        required: true
+        description: Consistent ID across detection frames
+      entityType:
+        type: TrackedEntityType
+        default: person
+      displayName:
+        type: string
+        description: Name if identified
+      currentPosition:
+        type: Point2D  # From primitive-spatial
+        description: Current position in floor plan coordinates
+      currentZoneId:
+        type: uuid
+        description: Zone currently occupied
+      boundingBox:
+        type: BoundingBox  # From primitive-spatial
+        description: Detected bounding box
+      confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+        description: Detection confidence
+      firstSeenAt:
+        type: datetime
+        required: true
+      lastSeenAt:
+        type: datetime
+        required: true
+      isIdentified:
+        type: boolean
+        default: false
+        description: Whether entity has been identified
+      identityId:
+        type: uuid
+        description: Link to known identity if identified
+
+  Trajectory:
+    description: Path of movement for a tracked entity
+    properties:
+      entityId:
+        type: uuid
+        required: true
+      points:
+        type: array
+        items: TrajectoryPoint
+        minItems: 1
+      startTime:
+        type: datetime
+        required: true
+      endTime:
+        type: datetime
+
+  TrajectoryPoint:
+    description: Position at a point in time
+    properties:
+      position:
+        type: Point2D  # From primitive-spatial
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+      zoneId:
+        type: uuid
+        description: Zone at this point
+      velocity:
+        type: Velocity
+        description: Speed and direction at this point
+      confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+
+  Velocity:
+    description: Speed and direction of movement
+    properties:
+      speed:
+        type: number
+        minimum: 0
+        description: Speed magnitude
+      speedUnit:
+        type: SpeedUnit
+        default: meters_per_second
+      direction:
+        type: number
+        description: Direction in degrees (0 = right, 90 = down)
+      vector:
+        type: Vector2D  # From primitive-spatial
+        description: Velocity as vector
+
+  # ============================================
+  # PRESENCE EVENTS
+  # ============================================
+
+  PresenceEvent:
+    extends: Event  # From primitive-event
+    description: Entity entering, exiting, or being detected in a zone
+    properties:
+      id:
+        type: uuid
+        required: true
+      entityId:
+        type: uuid
+        required: true
+      zoneId:
+        type: uuid
+        required: true
+      eventType:
+        type: PresenceEventType
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+      position:
+        type: Point2D  # From primitive-spatial
+      confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+      dwellTime:
+        type: DwellTime
+        description: Time spent in zone (for exit events)
+
+  DwellTime:
+    description: Duration of presence in a zone
+    properties:
+      value:
+        type: number
+        required: true
+        minimum: 0
+      unit:
+        type: DurationUnit
+        default: seconds
+    computed:
+      valueMs:
+        formula: "convert to milliseconds"
+
+  DetectionEvent:
+    extends: Event  # From primitive-event
+    description: Raw detection from video/sensor
+    properties:
+      id:
+        type: uuid
+        required: true
+      sourceId:
+        type: string
+        required: true
+        description: Camera or sensor ID
+      timestamp:
+        type: datetime
+        required: true
+      detections:
+        type: array
+        items: Detection
+      frameId:
+        type: string
+        description: Video frame identifier
+
+  Detection:
+    description: Single detected object in a frame
+    properties:
+      label:
+        type: string
+        required: true
+        description: What was detected (person, vehicle, etc.)
+      confidence:
+        type: number
+        required: true
+        minimum: 0
+        maximum: 1
+      boundingBox:
+        type: BoundingBox  # From primitive-spatial
+        required: true
+      trackingId:
+        type: string
+        description: ID for tracking across frames
+      attributes:
+        type: object
+        description: Additional detection attributes
+
+  # ============================================
+  # OCCUPANCY
+  # ============================================
+
+  ZoneOccupancy:
+    description: Current occupancy state of a zone
+    properties:
+      zoneId:
+        type: uuid
+        required: true
+      count:
+        type: integer
+        minimum: 0
+        description: Current entity count
+      entities:
+        type: array
+        items: uuid
+        description: IDs of entities in zone
+      lastUpdated:
+        type: datetime
+        required: true
+      status:
+        type: OccupancyStatus
+
+  OccupancyHistory:
+    description: Historical occupancy data
+    properties:
+      zoneId:
+        type: uuid
+        required: true
+      period:
+        type: TimePeriod
+      samples:
+        type: array
+        items: OccupancySample
+
+  OccupancySample:
+    description: Occupancy at a point in time
+    properties:
+      timestamp: { type: datetime, required: true }
+      count: { type: integer, required: true }
+
+enums:
+
+  ZoneType:
+    description: Type of zone
+    values:
+      - entrance        # Entry/exit point
+      - common          # Common area (lobby, hallway)
+      - restricted      # Restricted access area
+      - private         # Private space (office, bedroom)
+      - outdoor         # Outdoor area
+      - parking         # Parking area
+      - utility         # Utility/service area
+      - emergency       # Emergency area (fire exit)
+
+  AccessLevel:
+    description: Access restriction level
+    values:
+      - public          # Anyone can access
+      - authorized      # Requires authorization
+      - restricted      # Limited access
+      - admin           # Admin only
+      - emergency       # Emergency access only
+
+  TrackedEntityType:
+    description: Type of tracked entity
+    values:
+      - person
+      - vehicle
+      - animal
+      - object
+      - unknown
+
+  PresenceEventType:
+    description: Type of presence event
+    values:
+      - entered         # Entity entered zone
+      - exited          # Entity exited zone
+      - detected        # Entity detected in zone
+      - lost            # Entity tracking lost
+      - identified      # Entity was identified
+
+  OccupancyStatus:
+    description: Occupancy level status
+    values:
+      - empty           # No occupants
+      - low             # Below 25% capacity
+      - moderate        # 25-75% capacity
+      - high            # 75-100% capacity
+      - overcrowded     # Above capacity
+
+  SpeedUnit:
+    description: Units for speed measurement
+    values:
+      - meters_per_second
+      - kilometers_per_hour
+      - miles_per_hour
+      - pixels_per_second
+
+  DurationUnit:
+    description: Units for duration
+    values:
+      - milliseconds
+      - seconds
+      - minutes
+      - hours
+
+  DayOfWeek:
+    values: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+
+  TimePeriod:
+    values: [hour, day, week, month]
+
+meta:
+  use_cases:
+    - "Video monitoring - track people on floor plan"
+    - "Security - detect intrusion in restricted zones"
+    - "Retail analytics - track customer paths"
+    - "Smart building - occupancy-based HVAC"
+
+  integrations:
+    - "AWS Rekognition (person detection)"
+    - "Google Cloud Vision"
+    - "YOLO / OpenCV"
+    - "Commercial video analytics systems"
+
+  related_domains:
+    - security-event: "Security alerts from zone monitoring"
+    - building: "Buildings contain floor plans"
+    - iot: "IoT sensors can detect presence"

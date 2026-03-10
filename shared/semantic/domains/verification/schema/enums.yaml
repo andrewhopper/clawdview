@@ -1,0 +1,61 @@
+# Verification Domain - Enums
+
+enums:
+
+  EvalTarget:
+    description: What to evaluate pattern against
+    values:
+      - file_content    # Grep file contents
+      - file_path       # Match file paths
+      - field_value     # JSON/YAML field
+
+  ExistsKind:
+    description: What should exist
+    values:
+      - file
+      - dir
+      - either
+
+  LogicOperator:
+    description: Combine evals
+    values:
+      - and
+      - or
+
+  RuleCategory:
+    values:
+      - error_tracking
+      - theme
+      - structure
+      - code_quality
+      - testing
+      - documentation
+      - performance
+      - deployment
+
+  Severity:
+    values:
+      - critical        # Must pass
+      - important       # Should pass
+      - recommended     # Nice to have
+
+  TechStack:
+    values:
+      - all
+      - react
+      - next
+      - node
+      - python
+      - fastapi
+      - typescript
+      - html
+      - css
+      - deployable
+
+  Grade:
+    values:
+      - A    # 90+
+      - B    # 75-89
+      - C    # 60-74
+      - D    # 40-59
+      - F    # <40

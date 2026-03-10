@@ -1,0 +1,139 @@
+# LLM Context Window Domain Model
+# Token budgets, slots, and priority management
+# Source: Anthropic context engineering, proto-context-management-game
+
+domain:
+  name: llm-context-window
+  version: "1.0.0"
+  description: Context window management - token budgets, slots, and priority allocation
+  dependencies: [core]
+  sources:
+    - "Anthropic: anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+    - "proto-context-management-game-5vdle-001"
+    - "Context rot research"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  ContextWindow:
+    description: The context window for an LLM interaction
+    properties:
+      id: { type: string, required: true }
+      sessionId: { type: string, required: true }
+      maxTokens: { type: integer, required: true }
+      usedTokens: { type: integer, default: 0 }
+      availableTokens: { type: integer }
+      utilizationPercent: { type: decimal }
+      slots: { type: array, items: ContextSlot }
+      allocationStrategy: { type: AllocationStrategy }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ContextSlot:
+    description: A slot/section in the context window (system, tools, history, user)
+    properties:
+      id: { type: string, required: true }
+      type: { type: SlotType, required: true }
+      priority: { type: integer, required: true, description: "Lower = higher priority" }
+      minTokens: { type: integer, description: "Minimum reserved tokens" }
+      maxTokens: { type: integer, description: "Maximum allowed tokens" }
+      currentTokens: { type: integer, default: 0 }
+      content: { type: string }
+      contentHash: { type: string, description: "For change detection" }
+      isCompressible: { type: boolean, default: true }
+      lastUpdatedAt: { type: datetime }
+
+  TokenBudget:
+    description: Token allocation budget for a context section
+    properties:
+      slotType: { type: SlotType, required: true }
+      allocatedTokens: { type: integer, required: true }
+      usedTokens: { type: integer, default: 0 }
+      reservedTokens: { type: integer, default: 0 }
+      overflowPolicy: { type: OverflowPolicy }
+
+  ContextAllocation:
+    description: Complete context allocation plan
+    properties:
+      id: { type: string, required: true }
+      totalBudget: { type: integer, required: true }
+      reservedForOutput: { type: integer, description: "Tokens reserved for response" }
+      allocations: { type: array, items: TokenBudget }
+      strategy: { type: AllocationStrategy }
+      createdAt: { type: datetime, required: true }
+
+  ContextOverflow:
+    description: Record of a context overflow event
+    properties:
+      id: { type: string, required: true }
+      sessionId: { type: string, required: true }
+      requestedTokens: { type: integer }
+      availableTokens: { type: integer }
+      overflowTokens: { type: integer }
+      resolution: { type: OverflowResolution }
+      resolvedAt: { type: datetime }
+
+  TokenCount:
+    description: Token count for a piece of content
+    properties:
+      content: { type: string }
+      tokenCount: { type: integer, required: true }
+      tokenizer: { type: string, description: "Tokenizer used (cl100k_base, etc.)" }
+      modelId: { type: string }
+      countedAt: { type: datetime }
+
+  ContextSnapshot:
+    description: Snapshot of context state at a point in time
+    properties:
+      id: { type: string, required: true }
+      sessionId: { type: string, required: true }
+      turnNumber: { type: integer }
+      slots: { type: array, items: ContextSlot }
+      totalTokens: { type: integer }
+      snapshotAt: { type: datetime, required: true }
+      reason: { type: string, description: "Why snapshot was taken" }
+
+enums:
+
+  SlotType:
+    description: Type of context slot (from proto-context-management-game)
+    values:
+      - SystemPrompt     # Core system instructions
+      - DeveloperPrompt  # Developer-level instructions
+      - Guardrails       # Safety constraints and rules
+      - Tools            # Tool/function definitions
+      - Resources        # RAG/external data
+      - Examples         # Few-shot examples
+      - ConversationHistory  # Previous turns
+      - UserContext      # User-specific context
+      - CurrentQuery     # Current user message
+      - Scratchpad       # Working memory/notes
+      - Thinking         # Extended thinking budget
+
+  AllocationStrategy:
+    description: Strategy for allocating tokens to slots
+    values:
+      - Fixed           # Fixed allocation per slot
+      - Proportional    # Proportional to content
+      - Priority        # Priority-based allocation
+      - Dynamic         # Dynamically adjust based on need
+      - Hybrid          # Combination of strategies
+
+  OverflowPolicy:
+    description: How to handle slot overflow
+    values:
+      - Truncate        # Truncate oldest content
+      - Compress        # Compress/summarize content
+      - Spill           # Spill to lower priority slot
+      - Reject          # Reject the addition
+      - Evict           # Evict lowest priority items
+
+  OverflowResolution:
+    description: How an overflow was resolved
+    values:
+      - Compacted       # Content was compacted
+      - Truncated       # Content was truncated
+      - Evicted         # Items were evicted
+      - Rejected        # Request was rejected
+      - Expanded        # Window was expanded (if possible)

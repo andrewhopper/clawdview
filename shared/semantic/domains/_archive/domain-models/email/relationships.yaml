@@ -1,0 +1,56 @@
+# relationships.yaml - Email Domain Entity Relationships
+# Generated: 2025-11-24
+# Status: PENDING APPROVAL
+
+relationships:
+  # Email -> Recipients
+  - type: one_to_many
+    from: Email
+    to: EmailRecipient
+    foreign_key: email_id
+    cascade_delete: true
+
+  # Email -> Attachments
+  - type: one_to_many
+    from: Email
+    to: EmailAttachment
+    foreign_key: email_id
+    cascade_delete: true
+
+  # Email -> Thread
+  - type: many_to_one
+    from: Email
+    to: EmailThread
+    foreign_key: thread_id
+    cascade_delete: false
+
+  # Email -> Email (reply chain)
+  - type: one_to_many
+    from: Email
+    to: Email
+    foreign_key: in_reply_to_id
+    cascade_delete: false
+    description: "Email reply chain"
+
+  # Email <-> Labels (many-to-many)
+  - type: many_to_many
+    from: Email
+    to: EmailLabel
+    through: EmailLabelAssignment
+    cascade_delete: false
+
+# External domain references
+external_references:
+  - entity: User
+    domain: auth
+    used_by:
+      - Email.user_id
+      - EmailRecipient.user_id
+      - EmailThread.user_id
+      - EmailLabel.user_id
+    description: "Email ownership and recipient mapping"
+
+  - entity: Organization
+    domain: organization
+    description: "Email can reference sender/recipient organization"
+    usage: "Future: EmailRecipient.organization_id"

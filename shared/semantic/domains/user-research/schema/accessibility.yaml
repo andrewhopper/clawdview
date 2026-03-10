@@ -1,0 +1,125 @@
+# Accessibility - Physical/cognitive traits for inclusive design
+# Source: WCAG 2.1, Microsoft Inclusive Design
+
+entities:
+  AccessibilityProfile:
+    description: Accessibility characteristics for UX simulation
+    properties:
+      vision:
+        type: VisionProfile
+        required: true
+      motor:
+        type: MotorProfile
+        required: true
+      cognitive:
+        type: CognitiveProfile
+        required: true
+      hearing:
+        type: HearingProfile
+        required: true
+      assistive_tech:
+        type: array
+        items: string
+        description: Assistive technologies used (screen reader, voice control, etc.)
+      simulation_params:
+        type: SimulationParams
+        description: Machine-readable settings for automated testing
+
+  VisionProfile:
+    description: Visual capabilities and needs
+    properties:
+      acuity:
+        type: VisionAcuity
+        required: true
+      color_vision:
+        type: ColorVision
+        default: normal
+      contrast_sensitivity:
+        type: SensitivityLevel
+        default: normal
+      light_sensitivity:
+        type: SensitivityLevel
+        default: normal
+      min_font_size:
+        type: integer
+        default: 16
+        description: Minimum readable font size in pixels
+
+  MotorProfile:
+    description: Physical interaction capabilities
+    properties:
+      fine_motor:
+        type: CapabilityLevel
+        required: true
+      click_accuracy:
+        type: CapabilityLevel
+        default: good
+      preferred_input:
+        type: InputMethod
+        default: mouse
+      min_touch_target:
+        type: integer
+        default: 44
+        description: Minimum touch target size in pixels
+      tremor:
+        type: boolean
+        default: false
+
+  CognitiveProfile:
+    description: Cognitive processing characteristics
+    properties:
+      attention_span:
+        type: CapabilityLevel
+        default: standard
+      reading_level:
+        type: ReadingLevel
+        default: standard
+      working_memory:
+        type: CapabilityLevel
+        default: standard
+      processing_speed:
+        type: CapabilityLevel
+        default: standard
+      max_nav_items:
+        type: integer
+        default: 5
+        description: Maximum navigation items before overwhelm
+      prefer_linear_flow:
+        type: boolean
+        default: false
+
+  HearingProfile:
+    description: Auditory capabilities
+    properties:
+      range:
+        type: HearingRange
+        default: normal
+      audio_processing:
+        type: CapabilityLevel
+        default: standard
+      captions_needed:
+        type: CaptionNeed
+        default: optional
+
+  SimulationParams:
+    description: Machine-readable parameters for automated UX testing
+    properties:
+      wcag_level:
+        type: WCAGLevel
+        default: AA
+      min_contrast_ratio:
+        type: number
+        default: 4.5
+      min_font_size:
+        type: integer
+        default: 16
+      min_touch_target:
+        type: integer
+        default: 44
+      max_page_weight_kb:
+        type: integer
+        description: Max page size for connection type
+      test_priority:
+        type: array
+        items: string
+        description: Ordered list of tests to prioritize

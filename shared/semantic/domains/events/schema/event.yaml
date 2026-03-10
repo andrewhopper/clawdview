@@ -1,0 +1,153 @@
+# Domain Event Schema
+# Immutable records of something that happened in the domain
+
+enums:
+
+  EventPriority:
+    description: Priority for event processing order
+    values:
+      - critical    # Process immediately, block if needed
+      - high        # Process before normal events
+      - normal      # Standard processing
+      - low         # Process when idle
+      - background  # Batch process later
+
+  EventStatus:
+    description: Lifecycle status of an event
+    values:
+      - pending     # Created, not yet published
+      - published   # Sent to event bus
+      - processing  # Being handled
+      - completed   # All handlers finished
+      - failed      # Handler(s) failed
+      - retrying    # Failed, will retry
+
+entities:
+
+  EventMetadata:
+    description: Metadata attached to every domain event for tracing and correlation
+    properties:
+      correlationId:
+        type: string
+        required: true
+        description: Groups related events together
+      causationId:
+        type: string
+        description: ID of event that caused this one
+      traceId:
+        type: string
+        description: Distributed trace ID
+      sourceService:
+        type: string
+        description: Service that emitted the event
+      sourceAggregate:
+        type: string
+        description: Aggregate type that raised the event
+      sourceAggregateId:
+        type: string
+        description: ID of aggregate that raised the event
+      version:
+        type: integer
+        default: 1
+        description: Event schema version
+      retryCount:
+        type: integer
+        default: 0
+        description: Number of processing attempts
+      maxRetries:
+        type: integer
+        default: 3
+        description: Maximum retry attempts before dead letter
+      userId:
+        type: string
+        description: User who triggered the event
+      tenantId:
+        type: string
+        description: Tenant context for multi-tenant systems
+      tags:
+        type: map
+        keyType: string
+        valueType: string
+        description: Additional key-value metadata
+
+  DomainEvent:
+    description: |
+      Abstract base for all domain events.
+      Events are immutable facts about something that happened.
+      Name in past tense (e.g., RefundRequested, OrderShipped).
+    extends: Entity
+    properties:
+      eventId:
+        type: string
+        required: true
+        description: Unique identifier for this event instance
+      eventType:
+        type: string
+        required: true
+        description: Event class name (auto-populated)
+      occurredAt:
+        type: datetime
+        required: true
+        description: When the event happened
+      createdAt:
+        type: datetime
+        required: true
+        description: When event record was created
+      updatedAt:
+        type: datetime
+        required: true
+        description: When event record was last modified
+      priority:
+        type: EventPriority
+        default: normal
+        description: Processing priority
+      status:
+        type: EventStatus
+        default: pending
+        description: Current lifecycle status
+      metadata:
+        type: EventMetadata
+        required: true
+        description: Tracing and correlation metadata
+
+  EntityEvent:
+    description: Event related to a specific entity
+    extends: DomainEvent
+    properties:
+      entityType:
+        type: string
+        required: true
+        description: Type of entity this event concerns
+      entityId:
+        type: string
+        required: true
+        description: ID of entity this event concerns
+
+  AggregateEvent:
+    description: Event emitted from an aggregate root
+    extends: DomainEvent
+    properties:
+      aggregateType:
+        type: string
+        required: true
+        description: Type of aggregate that raised this event
+      aggregateId:
+        type: string
+        required: true
+        description: ID of aggregate that raised this event
+      aggregateVersion:
+        type: integer
+        required: true
+        description: Version of aggregate when event was raised
+
+  IntegrationEvent:
+    description: Event for cross-service communication
+    extends: DomainEvent
+    properties:
+      sourceService:
+        type: string
+        required: true
+        description: Service that published the event
+      targetService:
+        type: string
+        description: Specific target service (null = broadcast)

@@ -1,0 +1,558 @@
+# Geo Domain: Elevation & Terrain
+# Altitude, elevation profiles, terrain analysis
+# Version: 1.0.0
+
+domain: geo-elevation
+version: "1.0.0"
+status: production
+description: Elevation data, terrain profiles, and vertical geometry
+dependencies:
+  - geo-point
+  - geo-shape
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Elevation Point
+  # ---------------------------------------------------------------------------
+
+  ElevationPoint:
+    description: Point with elevation data
+    fields:
+      location:
+        type: Point
+        required: true
+        description: Geographic location
+      elevation_meters:
+        type: float
+        required: true
+        description: Elevation in meters
+      reference:
+        type: AltitudeReference
+        required: false
+        default: MSL
+        description: Vertical datum
+      source:
+        type: ElevationSource
+        required: false
+        description: Data source (DEM, survey, GPS, etc.)
+      resolution_meters:
+        type: float
+        required: false
+        description: Horizontal resolution of source data
+      accuracy_meters:
+        type: float
+        required: false
+        description: Vertical accuracy estimate
+
+  # ---------------------------------------------------------------------------
+  # Elevation Profile (for routes/trails)
+  # ---------------------------------------------------------------------------
+
+  ElevationProfile:
+    description: Elevation along a path
+    fields:
+      path:
+        type: LineString
+        required: true
+        description: Horizontal path
+      samples:
+        type: array
+        items:
+          type: ElevationSample
+        required: true
+        description: Elevation samples along path
+      statistics:
+        type: ElevationStatistics
+        required: false
+        description: Computed statistics
+      source:
+        type: ElevationSource
+        required: false
+
+  ElevationSample:
+    description: Single elevation sample along a profile
+    fields:
+      distance_meters:
+        type: float
+        required: true
+        description: Distance from start of path
+      elevation_meters:
+        type: float
+        required: true
+        description: Elevation at this point
+      location:
+        type: Point
+        required: false
+        description: Geographic location of sample
+      gradient_percent:
+        type: float
+        required: false
+        description: Grade/slope at this point (%)
+
+  ElevationStatistics:
+    description: Computed elevation statistics for a profile
+    fields:
+      min_elevation:
+        type: float
+        required: true
+        description: Minimum elevation (meters)
+      max_elevation:
+        type: float
+        required: true
+        description: Maximum elevation (meters)
+      start_elevation:
+        type: float
+        required: true
+        description: Elevation at start
+      end_elevation:
+        type: float
+        required: true
+        description: Elevation at end
+      total_ascent:
+        type: float
+        required: true
+        description: Total uphill (meters)
+      total_descent:
+        type: float
+        required: true
+        description: Total downhill (meters)
+      net_elevation_change:
+        type: float
+        required: true
+        description: End minus start elevation
+      average_gradient:
+        type: float
+        required: false
+        description: Average grade (%)
+      max_gradient:
+        type: float
+        required: false
+        description: Maximum grade (%)
+      min_gradient:
+        type: float
+        required: false
+        description: Minimum grade (steepest descent, negative)
+      total_distance:
+        type: float
+        required: true
+        description: Horizontal distance (meters)
+
+  # ---------------------------------------------------------------------------
+  # Terrain Grid / DEM
+  # ---------------------------------------------------------------------------
+
+  ElevationGrid:
+    description: Regular grid of elevation values (DEM)
+    aliases: [DEM, DTM, DigitalElevationModel]
+    fields:
+      bounds:
+        type: BoundingBox
+        required: true
+        description: Geographic extent
+      width:
+        type: integer
+        required: true
+        description: Number of columns
+      height:
+        type: integer
+        required: true
+        description: Number of rows
+      resolution_x:
+        type: float
+        required: true
+        description: Cell width in degrees or meters
+      resolution_y:
+        type: float
+        required: true
+        description: Cell height in degrees or meters
+      crs:
+        type: string
+        required: false
+        default: "EPSG:4326"
+      no_data_value:
+        type: float
+        required: false
+        default: -9999
+        description: Value indicating missing data
+      values:
+        type: array
+        items:
+          type: float
+        required: true
+        description: Row-major elevation values
+      source:
+        type: ElevationSource
+        required: false
+      vertical_units:
+        type: VerticalUnits
+        required: false
+        default: METERS
+
+  # ---------------------------------------------------------------------------
+  # Contour Lines
+  # ---------------------------------------------------------------------------
+
+  ContourLine:
+    description: Iso-elevation line
+    fields:
+      elevation_meters:
+        type: float
+        required: true
+        description: Elevation of this contour
+      geometry:
+        type: LineString
+        required: true
+        description: Contour path
+      contour_type:
+        type: ContourType
+        required: false
+        default: INTERMEDIATE
+
+  ContourSet:
+    description: Collection of contour lines for an area
+    fields:
+      bounds:
+        type: BoundingBox
+        required: true
+      interval_meters:
+        type: float
+        required: true
+        description: Contour interval
+      index_interval:
+        type: integer
+        required: false
+        default: 5
+        description: Every Nth contour is index contour
+      contours:
+        type: array
+        items:
+          type: ContourLine
+        required: true
+      source:
+        type: ElevationSource
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Slope & Aspect Analysis
+  # ---------------------------------------------------------------------------
+
+  SlopeAnalysis:
+    description: Slope angle for a location or area
+    fields:
+      location:
+        type: Point
+        required: false
+        description: Point analysis
+      bounds:
+        type: BoundingBox
+        required: false
+        description: Area analysis
+      slope_degrees:
+        type: float
+        required: true
+        constraints:
+          min: 0
+          max: 90
+        description: Slope angle in degrees
+      slope_percent:
+        type: float
+        required: false
+        description: Slope as percentage (rise/run * 100)
+      slope_class:
+        type: SlopeClass
+        required: false
+        description: Categorical classification
+
+  AspectAnalysis:
+    description: Slope facing direction
+    fields:
+      location:
+        type: Point
+        required: false
+      aspect_degrees:
+        type: float
+        required: true
+        constraints:
+          min: 0
+          max: 360
+        description: Direction slope faces (0=N, 90=E, 180=S, 270=W)
+      aspect_direction:
+        type: CardinalDirection
+        required: false
+        description: Cardinal direction
+
+  TerrainAnalysis:
+    description: Combined terrain metrics for a location
+    fields:
+      location:
+        type: Point
+        required: true
+      elevation_meters:
+        type: float
+        required: true
+      slope:
+        type: SlopeAnalysis
+        required: false
+      aspect:
+        type: AspectAnalysis
+        required: false
+      curvature:
+        type: float
+        required: false
+        description: Surface curvature
+      roughness:
+        type: float
+        required: false
+        description: Terrain roughness index
+      ruggedness:
+        type: float
+        required: false
+        description: Terrain ruggedness index (TRI)
+      landform:
+        type: LandformClass
+        required: false
+        description: Landform classification
+
+  # ---------------------------------------------------------------------------
+  # Hillshade / Relief
+  # ---------------------------------------------------------------------------
+
+  HillshadeConfig:
+    description: Configuration for hillshade rendering
+    fields:
+      azimuth_degrees:
+        type: float
+        required: false
+        default: 315
+        description: Sun azimuth (315 = NW, standard cartographic)
+      altitude_degrees:
+        type: float
+        required: false
+        default: 45
+        description: Sun altitude above horizon
+      z_factor:
+        type: float
+        required: false
+        default: 1
+        description: Vertical exaggeration
+
+  # ---------------------------------------------------------------------------
+  # Viewshed Analysis
+  # ---------------------------------------------------------------------------
+
+  Viewshed:
+    description: Visible area from a viewpoint
+    fields:
+      viewpoint:
+        type: Point
+        required: true
+        description: Observer location
+      observer_height_meters:
+        type: float
+        required: false
+        default: 1.7
+        description: Height of observer above ground
+      target_height_meters:
+        type: float
+        required: false
+        default: 0
+        description: Height of targets above ground
+      max_distance_meters:
+        type: float
+        required: false
+        description: Maximum analysis distance
+      visible_area:
+        type: Geometry
+        required: false
+        description: Polygon of visible terrain
+      hidden_area:
+        type: Geometry
+        required: false
+        description: Polygon of hidden terrain
+      percent_visible:
+        type: float
+        required: false
+        description: Percentage of analysis area visible
+
+  # ---------------------------------------------------------------------------
+  # Vertical Obstacle Clearance
+  # ---------------------------------------------------------------------------
+
+  ObstacleClearance:
+    description: Vertical clearance analysis (aviation, trucking)
+    fields:
+      path:
+        type: LineString
+        required: true
+        description: Route to analyze
+      required_clearance_meters:
+        type: float
+        required: true
+        description: Minimum required clearance
+      obstacles:
+        type: array
+        items:
+          type: Obstacle
+        required: false
+        description: Obstacles along path
+      minimum_clearance:
+        type: float
+        required: false
+        description: Actual minimum clearance found
+      clearance_ok:
+        type: boolean
+        required: false
+        description: True if path clears all obstacles
+
+  Obstacle:
+    description: Vertical obstacle
+    fields:
+      location:
+        type: Point
+        required: true
+      height_meters:
+        type: float
+        required: true
+        description: Height above ground
+      obstacle_type:
+        type: ObstacleType
+        required: false
+      name:
+        type: string
+        required: false
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  ElevationSource:
+    description: Source of elevation data
+    values:
+      - SRTM         # Shuttle Radar Topography Mission (30m/90m)
+      - ASTER        # ASTER GDEM (30m)
+      - USGS_NED     # National Elevation Dataset (10m/30m)
+      - LIDAR        # Light Detection and Ranging (sub-meter)
+      - SURVEY       # Ground survey
+      - GPS          # GPS-derived elevation
+      - BARO         # Barometric altimeter
+      - COPERNICUS   # Copernicus DEM (30m/90m)
+      - ALOS         # ALOS World 3D (30m)
+      - GEBCO        # Bathymetry (ocean floor)
+      - INTERPOLATED # Interpolated from sparse data
+      - UNKNOWN
+
+  VerticalUnits:
+    description: Units for elevation values
+    values:
+      - METERS
+      - FEET
+      - FATHOMS      # Nautical (1 fathom = 6 feet)
+
+  ContourType:
+    description: Type of contour line
+    values:
+      - INDEX        # Major contour (every 5th typically)
+      - INTERMEDIATE # Regular contour
+      - SUPPLEMENTARY # Half-interval contour
+      - DEPRESSION   # Closed contour indicating depression
+      - APPROXIMATE  # Uncertain contour
+
+  SlopeClass:
+    description: Slope classification
+    values:
+      - FLAT              # 0-2%
+      - GENTLE            # 2-6%
+      - MODERATE          # 6-12%
+      - MODERATELY_STEEP  # 12-18%
+      - STEEP             # 18-30%
+      - VERY_STEEP        # 30-45%
+      - EXTREMELY_STEEP   # 45-60%
+      - CLIFF             # >60%
+
+  LandformClass:
+    description: Topographic landform classification
+    values:
+      - PEAK
+      - RIDGE
+      - SHOULDER
+      - SPUR
+      - FLAT
+      - HOLLOW
+      - FOOTSLOPE
+      - VALLEY
+      - PIT
+
+  ObstacleType:
+    description: Types of vertical obstacles
+    values:
+      - BUILDING
+      - TOWER
+      - ANTENNA
+      - POWER_LINE
+      - BRIDGE
+      - TREE
+      - TERRAIN
+      - OTHER
+
+# =============================================================================
+# WELL-KNOWN ELEVATION DATASETS
+# =============================================================================
+
+datasets:
+
+  SRTM1:
+    name: "SRTM 1 Arc-Second"
+    resolution: "30m"
+    coverage: "60°N to 56°S"
+    source: "NASA/USGS"
+    url: "https://earthexplorer.usgs.gov/"
+
+  SRTM3:
+    name: "SRTM 3 Arc-Second"
+    resolution: "90m"
+    coverage: "60°N to 56°S"
+    source: "NASA/USGS"
+
+  ASTER_GDEM:
+    name: "ASTER Global DEM"
+    resolution: "30m"
+    coverage: "83°N to 83°S"
+    source: "NASA/METI"
+
+  COPERNICUS_30:
+    name: "Copernicus DEM GLO-30"
+    resolution: "30m"
+    coverage: "Global"
+    source: "ESA/Airbus"
+    url: "https://spacedata.copernicus.eu/"
+
+  NED_10M:
+    name: "USGS National Elevation Dataset"
+    resolution: "10m"
+    coverage: "United States"
+    source: "USGS"
+
+  GEBCO:
+    name: "General Bathymetric Chart of the Oceans"
+    resolution: "15 arc-second"
+    coverage: "Global ocean floor"
+    source: "GEBCO"
+    url: "https://www.gebco.net/"
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "USGS Elevation Products: https://www.usgs.gov/core-science-systems/ngp/3dep"
+  - "NASA SRTM: https://www2.jpl.nasa.gov/srtm/"
+  - "Copernicus DEM: https://spacedata.copernicus.eu/"
+  - "GEBCO Bathymetry: https://www.gebco.net/"
+  - "Terrain Analysis: Wilson & Gallant (2000) Terrain Analysis"

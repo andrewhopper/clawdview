@@ -1,0 +1,103 @@
+# relationships.yaml - Meeting Domain Entity Relationships
+# Generated: 2025-11-24
+# Status: PENDING APPROVAL
+
+relationships:
+  # Meeting -> Attendees
+  - type: one_to_many
+    from: Meeting
+    to: Attendee
+    foreign_key: meeting_id
+    cascade_delete: true
+
+  # Meeting -> Agenda (typically one, but versioned)
+  - type: one_to_many
+    from: Meeting
+    to: MeetingAgenda
+    foreign_key: meeting_id
+    cascade_delete: true
+
+  # Agenda -> Items
+  - type: one_to_many
+    from: MeetingAgenda
+    to: AgendaItem
+    foreign_key: agenda_id
+    cascade_delete: true
+
+  # Meeting -> Minutes (one per meeting)
+  - type: one_to_one
+    from: Meeting
+    to: MeetingMinutes
+    foreign_key: meeting_id
+    cascade_delete: true
+
+  # Meeting -> Notes (multiple)
+  - type: one_to_many
+    from: Meeting
+    to: MeetingNotes
+    foreign_key: meeting_id
+    cascade_delete: true
+
+  # Meeting -> Decisions
+  - type: one_to_many
+    from: Meeting
+    to: Decision
+    foreign_key: meeting_id
+    cascade_delete: true
+
+  # Meeting -> Action Items
+  - type: one_to_many
+    from: Meeting
+    to: ActionItem
+    foreign_key: meeting_id
+    cascade_delete: true
+
+  # Minutes -> Decisions (optional link)
+  - type: one_to_many
+    from: MeetingMinutes
+    to: Decision
+    foreign_key: minutes_id
+    cascade_delete: false
+
+  # Minutes -> Action Items (optional link)
+  - type: one_to_many
+    from: MeetingMinutes
+    to: ActionItem
+    foreign_key: minutes_id
+    cascade_delete: false
+
+  # Agenda Item -> Decisions (optional link)
+  - type: one_to_many
+    from: AgendaItem
+    to: Decision
+    foreign_key: agenda_item_id
+    cascade_delete: false
+
+  # Agenda Item -> Action Items (optional link)
+  - type: one_to_many
+    from: AgendaItem
+    to: ActionItem
+    foreign_key: agenda_item_id
+    cascade_delete: false
+
+  # Recurring meetings (self-reference)
+  - type: one_to_many
+    from: Meeting
+    to: Meeting
+    foreign_key: parent_meeting_id
+    cascade_delete: false
+    description: "Parent meeting for recurring series"
+
+# External domain references
+external_references:
+  - entity: User
+    domain: auth
+    used_by:
+      - Meeting.organizer_id
+      - Attendee.user_id
+      - MeetingAgenda.prepared_by_id
+      - AgendaItem.presenter_id
+      - MeetingMinutes.recorder_id
+      - MeetingMinutes.approved_by_id
+      - MeetingNotes.author_id
+      - ActionItem.assignee_id

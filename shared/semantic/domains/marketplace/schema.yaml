@@ -1,0 +1,839 @@
+# Marketplace Domain Model
+# Buyer-seller transactions with listings, offers, and escrow
+# Foundation for secondary markets and peer-to-peer exchanges
+
+domain:
+  name: marketplace
+  version: "1.0.0"
+  description: Buyer-seller marketplace with listings, offers, negotiation, escrow, and ownership transfer
+  dependencies: [core, finance, auth]
+  use_case: Concert ticket resale, secondhand goods, peer-to-peer services, B2B marketplace
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  # ============================================
+  # MARKETPLACE CONFIGURATION
+  # ============================================
+
+  Marketplace:
+    description: A marketplace instance
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      # Type
+      marketplaceType: { type: MarketplaceType, required: true }
+      itemCategories: { type: array, items: string }
+      # Rules
+      transactionRules: { type: TransactionRules }
+      pricingRules: { type: MarketplacePricingRules }
+      # Fees
+      platformFeePercent: { type: number, default: 0 }
+      platformFeeFixed: { type: number, default: 0 }
+      paymentProcessingFeePercent: { type: number }
+      # Escrow
+      useEscrow: { type: boolean, default: true }
+      escrowReleaseTrigger: { type: EscrowReleaseTrigger }
+      # Verification
+      requireSellerVerification: { type: boolean, default: true }
+      requireBuyerVerification: { type: boolean, default: false }
+      # Currency
+      supportedCurrencies: { type: array, items: string }
+      defaultCurrency: { type: string, required: true }
+      # Status
+      status: { type: MarketplaceStatus, required: true, default: active }
+      # Metadata
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  TransactionRules:
+    description: Rules governing transactions
+    properties:
+      id: { type: uuid, required: true }
+      marketplaceId: { type: uuid, required: true }
+      # Limits
+      minPrice: { type: number }
+      maxPrice: { type: number }
+      maxMarkupPercent: { type: number, description: "Max % above face value" }
+      minMarkdownPercent: { type: number }
+      # Timing
+      listingExpiryDays: { type: integer, default: 30 }
+      offerExpiryHours: { type: integer, default: 24 }
+      paymentWindowHours: { type: integer, default: 24 }
+      # Returns
+      allowReturns: { type: boolean, default: true }
+      returnWindowDays: { type: integer, default: 14 }
+      # Cancellation
+      allowSellerCancellation: { type: boolean, default: false }
+      sellerCancellationPenalty: { type: number }
+      allowBuyerCancellation: { type: boolean, default: true }
+      buyerCancellationDeadlineHours: { type: integer }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  MarketplacePricingRules:
+    description: Pricing rules for the marketplace
+    properties:
+      id: { type: uuid, required: true }
+      marketplaceId: { type: uuid, required: true }
+      # Fixed price rules
+      allowNegotiation: { type: boolean, default: true }
+      allowBestOffer: { type: boolean, default: true }
+      autoAcceptAbovePercent: { type: number }
+      autoDeclineBelowPercent: { type: number }
+      # Dynamic pricing
+      enableDynamicPricing: { type: boolean, default: false }
+      suggestPriceToSellers: { type: boolean, default: true }
+      # Bundles
+      allowBundleDeals: { type: boolean, default: true }
+      bundleDiscountMaxPercent: { type: number }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # PARTICIPANTS
+  # ============================================
+
+  MarketplaceParticipant:
+    description: A buyer or seller in the marketplace
+    properties:
+      id: { type: uuid, required: true }
+      marketplaceId: { type: uuid, required: true }
+      userId: { type: string, required: true }
+      # Roles
+      isSeller: { type: boolean, default: false }
+      isBuyer: { type: boolean, default: true }
+      # Verification
+      verificationStatus: { type: VerificationStatus, required: true, default: unverified }
+      verifiedAt: { type: datetime }
+      verificationMethod: { type: string }
+      # Profile
+      displayName: { type: string }
+      bio: { type: string }
+      avatarUrl: { type: string }
+      location: { type: string }
+      # Reputation
+      sellerRating: { type: number }
+      sellerRatingCount: { type: integer, default: 0 }
+      buyerRating: { type: number }
+      buyerRatingCount: { type: integer, default: 0 }
+      # Stats
+      totalSales: { type: integer, default: 0 }
+      totalPurchases: { type: integer, default: 0 }
+      totalSalesValue: { type: number, default: 0 }
+      totalPurchasesValue: { type: number, default: 0 }
+      cancellationRate: { type: number }
+      responseTimeMinutes: { type: integer }
+      # Status
+      status: { type: ParticipantStatus, required: true, default: active }
+      suspendedAt: { type: datetime }
+      suspensionReason: { type: string }
+      # Preferences
+      paymentMethods: { type: array, items: string }
+      shippingPreferences: { type: object }
+      notificationPreferences: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # LISTINGS
+  # ============================================
+
+  Listing:
+    description: An item listed for sale
+    properties:
+      id: { type: uuid, required: true }
+      marketplaceId: { type: uuid, required: true }
+      sellerId: { type: uuid, required: true }
+      # Item
+      title: { type: string, required: true }
+      description: { type: string }
+      category: { type: string, required: true }
+      subcategory: { type: string }
+      # Item reference (for tickets, etc.)
+      itemType: { type: string }
+      itemId: { type: string }
+      originalItemId: { type: string, description: "Original ticket/item ID" }
+      # Pricing
+      askingPrice: { type: number, required: true }
+      currency: { type: string, required: true }
+      originalPrice: { type: number, description: "Face value" }
+      minAcceptablePrice: { type: number, description: "Seller's floor (private)" }
+      # Quantity
+      quantity: { type: integer, required: true, default: 1 }
+      availableQuantity: { type: integer, required: true }
+      # Condition
+      condition: { type: ItemCondition }
+      conditionNotes: { type: string }
+      # Media
+      images: { type: array, items: ListingImage }
+      videoUrl: { type: string }
+      # Details
+      attributes: { type: object }
+      tags: { type: array, items: string }
+      # Shipping
+      shippingOptions: { type: array, items: ShippingOption }
+      localPickupAvailable: { type: boolean, default: false }
+      pickupLocation: { type: string }
+      # Digital delivery
+      isDigital: { type: boolean, default: false }
+      digitalDeliveryMethod: { type: DigitalDeliveryMethod }
+      # Negotiation
+      acceptsOffers: { type: boolean, default: true }
+      autoAcceptPrice: { type: number }
+      autoDeclinePrice: { type: number }
+      # Timing
+      listedAt: { type: datetime, required: true }
+      expiresAt: { type: datetime }
+      # Status
+      status: { type: ListingStatus, required: true, default: active }
+      # Stats
+      viewCount: { type: integer, default: 0 }
+      watchCount: { type: integer, default: 0 }
+      offerCount: { type: integer, default: 0 }
+      # Metadata
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ListingImage:
+    description: Image for a listing
+    properties:
+      id: { type: uuid, required: true }
+      listingId: { type: uuid, required: true }
+      url: { type: string, required: true }
+      thumbnailUrl: { type: string }
+      caption: { type: string }
+      sortOrder: { type: integer, required: true }
+      isPrimary: { type: boolean, default: false }
+
+  ShippingOption:
+    description: Shipping option for a listing
+    properties:
+      id: { type: uuid, required: true }
+      listingId: { type: uuid, required: true }
+      carrier: { type: string, required: true }
+      serviceName: { type: string, required: true }
+      price: { type: number, required: true }
+      estimatedDaysMin: { type: integer }
+      estimatedDaysMax: { type: integer }
+      trackingIncluded: { type: boolean, default: true }
+      insuranceIncluded: { type: boolean, default: false }
+
+  # ============================================
+  # OFFERS & NEGOTIATION
+  # ============================================
+
+  Offer:
+    description: An offer to buy a listing
+    properties:
+      id: { type: uuid, required: true }
+      listingId: { type: uuid, required: true }
+      buyerId: { type: uuid, required: true }
+      sellerId: { type: uuid, required: true }
+      # Offer details
+      offerAmount: { type: number, required: true }
+      currency: { type: string, required: true }
+      quantity: { type: integer, required: true, default: 1 }
+      # Shipping
+      shippingOptionId: { type: uuid }
+      shippingAddress: { type: object }
+      # Message
+      message: { type: string }
+      # Timing
+      offeredAt: { type: datetime, required: true }
+      expiresAt: { type: datetime, required: true }
+      respondedAt: { type: datetime }
+      # State
+      status: { type: OfferStatus, required: true, default: pending }
+      # Counter
+      isCounterOffer: { type: boolean, default: false }
+      previousOfferId: { type: uuid }
+      counterOfferCount: { type: integer, default: 0 }
+      # Response
+      sellerResponse: { type: OfferResponse }
+      responseMessage: { type: string }
+      # Result
+      resultingTransactionId: { type: uuid }
+      # Metadata
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # TRANSACTIONS
+  # ============================================
+
+  Transaction:
+    description: A completed or in-progress sale
+    properties:
+      id: { type: uuid, required: true }
+      marketplaceId: { type: uuid, required: true }
+      listingId: { type: uuid, required: true }
+      offerId: { type: uuid }
+      # Parties
+      sellerId: { type: uuid, required: true }
+      buyerId: { type: uuid, required: true }
+      # Item
+      quantity: { type: integer, required: true }
+      # Pricing
+      itemPrice: { type: number, required: true }
+      shippingPrice: { type: number, default: 0 }
+      subtotal: { type: number, required: true }
+      platformFee: { type: number, default: 0 }
+      paymentProcessingFee: { type: number, default: 0 }
+      taxes: { type: number, default: 0 }
+      totalPrice: { type: number, required: true }
+      currency: { type: string, required: true }
+      # Seller payout
+      sellerPayout: { type: number, required: true }
+      # State
+      status: { type: TransactionStatus, required: true, default: pending_payment }
+      # Payment
+      paymentMethod: { type: string }
+      paymentId: { type: string }
+      paidAt: { type: datetime }
+      # Escrow
+      escrowId: { type: uuid }
+      escrowStatus: { type: EscrowStatus }
+      # Shipping
+      shippingOptionId: { type: uuid }
+      shippingAddress: { type: object }
+      trackingNumber: { type: string }
+      trackingUrl: { type: string }
+      shippedAt: { type: datetime }
+      deliveredAt: { type: datetime }
+      # Digital delivery
+      digitalDeliveryStatus: { type: DigitalDeliveryStatus }
+      deliveredDigitallyAt: { type: datetime }
+      # Completion
+      completedAt: { type: datetime }
+      # Cancellation
+      cancelledAt: { type: datetime }
+      cancelledBy: { type: string }
+      cancellationReason: { type: string }
+      # Dispute
+      disputeId: { type: uuid }
+      # Metadata
+      notes: { type: string }
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # ESCROW
+  # ============================================
+
+  Escrow:
+    description: Funds held in escrow
+    properties:
+      id: { type: uuid, required: true }
+      transactionId: { type: uuid, required: true }
+      # Amounts
+      amount: { type: number, required: true }
+      currency: { type: string, required: true }
+      platformFeeHeld: { type: number, default: 0 }
+      sellerAmount: { type: number, required: true }
+      # State
+      status: { type: EscrowStatus, required: true, default: pending }
+      # Timing
+      fundedAt: { type: datetime }
+      releaseConditions: { type: array, items: EscrowReleaseCondition }
+      releaseTriggeredAt: { type: datetime }
+      releasedAt: { type: datetime }
+      # Refund
+      refundedAt: { type: datetime }
+      refundAmount: { type: number }
+      refundReason: { type: string }
+      # Reference
+      paymentReference: { type: string }
+      releaseReference: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  EscrowReleaseCondition:
+    description: Condition for releasing escrow
+    properties:
+      id: { type: uuid, required: true }
+      escrowId: { type: uuid, required: true }
+      conditionType: { type: ReleaseConditionType, required: true }
+      conditionValue: { type: string }
+      isMet: { type: boolean, default: false }
+      metAt: { type: datetime }
+      sortOrder: { type: integer, required: true }
+
+  # ============================================
+  # RATINGS & REVIEWS
+  # ============================================
+
+  Review:
+    description: Review of a transaction
+    properties:
+      id: { type: uuid, required: true }
+      transactionId: { type: uuid, required: true }
+      # Reviewer
+      reviewerId: { type: uuid, required: true }
+      reviewerRole: { type: ReviewerRole, required: true }
+      # Reviewee
+      revieweeId: { type: uuid, required: true }
+      # Rating
+      overallRating: { type: integer, required: true, minimum: 1, maximum: 5 }
+      # Detailed ratings
+      itemAsDescribedRating: { type: integer, minimum: 1, maximum: 5 }
+      communicationRating: { type: integer, minimum: 1, maximum: 5 }
+      shippingSpeedRating: { type: integer, minimum: 1, maximum: 5 }
+      # Content
+      title: { type: string }
+      comment: { type: string }
+      # Response
+      responseComment: { type: string }
+      respondedAt: { type: datetime }
+      # Moderation
+      isPublic: { type: boolean, default: true }
+      isModerated: { type: boolean, default: false }
+      moderationReason: { type: string }
+      # Helpful votes
+      helpfulCount: { type: integer, default: 0 }
+      notHelpfulCount: { type: integer, default: 0 }
+      # Timing
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # DISPUTES
+  # ============================================
+
+  Dispute:
+    description: Dispute between buyer and seller
+    properties:
+      id: { type: uuid, required: true }
+      transactionId: { type: uuid, required: true }
+      # Parties
+      openedBy: { type: string, required: true }
+      buyerId: { type: uuid, required: true }
+      sellerId: { type: uuid, required: true }
+      # Dispute details
+      disputeType: { type: DisputeType, required: true }
+      reason: { type: string, required: true }
+      description: { type: string }
+      evidence: { type: array, items: DisputeEvidence }
+      # Resolution
+      status: { type: DisputeStatus, required: true, default: open }
+      assignedTo: { type: string }
+      resolution: { type: DisputeResolution }
+      resolutionNotes: { type: string }
+      resolvedAt: { type: datetime }
+      # Refund
+      refundAmount: { type: number }
+      refundTo: { type: string }
+      # Timing
+      openedAt: { type: datetime, required: true }
+      escalatedAt: { type: datetime }
+      deadline: { type: datetime }
+      # Messages
+      messages: { type: array, items: DisputeMessage }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  DisputeEvidence:
+    description: Evidence submitted for dispute
+    properties:
+      id: { type: uuid, required: true }
+      disputeId: { type: uuid, required: true }
+      submittedBy: { type: string, required: true }
+      evidenceType: { type: EvidenceType, required: true }
+      description: { type: string }
+      fileUrl: { type: string }
+      submittedAt: { type: datetime, required: true }
+
+  DisputeMessage:
+    description: Message in dispute thread
+    properties:
+      id: { type: uuid, required: true }
+      disputeId: { type: uuid, required: true }
+      senderId: { type: string, required: true }
+      senderRole: { type: string, required: true }
+      message: { type: string, required: true }
+      attachments: { type: array, items: string }
+      sentAt: { type: datetime, required: true }
+
+enums:
+
+  MarketplaceType:
+    values:
+      - c2c             # Consumer to consumer
+      - b2c             # Business to consumer
+      - b2b             # Business to business
+      - hybrid          # Mixed
+
+  MarketplaceStatus:
+    values:
+      - active
+      - paused
+      - maintenance
+      - closed
+
+  EscrowReleaseTrigger:
+    values:
+      - delivery_confirmed
+      - time_based
+      - buyer_approval
+      - seller_proof
+      - auto_after_period
+
+  VerificationStatus:
+    values:
+      - unverified
+      - pending
+      - verified
+      - rejected
+      - suspended
+
+  ParticipantStatus:
+    values:
+      - active
+      - suspended
+      - banned
+      - inactive
+
+  ListingStatus:
+    values:
+      - draft
+      - pending_approval
+      - active
+      - paused
+      - sold
+      - expired
+      - cancelled
+      - removed
+
+  ItemCondition:
+    values:
+      - new
+      - like_new
+      - excellent
+      - good
+      - fair
+      - poor
+
+  DigitalDeliveryMethod:
+    values:
+      - email
+      - download
+      - transfer
+      - api
+      - in_app
+
+  OfferStatus:
+    values:
+      - pending
+      - accepted
+      - declined
+      - countered
+      - expired
+      - cancelled
+      - withdrawn
+
+  OfferResponse:
+    values:
+      - accept
+      - decline
+      - counter
+
+  TransactionStatus:
+    values:
+      - pending_payment
+      - payment_processing
+      - paid
+      - preparing
+      - shipped
+      - in_transit
+      - delivered
+      - completed
+      - cancelled
+      - refunded
+      - disputed
+
+  EscrowStatus:
+    values:
+      - pending
+      - funded
+      - held
+      - release_pending
+      - released
+      - refund_pending
+      - refunded
+      - disputed
+
+  ReleaseConditionType:
+    values:
+      - delivery_confirmed
+      - buyer_approved
+      - time_elapsed
+      - tracking_delivered
+      - no_dispute_period
+
+  DigitalDeliveryStatus:
+    values:
+      - pending
+      - processing
+      - delivered
+      - failed
+      - revoked
+
+  ReviewerRole:
+    values:
+      - buyer
+      - seller
+
+  DisputeType:
+    values:
+      - item_not_received
+      - item_not_as_described
+      - counterfeit
+      - damaged
+      - wrong_item
+      - seller_cancelled
+      - payment_issue
+      - other
+
+  DisputeStatus:
+    values:
+      - open
+      - under_review
+      - awaiting_response
+      - escalated
+      - resolved
+      - closed
+
+  DisputeResolution:
+    values:
+      - full_refund_buyer
+      - partial_refund_buyer
+      - no_refund
+      - return_for_refund
+      - replacement
+      - mutual_agreement
+      - seller_favor
+      - buyer_favor
+
+  EvidenceType:
+    values:
+      - photo
+      - video
+      - screenshot
+      - document
+      - tracking_info
+      - communication
+      - other
+
+actions:
+
+  # Participant
+  RegisterParticipant:
+    description: Register as marketplace participant
+    parameters:
+      marketplaceId: { type: uuid, required: true }
+      isSeller: { type: boolean }
+      displayName: { type: string }
+    result: MarketplaceParticipant
+    idempotent: false
+
+  VerifyParticipant:
+    description: Verify a participant
+    parameters:
+      participantId: { type: uuid, required: true }
+      verificationMethod: { type: string, required: true }
+    result: MarketplaceParticipant
+    idempotent: true
+
+  # Listings
+  CreateListing:
+    description: Create a new listing
+    parameters:
+      marketplaceId: { type: uuid, required: true }
+      title: { type: string, required: true }
+      description: { type: string }
+      category: { type: string, required: true }
+      askingPrice: { type: number, required: true }
+      quantity: { type: integer }
+      condition: { type: ItemCondition }
+      images: { type: array, items: string }
+    result: Listing
+    idempotent: false
+
+  UpdateListing:
+    description: Update a listing
+    parameters:
+      listingId: { type: uuid, required: true }
+      title: { type: string }
+      description: { type: string }
+      askingPrice: { type: number }
+      quantity: { type: integer }
+    result: Listing
+    idempotent: true
+
+  DeactivateListing:
+    description: Deactivate a listing
+    parameters:
+      listingId: { type: uuid, required: true }
+      reason: { type: string }
+    result: Listing
+    idempotent: true
+
+  # Offers
+  MakeOffer:
+    description: Make an offer on a listing
+    parameters:
+      listingId: { type: uuid, required: true }
+      offerAmount: { type: number, required: true }
+      quantity: { type: integer }
+      message: { type: string }
+      shippingOptionId: { type: uuid }
+    result: Offer
+    idempotent: false
+
+  RespondToOffer:
+    description: Respond to an offer
+    parameters:
+      offerId: { type: uuid, required: true }
+      response: { type: OfferResponse, required: true }
+      counterAmount: { type: number }
+      message: { type: string }
+    result: Offer
+    idempotent: true
+
+  # Transactions
+  CreateTransaction:
+    description: Create a transaction from accepted offer
+    parameters:
+      offerId: { type: uuid, required: true }
+      paymentMethod: { type: string, required: true }
+      shippingAddress: { type: object }
+    result: Transaction
+    idempotent: false
+
+  MarkShipped:
+    description: Mark transaction as shipped
+    parameters:
+      transactionId: { type: uuid, required: true }
+      trackingNumber: { type: string }
+      carrier: { type: string }
+    result: Transaction
+    idempotent: true
+
+  ConfirmDelivery:
+    description: Confirm item delivered
+    parameters:
+      transactionId: { type: uuid, required: true }
+    result: Transaction
+    idempotent: true
+
+  # Escrow
+  FundEscrow:
+    description: Fund escrow for transaction
+    parameters:
+      transactionId: { type: uuid, required: true }
+      paymentId: { type: string, required: true }
+    result: Escrow
+    idempotent: true
+
+  ReleaseEscrow:
+    description: Release escrow to seller
+    parameters:
+      escrowId: { type: uuid, required: true }
+      reason: { type: string }
+    result: Escrow
+    idempotent: true
+
+  RefundEscrow:
+    description: Refund escrow to buyer
+    parameters:
+      escrowId: { type: uuid, required: true }
+      amount: { type: number }
+      reason: { type: string, required: true }
+    result: Escrow
+    idempotent: true
+
+  # Reviews
+  LeaveReview:
+    description: Leave a review
+    parameters:
+      transactionId: { type: uuid, required: true }
+      overallRating: { type: integer, required: true }
+      comment: { type: string }
+    result: Review
+    idempotent: false
+
+  # Disputes
+  OpenDispute:
+    description: Open a dispute
+    parameters:
+      transactionId: { type: uuid, required: true }
+      disputeType: { type: DisputeType, required: true }
+      reason: { type: string, required: true }
+      description: { type: string }
+    result: Dispute
+    idempotent: false
+
+  ResolveDispute:
+    description: Resolve a dispute
+    parameters:
+      disputeId: { type: uuid, required: true }
+      resolution: { type: DisputeResolution, required: true }
+      refundAmount: { type: number }
+      notes: { type: string }
+    result: Dispute
+    idempotent: true
+
+relationships:
+  - type: one_to_many
+    from: Marketplace
+    to: MarketplaceParticipant
+    foreign_key: marketplaceId
+    description: Marketplace has many participants
+
+  - type: one_to_many
+    from: Marketplace
+    to: Listing
+    foreign_key: marketplaceId
+    description: Marketplace has many listings
+
+  - type: one_to_many
+    from: MarketplaceParticipant
+    to: Listing
+    foreign_key: sellerId
+    description: Seller has many listings
+
+  - type: one_to_many
+    from: Listing
+    to: Offer
+    foreign_key: listingId
+    description: Listing has many offers
+
+  - type: one_to_one
+    from: Offer
+    to: Transaction
+    foreign_key: offerId
+    description: Accepted offer creates transaction
+
+  - type: one_to_one
+    from: Transaction
+    to: Escrow
+    foreign_key: transactionId
+    description: Transaction has escrow
+
+  - type: one_to_many
+    from: Transaction
+    to: Review
+    foreign_key: transactionId
+    description: Transaction has reviews
+
+  - type: one_to_one
+    from: Transaction
+    to: Dispute
+    foreign_key: transactionId
+    description: Transaction may have dispute

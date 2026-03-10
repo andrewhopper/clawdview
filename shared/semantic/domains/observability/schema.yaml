@@ -1,0 +1,974 @@
+# Observability Domain Model
+# Logging, metrics, tracing, alerting, and dashboards
+# Sources: OpenTelemetry, CloudWatch, Datadog, Prometheus/Grafana
+
+domain:
+  name: observability
+  version: "1.0.0"
+  description: Logging, metrics, distributed tracing, alerting, and dashboards for system observability
+  dependencies: [core, infrastructure]
+  sources:
+    - "OpenTelemetry Specification: https://opentelemetry.io/docs/specs/"
+    - "AWS CloudWatch: https://docs.aws.amazon.com/cloudwatch/"
+    - "Prometheus Data Model: https://prometheus.io/docs/concepts/data_model/"
+    - "Datadog Metrics: https://docs.datadoghq.com/metrics/"
+  created_at: "2025-11-25"
+  updated_at: "2025-11-25"
+
+entities:
+
+  # ============================================
+  # LOGGING
+  # ============================================
+
+  LogEntry:
+    description: Single log record following OpenTelemetry Log Data Model
+    properties:
+      id: { type: string, required: true }
+      timestamp: { type: datetime, required: true, description: "When the event occurred" }
+      observedTimestamp: { type: datetime, description: "When the log was observed/collected" }
+      traceId: { type: string, description: "Correlation to distributed trace" }
+      spanId: { type: string, description: "Correlation to specific span" }
+      traceFlags: { type: integer, description: "W3C trace flags" }
+      severityNumber: { type: integer, description: "Numeric severity (1-24 per OTel)" }
+      severityText: { type: LogLevel, required: true }
+      body: { type: string, required: true, description: "Log message body" }
+      attributes: { type: object, description: "Structured key-value attributes" }
+      resource: { type: Resource, description: "Source resource (service, host, etc.)" }
+      instrumentationScope: { type: InstrumentationScope }
+      droppedAttributesCount: { type: integer, default: 0 }
+
+  LogStream:
+    description: Sequence of log entries from a single source
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      logGroupId: { type: string }
+      source: { type: string, description: "Source identifier (container, instance, etc.)" }
+      retentionDays: { type: integer, description: "Log retention period" }
+      lastEventTimestamp: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  LogGroup:
+    description: Collection of related log streams
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      streams: { type: array, items: LogStream }
+      retentionDays: { type: integer, default: 30 }
+      kmsKeyId: { type: string, description: "Encryption key" }
+      metricFilters: { type: array, items: MetricFilter }
+      subscriptionFilters: { type: array, items: SubscriptionFilter }
+      tags: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  MetricFilter:
+    description: Extract metrics from log patterns
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      filterPattern: { type: string, required: true, description: "Log pattern to match" }
+      metricName: { type: string, required: true }
+      metricNamespace: { type: string, required: true }
+      metricValue: { type: string, description: "Value to extract or static value" }
+      defaultValue: { type: decimal }
+      dimensions: { type: array, items: Dimension }
+
+  SubscriptionFilter:
+    description: Stream logs to destinations (Lambda, Kinesis, etc.)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      filterPattern: { type: string }
+      destinationType: { type: LogDestinationType, required: true }
+      destinationArn: { type: string, required: true }
+      roleArn: { type: string }
+
+  Resource:
+    description: Entity producing telemetry (OpenTelemetry Resource)
+    properties:
+      attributes: { type: object, required: true, description: "Resource attributes" }
+      serviceName: { type: string, description: "service.name attribute" }
+      serviceVersion: { type: string, description: "service.version attribute" }
+      serviceNamespace: { type: string, description: "service.namespace attribute" }
+      hostName: { type: string }
+      hostId: { type: string }
+      cloudProvider: { type: string }
+      cloudRegion: { type: string }
+      cloudAccountId: { type: string }
+      containerName: { type: string }
+      containerId: { type: string }
+      k8sNamespace: { type: string }
+      k8sPodName: { type: string }
+
+  InstrumentationScope:
+    description: Instrumentation library that produced the telemetry
+    properties:
+      name: { type: string, required: true }
+      version: { type: string }
+      schemaUrl: { type: string }
+      attributes: { type: object }
+
+  # ============================================
+  # METRICS
+  # ============================================
+
+  Metric:
+    description: Named measurement with dimensions and aggregations
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      namespace: { type: string, required: true, description: "Metric namespace for grouping" }
+      description: { type: string }
+      unit: { type: string, description: "Unit of measurement (ms, bytes, count, etc.)" }
+      type: { type: MetricType, required: true }
+      dimensions: { type: array, items: Dimension }
+      resource: { type: Resource }
+      instrumentationScope: { type: InstrumentationScope }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Dimension:
+    description: Key-value pair for metric filtering/grouping
+    properties:
+      name: { type: string, required: true }
+      value: { type: string, required: true }
+
+  DataPoint:
+    description: Single metric measurement at a point in time
+    properties:
+      timestamp: { type: datetime, required: true }
+      value: { type: decimal, required: true }
+      attributes: { type: object, description: "Additional attributes" }
+      exemplars: { type: array, items: Exemplar, description: "Sample trace exemplars" }
+
+  Exemplar:
+    description: Sample trace linked to a metric data point
+    properties:
+      traceId: { type: string, required: true }
+      spanId: { type: string, required: true }
+      timestamp: { type: datetime, required: true }
+      value: { type: decimal, required: true }
+      filteredAttributes: { type: object }
+
+  Counter:
+    description: Monotonically increasing cumulative metric
+    properties:
+      metricId: { type: string, required: true }
+      isMonotonic: { type: boolean, default: true }
+      aggregationTemporality: { type: AggregationTemporality, required: true }
+      dataPoints: { type: array, items: DataPoint }
+
+  Gauge:
+    description: Metric representing current value at measurement time
+    properties:
+      metricId: { type: string, required: true }
+      dataPoints: { type: array, items: DataPoint }
+
+  Histogram:
+    description: Distribution of values in buckets
+    properties:
+      metricId: { type: string, required: true }
+      aggregationTemporality: { type: AggregationTemporality, required: true }
+      dataPoints: { type: array, items: HistogramDataPoint }
+
+  HistogramDataPoint:
+    description: Histogram data at a point in time
+    properties:
+      timestamp: { type: datetime, required: true }
+      startTime: { type: datetime }
+      count: { type: integer, required: true }
+      sum: { type: decimal }
+      min: { type: decimal }
+      max: { type: decimal }
+      bucketCounts: { type: array, items: integer, description: "Count per bucket" }
+      explicitBounds: { type: array, items: decimal, description: "Bucket boundaries" }
+      exemplars: { type: array, items: Exemplar }
+
+  Summary:
+    description: Pre-computed quantiles (legacy, prefer histogram)
+    properties:
+      metricId: { type: string, required: true }
+      dataPoints: { type: array, items: SummaryDataPoint }
+
+  SummaryDataPoint:
+    description: Summary data with quantiles
+    properties:
+      timestamp: { type: datetime, required: true }
+      startTime: { type: datetime }
+      count: { type: integer, required: true }
+      sum: { type: decimal }
+      quantiles: { type: array, items: Quantile }
+
+  Quantile:
+    description: Single quantile value
+    properties:
+      quantile: { type: decimal, required: true, description: "0.5, 0.9, 0.99, etc." }
+      value: { type: decimal, required: true }
+
+  TimeSeries:
+    description: Sequence of data points over time for a metric
+    properties:
+      metricId: { type: string, required: true }
+      dimensions: { type: array, items: Dimension }
+      dataPoints: { type: array, items: DataPoint }
+      resolution: { type: integer, description: "Resolution in seconds" }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+
+  # ============================================
+  # DISTRIBUTED TRACING
+  # ============================================
+
+  Trace:
+    description: Distributed trace representing end-to-end request flow
+    properties:
+      traceId: { type: string, required: true, description: "128-bit trace ID (32 hex chars)" }
+      rootSpan: { type: Span }
+      spans: { type: array, items: Span }
+      resource: { type: Resource }
+      status: { type: TraceStatus }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime }
+      durationMs: { type: integer }
+
+  Span:
+    description: Single operation within a trace
+    properties:
+      spanId: { type: string, required: true, description: "64-bit span ID (16 hex chars)" }
+      traceId: { type: string, required: true }
+      parentSpanId: { type: string, description: "Parent span ID (null for root)" }
+      name: { type: string, required: true, description: "Operation name" }
+      kind: { type: SpanKind, required: true }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime }
+      durationMs: { type: integer }
+      status: { type: SpanStatus }
+      attributes: { type: object, description: "Span attributes" }
+      events: { type: array, items: SpanEvent }
+      links: { type: array, items: SpanLink }
+      resource: { type: Resource }
+      instrumentationScope: { type: InstrumentationScope }
+      droppedAttributesCount: { type: integer, default: 0 }
+      droppedEventsCount: { type: integer, default: 0 }
+      droppedLinksCount: { type: integer, default: 0 }
+
+  SpanContext:
+    description: Immutable context for trace propagation (W3C Trace Context)
+    properties:
+      traceId: { type: string, required: true }
+      spanId: { type: string, required: true }
+      traceFlags: { type: integer, default: 0, description: "W3C trace flags (sampled=1)" }
+      traceState: { type: string, description: "W3C tracestate header value" }
+      isRemote: { type: boolean, default: false }
+
+  SpanEvent:
+    description: Time-stamped event within a span
+    properties:
+      name: { type: string, required: true }
+      timestamp: { type: datetime, required: true }
+      attributes: { type: object }
+      droppedAttributesCount: { type: integer, default: 0 }
+
+  SpanLink:
+    description: Link to another span (causal relationship)
+    properties:
+      traceId: { type: string, required: true }
+      spanId: { type: string, required: true }
+      traceState: { type: string }
+      attributes: { type: object }
+      droppedAttributesCount: { type: integer, default: 0 }
+
+  SpanStatus:
+    description: Status of a span execution
+    properties:
+      code: { type: SpanStatusCode, required: true }
+      message: { type: string, description: "Error message if status is Error" }
+
+  # ============================================
+  # ALERTING
+  # ============================================
+
+  AlertRule:
+    description: Rule defining when to trigger an alert
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      enabled: { type: boolean, default: true }
+      severity: { type: AlertSeverity, required: true }
+      conditions: { type: array, items: AlertCondition, required: true }
+      conditionLogic: { type: ConditionLogic, default: AND }
+      evaluationPeriod: { type: integer, description: "Evaluation window in seconds" }
+      evaluationFrequency: { type: integer, description: "How often to evaluate in seconds" }
+      datapointsToAlarm: { type: integer, default: 1, description: "Breaching points to trigger" }
+      treatMissingData: { type: MissingDataTreatment, default: Missing }
+      actions: { type: array, items: AlertAction }
+      tags: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AlertCondition:
+    description: Single condition within an alert rule
+    properties:
+      id: { type: string, required: true }
+      metricName: { type: string }
+      metricNamespace: { type: string }
+      dimensions: { type: array, items: Dimension }
+      statistic: { type: Statistic, required: true }
+      comparisonOperator: { type: ComparisonOperator, required: true }
+      threshold: { type: decimal, required: true }
+      period: { type: integer, description: "Aggregation period in seconds" }
+      logQuery: { type: string, description: "Log-based condition query" }
+      traceQuery: { type: string, description: "Trace-based condition query" }
+
+  Alert:
+    description: Active or historical alert instance
+    properties:
+      id: { type: string, required: true }
+      alertRuleId: { type: string, required: true }
+      name: { type: string, required: true }
+      state: { type: AlertState, required: true }
+      severity: { type: AlertSeverity, required: true }
+      stateReason: { type: string }
+      stateReasonData: { type: object }
+      stateUpdatedAt: { type: datetime, required: true }
+      triggeredAt: { type: datetime }
+      resolvedAt: { type: datetime }
+      acknowledgedAt: { type: datetime }
+      acknowledgedBy: { type: string }
+      dimensions: { type: array, items: Dimension }
+      value: { type: decimal, description: "Value that triggered alert" }
+      threshold: { type: decimal }
+      annotations: { type: object }
+      notificationsSent: { type: array, items: AlertNotification }
+
+  AlertAction:
+    description: Action to take when alert triggers
+    properties:
+      id: { type: string, required: true }
+      type: { type: AlertActionType, required: true }
+      targetArn: { type: string, description: "SNS topic, Lambda, etc." }
+      notificationChannel: { type: NotificationChannel }
+      onStates: { type: array, items: AlertState, description: "States that trigger action" }
+
+  AlertNotification:
+    description: Record of notification sent for an alert
+    properties:
+      id: { type: string, required: true }
+      alertId: { type: string, required: true }
+      channelId: { type: string, required: true }
+      sentAt: { type: datetime, required: true }
+      status: { type: NotificationStatus, required: true }
+      errorMessage: { type: string }
+
+  NotificationChannel:
+    description: Channel for alert notifications
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: NotificationChannelType, required: true }
+      config: { type: object, required: true, description: "Channel-specific configuration" }
+      enabled: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  EscalationPolicy:
+    description: Escalation rules for unacknowledged alerts
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      levels: { type: array, items: EscalationLevel, required: true }
+      repeatAfterMinutes: { type: integer, description: "Re-escalate after N minutes" }
+      enabled: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  EscalationLevel:
+    description: Single level in an escalation policy
+    properties:
+      level: { type: integer, required: true }
+      delayMinutes: { type: integer, required: true, description: "Wait time before escalating" }
+      channels: { type: array, items: NotificationChannel }
+      targets: { type: array, items: string, description: "User/team IDs to notify" }
+
+  # ============================================
+  # DASHBOARDS
+  # ============================================
+
+  Dashboard:
+    description: Visual dashboard for observability data
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      widgets: { type: array, items: Widget }
+      layout: { type: DashboardLayout }
+      variables: { type: array, items: DashboardVariable }
+      timeRange: { type: TimeRange }
+      refreshInterval: { type: integer, description: "Auto-refresh in seconds" }
+      tags: { type: object }
+      createdBy: { type: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Widget:
+    description: Single visualization widget on a dashboard
+    properties:
+      id: { type: string, required: true }
+      title: { type: string, required: true }
+      type: { type: WidgetType, required: true }
+      queries: { type: array, items: WidgetQuery }
+      position: { type: WidgetPosition }
+      options: { type: object, description: "Widget-specific display options" }
+      thresholds: { type: array, items: WidgetThreshold }
+
+  WidgetQuery:
+    description: Data query for a widget
+    properties:
+      id: { type: string, required: true }
+      label: { type: string }
+      queryType: { type: QueryType, required: true }
+      metricName: { type: string }
+      metricNamespace: { type: string }
+      dimensions: { type: array, items: Dimension }
+      statistic: { type: Statistic }
+      period: { type: integer, description: "Aggregation period in seconds" }
+      expression: { type: string, description: "Math expression or query language" }
+      logQuery: { type: string, description: "Log insights query" }
+      traceQuery: { type: string, description: "Trace query" }
+
+  WidgetPosition:
+    description: Position and size of widget on dashboard
+    properties:
+      x: { type: integer, required: true }
+      y: { type: integer, required: true }
+      width: { type: integer, required: true }
+      height: { type: integer, required: true }
+
+  WidgetThreshold:
+    description: Visual threshold line on a widget
+    properties:
+      value: { type: decimal, required: true }
+      color: { type: string }
+      label: { type: string }
+      fill: { type: ThresholdFill }
+
+  DashboardLayout:
+    description: Dashboard layout configuration
+    properties:
+      type: { type: LayoutType, default: Grid }
+      columns: { type: integer, default: 12 }
+      rowHeight: { type: integer, default: 100 }
+
+  DashboardVariable:
+    description: Template variable for dashboard filtering
+    properties:
+      name: { type: string, required: true }
+      label: { type: string }
+      type: { type: VariableType, required: true }
+      query: { type: string, description: "Query to populate options" }
+      options: { type: array, items: string }
+      defaultValue: { type: string }
+      multi: { type: boolean, default: false }
+      includeAll: { type: boolean, default: false }
+
+  TimeRange:
+    description: Time range for dashboard queries
+    properties:
+      type: { type: TimeRangeType, required: true }
+      from: { type: datetime }
+      to: { type: datetime }
+      relativeValue: { type: integer, description: "For relative ranges" }
+      relativeUnit: { type: TimeUnit }
+
+  # ============================================
+  # COLLECTORS & EXPORTERS
+  # ============================================
+
+  Collector:
+    description: Telemetry collector (OpenTelemetry Collector, Fluentd, etc.)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: CollectorType, required: true }
+      receivers: { type: array, items: ReceiverConfig }
+      processors: { type: array, items: ProcessorConfig }
+      exporters: { type: array, items: ExporterConfig }
+      pipelines: { type: array, items: Pipeline }
+      status: { type: CollectorStatus, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ReceiverConfig:
+    description: Configuration for receiving telemetry data
+    properties:
+      name: { type: string, required: true }
+      type: { type: ReceiverType, required: true }
+      endpoint: { type: string }
+      protocol: { type: string }
+      config: { type: object }
+
+  ProcessorConfig:
+    description: Configuration for processing telemetry data
+    properties:
+      name: { type: string, required: true }
+      type: { type: ProcessorType, required: true }
+      config: { type: object }
+
+  ExporterConfig:
+    description: Configuration for exporting telemetry data
+    properties:
+      name: { type: string, required: true }
+      type: { type: ExporterType, required: true }
+      endpoint: { type: string }
+      headers: { type: object }
+      compression: { type: string }
+      config: { type: object }
+
+  Pipeline:
+    description: Telemetry processing pipeline
+    properties:
+      name: { type: string, required: true }
+      signalType: { type: SignalType, required: true }
+      receivers: { type: array, items: string }
+      processors: { type: array, items: string }
+      exporters: { type: array, items: string }
+
+enums:
+
+  LogLevel:
+    description: Log severity levels (OpenTelemetry severity text)
+    values:
+      - TRACE
+      - DEBUG
+      - INFO
+      - WARN
+      - ERROR
+      - FATAL
+
+  LogDestinationType:
+    description: Destination types for log subscriptions
+    values:
+      - Lambda
+      - Kinesis
+      - Firehose
+      - S3
+      - OpenSearch
+      - Splunk
+
+  MetricType:
+    description: Types of metrics (OpenTelemetry metric types)
+    values:
+      - Counter           # Monotonically increasing
+      - UpDownCounter     # Can increase or decrease
+      - Gauge             # Point-in-time value
+      - Histogram         # Distribution of values
+      - Summary           # Pre-computed quantiles (legacy)
+
+  AggregationTemporality:
+    description: How metric values are aggregated over time
+    values:
+      - Cumulative        # Running total since start
+      - Delta             # Change since last report
+
+  SpanKind:
+    description: Type of span in distributed trace
+    values:
+      - Internal          # Internal operation
+      - Server            # Server-side handler
+      - Client            # Client-side request
+      - Producer          # Message producer
+      - Consumer          # Message consumer
+
+  SpanStatusCode:
+    description: Status code for span completion
+    values:
+      - Unset             # Default, no explicit status
+      - Ok                # Operation completed successfully
+      - Error             # Operation failed
+
+  TraceStatus:
+    description: Overall trace status
+    values:
+      - InProgress
+      - Complete
+      - Error
+      - Timeout
+
+  AlertSeverity:
+    description: Severity level of alerts
+    values:
+      - Critical          # Immediate action required
+      - High              # Urgent attention needed
+      - Medium            # Should be addressed soon
+      - Low               # Informational
+      - Info              # FYI only
+
+  AlertState:
+    description: Current state of an alert
+    values:
+      - OK                # Within normal thresholds
+      - Alarm             # Threshold breached
+      - InsufficientData  # Not enough data to evaluate
+      - Pending           # Evaluating
+      - Acknowledged      # Alert seen by operator
+      - Resolved          # Issue fixed
+
+  Statistic:
+    description: Statistical aggregation functions
+    values:
+      - Average
+      - Sum
+      - Minimum
+      - Maximum
+      - SampleCount
+      - p50               # 50th percentile
+      - p90               # 90th percentile
+      - p95               # 95th percentile
+      - p99               # 99th percentile
+      - p99_9             # 99.9th percentile
+
+  ComparisonOperator:
+    description: Comparison operators for alert conditions
+    values:
+      - GreaterThan
+      - GreaterThanOrEqual
+      - LessThan
+      - LessThanOrEqual
+      - Equal
+      - NotEqual
+
+  ConditionLogic:
+    description: Logic for combining multiple conditions
+    values:
+      - AND               # All conditions must be true
+      - OR                # Any condition must be true
+
+  MissingDataTreatment:
+    description: How to treat missing data points
+    values:
+      - Missing           # Treat as missing (don't alarm)
+      - Breaching         # Treat as breaching threshold
+      - NotBreaching      # Treat as within threshold
+      - Ignore            # Skip evaluation
+
+  AlertActionType:
+    description: Types of actions for alerts
+    values:
+      - SNS               # Send to SNS topic
+      - Lambda            # Invoke Lambda function
+      - Webhook           # Call webhook URL
+      - Email             # Send email
+      - SMS               # Send SMS
+      - PagerDuty         # PagerDuty incident
+      - Slack             # Slack notification
+      - Teams             # Microsoft Teams
+      - OpsGenie          # OpsGenie alert
+      - AutoScale         # Trigger auto-scaling
+
+  NotificationChannelType:
+    description: Types of notification channels
+    values:
+      - Email
+      - SMS
+      - Slack
+      - Teams
+      - PagerDuty
+      - OpsGenie
+      - Webhook
+      - SNS
+      - Lambda
+
+  NotificationStatus:
+    description: Status of notification delivery
+    values:
+      - Pending
+      - Sent
+      - Delivered
+      - Failed
+      - Bounced
+
+  WidgetType:
+    description: Types of dashboard widgets
+    values:
+      - LineChart
+      - AreaChart
+      - BarChart
+      - Gauge
+      - SingleValue
+      - Table
+      - Heatmap
+      - Histogram
+      - PieChart
+      - Text
+      - LogStream
+      - TraceList
+      - ServiceMap
+      - AlertList
+
+  QueryType:
+    description: Types of widget queries
+    values:
+      - Metric
+      - Log
+      - Trace
+      - Expression
+
+  LayoutType:
+    description: Dashboard layout types
+    values:
+      - Grid
+      - Freeform
+
+  VariableType:
+    description: Types of dashboard variables
+    values:
+      - Query             # Populated from query results
+      - Custom            # Static list of options
+      - Constant          # Single constant value
+      - Interval          # Time interval selector
+      - TextBox           # Free-form text input
+
+  TimeRangeType:
+    description: Type of time range selection
+    values:
+      - Absolute          # Fixed start/end times
+      - Relative          # Relative to now (last N hours)
+
+  TimeUnit:
+    description: Time units for relative ranges
+    values:
+      - Second
+      - Minute
+      - Hour
+      - Day
+      - Week
+      - Month
+
+  ThresholdFill:
+    description: How to fill threshold regions
+    values:
+      - None
+      - Above
+      - Below
+      - Between
+
+  CollectorType:
+    description: Type of telemetry collector
+    values:
+      - OTelCollector     # OpenTelemetry Collector
+      - FluentBit         # Fluent Bit
+      - Fluentd           # Fluentd
+      - Vector            # Vector
+      - Telegraf          # Telegraf
+      - CloudWatchAgent   # CloudWatch Agent
+
+  CollectorStatus:
+    description: Collector operational status
+    values:
+      - Running
+      - Stopped
+      - Error
+      - Degraded
+
+  ReceiverType:
+    description: Types of telemetry receivers
+    values:
+      - OTLP              # OpenTelemetry Protocol
+      - Prometheus        # Prometheus scrape
+      - Jaeger            # Jaeger format
+      - Zipkin            # Zipkin format
+      - StatsD            # StatsD protocol
+      - FluentForward     # Fluent forward
+      - Syslog            # Syslog messages
+      - FileLog           # File-based logs
+      - CloudWatch        # CloudWatch Logs
+
+  ProcessorType:
+    description: Types of telemetry processors
+    values:
+      - Batch             # Batch processing
+      - Memory_limiter    # Memory limits
+      - Filter            # Filter data
+      - Attributes        # Modify attributes
+      - Resource          # Modify resource
+      - Span              # Span processing
+      - Metric            # Metric transforms
+      - Log               # Log transforms
+      - Tail_sampling     # Trace tail sampling
+
+  ExporterType:
+    description: Types of telemetry exporters
+    values:
+      - OTLP              # OpenTelemetry Protocol
+      - Prometheus        # Prometheus remote write
+      - Jaeger            # Jaeger backend
+      - Zipkin            # Zipkin backend
+      - CloudWatch        # AWS CloudWatch
+      - Datadog           # Datadog
+      - NewRelic          # New Relic
+      - Splunk            # Splunk
+      - Elasticsearch     # Elasticsearch/OpenSearch
+      - Loki              # Grafana Loki
+      - File              # File output
+
+  SignalType:
+    description: Types of telemetry signals
+    values:
+      - Traces
+      - Metrics
+      - Logs
+
+actions:
+
+  # Logging actions
+  WriteLog:
+    description: Write a log entry
+    parameters:
+      severityText: { type: LogLevel, required: true }
+      body: { type: string, required: true }
+      attributes: { type: object }
+      traceId: { type: string }
+      spanId: { type: string }
+    result: LogEntry
+
+  QueryLogs:
+    description: Query log entries
+    parameters:
+      logGroupId: { type: string }
+      filterPattern: { type: string }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      limit: { type: integer, default: 100 }
+    result: { type: array, items: LogEntry }
+
+  CreateLogGroup:
+    description: Create a new log group
+    parameters:
+      name: { type: string, required: true }
+      retentionDays: { type: integer }
+      kmsKeyId: { type: string }
+      tags: { type: object }
+    result: LogGroup
+
+  # Metric actions
+  RecordMetric:
+    description: Record a metric data point
+    parameters:
+      name: { type: string, required: true }
+      namespace: { type: string, required: true }
+      value: { type: decimal, required: true }
+      unit: { type: string }
+      dimensions: { type: array, items: Dimension }
+      timestamp: { type: datetime }
+    result: DataPoint
+
+  QueryMetrics:
+    description: Query metric time series
+    parameters:
+      metricName: { type: string, required: true }
+      namespace: { type: string, required: true }
+      dimensions: { type: array, items: Dimension }
+      statistic: { type: Statistic, required: true }
+      period: { type: integer, required: true }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+    result: TimeSeries
+
+  # Tracing actions
+  StartSpan:
+    description: Start a new span in a trace
+    parameters:
+      name: { type: string, required: true }
+      kind: { type: SpanKind, required: true }
+      parentSpanId: { type: string }
+      attributes: { type: object }
+    result: Span
+
+  EndSpan:
+    description: End a span and record duration
+    parameters:
+      spanId: { type: string, required: true }
+      status: { type: SpanStatus }
+      attributes: { type: object }
+    result: Span
+
+  QueryTraces:
+    description: Query traces by criteria
+    parameters:
+      serviceName: { type: string }
+      operationName: { type: string }
+      minDurationMs: { type: integer }
+      maxDurationMs: { type: integer }
+      tags: { type: object }
+      startTime: { type: datetime, required: true }
+      endTime: { type: datetime, required: true }
+      limit: { type: integer, default: 20 }
+    result: { type: array, items: Trace }
+
+  GetTrace:
+    description: Get a trace by ID
+    parameters:
+      traceId: { type: string, required: true }
+    result: Trace
+
+  # Alerting actions
+  CreateAlertRule:
+    description: Create a new alert rule
+    parameters:
+      name: { type: string, required: true }
+      severity: { type: AlertSeverity, required: true }
+      conditions: { type: array, items: AlertCondition, required: true }
+      actions: { type: array, items: AlertAction }
+    result: AlertRule
+
+  AcknowledgeAlert:
+    description: Acknowledge an active alert
+    parameters:
+      alertId: { type: string, required: true }
+      acknowledgedBy: { type: string, required: true }
+      note: { type: string }
+    result: Alert
+
+  ResolveAlert:
+    description: Resolve an alert
+    parameters:
+      alertId: { type: string, required: true }
+      resolvedBy: { type: string }
+      resolution: { type: string }
+    result: Alert
+
+  GetActiveAlerts:
+    description: Get all active alerts
+    parameters:
+      severity: { type: AlertSeverity }
+      state: { type: AlertState }
+    result: { type: array, items: Alert }
+
+  # Dashboard actions
+  CreateDashboard:
+    description: Create a new dashboard
+    parameters:
+      name: { type: string, required: true }
+      description: { type: string }
+      widgets: { type: array, items: Widget }
+      variables: { type: array, items: DashboardVariable }
+    result: Dashboard
+
+  UpdateDashboard:
+    description: Update a dashboard
+    parameters:
+      dashboardId: { type: string, required: true }
+      name: { type: string }
+      widgets: { type: array, items: Widget }
+      variables: { type: array, items: DashboardVariable }
+    result: Dashboard
+
+  GetDashboard:
+    description: Get a dashboard by ID
+    parameters:
+      dashboardId: { type: string, required: true }
+    result: Dashboard

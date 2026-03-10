@@ -1,0 +1,157 @@
+# Work Item Typed Domain Model
+# Extension of work-item for SDLC-tracked work across all item types
+
+domain:
+  name: work-item-typed
+  version: "1.0.0"
+  description: Typed work items - prototypes, components, domains, tools, assets, meta
+  dependencies: [core, work-item, sdlc]
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  TypedWorkItem:
+    description: Any tracked work item in the repo
+    extends: work-item:WorkItem
+    properties:
+      # Identity
+      id: { type: string, required: true, description: "e.g., proto-email-abc12-001" }
+      name: { type: string, required: true }
+      description: { type: string }
+
+      # Classification
+      type: { type: WorkItemType, required: true }
+      ownership: { type: OwnershipType, required: true, default: unspecified }
+
+      # SDLC tracking
+      phase: { type: sdlc:SDLCPhase, required: true }
+      phaseNumber: { type: decimal }
+      version: { type: string, required: true, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      status: { type: ItemStatus, required: true, default: active }
+
+      # Metadata
+      techStack: { type: array, items: string }
+      priority: { type: PriorityLevel, default: medium }
+      approvalPath: { type: sdlc:ApprovalPathType }
+      targetOutput: { type: TargetOutput }
+      targetAudience: { type: string }
+
+      # History
+      phaseHistory: { type: array, items: PhaseEntry }
+      versionHistory: { type: array, items: VersionEntry }
+
+      # Timestamps
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  PhaseEntry:
+    description: Record of phase completion
+    properties:
+      phase: { type: sdlc:SDLCPhase, required: true }
+      phaseNumber: { type: decimal, required: true }
+      startedAt: { type: datetime, required: true }
+      completedAt: { type: datetime }
+      deliverablesCompleted: { type: boolean, default: false }
+
+  VersionEntry:
+    description: Version history entry
+    properties:
+      version: { type: string, required: true }
+      date: { type: datetime, required: true }
+      phase: { type: sdlc:SDLCPhase, required: true }
+      changeType: { type: ChangeType, required: true }
+      description: { type: string }
+
+enums:
+
+  WorkItemType:
+    description: Type of work item
+    values:
+      - prototype    # Standard project/prototype
+      - component    # Shared library, utility, helper
+      - domain       # Semantic domain model
+      - tool         # Repo tooling, CLI, scripts
+      - asset        # Templates, golden repos
+      - meta         # Repo organization, documentation
+
+  OwnershipType:
+    description: Ownership classification
+    values:
+      - work         # Work/employer related
+      - personal     # Personal projects
+      - shared       # Shared across contexts
+      - oss          # Open source
+      - unspecified  # Not yet classified
+
+  ItemStatus:
+    values:
+      - active       # In progress
+      - on_hold      # Paused
+      - blocked      # Waiting on dependency
+      - completed    # Done
+      - archived     # No longer maintained
+      - graduated    # Promoted to standalone
+
+  PriorityLevel:
+    values:
+      - low
+      - medium
+      - high
+      - urgent
+
+  ChangeType:
+    values:
+      - major        # Breaking/milestone change
+      - minor        # Feature addition
+      - patch        # Bug fix/docs
+
+  TargetOutput:
+    description: Expected deliverable type
+    values:
+      - cli_tool
+      - web_app
+      - api
+      - library
+      - dashboard
+      - mobile_app
+      - browser_extension
+      - shared_types
+      - domain_model
+      - ui_components
+      - utility_library
+      - documentation
+      - template
+
+# Type-specific SDLC guidance
+type_guidance:
+
+  prototype:
+    phases: all
+    typical_path: Standard
+    notes: "Full SDLC, moves ideas/ → prototypes/ at Phase 7"
+
+  component:
+    phases: [SEED, RESEARCH, SELECTION, TECHNICAL_DESIGN, TEST_DESIGN, IMPLEMENTATION, REFINEMENT]
+    typical_path: APIFirst
+    notes: "Skip expansion/analysis for focused utilities"
+
+  domain:
+    phases: [SEED, RESEARCH, EXPANSION, ANALYSIS, SELECTION, TECHNICAL_DESIGN, IMPLEMENTATION]
+    typical_path: APIFirst
+    notes: "Focus on entity modeling, skip UI phases"
+
+  tool:
+    phases: [SEED, SELECTION, TEST_DESIGN, IMPLEMENTATION]
+    typical_path: Minimal
+    notes: "Lean process for internal tooling"
+
+  asset:
+    phases: [SEED, TECHNICAL_DESIGN, IMPLEMENTATION]
+    typical_path: Minimal
+    notes: "Templates/golden repos - minimal process"
+
+  meta:
+    phases: [SEED, IMPLEMENTATION]
+    typical_path: Minimal
+    notes: "Repo organization - just do it"

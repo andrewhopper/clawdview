@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Data Viz",
+  "description": "Data visualization and diagramming",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "categories": {
+    "data_visualization": {
+      "description": "Data visualization and charting libraries",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Recharts",
+          "version": "2.x",
+          "rationale": "React-native, composable, responsive, simple API, good defaults",
+          "useCases": [
+            "React apps",
+            "dashboards",
+            "rapid prototyping",
+            "responsive charts"
+          ],
+          "docsUrl": "https://recharts.org/en-US/",
+          "examplesUrl": "https://recharts.org/en-US/examples"
+        },
+        {
+          "rank": 2,
+          "name": "D3.js",
+          "version": "7.x",
+          "rationale": "Most powerful, custom visualizations, full control, SVG manipulation, industry standard",
+          "useCases": [
+            "custom visualizations",
+            "complex interactions",
+            "data journalism",
+            "unique designs"
+          ],
+          "docsUrl": "https://d3js.org/",
+          "examplesUrl": "https://observablehq.com/@d3/gallery"
+        },
+        {
+          "rank": 3,
+          "name": "Chart.js",
+          "version": "4.x",
+          "rationale": "Simple, Canvas-based, good performance, extensive chart types, easy setup",
+          "useCases": [
+            "simple charts",
+            "canvas rendering",
+            "admin dashboards",
+            "quick setup"
+          ],
+          "docsUrl": "https://www.chartjs.org/docs/latest/",
+          "examplesUrl": "https://www.chartjs.org/docs/latest/samples/information.html"
+        },
+        {
+          "rank": 4,
+          "name": "Apache ECharts",
+          "version": "5.x",
+          "rationale": "Feature-rich, 20+ chart types, 3D support, geographic maps, themes",
+          "useCases": [
+            "complex dashboards",
+            "3D visualizations",
+            "geographic data",
+            "business intelligence"
+          ]
+        }
+      ]
+    },
+    "diagramming": {
+      "description": "Diagramming and flowchart libraries",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Mermaid",
+          "version": "10.x",
+          "rationale": "Text-based, simple syntax, GitHub integration, version-controllable, no manual layout",
+          "useCases": [
+            "documentation",
+            "automatic diagrams",
+            "CI/CD",
+            "flowcharts",
+            "sequence diagrams"
+          ],
+          "docsUrl": "https://mermaid.js.org/intro/",
+          "examplesUrl": "https://mermaid.js.org/ecosystem/tutorials.html"
+        },
+        {
+          "rank": 2,
+          "name": "ReactFlow",
+          "version": "11.x",
+          "rationale": "React-native, interactive node-based UIs, customizable, drag-and-drop",
+          "useCases": [
+            "workflow builders",
+            "data pipelines",
+            "interactive diagrams",
+            "node editors"
+          ],
+          "docsUrl": "https://reactflow.dev/learn",
+          "examplesUrl": "https://reactflow.dev/examples"
+        },
+        {
+          "rank": 3,
+          "name": "Excalidraw",
+          "version": "latest",
+          "rationale": "Hand-drawn style, collaborative, open source, beautiful defaults, embeddable",
+          "useCases": [
+            "architectural diagrams",
+            "whiteboarding",
+            "sketch-style diagrams",
+            "presentations"
+          ],
+          "docsUrl": "https://docs.excalidraw.com/",
+          "examplesUrl": "https://github.com/excalidraw/excalidraw/tree/master/examples"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,746 @@
+# Real Property Domain
+# Land, buildings, parcels - immovable property
+# Version: 1.0.0
+
+domain:
+  name: real-property
+  version: "1.0.0"
+  status: production
+  description: Real estate and land - parcels, buildings, zoning, assessments
+  dependencies: [core, geo-point, geo-shape, geo-place]
+  use_case: Real estate, property management, land records
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Property:
+    description: A piece of real property (land and/or improvements)
+    properties:
+      id:
+        type: uuid
+        required: true
+      property_type:
+        type: PropertyType
+        required: true
+
+      # Identification
+      parcel_number:
+        type: string
+        required: true
+        description: Assessor's parcel number (APN)
+      alternate_parcel_numbers:
+        type: array
+        items: string
+      legal_description:
+        type: LegalDescription
+        required: true
+
+      # Address
+      address:
+        type: Address
+        required: true
+      addresses:
+        type: array
+        items: Address
+        description: Additional addresses if multiple
+
+      # Location
+      geo_location:
+        type: GeoLocation
+      boundary:
+        type: Polygon
+        description: Property boundary
+      lot_size:
+        type: decimal
+        description: Land area
+      lot_size_unit:
+        type: AreaUnit
+        default: sq_ft
+      lot_dimensions:
+        type: string
+        description: "100x150" or irregular description
+
+      # Zoning
+      zoning:
+        type: Zoning
+      overlay_zones:
+        type: array
+        items: string
+
+      # Improvements
+      improvements:
+        type: array
+        items: Building
+      year_built:
+        type: integer
+        description: Year of primary structure
+      total_building_area:
+        type: decimal
+      building_area_unit:
+        type: AreaUnit
+        default: sq_ft
+
+      # Assessment
+      assessed_value:
+        type: Assessment
+      market_value:
+        type: Money
+        description: Estimated market value
+      last_sale:
+        type: SaleRecord
+
+      # Ownership (denormalized for quick access)
+      current_owner_id:
+        type: string
+        description: FK to current OwnershipRecord
+      owner_name:
+        type: string
+        description: Denormalized owner name
+
+      # Encumbrances (denormalized)
+      has_mortgage:
+        type: boolean
+        default: false
+      has_liens:
+        type: boolean
+        default: false
+      has_easements:
+        type: boolean
+        default: false
+      total_debt:
+        type: Money
+
+      # Utilities
+      utilities:
+        type: Utilities
+
+      # Status
+      status:
+        type: PropertyStatus
+        required: true
+        default: active
+
+      # Metadata
+      data_source:
+        type: string
+        description: Where data came from (county, MLS, etc.)
+      last_updated_from_source:
+        type: datetime
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  LegalDescription:
+    description: Legal description of property boundaries
+    properties:
+      description_type:
+        type: LegalDescriptionType
+        required: true
+      text:
+        type: string
+        required: true
+        description: Full legal description text
+
+      # Lot/Block (for subdivisions)
+      lot:
+        type: string
+      block:
+        type: string
+      subdivision:
+        type: string
+      phase:
+        type: string
+      unit:
+        type: string
+        description: For condos
+
+      # Section/Township/Range (PLSS)
+      section:
+        type: string
+      township:
+        type: string
+      range:
+        type: string
+      quarter_section:
+        type: string
+
+      # Recorded reference
+      book:
+        type: string
+      page:
+        type: string
+      instrument_number:
+        type: string
+      recorded_date:
+        type: date
+
+  Building:
+    description: A building/structure on the property
+    properties:
+      id:
+        type: uuid
+        required: true
+      building_type:
+        type: BuildingType
+        required: true
+      name:
+        type: string
+      description:
+        type: string
+
+      # Size
+      total_area:
+        type: decimal
+        required: true
+      area_unit:
+        type: AreaUnit
+        default: sq_ft
+      stories:
+        type: integer
+        default: 1
+      basement:
+        type: boolean
+        default: false
+      basement_area:
+        type: decimal
+
+      # Construction
+      year_built:
+        type: integer
+      year_renovated:
+        type: integer
+      construction_type:
+        type: ConstructionType
+      roof_type:
+        type: string
+      foundation_type:
+        type: string
+      exterior_finish:
+        type: string
+
+      # Rooms/Units
+      bedrooms:
+        type: integer
+      bathrooms:
+        type: decimal
+        description: Full + half baths (3.5 = 3 full + 1 half)
+      total_rooms:
+        type: integer
+      units:
+        type: array
+        items: Unit
+        description: For multi-unit buildings
+
+      # Features
+      features:
+        type: array
+        items: string
+      amenities:
+        type: array
+        items: string
+      hvac:
+        type: string
+      parking_spaces:
+        type: integer
+      garage_type:
+        type: GarageType
+
+      # Condition
+      condition:
+        type: BuildingCondition
+      quality:
+        type: BuildingQuality
+
+  Unit:
+    description: A unit within a multi-unit building
+    properties:
+      id:
+        type: uuid
+        required: true
+      unit_number:
+        type: string
+        required: true
+      unit_type:
+        type: UnitType
+        required: true
+      floor:
+        type: integer
+      area:
+        type: decimal
+      area_unit:
+        type: AreaUnit
+        default: sq_ft
+      bedrooms:
+        type: integer
+      bathrooms:
+        type: decimal
+      rent:
+        type: Money
+        description: Current/market rent
+
+  Zoning:
+    description: Zoning information for property
+    properties:
+      code:
+        type: string
+        required: true
+      description:
+        type: string
+      category:
+        type: ZoningCategory
+        required: true
+      permitted_uses:
+        type: array
+        items: string
+      conditional_uses:
+        type: array
+        items: string
+      density:
+        type: decimal
+        description: Units per acre
+      max_height:
+        type: decimal
+        description: Maximum building height
+      height_unit:
+        type: string
+        default: "feet"
+      setbacks:
+        type: Setbacks
+      lot_coverage_max:
+        type: decimal
+        description: Maximum lot coverage (0-1)
+      far:
+        type: decimal
+        description: Floor area ratio
+
+  Setbacks:
+    description: Required setbacks from property lines
+    properties:
+      front:
+        type: decimal
+      rear:
+        type: decimal
+      side:
+        type: decimal
+      corner:
+        type: decimal
+      unit:
+        type: string
+        default: "feet"
+
+  Assessment:
+    description: Property tax assessment
+    properties:
+      tax_year:
+        type: integer
+        required: true
+      land_value:
+        type: Money
+        required: true
+      improvement_value:
+        type: Money
+        required: true
+      total_value:
+        type: Money
+        required: true
+      exemptions:
+        type: array
+        items: TaxExemption
+      taxable_value:
+        type: Money
+      annual_taxes:
+        type: Money
+      tax_rate:
+        type: decimal
+        description: Mill rate or percentage
+      assessment_ratio:
+        type: decimal
+        description: Ratio of assessed to market value
+
+  TaxExemption:
+    description: Tax exemption on property
+    properties:
+      exemption_type:
+        type: ExemptionType
+        required: true
+      amount:
+        type: Money
+      percentage:
+        type: decimal
+      description:
+        type: string
+
+  SaleRecord:
+    description: Record of property sale
+    properties:
+      sale_date:
+        type: date
+        required: true
+      sale_price:
+        type: Money
+        required: true
+      price_per_sqft:
+        type: Money
+      seller:
+        type: string
+      buyer:
+        type: string
+      sale_type:
+        type: SaleType
+      deed_type:
+        type: string
+      recording_reference:
+        type: string
+      arms_length:
+        type: boolean
+        default: true
+        description: Arms-length transaction vs related party
+
+  Utilities:
+    description: Utility availability
+    properties:
+      water:
+        type: UtilityType
+      sewer:
+        type: UtilityType
+      electric:
+        type: UtilityType
+      gas:
+        type: UtilityType
+      internet:
+        type: array
+        items: string
+        description: Available providers
+
+  Listing:
+    description: Property listing for sale or rent
+    properties:
+      id:
+        type: uuid
+        required: true
+      property_id:
+        type: uuid
+        required: true
+      listing_type:
+        type: ListingType
+        required: true
+
+      # Pricing
+      price:
+        type: Money
+        required: true
+      price_per_sqft:
+        type: Money
+      original_price:
+        type: Money
+      price_change_history:
+        type: array
+        items: PriceChange
+
+      # Status
+      status:
+        type: ListingStatus
+        required: true
+        default: active
+
+      # Dates
+      listed_date:
+        type: date
+        required: true
+      contract_date:
+        type: date
+      closing_date:
+        type: date
+      days_on_market:
+        type: integer
+      off_market_date:
+        type: date
+
+      # Agent
+      listing_agent_id:
+        type: string
+      listing_office_id:
+        type: string
+      co_listing_agent_id:
+        type: string
+
+      # Description
+      headline:
+        type: string
+      description:
+        type: string
+      features_highlighted:
+        type: array
+        items: string
+
+      # Media
+      photos:
+        type: array
+        items: MediaObject
+      virtual_tour_url:
+        type: string
+      video_url:
+        type: string
+      floor_plan:
+        type: MediaObject
+
+      # Showing
+      showing_instructions:
+        type: string
+      lockbox_type:
+        type: string
+      lockbox_location:
+        type: string
+
+      # MLS
+      mls_number:
+        type: string
+      mls_name:
+        type: string
+
+  PriceChange:
+    description: Record of price change
+    properties:
+      date:
+        type: date
+        required: true
+      old_price:
+        type: Money
+        required: true
+      new_price:
+        type: Money
+        required: true
+      change_type:
+        type: PriceChangeType
+        required: true
+
+enums:
+
+  PropertyType:
+    values:
+      - single_family
+      - condo
+      - townhouse
+      - multi_family
+      - apartment
+      - commercial
+      - industrial
+      - retail
+      - office
+      - mixed_use
+      - land
+      - farm
+      - ranch
+      - mobile_home
+      - manufactured
+      - cooperative
+
+  PropertyStatus:
+    values:
+      - active
+      - pending_sale
+      - sold
+      - off_market
+      - foreclosure
+      - auction
+
+  LegalDescriptionType:
+    values:
+      - lot_block           # Lot and Block (subdivisions)
+      - metes_bounds        # Metes and Bounds
+      - plss                # Public Land Survey System
+      - texas_abstract      # Texas Abstract system
+      - condo               # Condominium
+
+  BuildingType:
+    values:
+      - house
+      - apartment_building
+      - condo_building
+      - townhouse
+      - duplex
+      - triplex
+      - fourplex
+      - commercial
+      - retail
+      - office
+      - industrial
+      - warehouse
+      - garage
+      - barn
+      - shed
+      - pool_house
+      - guest_house
+
+  ConstructionType:
+    values:
+      - wood_frame
+      - masonry
+      - concrete
+      - steel
+      - log
+      - modular
+      - manufactured
+      - adobe
+      - stone
+
+  GarageType:
+    values:
+      - attached
+      - detached
+      - carport
+      - underground
+      - none
+
+  BuildingCondition:
+    values:
+      - excellent
+      - good
+      - average
+      - fair
+      - poor
+      - under_construction
+      - needs_repair
+
+  BuildingQuality:
+    values:
+      - luxury
+      - premium
+      - standard
+      - economy
+      - substandard
+
+  UnitType:
+    values:
+      - apartment
+      - condo
+      - studio
+      - loft
+      - penthouse
+      - commercial
+      - retail
+      - office
+
+  ZoningCategory:
+    values:
+      - residential_single
+      - residential_multi
+      - commercial
+      - industrial
+      - agricultural
+      - mixed_use
+      - planned_unit
+      - special_district
+      - open_space
+
+  ExemptionType:
+    values:
+      - homestead
+      - senior
+      - veteran
+      - disability
+      - agricultural
+      - historic
+      - nonprofit
+      - religious
+
+  SaleType:
+    values:
+      - standard
+      - foreclosure
+      - short_sale
+      - auction
+      - estate_sale
+      - reo               # Bank-owned
+      - new_construction
+      - relocation
+
+  UtilityType:
+    values:
+      - public
+      - private
+      - well
+      - septic
+      - none
+      - available
+
+  ListingType:
+    values:
+      - for_sale
+      - for_rent
+      - for_lease
+      - auction
+
+  ListingStatus:
+    values:
+      - coming_soon
+      - active
+      - active_under_contract
+      - pending
+      - sold
+      - leased
+      - withdrawn
+      - expired
+      - canceled
+
+  PriceChangeType:
+    values:
+      - reduction
+      - increase
+
+  AreaUnit:
+    values:
+      - sq_ft
+      - sq_m
+      - acres
+      - hectares
+
+examples:
+
+  single_family_home:
+    property_type: single_family
+    parcel_number: "123-456-789"
+    legal_description:
+      description_type: lot_block
+      text: "Lot 15, Block 3, Oakwood Subdivision"
+      lot: "15"
+      block: "3"
+      subdivision: "Oakwood"
+    address:
+      street: "123 Oak Street"
+      city: "Austin"
+      state: "TX"
+      postal_code: "78701"
+    lot_size: 8500
+    lot_size_unit: sq_ft
+    improvements:
+      - building_type: house
+        total_area: 2400
+        stories: 2
+        year_built: 2015
+        bedrooms: 4
+        bathrooms: 2.5
+        garage_type: attached
+        parking_spaces: 2
+        condition: good
+    zoning:
+      code: "SF-3"
+      category: residential_single
+      density: 5.75
+    assessed_value:
+      tax_year: 2025
+      land_value: { amount: 150000, currency: "USD" }
+      improvement_value: { amount: 350000, currency: "USD" }
+      total_value: { amount: 500000, currency: "USD" }
+    status: active
+
+sources:
+  - "Assessor's Office Data Standards"
+  - "RESO Data Dictionary"
+  - "MLS Standards"
+  - "County Land Records"

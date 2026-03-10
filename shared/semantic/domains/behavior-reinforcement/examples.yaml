@@ -1,0 +1,285 @@
+# =============================================================================
+# Behavior Reinforcement Examples
+# Concrete instances of LearnedPattern with full provenance and approval
+# =============================================================================
+
+examples:
+
+  # ---------------------------------------------------------------------------
+  # EXAMPLE 1: BAML Version Matching (from today's session)
+  # ---------------------------------------------------------------------------
+  - id: "NICE-20251209-0001"
+    signal: positive
+    category: tool_usage
+    title: "Always use latest BAML version"
+
+    pattern: |
+      When working with BAML (BoundaryML):
+      1. Check installed version: `npm info @boundaryml/baml version`
+      2. Match generators.baml version to installed version
+      3. Never hardcode old versions like 0.70.0
+
+    anti_pattern: |
+      # WRONG - hardcoded old version
+      generator target {
+        version "0.70.0"  # Will cause version mismatch error
+      }
+
+    # RLHF-compatible pairwise comparison (Anthropic/HuggingFace format)
+    chosen: |
+      generator target {
+        output_type python/pydantic
+        output_dir "../baml_client"
+        version "0.214.0"  # Matches installed: npm info @boundaryml/baml version
+      }
+
+    rejected: |
+      generator target {
+        output_type python/pydantic
+        output_dir "../baml_client"
+        version "0.70.0"  # Hardcoded old version - will cause mismatch error
+      }
+
+    preference_strength: strong
+
+    trigger_context: "Any BAML schema work, especially after npm install"
+
+    examples:
+      - situation: "Setting up BAML for a new project"
+        correct_behavior: |
+          1. npm info @boundaryml/baml version  # Returns 0.214.0
+          2. Set version "0.214.0" in generators.baml
+        incorrect_behavior: |
+          Copy-paste old generators.baml with version "0.70.0"
+
+    tags: [baml, boundaryml, versioning, setup]
+
+    provenance:
+      source_type: self_observation
+
+      project_context:
+        project_id: null  # Not in a .project folder
+        project_name: "overwatch-pathway-analyzer"
+        project_type: poc
+        domain: "ai-tooling"
+        tech_stack: ["python", "baml", "ollama", "zmq"]
+        sdlc_phase: "phase-8-implementation"
+        task_description: "Adding BAML integration for AI-powered workflow pattern extraction"
+        constraints: ["use-small-model-to-save-money"]
+
+      session_id: "56ee5a88-32c8-4f63-a6a0-ebd7d429806c"
+      git_commit: "3b23ae59"
+      git_branch: "main"
+      file_path: "bin/overwatch/baml_src/generators.baml"
+      tool_name: "Edit"
+      observed_by: "claude-opus-4-5"
+      observed_at: "2025-12-09T09:41:00Z"
+      related_patterns: []
+
+    approval:
+      status: pending
+      # Will be filled when human reviews:
+      # reviewed_by: "andyhop"
+      # reviewed_at: "2025-12-09T10:00:00Z"
+      # confidence_score: 0.95
+      # review_notes: "Good pattern, commonly encountered"
+
+    effectiveness:
+      times_applied: 0
+      times_violated: 1  # Today's session
+      last_violated_at: "2025-12-09T09:38:00Z"
+
+  # ---------------------------------------------------------------------------
+  # EXAMPLE 2: Model-Specific Client Names
+  # ---------------------------------------------------------------------------
+  - id: "NICE-20251209-0002"
+    signal: positive
+    category: accuracy
+    title: "Match BAML client names to model config"
+
+    pattern: |
+      When config.yaml specifies a model (e.g., qwen3:8b), name the BAML
+      client to match:
+
+      # If config says model: qwen3:8b
+      client<llm> QwenClient {  # Name reflects the model
+        provider ollama
+        options {
+          model "qwen3:8b"
+        }
+      }
+
+    anti_pattern: |
+      # WRONG - generic name doesn't match model
+      client<llm> OllamaClient {  # Vague, doesn't indicate which model
+        provider ollama
+        options {
+          model "llama3.2:3b"  # Also outdated if config says qwen3:8b
+        }
+      }
+
+    trigger_context: "Creating BAML clients for LLM integration"
+
+    examples:
+      - situation: "config.yaml has ollama.model: qwen3:8b"
+        correct_behavior: "Create QwenClient with model qwen3:8b"
+        incorrect_behavior: "Create OllamaClient with model llama3.2:3b"
+        source_session_id: "56ee5a88-32c8-4f63-a6a0-ebd7d429806c"
+
+    tags: [baml, ollama, naming, config-consistency]
+
+    provenance:
+      source_type: user_feedback
+      session_id: "56ee5a88-32c8-4f63-a6a0-ebd7d429806c"
+      file_path: "bin/overwatch/baml_src/workflow_analysis.baml"
+      tool_name: "Edit"
+      observed_by: "andyhop"
+      observed_at: "2025-12-09T09:50:00Z"
+
+    approval:
+      status: pending
+
+  # ---------------------------------------------------------------------------
+  # EXAMPLE 3: Error Pattern - Verbose Nice Logging
+  # ---------------------------------------------------------------------------
+  - id: "ERR-20251209-0001"
+    signal: negative
+    category: accuracy
+    title: "Don't log CLI debugging steps as learnings"
+
+    pattern: |
+      When logging to /nice, capture the ACTUAL learning, not the
+      debugging journey:
+
+      BAD: "Learned BAML CLI requires baml_src/ directory, npx command,
+            version matching, pip install, etc."
+
+      GOOD: "Use latest BAML version" and "Match client name to model"
+
+    trigger_context: "Using /nice to capture learnings"
+
+    examples:
+      - situation: "After fixing BAML setup through trial and error"
+        correct_behavior: |
+          Log: "Always use latest BAML version matching installed package"
+        incorrect_behavior: |
+          Log: "1. Directory must be baml_src/ 2. Use npx 3. pip install
+          baml-py 4. Check version..." (debugging steps, not insight)
+        source_session_id: "56ee5a88-32c8-4f63-a6a0-ebd7d429806c"
+
+    tags: [nice, logging, learning, meta]
+
+    provenance:
+      source_type: user_feedback
+      session_id: "56ee5a88-32c8-4f63-a6a0-ebd7d429806c"
+      observed_by: "andyhop"
+      observed_at: "2025-12-09T09:52:00Z"
+
+    approval:
+      status: pending
+
+  # ---------------------------------------------------------------------------
+  # EXAMPLE 4: Approved Pattern (hypothetical)
+  # ---------------------------------------------------------------------------
+  - id: "NICE-20251201-0042"
+    signal: positive
+    category: following_rules
+    title: "Use uv instead of pip for Python projects"
+
+    pattern: |
+      For Python projects in this monorepo:
+      - Use `uv add package` not `pip install package`
+      - Use `uv run command` not direct execution
+      - Reference: CLAUDE.md section on Python projects
+
+    anti_pattern: |
+      pip install httpx  # WRONG
+      python script.py   # WRONG
+
+    trigger_context: "Any Python package management"
+
+    examples:
+      - situation: "Need to add httpx dependency"
+        correct_behavior: "uv add httpx"
+        incorrect_behavior: "pip install httpx"
+
+    tags: [python, uv, pip, dependencies, claude-md]
+
+    provenance:
+      source_type: documentation
+      file_path: "CLAUDE.md"
+      observed_by: "system"
+      observed_at: "2025-12-01T00:00:00Z"
+
+    approval:
+      status: approved
+      reviewed_by: "andyhop"
+      reviewed_at: "2025-12-01T10:30:00Z"
+      confidence_score: 1.0
+      review_notes: "Explicit rule in CLAUDE.md"
+      approved_version: 1
+
+    effectiveness:
+      times_applied: 47
+      times_violated: 3
+      success_rate: 0.94
+      last_applied_at: "2025-12-09T09:40:00Z"
+      user_feedback_positive: 5
+      user_feedback_negative: 0
+
+  # ---------------------------------------------------------------------------
+  # EXAMPLE 5: Pattern needing revision
+  # ---------------------------------------------------------------------------
+  - id: "NICE-20251205-0018"
+    signal: positive
+    category: efficiency
+    title: "Batch file operations"
+
+    pattern: |
+      When editing multiple files, batch them in parallel tool calls
+      instead of sequential edits.
+
+    trigger_context: "Multiple file edits in same request"
+
+    provenance:
+      source_type: self_observation
+      session_id: "abc123"
+      observed_by: "claude-opus-4-5"
+      observed_at: "2025-12-05T14:00:00Z"
+
+    approval:
+      status: needs_revision
+      reviewed_by: "andyhop"
+      reviewed_at: "2025-12-06T09:00:00Z"
+      review_notes: "Pattern is correct but needs caveats"
+      rejection_reason: null
+      suggested_revision: |
+        Add caveat: Only batch INDEPENDENT edits. If edit B depends
+        on edit A (e.g., imports), do them sequentially.
+
+# =============================================================================
+# ReinforcementEvent Examples
+# =============================================================================
+
+reinforcement_events:
+
+  - id: "evt-20251209-001"
+    pattern_id: "NICE-20251201-0042"
+    event_type: violated
+    session_id: "56ee5a88-32c8-4f63-a6a0-ebd7d429806c"
+    context: "Installing httpx for BAML testing"
+    outcome: "Used pip3.11 install httpx instead of uv add httpx"
+    occurred_at: "2025-12-09T09:42:00Z"
+    user_feedback:
+      signal: correction
+      comment: "Should have used uv"
+      provided_by: "andyhop"
+      provided_at: "2025-12-09T09:43:00Z"
+
+  - id: "evt-20251209-002"
+    pattern_id: "NICE-20251209-0002"
+    event_type: applied
+    session_id: "56ee5a88-32c8-4f63-a6a0-ebd7d429806c"
+    context: "Creating BAML client after user feedback"
+    outcome: "Named client QwenClient to match qwen3:8b model"
+    occurred_at: "2025-12-09T09:41:00Z"

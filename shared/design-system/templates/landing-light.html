@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landing Page - Light Theme</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Light Theme - shadcn/ui default */
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --primary-foreground: 0 0% 98%;
+      --secondary: 240 4.8% 95.9%;
+      --secondary-foreground: 240 5.9% 10%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --accent: 240 4.8% 95.9%;
+      --accent-foreground: 240 5.9% 10%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 5.9% 90%;
+      --input: 240 5.9% 90%;
+      --ring: 240 5.9% 10%;
+      --radius: 0.5rem;
+    }
+    * { border-color: hsl(var(--border)); }
+    body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      border-radius: calc(var(--radius) - 2px); font-size: 0.875rem; font-weight: 500;
+      padding: 0.5rem 1rem; height: 2.5rem; transition: all 0.2s;
+    }
+    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-outline { border: 1px solid hsl(var(--input)); background: transparent; }
+    .btn-outline:hover { background: hsl(var(--accent)); }
+    .btn-lg { height: 3rem; padding: 0 2rem; font-size: 1rem; }
+    .card { border-radius: var(--radius); border: 1px solid hsl(var(--border)); background: hsl(var(--card)); }
+    .badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.125rem 0.75rem; font-size: 0.75rem; font-weight: 500; background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+    <div class="container mx-auto flex h-16 items-center justify-between px-4">
+      <div class="flex items-center gap-8">
+        <a href="#" class="text-xl font-bold">Acme Inc</a>
+        <div class="hidden md:flex items-center gap-6">
+          <a href="#features" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
+          <a href="#pricing" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+          <a href="#testimonials" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
+          <a href="#faq" class="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="btn btn-outline">Sign In</button>
+        <button class="btn btn-primary">Get Started</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="container mx-auto px-4 py-24 lg:py-32">
+    <div class="mx-auto max-w-3xl text-center">
+      <span class="badge mb-4">New Release v2.0</span>
+      <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
+        Build faster with our
+        <span class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">modern platform</span>
+      </h1>
+      <p class="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
+        The complete toolkit for building production-ready applications. Ship faster, scale better, and delight your users.
+      </p>
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button class="btn btn-primary btn-lg">
+          Start Free Trial
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn btn-outline btn-lg">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Watch Demo
+        </button>
+      </div>
+      <p class="mt-4 text-sm text-muted-foreground">No credit card required. 14-day free trial.</p>
+    </div>
+  </section>
+
+  <!-- Logos Section -->
+  <section class="border-y bg-muted/30 py-12">
+    <div class="container mx-auto px-4">
+      <p class="text-center text-sm text-muted-foreground mb-8">Trusted by innovative companies worldwide</p>
+      <div class="flex flex-wrap items-center justify-center gap-8 md:gap-16 opacity-60">
+        <span class="text-2xl font-bold">Vercel</span>
+        <span class="text-2xl font-bold">Stripe</span>
+        <span class="text-2xl font-bold">GitHub</span>
+        <span class="text-2xl font-bold">Notion</span>
+        <span class="text-2xl font-bold">Linear</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="container mx-auto px-4 py-24">
+    <div class="text-center mb-16">
+      <span class="badge mb-4">Features</span>
+      <h2 class="text-3xl font-bold md:text-4xl">Everything you need to succeed</h2>
+      <p class="mt-4 text-muted-foreground max-w-2xl mx-auto">
+        Powerful features designed to help you build, deploy, and scale your applications with confidence.
+      </p>
+    </div>
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div class="card p-6 hover:shadow-lg transition-shadow">
+        <div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Lightning Fast</h3>
+        <p class="text-muted-foreground">Optimized for speed with edge computing and intelligent caching strategies.</p>
+      </div>
+      <div class="card p-6 hover:shadow-lg transition-shadow">
+        <div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Enterprise Security</h3>
+        <p class="text-muted-foreground">SOC 2 compliant with end-to-end encryption and advanced threat protection.</p>
+      </div>
+      <div class="card p-6 hover:shadow-lg transition-shadow">
+        <div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Advanced Analytics</h3>
+        <p class="text-muted-foreground">Real-time insights and comprehensive dashboards to track your metrics.</p>
+      </div>
+      <div class="card p-6 hover:shadow-lg transition-shadow">
+        <div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Flexible Layouts</h3>
+        <p class="text-muted-foreground">Customizable components that adapt to your brand and design system.</p>
+      </div>
+      <div class="card p-6 hover:shadow-lg transition-shadow">
+        <div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Developer First</h3>
+        <p class="text-muted-foreground">Built by developers, for developers. Clean APIs and excellent documentation.</p>
+      </div>
+      <div class="card p-6 hover:shadow-lg transition-shadow">
+        <div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Team Collaboration</h3>
+        <p class="text-muted-foreground">Work together seamlessly with real-time collaboration and permissions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="bg-muted/30 py-24">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <span class="badge mb-4">Pricing</span>
+        <h2 class="text-3xl font-bold md:text-4xl">Simple, transparent pricing</h2>
+        <p class="mt-4 text-muted-foreground">No hidden fees. Cancel anytime.</p>
+      </div>
+      <div class="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+        <div class="card p-8">
+          <h3 class="text-lg font-semibold">Starter</h3>
+          <p class="text-muted-foreground text-sm mt-1">For individuals and small projects</p>
+          <div class="mt-6">
+            <span class="text-4xl font-bold">$0</span>
+            <span class="text-muted-foreground">/month</span>
+          </div>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Up to 3 projects</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 1GB storage</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Community support</li>
+          </ul>
+          <button class="btn btn-outline w-full mt-8">Get Started</button>
+        </div>
+        <div class="card p-8 border-2 border-primary relative">
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 badge bg-primary text-primary-foreground">Most Popular</span>
+          <h3 class="text-lg font-semibold">Pro</h3>
+          <p class="text-muted-foreground text-sm mt-1">For growing teams</p>
+          <div class="mt-6">
+            <span class="text-4xl font-bold">$29</span>
+            <span class="text-muted-foreground">/month</span>
+          </div>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Unlimited projects</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 100GB storage</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Priority support</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Advanced analytics</li>
+          </ul>
+          <button class="btn btn-primary w-full mt-8">Start Free Trial</button>
+        </div>
+        <div class="card p-8">
+          <h3 class="text-lg font-semibold">Enterprise</h3>
+          <p class="text-muted-foreground text-sm mt-1">For large organizations</p>
+          <div class="mt-6">
+            <span class="text-4xl font-bold">Custom</span>
+          </div>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Everything in Pro</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Unlimited storage</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Dedicated support</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Custom integrations</li>
+          </ul>
+          <button class="btn btn-outline w-full mt-8">Contact Sales</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="container mx-auto px-4 py-24">
+    <div class="card p-12 text-center bg-primary text-primary-foreground">
+      <h2 class="text-3xl font-bold">Ready to get started?</h2>
+      <p class="mt-4 opacity-90 max-w-xl mx-auto">Join thousands of developers building amazing products with our platform.</p>
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button class="btn btn-lg bg-white text-primary hover:bg-white/90">Start Free Trial</button>
+        <button class="btn btn-lg border-white/30 border bg-transparent hover:bg-white/10">Schedule Demo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid gap-8 md:grid-cols-4">
+        <div>
+          <span class="text-xl font-bold">Acme Inc</span>
+          <p class="mt-4 text-sm text-muted-foreground">Building the future of software development.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Product</h4>
+          <ul class="space-y-2 text-sm text-muted-foreground">
+            <li><a href="#" class="hover:text-foreground">Features</a></li>
+            <li><a href="#" class="hover:text-foreground">Pricing</a></li>
+            <li><a href="#" class="hover:text-foreground">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Company</h4>
+          <ul class="space-y-2 text-sm text-muted-foreground">
+            <li><a href="#" class="hover:text-foreground">About</a></li>
+            <li><a href="#" class="hover:text-foreground">Blog</a></li>
+            <li><a href="#" class="hover:text-foreground">Careers</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Legal</h4>
+          <ul class="space-y-2 text-sm text-muted-foreground">
+            <li><a href="#" class="hover:text-foreground">Privacy</a></li>
+            <li><a href="#" class="hover:text-foreground">Terms</a></li>
+            <li><a href="#" class="hover:text-foreground">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-sm text-muted-foreground">&copy; 2024 Acme Inc. All rights reserved.</p>
+        <div class="flex gap-4">
+          <a href="#" class="text-muted-foreground hover:text-foreground"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg></a>
+          <a href="#" class="text-muted-foreground hover:text-foreground"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+          <a href="#" class="text-muted-foreground hover:text-foreground"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

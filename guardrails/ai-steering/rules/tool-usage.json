@@ -1,0 +1,238 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-19",
+  "rules": [
+    {
+      "id": "use-read-over-bash-cat",
+      "level": "ALWAYS",
+      "category": "tool_usage",
+      "description": "Use Read tool instead of bash cat/head/tail for file reading",
+      "context": {
+        "when": ["reading file contents", "viewing files"],
+        "unless": ["streaming logs in real-time", "monitoring active processes"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Read tool",
+        "alternative": "Only use Bash for streaming/real-time scenarios (tail -f, live logs)"
+      },
+      "rationale": "Read tool optimized for file viewing, better UX, handles large files, shows line numbers",
+      "examples": [
+        {
+          "scenario": "User: 'Show me the contents of config.json'",
+          "correct": "Use Read tool to read config.json",
+          "incorrect": "Use Bash with 'cat config.json'"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "use-grep-over-bash-grep",
+      "level": "ALWAYS",
+      "category": "tool_usage",
+      "description": "Use Grep tool instead of bash grep/rg for code search",
+      "context": {
+        "when": ["searching code", "finding patterns in files"],
+        "unless": ["complex shell pipeline required"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Grep tool",
+        "alternative": "Only use Bash grep for complex pipelines"
+      },
+      "rationale": "Grep tool optimized for search, supports output modes, better performance",
+      "examples": [
+        {
+          "scenario": "User: 'Find all TODO comments'",
+          "correct": "Use Grep tool with pattern 'TODO'",
+          "incorrect": "Use Bash with 'grep -r TODO .'"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "use-glob-over-find",
+      "level": "ALWAYS",
+      "category": "tool_usage",
+      "description": "Use Glob tool instead of bash find/ls for file discovery",
+      "context": {
+        "when": ["finding files by pattern", "listing files"],
+        "unless": ["complex find predicates needed"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Glob tool",
+        "alternative": "Only use Bash find for complex predicates (mtime, size, etc.)"
+      },
+      "rationale": "Glob tool optimized for pattern matching, faster, cleaner results",
+      "examples": [
+        {
+          "scenario": "User: 'List all TypeScript files'",
+          "correct": "Use Glob with pattern '**/*.ts'",
+          "incorrect": "Use Bash with 'find . -name \"*.ts\"'"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "use-edit-over-sed",
+      "level": "ALWAYS",
+      "category": "tool_usage",
+      "description": "Use Edit tool instead of bash sed/awk for file editing",
+      "context": {
+        "when": ["modifying files", "replacing text"],
+        "unless": ["streaming edits on large files"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Edit tool",
+        "alternative": "Only use Bash sed/awk for streaming scenarios"
+      },
+      "rationale": "Edit tool ensures exact matching, prevents errors, preserves formatting",
+      "examples": [
+        {
+          "scenario": "User: 'Update the API endpoint URL'",
+          "correct": "Use Edit tool with old_string/new_string",
+          "incorrect": "Use Bash with 'sed -i ...'"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "use-write-over-echo",
+      "level": "ALWAYS",
+      "category": "tool_usage",
+      "description": "Use Write tool instead of bash echo/cat for file creation",
+      "context": {
+        "when": ["creating new files", "writing file contents"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Write tool",
+        "alternative": null
+      },
+      "rationale": "Write tool safer, handles special characters, clear intent",
+      "examples": [
+        {
+          "scenario": "User: 'Create a config file'",
+          "correct": "Use Write tool with file_path and content",
+          "incorrect": "Use Bash with 'echo ... > config.json'"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "no-bash-for-communication",
+      "level": "NEVER",
+      "category": "tool_usage",
+      "description": "Never use Bash echo to communicate with user",
+      "context": {
+        "when": ["communicating thoughts", "explaining to user"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "Bash echo for user communication",
+        "alternative": "Output text directly in response"
+      },
+      "rationale": "Bash is for system operations, not communication. Direct output clearer.",
+      "examples": [
+        {
+          "scenario": "AI wants to explain next steps",
+          "correct": "Output explanation text directly",
+          "incorrect": "Use 'echo \"Next steps are...\"'"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "use-task-for-codebase-exploration",
+      "level": "MUST",
+      "category": "tool_usage",
+      "description": "Use Task tool with Explore subagent for non-needle codebase exploration",
+      "context": {
+        "when": ["exploring codebase structure", "understanding architecture", "finding related code"],
+        "unless": ["searching for specific class/function name", "reading specific known file"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Task tool (Explore subagent)",
+        "alternative": "Direct Glob/Grep only for needle queries (specific class/function)"
+      },
+      "rationale": "Explore agent optimized for broad codebase understanding, reduces token usage",
+      "examples": [
+        {
+          "scenario": "User: 'Where are errors from the client handled?'",
+          "correct": "Use Task tool with Explore subagent",
+          "incorrect": "Use Grep directly to search for 'error' everywhere"
+        },
+        {
+          "scenario": "User: 'Find the ErrorHandler class'",
+          "correct": "Use Grep to find 'class ErrorHandler' (needle query)",
+          "incorrect": "Use Task tool for simple class search"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "parallel-tool-calls",
+      "level": "ALWAYS",
+      "category": "tool_usage",
+      "description": "Make independent tool calls in parallel within single message",
+      "context": {
+        "when": ["multiple independent operations needed"],
+        "unless": ["operations depend on previous results"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Parallel tool invocation pattern",
+        "alternative": "Sequential calls only when dependencies exist"
+      },
+      "rationale": "Maximize performance, reduce latency, follow Claude Code best practices",
+      "examples": [
+        {
+          "scenario": "Need to read 3 unrelated files",
+          "correct": "Single message with 3 Read tool calls",
+          "incorrect": "3 separate messages with 1 Read call each"
+        },
+        {
+          "scenario": "Read file A, then use contents to search file B",
+          "correct": "Sequential: Read A, then search B with results",
+          "incorrect": "Parallel calls (would fail, B search needs A contents)"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    }
+  ]
+}

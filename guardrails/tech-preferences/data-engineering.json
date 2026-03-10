@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Data Engineering",
+  "description": "Data transformation, ETL, and data pipeline tools",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "categories": {
+    "data_transformation": {
+      "description": "SQL-based data transformation and modeling",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "dbt (Data Build Tool)",
+          "version": "1.x",
+          "rationale": "SQL-based transformations, version control, testing, documentation, modular models",
+          "useCases": [
+            "data warehousing",
+            "analytics engineering",
+            "data modeling",
+            "ELT pipelines"
+          ],
+          "docsUrl": "https://docs.getdbt.com/",
+          "examplesUrl": "https://github.com/dbt-labs/jaffle_shop"
+        },
+        {
+          "rank": 2,
+          "name": "AWS Glue",
+          "version": "AWS",
+          "rationale": "Serverless ETL, AWS-native, Spark-based, automatic schema discovery",
+          "useCases": [
+            "AWS data lakes",
+            "serverless ETL",
+            "large-scale transformations"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/glue/",
+          "examplesUrl": "https://github.com/aws-samples/aws-glue-samples"
+        },
+        {
+          "rank": 3,
+          "name": "Apache Airflow",
+          "version": "2.x",
+          "rationale": "Workflow orchestration, Python DAGs, extensive integrations",
+          "useCases": [
+            "complex data pipelines",
+            "workflow orchestration",
+            "scheduled ETL"
+          ],
+          "docsUrl": "https://airflow.apache.org/docs/",
+          "examplesUrl": "https://github.com/apache/airflow/tree/main/airflow/example_dags"
+        },
+        {
+          "rank": 4,
+          "name": "Dagster",
+          "version": "1.x",
+          "rationale": "Modern data orchestration, software-defined assets, type-safe, testing, dagster cloud",
+          "useCases": [
+            "modern data pipelines",
+            "asset-centric workflows",
+            "data platform engineering",
+            "testing data pipelines"
+          ],
+          "docsUrl": "https://docs.dagster.io/",
+          "examplesUrl": "https://docs.dagster.io/getting-started/quickstart"
+        }
+      ]
+    },
+    "data_warehouses": {
+      "description": "Cloud data warehouses and analytics databases",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS Redshift",
+          "version": "AWS",
+          "rationale": "AWS-native, columnar storage, scalable, SQL interface",
+          "useCases": [
+            "AWS data warehouses",
+            "large-scale analytics",
+            "OLAP queries"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/redshift/",
+          "examplesUrl": "https://github.com/aws-samples/amazon-redshift-primer"
+        },
+        {
+          "rank": 2,
+          "name": "Snowflake",
+          "version": "platform",
+          "rationale": "Fully managed, separation of storage/compute, multi-cloud, instant scaling",
+          "useCases": [
+            "enterprise data warehousing",
+            "multi-cloud analytics",
+            "data sharing"
+          ],
+          "docsUrl": "https://docs.snowflake.com/",
+          "examplesUrl": "https://github.com/Snowflake-Labs/sfquickstarts"
+        },
+        {
+          "rank": 3,
+          "name": "BigQuery",
+          "version": "GCP",
+          "rationale": "Serverless, fast SQL, built-in ML, GCP-native",
+          "useCases": [
+            "GCP analytics",
+            "serverless data warehouse",
+            "BigQuery ML"
+          ],
+          "docsUrl": "https://cloud.google.com/bigquery/docs",
+          "examplesUrl": "https://github.com/GoogleCloudPlatform/bigquery-samples"
+        }
+      ]
+    },
+    "data_lakes": {
+      "description": "Data lake storage and management",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "AWS S3 + Lake Formation",
+          "version": "AWS",
+          "rationale": "AWS-native, fine-grained access control, integrated with Glue/Athena",
+          "useCases": [
+            "AWS data lakes",
+            "centralized governance",
+            "secure data sharing"
+          ],
+          "docsUrl": "https://docs.aws.amazon.com/lake-formation/",
+          "examplesUrl": "https://github.com/aws-samples/aws-lake-formation-samples"
+        },
+        {
+          "rank": 2,
+          "name": "Delta Lake",
+          "version": "3.x",
+          "rationale": "ACID transactions, time travel, schema evolution, open source",
+          "useCases": [
+            "data lake reliability",
+            "streaming + batch",
+            "versioned data"
+          ],
+          "docsUrl": "https://docs.delta.io/",
+          "examplesUrl": "https://github.com/delta-io/delta/tree/master/examples"
+        },
+        {
+          "rank": 3,
+          "name": "Apache Iceberg",
+          "version": "latest",
+          "rationale": "Open table format, hidden partitioning, schema evolution, multi-engine",
+          "useCases": [
+            "multi-engine analytics",
+            "large-scale tables",
+            "open format"
+          ],
+          "docsUrl": "https://iceberg.apache.org/docs/latest/",
+          "examplesUrl": "https://iceberg.apache.org/docs/latest/getting-started/"
+        }
+      ]
+    }
+  }
+}

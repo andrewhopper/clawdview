@@ -1,0 +1,341 @@
+# =============================================================================
+# Domain: reporting
+# Version: 1.0.0
+# Status: production
+# Dependencies: core@^1.0.0
+# Created: 2025-12-01
+# Updated: 2025-12-01
+# =============================================================================
+
+domain:
+  name: reporting
+  version: "1.0.0"
+  description: "Business reports and research artifacts with structured sections"
+  namespace: "https://protoflow.ai/ontology/reporting#"
+  created_at: "2025-12-01"
+  updated_at: "2025-12-01"
+  dependencies:
+    core: "^1.0.0"
+
+  changelog:
+    "1.0.0": "Initial version - Report, ReportSection, ResearchReport entities"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  Report:
+    description: "Structured business report with executive summary and sections"
+    properties:
+      id:
+        type: uuid
+        required: true
+      title:
+        type: string
+        required: true
+        maxLength: 500
+      executive_summary:
+        type: string
+        required: true
+        description: "High-level summary of findings and recommendations"
+      report_type:
+        type: ReportType
+        required: true
+      status:
+        type: ReportStatus
+        required: true
+        default: draft
+      authors:
+        type: array
+        items: core.Author
+        required: true
+      sections:
+        type: array
+        items: ReportSection
+        required: true
+        description: "Ordered list of report sections"
+      visibility:
+        type: core.Visibility
+      project_id:
+        type: uuid
+        description: "FK to project (optional)"
+      organization_id:
+        type: uuid
+        description: "FK to organization (optional)"
+      tags:
+        type: array
+        items: string
+      version:
+        type: integer
+        default: 1
+      published_at:
+        type: datetime
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ReportSection:
+    description: "A section within a report"
+    properties:
+      id:
+        type: uuid
+        required: true
+      report_id:
+        type: uuid
+        required: true
+        description: "FK to Report"
+      title:
+        type: string
+        required: true
+        maxLength: 255
+      content:
+        type: array
+        items: ReportSectionContent
+        required: true
+      position:
+        type: integer
+        required: true
+        description: "Order within report (0-indexed)"
+      parent_section_id:
+        type: uuid
+        description: "FK for nested sections"
+      depth:
+        type: integer
+        default: 0
+      visibility:
+        type: core.Visibility
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ReportSectionContent:
+    description: "Content block within a report section"
+    properties:
+      id:
+        type: uuid
+        required: true
+      section_id:
+        type: uuid
+        required: true
+      content_type:
+        type: SectionContentType
+        required: true
+      content:
+        type: string
+        required: true
+        description: "Text content (markdown supported)"
+      position:
+        type: integer
+        required: true
+      metadata:
+        type: object
+        description: "Type-specific metadata (chart config, table schema, etc.)"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ResearchReport:
+    description: "Research artifact with methodology, findings, and citations"
+    extends: Report
+    properties:
+      research_type:
+        type: ResearchType
+        required: true
+      methodology:
+        type: string
+      data_sources:
+        type: array
+        items: string
+      key_findings:
+        type: array
+        items: string
+        required: true
+      recommendations:
+        type: array
+        items: string
+      citations:
+        type: array
+        items: Citation
+      confidence_level:
+        type: ConfidenceLevel
+
+  Citation:
+    description: "Reference or source citation"
+    properties:
+      id:
+        type: uuid
+        required: true
+      title:
+        type: string
+        required: true
+      authors:
+        type: array
+        items: string
+      url:
+        type: uri
+      publication_date:
+        type: date
+      accessed_date:
+        type: date
+      citation_type:
+        type: CitationType
+        required: true
+      notes:
+        type: string
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  ReportType:
+    description: "Categories of business reports"
+    values:
+      - general
+      - market_research
+      - competitive
+      - financial
+      - operational
+      - technical
+      - strategic
+      - status
+      - audit
+      - risk
+
+  ReportStatus:
+    values:
+      - draft
+      - in_review
+      - approved
+      - published
+      - archived
+      - superseded
+
+  SectionContentType:
+    description: "Types of content within report sections"
+    values:
+      - paragraph
+      - bullet_list
+      - numbered_list
+      - table
+      - chart
+      - image
+      - quote
+      - callout
+      - code
+      - key_value
+
+  ResearchType:
+    values:
+      - market_research
+      - ux_research
+      - competitive_analysis
+      - user_research
+      - technology_research
+      - feasibility_study
+      - industry_analysis
+      - customer_research
+
+  CitationType:
+    values:
+      - article
+      - book
+      - website
+      - report
+      - interview
+      - survey
+      - dataset
+      - internal_doc
+
+  ConfidenceLevel:
+    description: "Confidence in research findings"
+    values:
+      - high              # Strong evidence, multiple sources
+      - medium            # Reasonable evidence
+      - low               # Limited evidence, preliminary
+      - speculative       # Hypothesis, needs validation
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+
+  CreateReport:
+    description: "Create a new report"
+    parameters:
+      title: { type: string, required: true }
+      report_type: { type: ReportType, required: true }
+      executive_summary: { type: string }
+      authors: { type: array, items: core.Author, required: true }
+    result: Report
+    permission: report:create
+    idempotent: false
+
+  AddSection:
+    description: "Add a section to a report"
+    parameters:
+      report_id: { type: uuid, required: true }
+      title: { type: string, required: true }
+      position: { type: integer }
+      parent_section_id: { type: uuid }
+    result: ReportSection
+    permission: report:update
+    idempotent: false
+
+  PublishReport:
+    description: "Publish a report"
+    parameters:
+      report_id: { type: uuid, required: true }
+    result: Report
+    permission: report:publish
+    idempotent: true
+
+  CreateResearchReport:
+    description: "Create a research report"
+    parameters:
+      title: { type: string, required: true }
+      research_type: { type: ResearchType, required: true }
+      methodology: { type: string }
+      authors: { type: array, items: core.Author, required: true }
+    result: ResearchReport
+    permission: report:create
+    idempotent: false
+
+# =============================================================================
+# RELATIONSHIPS
+# =============================================================================
+
+relationships:
+  - type: one_to_many
+    from: Report
+    to: ReportSection
+    foreign_key: report_id
+
+  - type: one_to_many
+    from: ReportSection
+    to: ReportSectionContent
+    foreign_key: section_id
+
+  - type: one_to_many
+    from: ReportSection
+    to: ReportSection
+    foreign_key: parent_section_id
+    description: "Nested sections"
+
+  - type: one_to_many
+    from: ResearchReport
+    to: Citation
+    foreign_key: report_id

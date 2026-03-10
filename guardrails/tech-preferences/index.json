@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences Index",
+  "description": "Index of technology preference files organized by category",
+  "version": "1.1.0",
+  "lastUpdated": "2025-11-16",
+  "groups": {
+    "frontend": {
+      "file": "frontend.json",
+      "description": "Frontend frameworks, UI libraries, and styling",
+      "categories": [
+        "frontend_frameworks",
+        "ui_component_libraries",
+        "real_time_collaboration",
+        "styling"
+      ]
+    },
+    "backend": {
+      "file": "backend.json",
+      "description": "Backend frameworks, databases, and ORMs",
+      "categories": [
+        "backend_frameworks",
+        "databases",
+        "orm_query_builders"
+      ]
+    },
+    "ai-ml": {
+      "file": "ai-ml.json",
+      "description": "AI/ML services: ASR, TTS, OCR, LLM, embeddings, image generation",
+      "categories": [
+        "asr_speech_recognition",
+        "tts_text_to_speech",
+        "ocr_document_intelligence",
+        "llm_inference",
+        "image_generation",
+        "vector_embeddings",
+        "vector_databases",
+        "llm_orchestration"
+      ]
+    },
+    "testing": {
+      "file": "testing.json",
+      "description": "Testing frameworks and tools",
+      "categories": [
+        "testing_e2e",
+        "testing_unit"
+      ]
+    },
+    "infrastructure": {
+      "file": "infrastructure.json",
+      "description": "Deployment, monitoring, CI/CD, caching, and search",
+      "categories": [
+        "deployment_frontend",
+        "deployment_backend",
+        "monitoring",
+        "ci_cd",
+        "caching",
+        "search",
+        "task_queues",
+        "infrastructure_as_code",
+        "workflow_orchestration"
+      ]
+    },
+    "services": {
+      "file": "services.json",
+      "description": "Authentication, email, payments, and storage services",
+      "categories": [
+        "authentication",
+        "email_sending",
+        "email_templating",
+        "payments",
+        "storage",
+        "analytics"
+      ]
+    },
+    "data-viz": {
+      "file": "data-viz.json",
+      "description": "Data visualization and diagramming",
+      "categories": [
+        "data_visualization",
+        "diagramming"
+      ]
+    },
+    "api-docs": {
+      "file": "api-docs.json",
+      "description": "API documentation tools",
+      "categories": [
+        "api_documentation"
+      ]
+    },
+    "data-engineering": {
+      "file": "data-engineering.json",
+      "description": "Data transformation, ETL, and data pipeline tools",
+      "categories": [
+        "data_transformation",
+        "data_warehouses",
+        "data_lakes"
+      ]
+    },
+    "documentation": {
+      "file": "documentation.json",
+      "description": "Documentation platforms and tools",
+      "categories": [
+        "documentation_platforms",
+        "internal_documentation",
+        "static_site_generators"
+      ]
+    }
+  }
+}

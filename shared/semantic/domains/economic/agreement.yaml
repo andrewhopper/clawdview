@@ -1,0 +1,456 @@
+# Economic Domain: Agreement
+# Terms governing exchanges between actors
+# Version: 1.0.0
+
+domain: economic-agreement
+version: "1.0.0"
+status: production
+description: Agreements that govern economic exchanges - contracts, subscriptions, terms
+dependencies:
+  - core
+  - economic-actor
+  - economic-value
+
+# =============================================================================
+# DESIGN PHILOSOPHY
+# =============================================================================
+#
+# An Agreement defines terms BEFORE exchanges happen:
+# - Who are the parties
+# - What can be exchanged
+# - At what rates
+# - Under what conditions
+# - For how long
+#
+# Examples:
+# - Employment contract: employee provides labor, company pays salary
+# - API subscription: provider gives tokens, consumer pays per usage
+# - Service contract: vendor provides service, client pays hourly
+# - Lease: owner provides access, tenant pays monthly
+#
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Agreement (the core contract)
+  # ---------------------------------------------------------------------------
+
+  Agreement:
+    description: Terms governing exchanges between parties
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: false
+      agreement_type:
+        type: AgreementType
+        required: true
+
+      # Parties
+      parties:
+        type: array
+        items:
+          type: Party
+        required: true
+        constraints:
+          min_length: 2
+        description: At least 2 parties
+
+      # Duration
+      effective_from:
+        type: datetime
+        required: true
+      effective_until:
+        type: datetime
+        required: false
+        description: Null = indefinite
+      auto_renew:
+        type: boolean
+        required: false
+        default: false
+      renewal_period:
+        type: string
+        required: false
+        description: e.g., "1 year", "1 month"
+      notice_period:
+        type: string
+        required: false
+        description: Required notice to terminate
+
+      # Terms
+      terms:
+        type: array
+        items:
+          type: Term
+        required: false
+        description: Exchange terms (rates, limits, conditions)
+
+      # Payment terms
+      payment_terms:
+        type: PaymentTerms
+        required: false
+
+      # Status
+      status:
+        type: AgreementStatus
+        required: true
+        default: DRAFT
+
+      # Metadata
+      external_ref:
+        type: string
+        required: false
+        description: External contract/document reference
+      notes:
+        type: string
+        required: false
+      created_at:
+        type: datetime
+        required: false
+      signed_at:
+        type: datetime
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Party
+  # ---------------------------------------------------------------------------
+
+  Party:
+    description: A party to the agreement
+    fields:
+      actor_id:
+        type: string
+        required: true
+      role:
+        type: PartyRole
+        required: true
+      signed:
+        type: boolean
+        required: false
+        default: false
+      signed_at:
+        type: datetime
+        required: false
+      signed_by:
+        type: string
+        required: false
+        description: Name of signatory
+
+  # ---------------------------------------------------------------------------
+  # Term (exchange terms)
+  # ---------------------------------------------------------------------------
+
+  Term:
+    description: A term defining exchange rates/conditions
+    fields:
+      id:
+        type: string
+        required: false
+      name:
+        type: string
+        required: false
+      term_type:
+        type: TermType
+        required: true
+
+      # What value this term covers
+      value_type:
+        type: ValueType
+        required: false
+        description: What type of value this term governs
+      unit:
+        type: string
+        required: false
+        description: Unit of measure
+
+      # Rate
+      rate:
+        type: Rate
+        required: false
+
+      # Limits
+      minimum:
+        type: float
+        required: false
+        description: Minimum quantity per period
+      maximum:
+        type: float
+        required: false
+        description: Maximum quantity per period
+      limit_period:
+        type: string
+        required: false
+        description: Period for limits (day, week, month)
+
+      # Conditions
+      conditions:
+        type: array
+        items:
+          type: Condition
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Rate
+  # ---------------------------------------------------------------------------
+
+  Rate:
+    description: A rate for value exchange
+    fields:
+      amount:
+        type: float
+        required: true
+      currency:
+        type: string
+        required: false
+        default: "USD"
+      per:
+        type: string
+        required: true
+        description: Unit (hour, token, unit, month, etc.)
+      rate_type:
+        type: RateType
+        required: false
+        default: STANDARD
+
+  # ---------------------------------------------------------------------------
+  # Condition
+  # ---------------------------------------------------------------------------
+
+  Condition:
+    description: Condition that affects a term
+    fields:
+      condition_type:
+        type: ConditionType
+        required: true
+      operator:
+        type: string
+        required: false
+        description: >, <, =, between, etc.
+      value:
+        type: string
+        required: false
+      description:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Payment Terms
+  # ---------------------------------------------------------------------------
+
+  PaymentTerms:
+    description: Payment terms for the agreement
+    fields:
+      method:
+        type: PaymentMethod
+        required: false
+      frequency:
+        type: string
+        required: false
+        description: weekly, bi-weekly, monthly, per-invoice
+      due_days:
+        type: integer
+        required: false
+        description: Days after invoice/period to pay
+      currency:
+        type: string
+        required: false
+        default: "USD"
+      late_fee:
+        type: Rate
+        required: false
+      early_payment_discount:
+        type: Rate
+        required: false
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  AgreementType:
+    description: Type of agreement
+    values:
+      # Employment
+      - EMPLOYMENT        # Employee-employer
+      - CONTRACTOR        # Independent contractor
+      - CONSULTING        # Consulting engagement
+
+      # Service
+      - SERVICE           # Service agreement
+      - SUBSCRIPTION      # Recurring subscription
+      - LICENSE           # Software/IP license
+      - SLA               # Service level agreement
+
+      # Commercial
+      - PURCHASE          # Purchase agreement
+      - SALE              # Sales agreement
+      - LEASE             # Lease/rental
+      - PARTNERSHIP       # Partnership agreement
+
+      # Platform
+      - TERMS_OF_SERVICE  # TOS/EULA
+      - API_AGREEMENT     # API usage terms
+      - MARKETPLACE       # Marketplace terms
+
+      # Other
+      - CUSTOM
+
+  AgreementStatus:
+    description: Status of agreement
+    values:
+      - DRAFT             # Being drafted
+      - PENDING_SIGNATURE # Awaiting signatures
+      - ACTIVE            # In effect
+      - SUSPENDED         # Temporarily suspended
+      - EXPIRED           # Past effective date
+      - TERMINATED        # Ended early
+      - RENEWED           # Renewed (new agreement)
+
+  PartyRole:
+    description: Role of party in agreement
+    values:
+      - PROVIDER          # Provides value
+      - CONSUMER          # Receives value
+      - EMPLOYER          # Employs
+      - EMPLOYEE          # Is employed
+      - VENDOR            # Sells/provides
+      - CLIENT            # Buys/receives
+      - LICENSOR          # Grants license
+      - LICENSEE          # Receives license
+      - PLATFORM          # Platform/intermediary
+
+  TermType:
+    description: Type of term
+    values:
+      - RATE              # Rate for value
+      - LIMIT             # Usage limit
+      - COMMITMENT        # Minimum commitment
+      - SLA               # Service level
+      - PENALTY           # Penalty clause
+      - BONUS             # Bonus clause
+      - EXCLUSIVITY       # Exclusivity clause
+      - CONFIDENTIALITY   # NDA terms
+
+  RateType:
+    description: Type of rate
+    values:
+      - STANDARD          # Normal rate
+      - OVERTIME          # Overtime premium
+      - WEEKEND           # Weekend rate
+      - HOLIDAY           # Holiday rate
+      - NIGHT             # Night shift
+      - RUSH              # Rush/emergency
+      - BULK              # Volume discount
+      - TIERED            # Tiered pricing
+
+  ConditionType:
+    description: Type of condition
+    values:
+      - TIME              # Time-based (hours, days)
+      - VOLUME            # Quantity-based
+      - DURATION          # Length of engagement
+      - SKILL             # Skill/role required
+      - LOCATION          # Location-based
+      - PROJECT           # Project type
+      - APPROVAL          # Requires approval
+
+  PaymentMethod:
+    description: How payment is made
+    values:
+      - DIRECT_DEPOSIT    # Bank transfer
+      - CHECK             # Paper check
+      - WIRE              # Wire transfer
+      - CREDIT_CARD       # Card payment
+      - ACH               # ACH transfer
+      - PAYPAL            # PayPal
+      - CRYPTO            # Cryptocurrency
+      - INVOICE           # Invoice to pay
+
+# =============================================================================
+# EXAMPLES
+# =============================================================================
+
+examples:
+
+  employment_contract:
+    agreement_type: EMPLOYMENT
+    parties:
+      - actor_id: "emp_123"
+        role: EMPLOYEE
+      - actor_id: "company_abc"
+        role: EMPLOYER
+    effective_from: "2025-01-01T00:00:00Z"
+    terms:
+      - term_type: RATE
+        value_type: LABOR
+        rate: { amount: 75000, currency: "USD", per: "year" }
+      - term_type: COMMITMENT
+        minimum: 40
+        unit: "hours"
+        limit_period: "week"
+    payment_terms:
+      method: DIRECT_DEPOSIT
+      frequency: "bi-weekly"
+
+  api_subscription:
+    agreement_type: API_AGREEMENT
+    parties:
+      - actor_id: "anthropic"
+        role: PROVIDER
+      - actor_id: "customer_xyz"
+        role: CONSUMER
+    effective_from: "2025-01-01T00:00:00Z"
+    terms:
+      - term_type: RATE
+        value_type: DATA
+        unit: "token"
+        rate: { amount: 0.00001, currency: "USD", per: "token" }
+      - term_type: LIMIT
+        maximum: 1000000
+        unit: "tokens"
+        limit_period: "day"
+    payment_terms:
+      method: CREDIT_CARD
+      frequency: "monthly"
+
+  consulting_engagement:
+    agreement_type: CONSULTING
+    parties:
+      - actor_id: "consultant_abc"
+        role: PROVIDER
+      - actor_id: "client_xyz"
+        role: CLIENT
+    effective_from: "2025-02-01T00:00:00Z"
+    effective_until: "2025-04-30T23:59:59Z"
+    terms:
+      - term_type: RATE
+        value_type: LABOR
+        rate: { amount: 250, currency: "USD", per: "hour" }
+        rate_type: STANDARD
+      - term_type: RATE
+        value_type: LABOR
+        rate: { amount: 375, currency: "USD", per: "hour" }
+        rate_type: RUSH
+        conditions:
+          - condition_type: TIME
+            description: "Less than 48 hour notice"
+      - term_type: COMMITMENT
+        minimum: 20
+        unit: "hours"
+        limit_period: "month"
+    payment_terms:
+      method: INVOICE
+      due_days: 30
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "Contract law principles"
+  - "FLSA (Fair Labor Standards Act)"
+  - "SaaS agreement best practices"

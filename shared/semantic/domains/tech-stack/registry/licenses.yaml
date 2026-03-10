@@ -1,0 +1,141 @@
+# Software Licenses Registry
+# Based on SPDX License List: https://spdx.org/licenses/
+
+licenses:
+
+  MIT:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: [license-notice]
+    limitations: [liability, warranty]
+
+  Apache-2.0:
+    name: Apache License 2.0
+    url: https://opensource.org/licenses/Apache-2.0
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, patent-use, private-use]
+    conditions: [license-notice, state-changes]
+    limitations: [liability, warranty, trademark-use]
+
+  GPL-2.0:
+    name: GNU General Public License v2.0
+    url: https://opensource.org/licenses/GPL-2.0
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: [disclose-source, license-notice, same-license]
+    limitations: [liability, warranty]
+
+  GPL-3.0:
+    name: GNU General Public License v3.0
+    url: https://opensource.org/licenses/GPL-3.0
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, patent-use, private-use]
+    conditions: [disclose-source, license-notice, same-license, state-changes]
+    limitations: [liability, warranty]
+
+  BSD-2-Clause:
+    name: BSD 2-Clause "Simplified" License
+    url: https://opensource.org/licenses/BSD-2-Clause
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: [license-notice]
+    limitations: [liability, warranty]
+
+  BSD-3-Clause:
+    name: BSD 3-Clause "New" or "Revised" License
+    url: https://opensource.org/licenses/BSD-3-Clause
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: [license-notice]
+    limitations: [liability, warranty]
+
+  ISC:
+    name: ISC License
+    url: https://opensource.org/licenses/ISC
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: [license-notice]
+    limitations: [liability, warranty]
+
+  MPL-2.0:
+    name: Mozilla Public License 2.0
+    url: https://opensource.org/licenses/MPL-2.0
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, patent-use, private-use]
+    conditions: [disclose-source, license-notice, same-license-file]
+    limitations: [liability, warranty, trademark-use]
+
+  LGPL-2.1:
+    name: GNU Lesser General Public License v2.1
+    url: https://opensource.org/licenses/LGPL-2.1
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: [disclose-source, license-notice, same-license-library]
+    limitations: [liability, warranty]
+
+  LGPL-3.0:
+    name: GNU Lesser General Public License v3.0
+    url: https://opensource.org/licenses/LGPL-3.0
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, patent-use, private-use]
+    conditions: [disclose-source, license-notice, same-license-library]
+    limitations: [liability, warranty]
+
+  AGPL-3.0:
+    name: GNU Affero General Public License v3.0
+    url: https://opensource.org/licenses/AGPL-3.0
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, patent-use, private-use]
+    conditions: [disclose-source, license-notice, network-use-disclose, same-license, state-changes]
+    limitations: [liability, warranty]
+
+  Unlicense:
+    name: The Unlicense
+    url: https://unlicense.org
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: []
+    limitations: [liability, warranty]
+
+  CC0-1.0:
+    name: Creative Commons Zero v1.0 Universal
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    osiApproved: false
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: []
+    limitations: [liability, warranty, patent-use, trademark-use]
+
+  PostgreSQL:
+    name: PostgreSQL License
+    url: https://www.postgresql.org/about/licence/
+    osiApproved: true
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: [license-notice]
+    limitations: [liability, warranty]
+
+  SSPL-1.0:
+    name: Server Side Public License v1
+    url: https://www.mongodb.com/licensing/server-side-public-license
+    osiApproved: false
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: [disclose-source, license-notice, same-license, network-use-disclose]
+    limitations: [liability, warranty]
+
+  BSL-1.1:
+    name: Business Source License 1.1
+    url: https://mariadb.com/bsl11/
+    osiApproved: false
+    permissions: [modification, private-use]
+    conditions: [license-notice, time-limited-commercial]
+    limitations: [commercial-use-limited, liability, warranty]
+
+  # Public Domain
+  public-domain:
+    name: Public Domain
+    url: null
+    osiApproved: false
+    permissions: [commercial-use, modification, distribution, private-use]
+    conditions: []
+    limitations: []

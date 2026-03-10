@@ -1,0 +1,182 @@
+# Milestone Domain - Governance Entities
+# Organizational governance: boards, committees, milestones
+
+entities:
+
+  OrganizationalMilestone:
+    description: Corporate or organizational milestone
+    extends: Milestone
+    properties:
+      category:
+        type: OrganizationalMilestoneCategory
+        required: true
+      organization:
+        type: core.Organization
+      fiscalYear:
+        type: integer
+        description: Fiscal year this milestone belongs to
+      quarter:
+        type: integer
+        description: Fiscal quarter (1-4)
+      boardApproval:
+        type: boolean
+        description: Whether board approval is required
+      budget:
+        type: core.Money
+        description: Budget allocated for this milestone
+      actualCost:
+        type: core.Money
+        description: Actual cost incurred
+      metrics:
+        type: array
+        items: MilestoneMetric
+        description: Key metrics to track
+
+  Board:
+    description: Board of directors or advisory board
+    extends: core.Group
+    properties:
+      type:
+        type: BoardType
+        required: true
+      organization:
+        type: core.Organization
+        required: true
+      charter:
+        type: string
+        description: Board charter/bylaws reference
+      meetingFrequency:
+        type: core.Recurrence
+      nextMeetingDate:
+        type: date
+      committees:
+        type: array
+        items: Committee
+
+  Committee:
+    description: Board committee (audit, compensation, etc.)
+    extends: core.Group
+    properties:
+      type:
+        type: CommitteeType
+      parentBoard:
+        type: Board
+      charter:
+        type: string
+
+  BoardMember:
+    description: Member of board of directors
+    extends: core.Person
+    properties:
+      role:
+        type: BoardRole
+      committees:
+        type: array
+        items: Committee
+      tenure:
+        type: core.DateRange
+      independent:
+        type: boolean
+        description: Whether member is independent director
+
+  BoardPresentation:
+    description: Board of directors presentation milestone
+    extends: OrganizationalMilestone
+    properties:
+      presentationType:
+        type: PresentationType
+        required: true
+      agenda:
+        type: array
+        items: AgendaItem
+      attendees:
+        type: array
+        items: BoardMember
+      materials:
+        type: array
+        items: PresentationMaterial
+      decisions:
+        type: array
+        items: BoardDecision
+      followUpActions:
+        type: array
+        items: FollowUpAction
+      meetingLocation:
+        type: core.Address
+      isQuarterly:
+        type: boolean
+      meetingDuration:
+        type: core.Duration
+
+  AgendaItem:
+    description: Board meeting agenda item
+    properties:
+      order:
+        type: integer
+        required: true
+      title:
+        type: string
+        required: true
+      presenter:
+        type: core.Person
+      duration:
+        type: core.Duration
+      type:
+        type: AgendaItemType
+      materials:
+        type: array
+        items: PresentationMaterial
+
+  PresentationMaterial:
+    description: Material for board presentation
+    extends: core.Document
+    properties:
+      type:
+        type: MaterialType
+      confidentiality:
+        type: ConfidentialityLevel
+      version:
+        type: string
+
+  BoardDecision:
+    description: Decision made by board
+    properties:
+      item:
+        type: string
+        required: true
+      decision:
+        type: DecisionOutcome
+        required: true
+      votes:
+        type: VoteCount
+      notes:
+        type: string
+      effectiveDate:
+        type: date
+
+  FollowUpAction:
+    description: Action item from meeting
+    properties:
+      action:
+        type: string
+        required: true
+      owner:
+        type: core.Person
+        required: true
+      dueDate:
+        type: date
+      status:
+        type: ActionStatus
+      completedDate:
+        type: date
+
+# =============================================================================
+# Relationships
+# =============================================================================
+
+relationships:
+  - OrganizationalMilestone presentedAt BoardPresentation
+  - BoardPresentation hasDecisions BoardDecision
+  - Board hasCommittees Committee
+  - Committee partOfBoard Board
+  - BoardMember servesOn Committee

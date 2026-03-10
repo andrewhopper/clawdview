@@ -1,0 +1,48 @@
+{
+  "name": "typescript-nodejs-api-template",
+  "version": "0.1.0",
+  "description": "Gold standard TypeScript Node.js API template with Express and Swagger",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src tests --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "docs": "typedoc",
+    "docs:serve": "npx serve docs/api"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.0",
+    "express": "^4.18.0",
+    "pino": "^8.18.0",
+    "pino-http": "^9.0.0",
+    "pino-pretty": "^10.3.0",
+    "swagger-jsdoc": "^6.2.0",
+    "swagger-ui-express": "^5.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/node": "^20.11.0",
+    "@types/swagger-jsdoc": "^6.0.0",
+    "@types/swagger-ui-express": "^4.1.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "tsx": "^4.7.0",
+    "typedoc": "^0.25.0",
+    "typedoc-plugin-markdown": "^3.17.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0",
+    "@vitest/coverage-v8": "^1.2.0"
+  }
+}

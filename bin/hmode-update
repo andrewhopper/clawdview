@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# hmode-update: Pull latest hmode changes via git subtree
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HMODE_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$HMODE_DIR")"
+
+cd "$PROJECT_ROOT"
+
+echo "Updating hmode from remote..."
+git subtree pull --prefix=hmode git@github.com:andrewhopper/hmode.git main --squash -m "chore: update hmode methodology"
+
+echo ""
+echo "Re-running hmode-init to ensure symlinks..."
+./hmode/bin/hmode-init --quiet
+
+echo "hmode updated successfully!"

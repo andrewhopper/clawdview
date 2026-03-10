@@ -1,0 +1,103 @@
+# Design System Registry
+# Central catalog of available design systems in the Protoflow monorepo
+
+version: "1.0.0"
+last_updated: "2025-11-26"
+
+design_systems:
+  # Default design system based on shadcn/ui
+  shadcn:
+    name: "shadcn/ui"
+    path: "./design-system"
+    package: "@protoflow/design-system"
+    version: "0.1.0"
+    status: active
+    description: "Default design system based on shadcn/ui with Tailwind CSS"
+    use_cases:
+      - Marketing sites
+      - Consumer apps
+      - Custom branding projects
+      - Rapid prototyping
+    features:
+      - Tailwind CSS integration
+      - Radix UI primitives
+      - Dark/light theme support
+      - HTML templates (no build required)
+      - Storybook documentation
+    dependencies:
+      css_framework: "tailwindcss"
+      component_primitives: "@radix-ui/*"
+      utility: "class-variance-authority"
+    storybook_port: 6006
+
+  # AWS Cloudscape design system
+  cloudscape:
+    name: "AWS Cloudscape"
+    path: "./cloudscape"
+    package: "@protoflow/design-system-cloudscape"
+    version: "0.1.0"
+    status: active
+    description: "AWS Console design system for enterprise/data-heavy applications"
+    use_cases:
+      - AWS Console-like applications
+      - Data-heavy dashboards
+      - Enterprise/B2B applications
+      - Internal tools
+    features:
+      - AppLayout shell component
+      - Collection hooks for tables
+      - Built-in accessibility
+      - Dark mode support
+      - No CSS framework required
+    dependencies:
+      components: "@cloudscape-design/components"
+      tokens: "@cloudscape-design/design-tokens"
+      styles: "@cloudscape-design/global-styles"
+      hooks: "@cloudscape-design/collection-hooks"
+    storybook_port: 6007
+
+# Selection guide for choosing a design system
+selection_guide:
+  criteria:
+    - name: "Visual Style"
+      shadcn: "Modern, minimalist, highly customizable"
+      cloudscape: "AWS Console aesthetic, professional, data-focused"
+
+    - name: "Customization"
+      shadcn: "High - copy-paste components, full control"
+      cloudscape: "Medium - design tokens, limited structural changes"
+
+    - name: "Bundle Size"
+      shadcn: "Small - import only what you use"
+      cloudscape: "Medium - larger component library"
+
+    - name: "Learning Curve"
+      shadcn: "Low - familiar Tailwind/React patterns"
+      cloudscape: "Medium - specific patterns like AppLayout"
+
+    - name: "Build Requirements"
+      shadcn: "Optional - HTML templates work without build"
+      cloudscape: "Required - React/bundler setup needed"
+
+    - name: "Best For"
+      shadcn: "Marketing, consumer apps, custom designs"
+      cloudscape: "Enterprise, dashboards, AWS-adjacent tools"
+
+# Template for adding new design systems
+# Copy this template when onboarding a new design system
+template:
+  name: "<Design System Name>"
+  path: "./<directory-name>"
+  package: "@protoflow/design-system-<name>"
+  version: "0.1.0"
+  status: "proposed"  # proposed | active | deprecated
+  description: "<Brief description>"
+  use_cases:
+    - "<Use case 1>"
+    - "<Use case 2>"
+  features:
+    - "<Feature 1>"
+    - "<Feature 2>"
+  dependencies:
+    # Key npm packages required
+  storybook_port: # Unique port number

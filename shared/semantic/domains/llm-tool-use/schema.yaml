@@ -1,0 +1,225 @@
+# LLM Tool Use Domain Model
+# Tools, function calling, and MCP protocol
+# Source: ToolACE, Anthropic MCP, OpenAI Function Calling
+
+domain:
+  name: llm-tool-use
+  version: "1.0.0"
+  description: Tool definitions, function calling, and Model Context Protocol (MCP)
+  dependencies: [core, llm-model]
+  sources:
+    - "ToolACE: arxiv.org/abs/2409.00920"
+    - "Anthropic MCP: modelcontextprotocol.io"
+    - "OpenAI Function Calling documentation"
+    - "AsyncLM: arxiv.org/abs/2412.07017"
+    - "ToolRegistry: arxiv.org/abs/2507.10593"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  Tool:
+    description: A tool/function that can be called by an LLM
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string, required: true, description: "Natural language description for LLM" }
+      inputSchema: { type: ParameterSchema, required: true }
+      outputSchema: { type: ParameterSchema }
+      category: { type: ToolCategory }
+      provider: { type: string, description: "MCP server or API provider" }
+      isEnabled: { type: boolean, default: true }
+      requiresApproval: { type: boolean, default: false }
+      timeout: { type: integer, description: "Timeout in milliseconds" }
+      retryPolicy: { type: RetryPolicy }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ParameterSchema:
+    description: JSON Schema for tool parameters
+    properties:
+      type: { type: string, required: true }
+      properties: { type: object }
+      required: { type: array, items: string }
+      additionalProperties: { type: boolean }
+      description: { type: string }
+
+  ToolParameter:
+    description: A single parameter definition
+    properties:
+      name: { type: string, required: true }
+      type: { type: ParameterType, required: true }
+      description: { type: string }
+      required: { type: boolean, default: true }
+      defaultValue: { type: string }
+      enum: { type: array, items: string }
+      pattern: { type: string, description: "Regex pattern for validation" }
+
+  ToolCall:
+    description: An invocation of a tool by the LLM
+    properties:
+      id: { type: string, required: true }
+      toolId: { type: string, required: true }
+      toolName: { type: string, required: true }
+      input: { type: object, required: true }
+      status: { type: ToolCallStatus, required: true }
+      requestedAt: { type: datetime, required: true }
+      executedAt: { type: datetime }
+      completedAt: { type: datetime }
+      executionMode: { type: ExecutionMode }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ToolResult:
+    description: Result from a tool execution
+    properties:
+      toolCallId: { type: string, required: true }
+      output: { type: string }
+      structuredOutput: { type: object }
+      isError: { type: boolean, default: false }
+      errorType: { type: ToolErrorType }
+      errorMessage: { type: string }
+      executionTimeMs: { type: integer }
+      tokenCount: { type: integer, description: "Tokens in result" }
+
+  RetryPolicy:
+    description: Policy for retrying failed tool calls
+    properties:
+      maxRetries: { type: integer, default: 3 }
+      backoffType: { type: BackoffType, default: "Exponential" }
+      initialDelayMs: { type: integer, default: 1000 }
+      maxDelayMs: { type: integer, default: 30000 }
+      retryableErrors: { type: array, items: ToolErrorType }
+
+  MCPServer:
+    description: Model Context Protocol server definition
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      transport: { type: MCPTransport, required: true }
+      command: { type: string, description: "Command to start server" }
+      args: { type: array, items: string }
+      env: { type: object, description: "Environment variables" }
+      url: { type: uri, description: "For HTTP transport" }
+      tools: { type: array, items: string, description: "Tool IDs" }
+      resources: { type: array, items: MCPResource }
+      prompts: { type: array, items: MCPPrompt }
+      isConnected: { type: boolean, default: false }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  MCPResource:
+    description: A resource exposed by an MCP server
+    properties:
+      uri: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      mimeType: { type: string }
+
+  MCPPrompt:
+    description: A prompt template exposed by an MCP server
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      arguments: { type: array, items: ToolParameter }
+
+  ToolRegistry:
+    description: Registry of available tools (ToolRegistry pattern)
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      tools: { type: array, items: string, description: "Tool IDs" }
+      mcpServers: { type: array, items: string, description: "MCP Server IDs" }
+      schemaFormat: { type: SchemaFormat }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ToolCallBatch:
+    description: Batch of parallel tool calls (LLM-Tool Compiler pattern)
+    properties:
+      id: { type: string, required: true }
+      calls: { type: array, items: string, description: "ToolCall IDs" }
+      strategy: { type: BatchStrategy }
+      status: { type: ToolCallStatus }
+      totalExecutionTimeMs: { type: integer }
+
+enums:
+
+  ToolCategory:
+    description: Category of tool functionality
+    values:
+      - Search        # Web/code/file search
+      - FileSystem    # Read/write files
+      - Database      # Query databases
+      - API           # External API calls
+      - Browser       # Web browser automation
+      - Code          # Code execution
+      - Communication # Email, Slack, etc.
+      - Compute       # Calculations, data processing
+      - Memory        # Memory operations
+      - System        # System operations
+
+  ParameterType:
+    description: Data type of a parameter
+    values:
+      - String
+      - Number
+      - Integer
+      - Boolean
+      - Array
+      - Object
+      - Null
+
+  ToolCallStatus:
+    description: Status of a tool call
+    values:
+      - Pending         # Not yet executed
+      - AwaitingApproval # Needs human approval
+      - Executing       # Currently running
+      - Completed       # Successfully completed
+      - Failed          # Execution failed
+      - Cancelled       # Cancelled by user/system
+      - TimedOut        # Exceeded timeout
+
+  ExecutionMode:
+    description: How the tool call is executed
+    values:
+      - Synchronous     # Wait for result
+      - Asynchronous    # Fire and forget
+      - Streaming       # Stream results back
+      - Batch           # Part of a batch
+
+  ToolErrorType:
+    description: Type of tool execution error
+    values:
+      - ValidationError   # Invalid input
+      - AuthError         # Authentication failed
+      - PermissionDenied  # Not authorized
+      - NotFound          # Resource not found
+      - Timeout           # Execution timed out
+      - RateLimited       # Rate limit exceeded
+      - InternalError     # Tool internal error
+      - NetworkError      # Network connectivity issue
+
+  BackoffType:
+    description: Retry backoff strategy
+    values:
+      - Linear
+      - Exponential
+      - Fixed
+      - Jitter
+
+  MCPTransport:
+    description: MCP server transport type
+    values:
+      - Stdio           # Standard I/O
+      - HTTP            # HTTP/REST
+      - WebSocket       # WebSocket
+
+  SchemaFormat:
+    description: Tool schema format
+    values:
+      - OpenAI          # OpenAI function calling format
+      - Anthropic       # Anthropic tool use format
+      - JSONSchema      # Standard JSON Schema
+      - MCP             # Model Context Protocol

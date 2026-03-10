@@ -1,0 +1,217 @@
+# Observer Domain Entities
+# Version: 1.0.0
+
+entities:
+  Rule:
+    description: A deterministic validation rule with regex pattern or validator function
+    fields:
+      uuid:
+        type: string
+        format: uuid
+        description: Unique identifier (UUID v4)
+        auto_generate: true
+      id:
+        type: string
+        required: true
+        description: Short rule ID (e.g., DOC-001)
+      name:
+        type: string
+        required: true
+        description: Human-readable rule name
+      description:
+        type: string
+        required: true
+        description: What the rule checks for
+      version:
+        type: SemanticVersion
+        default: "1.0.0"
+        description: Semantic version of this rule
+      category:
+        type: RuleCategory
+        default: code_quality
+        description: Rule category for organization
+      tags:
+        type: string[]
+        default: []
+        description: Tags for filtering and grouping
+      severity:
+        type: Severity
+        default: warning
+      enforcement:
+        type: EnforcementLevel
+        default: warn
+      enabled:
+        type: boolean
+        default: true
+        description: Rule active state
+      pattern:
+        type: string
+        optional: true
+        description: Regex that SHOULD match
+      anti_pattern:
+        type: string
+        optional: true
+        description: Regex that should NOT match
+      validator_name:
+        type: string
+        optional: true
+        description: Custom validator function name
+      asset_types:
+        type: AssetType[]
+        default: [any]
+      file_patterns:
+        type: string[]
+        default: []
+        description: Glob patterns for file matching
+      fix_hint:
+        type: string
+        default: ""
+        description: How to fix the violation
+      critical_rule_ref:
+        type: integer
+        optional: true
+        description: Reference to CRITICAL_RULES.md
+      source:
+        type: string
+        optional: true
+        description: Source of this rule
+      created_at:
+        type: datetime
+        auto_generate: true
+      updated_at:
+        type: datetime
+        optional: true
+
+  Violation:
+    description: A detected rule violation
+    fields:
+      rule_id:
+        type: string
+        required: true
+      rule_name:
+        type: string
+        required: true
+      severity:
+        type: Severity
+        required: true
+      enforcement:
+        type: EnforcementLevel
+        required: true
+      file_path:
+        type: string
+        required: true
+      line_number:
+        type: integer
+        optional: true
+      context:
+        type: string
+        default: ""
+      matched_text:
+        type: string
+        default: ""
+      fix_hint:
+        type: string
+        default: ""
+      critical_rule_ref:
+        type: integer
+        optional: true
+      created_at:
+        type: datetime
+        auto_generate: true
+      updated_at:
+        type: datetime
+        optional: true
+
+  CheckResult:
+    description: Result of checking content against rules
+    fields:
+      violations:
+        type: Violation[]
+        default: []
+      rules_checked:
+        type: integer
+        default: 0
+      rules_skipped:
+        type: integer
+        default: 0
+      blocked:
+        type: boolean
+        default: false
+      block_reason:
+        type: string
+        optional: true
+      duration_ms:
+        type: float
+        default: 0.0
+      created_at:
+        type: datetime
+        auto_generate: true
+      updated_at:
+        type: datetime
+        optional: true
+    computed:
+      passed:
+        type: boolean
+        description: Did all checks pass without blocking violations?
+      error_count:
+        type: integer
+        description: Count of error-level violations
+      warning_count:
+        type: integer
+        description: Count of warning-level violations
+      ecc_status:
+        type: string
+        description: ECC-style status (PASS, WARN, FAIL)
+
+  ObserverConfig:
+    description: Configuration for the observer
+    fields:
+      log_level:
+        type: LogLevel
+        default: info
+      log_to_file:
+        type: boolean
+        default: false
+      log_file_path:
+        type: string
+        optional: true
+      fail_fast:
+        type: boolean
+        default: false
+        description: Stop on first blocking violation
+      max_violations:
+        type: integer
+        default: 100
+        description: Max violations before stopping
+      enable_timing:
+        type: boolean
+        default: true
+      default_enforcement:
+        type: EnforcementLevel
+        default: warn
+      created_at:
+        type: datetime
+        auto_generate: true
+      updated_at:
+        type: datetime
+        optional: true
+
+  SemanticVersion:
+    description: Semantic version following semver.org specification
+    fields:
+      major:
+        type: integer
+        default: 1
+        description: Major version - breaking changes
+      minor:
+        type: integer
+        default: 0
+        description: Minor version - new features
+      patch:
+        type: integer
+        default: 0
+        description: Patch version - bug fixes
+      prerelease:
+        type: string
+        optional: true
+        description: Pre-release label (e.g., 'alpha', 'beta.1')

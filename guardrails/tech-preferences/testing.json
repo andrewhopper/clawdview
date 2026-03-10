@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protoflow Tech Stack Preferences - Testing",
+  "description": "Testing frameworks and tools",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "categories": {
+    "testing_e2e": {
+      "description": "End-to-end testing frameworks",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Playwright",
+          "version": "1.40+",
+          "rationale": "Cross-browser, reliable selectors, codegen, excellent debugging, parallel execution",
+          "useCases": [
+            "all E2E testing",
+            "web automation",
+            "cross-browser testing"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "Cypress",
+          "version": "13.x+",
+          "rationale": "Great DX, time-travel debugging, component testing, visual regression",
+          "useCases": [
+            "component testing",
+            "visual testing",
+            "legacy projects"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "Selenium",
+          "version": "4.x",
+          "rationale": "Industry standard, cross-language support, mobile testing (Appium)",
+          "useCases": [
+            "multi-language projects",
+            "mobile testing",
+            "legacy support"
+          ]
+        }
+      ]
+    },
+    "testing_unit": {
+      "description": "Unit and integration testing frameworks",
+      "preferences": [
+        {
+          "rank": 1,
+          "name": "Jest",
+          "version": "29.x+",
+          "rationale": "Industry standard, snapshot testing, mocking, huge ecosystem. User preference: Use Jest for all tests.",
+          "useCases": [
+            "all TypeScript/JavaScript testing",
+            "React projects",
+            "Node.js projects",
+            "snapshot testing",
+            "mocking and spies"
+          ]
+        },
+        {
+          "rank": 2,
+          "name": "Vitest",
+          "version": "1.x+",
+          "rationale": "Vite-native, fast, Jest-compatible API, ESM support, excellent DX",
+          "useCases": [
+            "Vite projects (when explicitly requested)",
+            "modern TypeScript",
+            "fast test execution"
+          ]
+        },
+        {
+          "rank": 3,
+          "name": "pytest",
+          "version": "8.x+",
+          "rationale": "Python standard, fixtures, parametrize, excellent plugins",
+          "useCases": [
+            "Python projects",
+            "API testing",
+            "data pipeline testing"
+          ]
+        }
+      ]
+    }
+  }
+}

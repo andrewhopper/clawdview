@@ -1,0 +1,128 @@
+---
+# Project Metadata
+id: domain-cli
+name: Domain Model CLI
+description: Python CLI tool for managing shared semantic domain models with gated creation, research agent, and knowledge graph
+classification: shared
+
+# Project Type
+project_type: prototype  # exploration | prototype | production
+prototype_type: utility  # spike | poc | utility
+
+# Phase Tracking
+current_phase: 8
+phase_name: IMPLEMENTATION
+phase_history:
+  - phase: 1
+    name: SEED
+    started: 2025-12-15
+    completed: 2025-12-15
+    status: completed
+  - phase: 2
+    name: RESEARCH
+    started: 2025-12-15
+    completed: 2025-12-15
+    status: completed
+    notes: "GitHub research - datamodel-code-generator, pykwalify, sysgears/domain-schema"
+  - phase: 3
+    name: EXPANSION
+    started: 2025-12-15
+    completed: 2025-12-15
+    status: completed
+    notes: "7 alternatives explored - CLI, MCP, VS Code ext, web dashboard"
+  - phase: 4
+    name: ANALYSIS
+    started: 2025-12-15
+    completed: 2025-12-15
+    status: completed
+  - phase: 5
+    name: SELECTION
+    started: 2025-12-15
+    completed: 2025-12-15
+    status: completed
+    notes: "Selected: Full stack (CLI + validation + codegen + MCP + knowledge)"
+  - phase: 6
+    name: DESIGN
+    started: 2025-12-15
+    completed: 2025-12-15
+    status: completed
+    notes: "Architecture, knowledge graph, gated creation flow, rationale capture"
+  - phase: 7
+    name: TEST_DESIGN
+    started: 2025-12-15
+    completed: 2025-12-15
+    status: completed
+    notes: "pytest + Click CliRunner, 7 test files specified"
+  - phase: 8
+    name: IMPLEMENTATION
+    started: 2025-12-15
+    status: in_progress
+    notes: "Validating v0.1 code against design"
+
+# Testing Track
+testing_track: B  # A (basic) | B (comprehensive)
+uml_diagrams_used: false
+
+# Target Metadata
+target:
+  output: CLI tool + MCP server
+  audience:
+    - Developers
+    - AI agents
+  company_maturity:
+    - poc
+    - mvp
+
+# Tech Stack (approved)
+tech_stack:
+  language: Python 3.11+
+  cli_framework: Click
+  output_formatting: Rich
+  config: Pydantic
+  data_format: YAML
+  validation: pykwalify
+  codegen: datamodel-code-generator
+  knowledge_db: SQLite
+  http_client: httpx
+  mcp: mcp-sdk
+
+# Dependencies
+dependencies:
+  internal:
+    - shared/semantic/domains/registry.yaml
+    - shared/semantic/domains/_template/
+    - shared/semantic/domains/_primitives/
+    - shared/semantic/domains/_references/
+    - shared/semantic/domains/_knowledge/
+  external:
+    - click>=8.1
+    - rich>=13.0
+    - pyyaml>=6.0
+    - pydantic>=2.0
+    - pykwalify>=1.8
+    - datamodel-code-generator>=0.25
+    - httpx>=0.27
+    - mcp>=1.0
+
+# Version Roadmap
+versions:
+  v0.1:
+    status: implemented
+    features: [list, show, search, create, validate]
+  v0.2:
+    status: planned
+    features: [pykwalify validation, meta-schema]
+  v0.3:
+    status: planned
+    features: [codegen command]
+  v0.4:
+    status: planned
+    features: [MCP server]
+  v0.5:
+    status: planned
+    features: [knowledge system, research agent, gated creation]
+
+# Metadata
+version: 0.1.0
+created_at: 2025-12-15
+updated_at: 2025-12-15

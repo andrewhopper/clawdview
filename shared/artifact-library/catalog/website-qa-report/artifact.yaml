@@ -1,0 +1,248 @@
+# File UUID: w3bs1t3-qa-r3p0rt-4rt1
+# Website QA Report Artifact Definition
+# Category: report
+# Complexity: moderate
+
+id: website-qa-report
+name: Website QA Report
+version: "1.0.0"
+description: Comprehensive website quality assurance checklist covering design system compliance, meta tags, mobile responsiveness, accessibility, and performance
+category: report
+complexity: moderate
+created_at: "2026-02-23"
+updated_at: "2026-02-23"
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: summary
+      name: QA Summary
+      description: Overall pass/fail status and key metrics
+      required: true
+      format: table
+
+    - id: design-system
+      name: Design System Compliance
+      description: Adherence to design tokens, typography, spacing, and visual hierarchy
+      required: true
+      format: mixed
+      subsections:
+        - id: colors
+          name: Color Token Usage
+        - id: typography
+          name: Typography Compliance
+        - id: spacing
+          name: Spacing & Layout
+        - id: components
+          name: Component Library Usage
+
+    - id: meta-tags
+      name: Meta Tags & SEO
+      description: HTML meta tags, Open Graph, Twitter cards, structured data
+      required: true
+      format: table
+
+    - id: mobile
+      name: Mobile Responsiveness
+      description: Breakpoint testing, touch targets, viewport behavior
+      required: true
+      format: mixed
+
+    - id: accessibility
+      name: Accessibility (WCAG)
+      description: WCAG 2.1 compliance checks for color contrast, keyboard nav, screen readers
+      required: true
+      format: mixed
+      subsections:
+        - id: perceivable
+          name: Perceivable
+        - id: operable
+          name: Operable
+        - id: understandable
+          name: Understandable
+        - id: robust
+          name: Robust
+
+    - id: performance
+      name: Performance
+      description: Core Web Vitals, load times, asset optimization
+      required: true
+      format: table
+
+    - id: browser-compatibility
+      name: Browser Compatibility
+      description: Testing across target browsers and devices
+      required: true
+      format: table
+
+    - id: functionality
+      name: Functionality Testing
+      description: Interactive elements, forms, navigation, error states
+      required: true
+      format: bullets
+
+    - id: content
+      name: Content Quality
+      description: Spelling, grammar, broken links, placeholder content
+      required: true
+      format: bullets
+
+    - id: issues
+      name: Issues Found
+      description: Detailed list of all issues with severity and location
+      required: true
+      format: table
+
+    - id: recommendations
+      name: Recommendations
+      description: Prioritized list of fixes and improvements
+      required: true
+      format: numbered
+      item_count: 5-15
+
+  required_inputs:
+    - name: url
+      type: url
+      description: URL of the website being tested
+      required: true
+    - name: project_name
+      type: string
+      description: Project or site name
+      required: true
+    - name: test_date
+      type: date
+      description: Date of QA testing
+      required: true
+    - name: tester
+      type: string
+      description: Person or team conducting QA
+      default: "QA Team"
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a senior QA engineer specializing in web applications and design system compliance.
+
+    Your QA approach:
+    - Systematic checklist-based testing
+    - Evidence-based findings with screenshots/specifics
+    - Severity ratings: Critical, Major, Minor, Cosmetic
+    - Actionable recommendations with clear priority
+    - Balance thoroughness with practical focus
+
+    Key testing areas:
+    - Design system: Colors use CSS variables, proper token usage
+    - Meta tags: Title, description, OG tags, favicon
+    - Mobile: All breakpoints, touch targets 44x44px minimum
+    - A11y: WCAG 2.1 AA compliance, 4.5:1 contrast ratio
+    - Performance: LCP < 2.5s, FID < 100ms, CLS < 0.1
+
+  task: |
+    Generate a website QA report for {{PROJECT_NAME}}.
+
+    URL: {{URL}}
+    Test Date: {{TEST_DATE}}
+    Tester: {{TESTER}}
+
+    Structure your response with these sections:
+    1. **QA Summary** - Overall status table with pass/fail by category
+    2. **Design System Compliance** - Token usage, typography, spacing, components
+    3. **Meta Tags & SEO** - All required meta tags with status
+    4. **Mobile Responsiveness** - Breakpoint testing results
+    5. **Accessibility (WCAG)** - WCAG 2.1 checklist results
+    6. **Performance** - Core Web Vitals and load metrics
+    7. **Browser Compatibility** - Cross-browser test results
+    8. **Functionality Testing** - Interactive elements testing
+    9. **Content Quality** - Content review findings
+    10. **Issues Found** - Table: Issue | Severity | Location | Description
+    11. **Recommendations** - Prioritized fix list
+
+  tone: professional
+  reading_level: technical
+  density: standard
+
+# -----------------------------------------
+# VALIDATORS: Quality Checks
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 600
+      max: 3000
+    severity: warning
+    message: "Website QA report should be 600-3000 words"
+
+  - id: section-presence
+    name: Required Sections
+    type: section_presence
+    rule:
+      required:
+        - summary
+        - design-system
+        - meta-tags
+        - mobile
+        - accessibility
+        - performance
+        - issues
+        - recommendations
+    severity: error
+    message: "Missing required section"
+
+  - id: has-severity-ratings
+    name: Contains Severity Ratings
+    type: regex
+    rule:
+      pattern: "(Critical|Major|Minor|Cosmetic|Pass|Fail)"
+      should_match: true
+    severity: warning
+    message: "Issues should include severity ratings"
+
+  - id: has-url
+    name: Contains URL
+    type: regex
+    rule:
+      pattern: "https?://"
+      should_match: true
+    severity: error
+    message: "Report must reference the tested URL"
+
+  - id: has-wcag-reference
+    name: References WCAG
+    type: regex
+    rule:
+      pattern: "WCAG|accessibility|a11y"
+      should_match: true
+    severity: warning
+    message: "Should include accessibility/WCAG references"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 600
+  max_words: 3000
+  reading_level: technical
+  density: standard
+  output_formats:
+    - markdown
+    - html
+    - pdf
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - qa
+  - testing
+  - website
+  - accessibility
+  - performance
+  - design-system
+  - mobile
+  - seo

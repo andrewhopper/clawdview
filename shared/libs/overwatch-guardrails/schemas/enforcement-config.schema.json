@@ -1,0 +1,183 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Enforcement Configuration Schema",
+  "description": "Schema for overwatch-guardrails enforcement configuration",
+  "type": "object",
+  "required": ["default_mode"],
+  "properties": {
+    "default_mode": {
+      "type": "string",
+      "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"],
+      "description": "Default enforcement mode for all rules"
+    },
+    "categories": {
+      "type": "object",
+      "description": "Enforcement modes per category",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object",
+          "required": ["mode"],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+            },
+            "description": {
+              "type": "string"
+            },
+            "suggest_alternatives": {
+              "type": "boolean",
+              "default": false
+            },
+            "log_approval_decision": {
+              "type": "boolean",
+              "default": false
+            },
+            "autofix_available": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "Individual rule configurations",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "mode", "message"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "category": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "show_alternatives": {
+            "type": "boolean",
+            "default": false
+          },
+          "require_justification": {
+            "type": "boolean",
+            "default": false
+          },
+          "autofix_available": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "strictness_profiles": {
+      "type": "object",
+      "description": "Strictness profiles for ranking enforcement",
+      "patternProperties": {
+        "^[a-z]+$": {
+          "type": "object",
+          "required": ["rank_1", "rank_2_3", "rank_4_plus", "not_listed"],
+          "properties": {
+            "rank_1": {
+              "type": "string",
+              "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+            },
+            "rank_2_3": {
+              "type": "string",
+              "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+            },
+            "rank_4_plus": {
+              "type": "string",
+              "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+            },
+            "not_listed": {
+              "type": "string",
+              "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+            }
+          }
+        }
+      }
+    },
+    "environments": {
+      "type": "object",
+      "description": "Environment-specific overrides",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object",
+          "properties": {
+            "default_mode": {
+              "type": "string",
+              "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+            },
+            "strictness": {
+              "type": "string"
+            },
+            "categories": {
+              "type": "object",
+              "patternProperties": {
+                "^[a-z_]+$": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "phases": {
+      "type": "object",
+      "description": "Phase-specific overrides",
+      "patternProperties": {
+        "^phase_[0-9_a-z]+$": {
+          "type": "object",
+          "properties": {
+            "default_mode": {
+              "type": "string",
+              "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+            },
+            "strictness": {
+              "type": "string"
+            },
+            "categories": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "project_types": {
+      "type": "object",
+      "description": "Project type-specific overrides",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object",
+          "properties": {
+            "default_mode": {
+              "type": "string",
+              "enum": ["LOG", "WARN", "APPROVAL_REQUIRED", "BLOCK"]
+            },
+            "strictness": {
+              "type": "string"
+            },
+            "categories": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  }
+}

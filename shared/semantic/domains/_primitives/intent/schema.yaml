@@ -1,0 +1,362 @@
+# Primitive: Intent
+# What an actor wants to achieve - goals and objectives
+# Physics: Final state (target configuration)
+# Philosophy: Teleology (purpose, final cause)
+# Biology: Survival, reproduction (evolutionary drives)
+# Psychology: Motivation, desire, need
+
+domain:
+  name: primitive-intent
+  version: "1.0.0"
+  description: Intents and goals - what actors want to achieve
+  layer: primitive
+  dependencies: [primitive-entity, primitive-state]
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  # ============================================
+  # INTENT FUNDAMENTALS
+  # ============================================
+
+  Intent:
+    description: What an actor wants to achieve
+    properties:
+      id: { type: string, required: true }
+      description: { type: string, required: true }
+      type: { type: IntentType, required: true }
+      priority: { type: Priority }
+      goalState: { type: string, description: "Desired end state" }
+      successCriteria: { type: array, items: Criterion }
+      constraints: { type: array, items: Constraint }
+      deadline: { type: datetime }
+    meta:
+      philosophy: "Final cause (Aristotle) - purpose toward which action aims"
+      psychology: "Motivation - what drives behavior"
+      biology: "Fitness-seeking behavior"
+
+  # ============================================
+  # INTENT TYPES
+  # ============================================
+
+  Goal:
+    extends: Intent
+    description: Desired end state to achieve
+    properties:
+      measureable: { type: boolean }
+      achievable: { type: boolean }
+      relevant: { type: boolean }
+      timeBound: { type: boolean }
+      targetValue: { type: number }
+      currentValue: { type: number }
+      progressPercent: { type: number }
+    meta:
+      source: "SMART goals framework"
+
+  Objective:
+    extends: Intent
+    description: Measurable target (more specific than goal)
+    properties:
+      metric: { type: string, required: true }
+      targetValue: { type: number, required: true }
+      comparison: { type: Comparison, required: true }
+      baseline: { type: number }
+      timeframe: { type: string }
+    examples:
+      - "Reduce latency to < 100ms"
+      - "Increase conversion rate by 20%"
+
+  Need:
+    extends: Intent
+    description: Requirement that must be fulfilled
+    properties:
+      category: { type: NeedCategory, required: true }
+      urgency: { type: Urgency }
+      importance: { type: Importance }
+      satisfiedBy: { type: array, items: string }
+    meta:
+      psychology: "Maslow's hierarchy of needs"
+
+  Desire:
+    extends: Intent
+    description: Preference (nice-to-have, not required)
+    properties:
+      strength: { type: DesireStrength }
+      alternatives: { type: array, items: string }
+      tradeoffs: { type: array, items: Tradeoff }
+
+  Problem:
+    description: Gap between current and desired state
+    properties:
+      currentState: { type: string, required: true }
+      desiredState: { type: string, required: true }
+      impact: { type: Impact }
+      rootCauses: { type: array, items: string }
+      blockers: { type: array, items: string }
+
+  # ============================================
+  # CONSTRAINTS
+  # ============================================
+
+  Constraint:
+    description: Limitation on how intent can be achieved
+    properties:
+      type: { type: ConstraintType, required: true }
+      expression: { type: string, required: true }
+      hardness: { type: Hardness, required: true }
+      rationale: { type: string }
+
+  TemporalConstraint:
+    extends: Constraint
+    description: Time-based limitation
+    properties:
+      deadline: { type: datetime }
+      notBefore: { type: datetime }
+      duration: { type: string }
+      recurrence: { type: string }
+
+  ResourceConstraint:
+    extends: Constraint
+    description: Resource-based limitation
+    properties:
+      resourceType: { type: string, required: true }
+      maxAmount: { type: number }
+      minAmount: { type: number }
+
+  QualityConstraint:
+    extends: Constraint
+    description: Quality-based limitation
+    properties:
+      attribute: { type: string, required: true }
+      threshold: { type: number }
+      comparison: { type: Comparison }
+
+  # ============================================
+  # SUCCESS CRITERIA
+  # ============================================
+
+  Criterion:
+    description: How success is determined
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      metric: { type: string }
+      operator: { type: Comparison }
+      targetValue: { type: any }
+      weight: { type: number, description: "Importance relative to others" }
+
+  AcceptanceCriteria:
+    description: Conditions for accepting work as complete
+    properties:
+      criteria: { type: array, items: Criterion }
+      allRequired: { type: boolean, default: true }
+      minPercentage: { type: number }
+
+  # ============================================
+  # INTENT HIERARCHY
+  # ============================================
+
+  IntentHierarchy:
+    description: Goals broken down into sub-goals
+    properties:
+      rootIntent: { type: Intent, required: true }
+      subIntents: { type: array, items: Intent }
+      decompositionStrategy: { type: DecompositionStrategy }
+    meta:
+      source: "Goal-Task hierarchy"
+
+  Tradeoff:
+    description: Competing constraints requiring balance
+    properties:
+      optionA: { type: string, required: true }
+      optionB: { type: string, required: true }
+      preference: { type: string }
+      ratio: { type: number, description: "Balance point" }
+    examples:
+      - "Speed vs. cost"
+      - "Quality vs. time"
+      - "Features vs. simplicity"
+
+  # ============================================
+  # INTENT RESOLUTION
+  # ============================================
+
+  IntentResolution:
+    description: How an intent was satisfied
+    properties:
+      intentId: { type: string, required: true }
+      status: { type: ResolutionStatus, required: true }
+      satisfiedAt: { type: datetime }
+      satisfiedBy: { type: string }
+      actualValue: { type: any }
+      criteriaResults: { type: array, items: CriterionResult }
+      notes: { type: string }
+
+  CriterionResult:
+    description: Outcome for a single criterion
+    properties:
+      criterionName: { type: string, required: true }
+      passed: { type: boolean, required: true }
+      actualValue: { type: any }
+      message: { type: string }
+
+  Impact:
+    description: Effect of the problem or solution
+    properties:
+      scope: { type: ImpactScope }
+      severity: { type: Severity }
+      likelihood: { type: Likelihood }
+      affectedEntities: { type: array, items: string }
+
+enums:
+
+  IntentType:
+    description: Category of intent
+    values:
+      - goal            # Desired end state
+      - objective       # Measurable target
+      - need            # Requirement
+      - desire          # Preference
+      - problem         # Gap to close
+
+  Priority:
+    description: Importance ranking
+    values:
+      - critical        # Must achieve, blocking
+      - high            # Very important
+      - medium          # Normal importance
+      - low             # Nice to have
+      - none            # No priority assigned
+
+  NeedCategory:
+    description: Type of need (Maslow-inspired)
+    values:
+      - physiological   # Basic survival
+      - safety          # Security, stability
+      - belonging       # Social, connection
+      - esteem          # Achievement, respect
+      - self_actualization # Growth, purpose
+      - functional      # Business function
+      - regulatory      # Compliance
+
+  Urgency:
+    description: Time pressure
+    values:
+      - immediate       # Now
+      - urgent          # Today
+      - soon            # This week
+      - normal          # Normal timeline
+      - later           # When convenient
+
+  Importance:
+    description: Significance level
+    values:
+      - critical        # Cannot proceed without
+      - important       # Significant impact
+      - moderate        # Notable impact
+      - minor           # Small impact
+      - trivial         # Negligible
+
+  DesireStrength:
+    description: How much something is wanted
+    values:
+      - must_have       # Strong preference
+      - should_have     # Moderate preference
+      - could_have      # Mild preference
+      - wont_have       # Explicitly not wanted
+
+  ConstraintType:
+    description: Category of constraint
+    values:
+      - temporal        # Time-based
+      - resource        # Resource limits
+      - quality         # Quality requirements
+      - scope           # Boundary limits
+      - regulatory      # Legal/compliance
+      - technical       # Technical limits
+
+  Hardness:
+    description: How strictly constraint must be observed
+    values:
+      - hard            # Cannot be violated
+      - soft            # Prefer not to violate
+      - preference      # Nice to observe
+
+  Comparison:
+    description: Comparison operators
+    values:
+      - equals
+      - not_equals
+      - greater_than
+      - greater_or_equal
+      - less_than
+      - less_or_equal
+      - contains
+      - between
+      - in_set
+
+  DecompositionStrategy:
+    description: How intents are broken down
+    values:
+      - sequential      # One after another
+      - parallel        # All at same time
+      - alternative     # Any one satisfies
+      - weighted        # Partial satisfaction OK
+
+  ResolutionStatus:
+    description: Outcome of intent pursuit
+    values:
+      - achieved        # Fully satisfied
+      - partial         # Partially satisfied
+      - failed          # Could not satisfy
+      - abandoned       # No longer pursuing
+      - deferred        # Postponed
+
+  ImpactScope:
+    description: Who/what is affected
+    values:
+      - individual      # Single entity
+      - team            # Group
+      - department      # Division
+      - organization    # Whole org
+      - ecosystem       # Beyond org
+
+  Severity:
+    description: How serious
+    values:
+      - critical
+      - high
+      - medium
+      - low
+      - info
+
+  Likelihood:
+    description: Probability
+    values:
+      - certain         # > 90%
+      - likely          # 60-90%
+      - possible        # 30-60%
+      - unlikely        # 10-30%
+      - rare            # < 10%
+
+meta:
+  theoretical_basis:
+    philosophy: "Teleology - study of purpose and goals"
+    psychology: "Motivation theory, goal-setting theory"
+    biology: "Adaptive behavior, fitness optimization"
+    ai: "Goal-oriented agents, planning"
+
+  patterns:
+    - "Goals-Questions-Metrics (GQM)"
+    - "SMART goals"
+    - "OKRs (Objectives and Key Results)"
+    - "User stories / jobs-to-be-done"
+
+  composition_role: "Why actors act"
+
+  related_primitives:
+    - actor: "Actors have intents"
+    - action: "Actions pursue intents"
+    - resource: "Resources constrain intents"
+    - state: "Goal states represent fulfilled intents"

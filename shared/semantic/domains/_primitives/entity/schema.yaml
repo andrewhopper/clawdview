@@ -1,0 +1,211 @@
+# Primitive: Entity
+# The most fundamental domain - identity and existence
+# Physics: Matter (what has mass and occupies space)
+# Philosophy: Substance (what exists independently)
+# Biology: Organism (what maintains identity over time)
+
+domain:
+  name: primitive-entity
+  version: "1.0.0"
+  description: Identity and existence - the foundation of all things
+  layer: primitive
+  dependencies: []
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  # ============================================
+  # BASE EXISTENCE
+  # ============================================
+
+  Thing:
+    description: Anything that can be referred to - the root of all entities
+    properties:
+      _type: { type: string, description: "Discriminator for polymorphism" }
+    meta:
+      physics: "Particle - fundamental unit of matter"
+      philosophy: "Res (Descartes) - thing that exists"
+
+  IdentifiableThing:
+    extends: Thing
+    description: Thing with stable identity over time
+    properties:
+      id: { type: Identity, required: true }
+    meta:
+      philosophy: "Substance - that which persists through change"
+      biology: "Organism with continuous identity"
+
+  # ============================================
+  # IDENTITY
+  # ============================================
+
+  Identity:
+    description: What makes something THIS specific thing (not another)
+    properties:
+      value: { type: string, required: true }
+      type: { type: IdentityType, required: true }
+      namespace: { type: string, description: "Scope in which identity is unique" }
+      issuedAt: { type: datetime }
+      issuedBy: { type: string }
+    meta:
+      philosophy: "Principium individuationis - principle of individuation"
+      biology: "DNA, fingerprint - unique identifier"
+
+  NaturalIdentity:
+    extends: Identity
+    description: Identity inherent to the thing itself
+    properties:
+      derivedFrom: { type: array, items: string, description: "Properties that constitute identity" }
+    examples:
+      - "Person: fingerprint, DNA"
+      - "Document: content hash"
+      - "Product: SKU from manufacturer"
+
+  SurrogateIdentity:
+    extends: Identity
+    description: Identity assigned by an external system
+    properties:
+      assignedBy: { type: string, required: true }
+      algorithm: { type: string, description: "UUID, ULID, Snowflake, etc." }
+    examples:
+      - "Database primary key"
+      - "UUID"
+      - "Account number"
+
+  CompositeIdentity:
+    extends: Identity
+    description: Identity from combination of properties
+    properties:
+      components: { type: array, items: IdentityComponent, required: true }
+    examples:
+      - "Order: customer_id + order_date + sequence"
+      - "Flight: airline + number + date"
+
+  IdentityComponent:
+    description: One part of a composite identity
+    properties:
+      name: { type: string, required: true }
+      value: { type: string, required: true }
+      order: { type: integer }
+
+  # ============================================
+  # EXISTENCE & LIFECYCLE
+  # ============================================
+
+  ExistenceInfo:
+    description: When and how a thing came to exist and ceased
+    properties:
+      createdAt: { type: datetime, required: true }
+      createdBy: { type: string }
+      creationMethod: { type: CreationMethod }
+      destroyedAt: { type: datetime }
+      destroyedBy: { type: string }
+      destructionMethod: { type: DestructionMethod }
+    meta:
+      physics: "Conservation - matter/energy neither created nor destroyed"
+      biology: "Birth and death"
+
+  VersionInfo:
+    description: Tracks changes to an entity over time
+    properties:
+      version: { type: integer, required: true, default: 1 }
+      previousVersion: { type: integer }
+      updatedAt: { type: datetime, required: true }
+      updatedBy: { type: string }
+      changeReason: { type: string }
+    meta:
+      philosophy: "Ship of Theseus - identity through change"
+
+  # ============================================
+  # BOUNDARY & COMPOSITION
+  # ============================================
+
+  Boundary:
+    description: What defines the limits of an entity
+    properties:
+      type: { type: BoundaryType, required: true }
+      criteria: { type: string, description: "How boundary is determined" }
+      permeability: { type: Permeability, description: "How easily things cross" }
+    meta:
+      biology: "Cell membrane - defines inside vs outside"
+      physics: "Event horizon, system boundary"
+
+  Aggregate:
+    extends: IdentifiableThing
+    description: Entity composed of other entities that form a consistency boundary
+    properties:
+      rootType: { type: string, required: true, description: "Type of aggregate root" }
+      components: { type: array, items: string, description: "Types of component entities" }
+      invariants: { type: array, items: string, description: "Rules that must always be true" }
+    meta:
+      philosophy: "Whole-part relation"
+      biology: "Organism as aggregate of cells"
+
+  Reference:
+    description: Pointer to another entity (without containing it)
+    properties:
+      targetId: { type: Identity, required: true }
+      targetType: { type: string }
+      relationship: { type: string, description: "Nature of reference" }
+    meta:
+      philosophy: "Intentionality - aboutness"
+
+enums:
+
+  IdentityType:
+    description: How identity is established
+    values:
+      - natural       # Derived from inherent properties
+      - surrogate     # Assigned by external system
+      - composite     # Combined from multiple properties
+      - temporal      # Valid only for a time period
+      - contextual    # Valid only in specific context
+
+  CreationMethod:
+    description: How entity came into existence
+    values:
+      - instantiation   # Created new
+      - derivation      # Created from another entity
+      - transformation  # Changed from different type
+      - aggregation     # Composed from parts
+      - discovery       # Already existed, now tracked
+
+  DestructionMethod:
+    description: How entity ceased to exist
+    values:
+      - deletion        # Explicitly removed
+      - expiration      # Time-based end
+      - consumption     # Used up
+      - transformation  # Changed to different type
+      - disaggregation  # Broken into parts
+
+  BoundaryType:
+    description: Type of entity boundary
+    values:
+      - physical        # Material boundary
+      - logical         # Conceptual boundary
+      - temporal        # Time-based boundary
+      - ownership       # Possession-based
+      - membership      # Group inclusion
+
+  Permeability:
+    description: How easily things cross a boundary
+    values:
+      - impermeable     # Nothing crosses
+      - selective       # Some things cross
+      - permeable       # Most things cross
+      - open            # No restriction
+
+meta:
+  theoretical_basis:
+    physics: "Matter - that which has mass and occupies space"
+    philosophy: "Aristotelian substance - that which exists in itself"
+    biology: "Living organism - self-maintaining identity"
+
+  composition_role: "Foundation - all other domains depend on entity"
+
+  related_primitives:
+    - state: "Entity has state"
+    - event: "Events happen to entities"
+    - relation: "Entities connect via relations"

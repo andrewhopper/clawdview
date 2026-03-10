@@ -1,0 +1,383 @@
+{
+  "version": "1.1.0",
+  "lastUpdated": "2025-11-23",
+  "rules": [
+    {
+      "uuid": "a7c3e8f1-4b2d-4e9a-8c6f-1d5e7a9b3c2f",
+      "id": "copyright-notice-required",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "artifacts",
+      "description": "Include confidential copyright notice on all documents",
+      "context": {
+        "when": ["creating documents", "creating markdown files", "creating reports", "creating presentations"],
+        "unless": ["user explicitly says no copyright", "user requests no copyright notice"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Copyright notice at document end",
+        "message": "---\nConfidential © Andrew Hopper [YEAR] hopperab@gmail.com"
+      },
+      "rationale": "Protect intellectual property, establish ownership, legal protection for all created content",
+      "examples": [
+        {
+          "scenario": "Creating a technical design document",
+          "correct": "Add at end of document:\n---\nConfidential © Andrew Hopper 2025 hopperab@gmail.com",
+          "incorrect": "Create document without copyright notice"
+        },
+        {
+          "scenario": "User says 'create doc without copyright'",
+          "correct": "Omit copyright notice as explicitly requested",
+          "incorrect": "Add copyright notice anyway"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved",
+        "changelog": [
+          {
+            "version": "1.0.0",
+            "date": "2025-11-23",
+            "changes": ["Initial rule creation"],
+            "author": "Andrew Hopper"
+          }
+        ]
+      }
+    },
+    {
+      "id": "decimal-outline-format",
+      "level": "ALWAYS",
+      "category": "artifacts",
+      "description": "Use decimal outline format (1.0, 1.1, 1.2, 2.0) for all documents",
+      "context": {
+        "when": ["creating markdown documents", "writing documentation"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Decimal outline numbering system",
+        "alternative": null
+      },
+      "rationale": "Consistent formatting, easy navigation, clear hierarchy",
+      "examples": [
+        {
+          "scenario": "Creating technical design document",
+          "correct": "## 1.0 Overview\n## 2.0 Architecture\n### 2.1 Components\n### 2.2 Data Flow",
+          "incorrect": "## Overview\n## Architecture\n### Components\n### Data Flow"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "stage-titles-format",
+      "level": "ALWAYS",
+      "category": "artifacts",
+      "description": "Phase documents use format: # Stage N - Phase Name",
+      "context": {
+        "when": ["creating SDLC phase documents"],
+        "filePattern": "**/seed.md"
+      },
+      "action": {
+        "directive": "use",
+        "target": "Stage title format: # Stage N - Phase Name",
+        "message": "Example: # Stage 1 - Concept Seed"
+      },
+      "rationale": "Clear phase identification, consistent formatting across prototypes",
+      "examples": [
+        {
+          "scenario": "Creating seed.md for new prototype",
+          "correct": "# Stage 1 - Concept Seed",
+          "incorrect": "'# Seed Document' or '# Phase 1'"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "ascii-diagrams-required",
+      "level": "SHOULD",
+      "category": "artifacts",
+      "description": "Include ASCII diagrams for 10-second visual comprehension",
+      "context": {
+        "when": ["creating technical documents", "explaining architecture"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "ASCII diagrams at start of documents",
+        "alternative": "Skip for very simple concepts"
+      },
+      "rationale": "Visual scan enables quick understanding, reduces reading time",
+      "examples": [
+        {
+          "scenario": "Documenting data flow",
+          "correct": "```\nInput → Process → Transform → Output\n  │        │          │         │\n  ▼        ▼          ▼         ▼\n File    Parse     Validate   Store\n```",
+          "incorrect": "Text-only description without visual diagram"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "numbered-lists-not-bullets",
+      "level": "SHOULD",
+      "category": "artifacts",
+      "description": "Use numbered lists instead of bullets (except ✅/❌ checkboxes)",
+      "context": {
+        "when": ["writing lists in documents"]
+      },
+      "action": {
+        "directive": "prefer",
+        "target": "Numbered lists (1. 2. 3.)",
+        "alternative": "Use bullets only for ✅/❌ status indicators"
+      },
+      "rationale": "Numbered lists enable referencing ('see item 3'), clearer sequence",
+      "examples": [
+        {
+          "scenario": "Listing requirements",
+          "correct": "1. User authentication\n2. Role-based permissions\n3. Audit logging",
+          "incorrect": "- User authentication\n- Role-based permissions\n- Audit logging"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "densified-writing-50-percent",
+      "level": "SHOULD",
+      "category": "artifacts",
+      "description": "Use 50% fewer words, densified technical writing",
+      "context": {
+        "when": ["creating documentation", "writing technical content"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "Concise densified language",
+        "message": "Remove filler, use arrows/bullets, state directly"
+      },
+      "rationale": "Respect reader time, increase information density, reduce noise",
+      "examples": [
+        {
+          "scenario": "Explaining a system",
+          "correct": "FastAPI backend → AWS Lambda → DynamoDB. 100ms p95 latency.",
+          "incorrect": "The system utilizes a FastAPI backend that is deployed on AWS Lambda, which then connects to DynamoDB for data storage. The 95th percentile latency is approximately 100 milliseconds."
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "progressive-content-complex-artifacts",
+      "level": "MUST",
+      "category": "artifacts",
+      "description": "Use /progressive-content for complex artifacts (detailed presentations, comprehensive docs)",
+      "context": {
+        "when": ["creating detailed presentation", "comprehensive documentation", "strategic documents"],
+        "taskType": ["New Artifact"]
+      },
+      "action": {
+        "directive": "use",
+        "target": "/progressive-content 6-stage workflow",
+        "message": "Complex artifact: Using /progressive-content (Stages 0-5)"
+      },
+      "rationale": "Stage-gated creation ensures quality, enables feedback, prevents wasted effort",
+      "examples": [
+        {
+          "scenario": "User: 'Create detailed architecture presentation'",
+          "correct": "Invoke /progressive-content, start Stage 0: 'What's the 2-3 sentence concept?'",
+          "incorrect": "Immediately generate full 20-slide presentation"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "progressive-content-thresholds",
+      "level": "MUST",
+      "category": "artifacts",
+      "description": "Progressive content required for: >10 slides, >5 pages, >10 diagram nodes, strategic docs",
+      "context": {
+        "when": ["artifact exceeds complexity threshold"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "/progressive-content workflow",
+        "message": "Complexity threshold: {threshold}. Using progressive workflow."
+      },
+      "rationale": "Thresholds prevent wasted effort on complex artifacts",
+      "examples": [
+        {
+          "scenario": "User: 'Create 15-slide presentation'",
+          "correct": "15 slides > 10 threshold. Use /progressive-content.",
+          "incorrect": "Generate all 15 slides immediately"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "trade-offs-in-options",
+      "level": "MUST",
+      "category": "artifacts",
+      "description": "When presenting options, always include trade-offs (no option is perfect)",
+      "context": {
+        "when": ["presenting multiple approaches", "confirmation protocol"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Explicit trade-offs for each option",
+        "message": "Each option must have: approach + key trade-off"
+      },
+      "rationale": "Honest assessment, helps user make informed decision, no option is perfect",
+      "examples": [
+        {
+          "scenario": "Presenting architecture options",
+          "correct": "Option A: Serverless - Trade-off: Cold start latency\nOption B: Containers - Trade-off: Higher operational overhead",
+          "incorrect": "Option A: Serverless (fast, cheap, scalable)\nOption B: Containers (full control)"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "no-proactive-readme-creation",
+      "level": "NEVER",
+      "category": "artifacts",
+      "description": "Never proactively create README.md or documentation files",
+      "context": {
+        "when": ["completed implementation"],
+        "unless": ["user explicitly requests documentation"]
+      },
+      "action": {
+        "directive": "prohibit",
+        "target": "Proactive README/doc creation",
+        "alternative": "Only create when user requests"
+      },
+      "rationale": "Avoid clutter, user knows when docs needed, focus on code quality first",
+      "examples": [
+        {
+          "scenario": "Just implemented new utility function",
+          "correct": "Do not create README.md for the utility",
+          "incorrect": "Proactively create README.md documenting the utility"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "diagrams-fit-on-screen",
+      "level": "SHOULD",
+      "category": "artifacts",
+      "description": "ASCII diagrams should fit on one screen (no scrolling)",
+      "context": {
+        "when": ["creating ASCII diagrams"]
+      },
+      "action": {
+        "directive": "prefer",
+        "target": "Diagrams fit in 80x40 character space",
+        "alternative": "Break into multiple diagrams if too complex"
+      },
+      "rationale": "10-second visual scan impossible if scrolling required",
+      "examples": [
+        {
+          "scenario": "Complex architecture with 20 components",
+          "correct": "Create 2-3 focused diagrams (high-level, then details)",
+          "incorrect": "Single massive diagram requiring vertical scrolling"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "slide-deck-format-slidev",
+      "level": "PREFER",
+      "category": "artifacts",
+      "description": "Use Slidev for presentations (markdown-based, version control friendly)",
+      "context": {
+        "when": ["creating presentation"],
+        "unless": ["user requests PowerPoint/Google Slides"]
+      },
+      "action": {
+        "directive": "prefer",
+        "target": "Slidev markdown format",
+        "alternative": "PowerPoint/PDF if user requests"
+      },
+      "rationale": "Markdown-based, git-friendly, code syntax highlighting, developer-focused",
+      "examples": [
+        {
+          "scenario": "User: 'Create architecture presentation'",
+          "correct": "Generate Slidev markdown slides.md",
+          "incorrect": "Ask if they want PowerPoint (default to Slidev)"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-19",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "presentation-thank-you-slide",
+      "level": "MUST",
+      "category": "artifacts",
+      "description": "Every presentation must end with a thank you slide with author name, photo, and contact info",
+      "context": {
+        "when": ["creating presentation", "creating slide deck", "generating slides"],
+        "taskType": ["New Artifact"]
+      },
+      "action": {
+        "directive": "require",
+        "target": "Final slide with: Thank You, author name, author photo, contact information",
+        "message": "Adding thank you slide with name, photo, and contact info"
+      },
+      "rationale": "Professional closing, branding consistency, enables follow-up contact",
+      "examples": [
+        {
+          "scenario": "Creating 10-slide architecture presentation",
+          "correct": "Slide 10: Thank You\\n- Andrew Hopper\\n- [Photo]\\n- Email/LinkedIn/GitHub",
+          "incorrect": "End on 'Questions?' slide without author info"
+        },
+        {
+          "scenario": "Slidev markdown presentation",
+          "correct": "---\\nlayout: center\\n---\\n# Thank You\\n\\n![Author Photo](/path/to/photo.jpg)\\n\\n**Andrew Hopper**\\n\\nemail@example.com | linkedin.com/in/author | github.com/author",
+          "incorrect": "Omit thank you slide or include only 'Questions?' without contact"
+        }
+      ],
+      "metadata": {
+        "approvedBy": "Andrew Hopper",
+        "approvedDate": "2025-11-23",
+        "status": "approved"
+      }
+    }
+  ]
+}

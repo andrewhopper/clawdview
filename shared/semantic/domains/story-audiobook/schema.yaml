@@ -1,0 +1,176 @@
+# Story Audiobook Domain Model
+# Extension of story domain for multi-voice audiobooks with synchronized diagrams
+# Supports CLI-based playback with visual sync
+
+domain:
+  name: story-audiobook
+  version: "1.0.0"
+  description: Audiobook storytelling with multi-voice narration and synchronized diagrams
+  dependencies: [core, story]
+  created_at: "2025-11-28"
+  updated_at: "2025-11-28"
+
+entities:
+
+  # ============================================
+  # AUDIOBOOK ENTITIES
+  # ============================================
+
+  Audiobook:
+    description: Complete audiobook with scenes, audio segments, and synchronized visuals
+    properties:
+      id: { type: string, required: true }
+      storyId: { type: string, required: true, description: "Reference to Story entity" }
+      title: { type: string, required: true }
+      narrator: { type: string }
+      totalDuration: { type: integer, description: "Total duration in seconds" }
+      scenes: { type: array, items: AudiobookScene }
+      voices: { type: array, items: Voice }
+      format: { type: AudioFormat, default: MP3 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AudiobookScene:
+    description: Scene with synchronized audio segments and diagrams
+    properties:
+      id: { type: string, required: true }
+      sceneId: { type: string, required: true, description: "Reference to Scene entity from story domain" }
+      sceneNumber: { type: integer, required: true }
+      title: { type: string }
+      audioSegments: { type: array, items: AudioSegment }
+      diagrams: { type: array, items: Diagram }
+      startTime: { type: integer, description: "Start time in seconds from audiobook beginning" }
+      duration: { type: integer, description: "Scene duration in seconds" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  AudioSegment:
+    description: Single audio file spoken by one voice (passage or dialogue)
+    properties:
+      id: { type: string, required: true }
+      segmentNumber: { type: integer, required: true }
+      speaker: { type: Speaker, required: true }
+      text: { type: string, required: true }
+      voiceId: { type: string, required: true }
+      audioFile: { type: string, description: "Path to MP3 file" }
+      duration: { type: integer, description: "Duration in milliseconds" }
+      startTime: { type: integer, description: "Start time in ms from scene beginning" }
+      endTime: { type: integer, description: "End time in ms from scene beginning" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Diagram:
+    description: Visual diagram synchronized with audio timeline
+    properties:
+      id: { type: string, required: true }
+      title: { type: string, required: true }
+      diagramType: { type: DiagramType, required: true }
+      content: { type: string, required: true, description: "Mermaid/ASCII/SVG content" }
+      showAtTime: { type: integer, required: true, description: "Time in ms when diagram appears" }
+      hideAtTime: { type: integer, description: "Time in ms when diagram disappears (null = stays visible)" }
+      relatedSegments: { type: array, items: string, description: "AudioSegment IDs" }
+      animationType: { type: AnimationType, default: FADE_IN }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Voice:
+    description: TTS voice configuration for a speaker
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      voiceId: { type: string, required: true, description: "ElevenLabs voice ID" }
+      provider: { type: string, default: "elevenlabs" }
+      gender: { type: Gender }
+      accent: { type: string }
+      description: { type: string }
+      characterId: { type: string, description: "Character this voice represents" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Speaker:
+    description: Who is speaking in an audio segment
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      role: { type: SpeakerRole, required: true }
+      characterId: { type: string, description: "Reference to Character entity if this is a character" }
+      voiceId: { type: string, required: true }
+
+  # ============================================
+  # PLAYBACK ENTITIES
+  # ============================================
+
+  PlaybackTimeline:
+    description: Timeline for synchronized playback of audio and diagrams
+    properties:
+      id: { type: string, required: true }
+      audiobookId: { type: string, required: true }
+      events: { type: array, items: TimelineEvent }
+      totalDuration: { type: integer, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  TimelineEvent:
+    description: Event that occurs at specific time during playback
+    properties:
+      id: { type: string, required: true }
+      timestamp: { type: integer, required: true, description: "Time in ms" }
+      eventType: { type: EventType, required: true }
+      targetId: { type: string, required: true, description: "Diagram or Segment ID" }
+      action: { type: EventAction, required: true }
+      metadata: { type: object }
+
+# ============================================
+# ENUMS
+# ============================================
+
+enums:
+
+  AudioFormat:
+    values: [MP3, WAV, OGG, FLAC]
+    description: Audio file format
+
+  DiagramType:
+    values: [MERMAID, ASCII, SVG, IMAGE, TEXT]
+    description: Type of diagram/visual
+
+  AnimationType:
+    values: [NONE, FADE_IN, FADE_OUT, SLIDE_IN, SLIDE_OUT, ZOOM_IN, ZOOM_OUT]
+    description: How diagram appears/disappears
+
+  SpeakerRole:
+    values: [NARRATOR, CHARACTER, CHORUS, SOUND_EFFECT]
+    description: Role of speaker in audiobook
+
+  EventType:
+    values: [SHOW_DIAGRAM, HIDE_DIAGRAM, START_AUDIO, END_AUDIO, SCENE_CHANGE, PAUSE]
+    description: Type of timeline event
+
+  EventAction:
+    values: [SHOW, HIDE, PLAY, STOP, PAUSE, RESUME]
+    description: Action to perform
+
+  Gender:
+    values: [MALE, FEMALE, NEUTRAL]
+    description: Voice gender
+
+# ============================================
+# VALIDATION RULES
+# ============================================
+
+validation:
+  - rule: audio_segment_timing
+    description: AudioSegment endTime must be >= startTime
+    expression: endTime >= startTime
+
+  - rule: diagram_timing
+    description: Diagram hideAtTime must be > showAtTime if specified
+    expression: hideAtTime == null || hideAtTime > showAtTime
+
+  - rule: timeline_ordering
+    description: TimelineEvents must be ordered by timestamp
+    expression: events sorted by timestamp ascending
+
+  - rule: scene_duration
+    description: Scene duration must equal sum of audio segment durations
+    expression: duration == sum(audioSegments.duration)

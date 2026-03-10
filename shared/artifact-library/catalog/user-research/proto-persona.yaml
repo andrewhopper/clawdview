@@ -1,0 +1,252 @@
+# Proto-Persona Artifact Type
+# Source: Cooper (2004) "The Inmates Are Running the Asylum", Gothelf & Seiden (2013) "Lean UX"
+# Version: 1.0.0
+
+# Composes from shared/semantic/domains/user-research
+domain_types:
+  imports:
+    - user-research/Actor
+    - user-research/Demographics
+    - user-research/TechProfile
+    - user-research/AccessibilityProfile
+    - user-research/Motivation
+    - user-research/Pain
+    - user-research/Behavior
+
+id: proto-persona
+name: Proto-Persona
+description: |
+  Lightweight persona for rapid hypothesis generation. Based on assumptions
+  rather than research. Validated/refined through customer interviews.
+  Includes accessibility traits for UX simulation.
+category: assessment
+complexity: simple
+version: "1.0.0"
+created_at: "2025-11-28"
+updated_at: "2025-11-28"
+
+tags:
+  - user-research
+  - ux
+  - persona
+  - accessibility
+  - web-design
+
+schema:
+  sections:
+    - id: identity
+      name: Identity
+      order: 1
+      required: true
+      description: Name and visual representation
+      format: mixed
+
+    - id: demographics
+      name: Demographics
+      order: 2
+      required: true
+      description: Age, income, location, occupation
+      format: table
+
+    - id: quote
+      name: Representative Quote
+      order: 3
+      required: true
+      description: One sentence capturing their mindset
+      format: prose
+      word_limit: 30
+
+    - id: goals
+      name: Goals
+      order: 4
+      required: true
+      description: What they want to achieve (3-5 items)
+      format: bullets
+
+    - id: frustrations
+      name: Frustrations / Pain Points
+      order: 5
+      required: true
+      description: What blocks or annoys them (3-5 items)
+      format: bullets
+
+    - id: behaviors
+      name: Behaviors
+      order: 6
+      required: true
+      description: How they act, decide, purchase
+      format: bullets
+
+    - id: tech_profile
+      name: Technology Profile
+      order: 7
+      required: true
+      description: Devices, platforms, tech comfort
+      format: table
+
+    - id: accessibility
+      name: Accessibility Profile
+      order: 8
+      required: true
+      description: Physical/cognitive traits affecting web experience
+      format: table
+
+  required_fields:
+    - name: business_name
+      type: string
+      description: Client business name
+      required: true
+    - name: industry
+      type: string
+      description: Business industry/vertical
+      required: true
+    - name: segment_name
+      type: string
+      description: Customer segment this persona represents
+      required: true
+
+  optional_fields:
+    - name: location
+      type: string
+      description: Geographic focus
+    - name: business_url
+      type: url
+      description: Client website URL for context
+
+prompt:
+  system_prompt: |
+    You are a UX researcher creating proto-personas for web design projects.
+    Generate realistic, specific personas based on industry knowledge.
+    Include accessibility considerations for inclusive design.
+
+  task_prompt: |
+    Create a proto-persona for {{SEGMENT_NAME}} customers of {{BUSINESS_NAME}}
+    in the {{INDUSTRY}} industry.
+
+    Include:
+    1. Fictional but realistic name and photo description
+    2. Demographics (age range, income bracket, location type, occupation)
+    3. A quote that captures their mindset (max 30 words)
+    4. 3-5 specific goals related to {{BUSINESS_NAME}}'s offerings
+    5. 3-5 frustrations/pain points
+    6. Key behaviors (purchasing, research, decision-making)
+    7. Technology profile (devices, platforms, social media, tech comfort 1-5)
+    8. Accessibility profile:
+       - Vision: normal / corrected / low vision / color blind type
+       - Motor: full mobility / limited fine motor / keyboard-only
+       - Cognitive: standard / attention challenges / memory challenges
+       - Hearing: normal / hard of hearing / deaf
+       - Tech comfort: expert(5) / comfortable(4) / basic(3) / reluctant(2) / resistant(1)
+       - Primary device: desktop / laptop / tablet / smartphone
+       - Connection: broadband / mobile 5G / mobile 4G / limited/rural
+
+  audience: Web designers and developers
+  tone: professional
+
+  constraints:
+    - Use realistic income ranges for the industry/location
+    - Accessibility traits should reflect the demographic (e.g., older = higher vision issues)
+    - Be specific, not generic
+
+validators:
+  - id: has-quote
+    name: Quote Present
+    type: section_presence
+    rule: quote
+    severity: error
+    message: Persona must include a representative quote
+
+  - id: has-accessibility
+    name: Accessibility Profile Present
+    type: section_presence
+    rule: accessibility
+    severity: error
+    message: Persona must include accessibility profile for UX simulation
+
+  - id: goals-count
+    name: Goals Count
+    type: regex
+    rule: "(?:^|\\n)\\s*[-•]\\s*.+(?:\\n\\s*[-•]\\s*.+){2,4}"
+    severity: warning
+    message: Should have 3-5 goals listed
+
+constraints:
+  max_words: 500
+  reading_level: professional
+  density: standard
+
+output_formats:
+  - markdown
+  - yaml
+  - json
+  - html
+
+examples:
+  - id: hobby-farmer
+    name: Hobby Farmer Frank
+    description: Example persona for a heritage pig breeder
+    input:
+      business_name: Goodhue Hawkins Boars
+      industry: Heritage livestock / small-scale agriculture
+      segment_name: Hobby Farmer
+    output: |
+      # Hobby Farmer Frank
+
+      **Photo:** White male, late 50s, weathered hands, flannel shirt, standing by wooden fence
+
+      ## Demographics
+      | Attribute | Value |
+      |-----------|-------|
+      | Age | 52-65 |
+      | Income | $65,000-$95,000 |
+      | Location | Rural/exurban, 5-20 acre property |
+      | Occupation | Semi-retired professional, part-time farmer |
+
+      ## Quote
+      > "I want quality breeding stock from someone who knows what they're doing, not a factory farm."
+
+      ## Goals
+      - Find reputable local breeder with healthy, registered stock
+      - Start small (2-4 animals) with room to grow
+      - Connect with community of other heritage breed enthusiasts
+      - Produce high-quality meat for family and local customers
+
+      ## Frustrations
+      - Hard to verify breeder reputation online
+      - Unclear pricing—doesn't want to waste time on out-of-budget options
+      - Worried about transport logistics and animal stress
+      - Overwhelmed by breed variations and registration requirements
+
+      ## Behaviors
+      - Researches extensively before purchasing (2-4 weeks)
+      - Values phone calls over email for important decisions
+      - Attends county fairs and agricultural events
+      - Active in Facebook groups for heritage breeds
+      - Prefers local (within 100 miles) to avoid shipping
+
+      ## Technology Profile
+      | Attribute | Value |
+      |-----------|-------|
+      | Primary Device | Desktop computer (home office) |
+      | Secondary | Smartphone (Android, older model) |
+      | Social Media | Facebook primarily |
+      | Tech Comfort | 3/5 - Basic |
+      | Preferred Contact | Phone call, then email |
+
+      ## Accessibility Profile
+      | Attribute | Value |
+      |-----------|-------|
+      | Vision | Corrected (reading glasses) |
+      | Motor | Full mobility |
+      | Cognitive | Standard |
+      | Hearing | Normal to mild loss |
+      | Tech Comfort | Basic (3/5) |
+      | Primary Device | Desktop |
+      | Connection | Rural broadband (variable speed) |
+
+      **UX Implications:**
+      - Needs larger font sizes (16px+ body text)
+      - High contrast important
+      - Simple navigation, no complex interactions
+      - Pages must load on slower connections
+      - Phone number prominently displayed

@@ -1,0 +1,496 @@
+# Geo Domain: Shapes & Bounding Boxes
+# Polygons, circles, lines, and spatial bounds
+# Version: 1.0.0
+
+domain: geo-shape
+version: "1.0.0"
+status: production
+description: Geographic shapes, bounding boxes, and spatial geometry
+dependencies:
+  - geo-point
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Bounding Boxes (critical for spatial queries)
+  # ---------------------------------------------------------------------------
+
+  BoundingBox:
+    description: Axis-aligned bounding box (AABB) for fast spatial queries
+    aliases: [AABB, Envelope, Extent, MBR]
+    fields:
+      min_lat:
+        type: float
+        required: true
+        constraints:
+          min: -90
+          max: 90
+        description: Southern boundary (minimum latitude)
+      max_lat:
+        type: float
+        required: true
+        constraints:
+          min: -90
+          max: 90
+        description: Northern boundary (maximum latitude)
+      min_lng:
+        type: float
+        required: true
+        constraints:
+          min: -180
+          max: 180
+        description: Western boundary (minimum longitude)
+      max_lng:
+        type: float
+        required: true
+        constraints:
+          min: -180
+          max: 180
+        description: Eastern boundary (maximum longitude)
+      crs:
+        type: string
+        required: false
+        default: "EPSG:4326"
+        description: Coordinate Reference System
+    computed:
+      center:
+        type: Point
+        description: Center point of bounding box
+      width_degrees:
+        type: float
+        description: Width in degrees
+      height_degrees:
+        type: float
+        description: Height in degrees
+      area_sq_degrees:
+        type: float
+        description: Area in square degrees (approximate)
+
+  BoundingBox3D:
+    description: 3D bounding box with altitude
+    extends: BoundingBox
+    fields:
+      min_alt:
+        type: float
+        required: true
+        description: Minimum altitude in meters
+      max_alt:
+        type: float
+        required: true
+        description: Maximum altitude in meters
+      altitude_reference:
+        type: AltitudeReference
+        required: false
+        default: MSL
+
+  ProjectedBoundingBox:
+    description: Bounding box in projected coordinates (meters)
+    fields:
+      min_x:
+        type: float
+        required: true
+        description: Minimum X (easting) in meters
+      max_x:
+        type: float
+        required: true
+        description: Maximum X (easting) in meters
+      min_y:
+        type: float
+        required: true
+        description: Minimum Y (northing) in meters
+      max_y:
+        type: float
+        required: true
+        description: Maximum Y (northing) in meters
+      crs:
+        type: string
+        required: true
+        description: Projected CRS (e.g., "EPSG:3857")
+
+  # ---------------------------------------------------------------------------
+  # Line Geometry
+  # ---------------------------------------------------------------------------
+
+  LineString:
+    description: Ordered sequence of points forming a line
+    fields:
+      coordinates:
+        type: array
+        items:
+          type: Point
+        required: true
+        constraints:
+          min_length: 2
+        description: Ordered list of points (minimum 2)
+      is_closed:
+        type: boolean
+        required: false
+        default: false
+        description: True if first and last point are identical
+    computed:
+      length_meters:
+        type: float
+        description: Total length in meters (geodesic)
+      bounds:
+        type: BoundingBox
+        description: Bounding box containing the line
+
+  MultiLineString:
+    description: Collection of line strings
+    fields:
+      lines:
+        type: array
+        items:
+          type: LineString
+        required: true
+        description: Array of LineString objects
+
+  # ---------------------------------------------------------------------------
+  # Polygon Geometry
+  # ---------------------------------------------------------------------------
+
+  LinearRing:
+    description: Closed ring of points (for polygon boundaries)
+    fields:
+      coordinates:
+        type: array
+        items:
+          type: Point
+        required: true
+        constraints:
+          min_length: 4
+        description: Points forming closed ring (first = last, min 4 points)
+      winding:
+        type: WindingOrder
+        required: false
+        description: CCW for exterior, CW for holes (GeoJSON convention)
+
+  Polygon:
+    description: Area bounded by one exterior ring and zero or more holes
+    fields:
+      exterior:
+        type: LinearRing
+        required: true
+        description: Outer boundary (counter-clockwise)
+      holes:
+        type: array
+        items:
+          type: LinearRing
+        required: false
+        description: Interior holes (clockwise)
+    computed:
+      area_sq_meters:
+        type: float
+        description: Area in square meters (geodesic)
+      perimeter_meters:
+        type: float
+        description: Perimeter in meters
+      centroid:
+        type: Point
+        description: Geometric centroid
+      bounds:
+        type: BoundingBox
+        description: Bounding box
+
+  MultiPolygon:
+    description: Collection of polygons (e.g., Hawaii, archipelagos)
+    fields:
+      polygons:
+        type: array
+        items:
+          type: Polygon
+        required: true
+        description: Array of Polygon objects
+    computed:
+      total_area_sq_meters:
+        type: float
+      bounds:
+        type: BoundingBox
+
+  # ---------------------------------------------------------------------------
+  # Circle & Radius
+  # ---------------------------------------------------------------------------
+
+  Circle:
+    description: Circular area defined by center and radius
+    aliases: [RadiusSearch, Buffer]
+    fields:
+      center:
+        type: Point
+        required: true
+        description: Center point
+      radius_meters:
+        type: float
+        required: true
+        constraints:
+          min: 0
+        description: Radius in meters
+    computed:
+      area_sq_meters:
+        type: float
+        description: πr² area
+      bounds:
+        type: BoundingBox
+        description: Bounding box containing circle
+
+  Ellipse:
+    description: Elliptical area (e.g., GPS uncertainty)
+    fields:
+      center:
+        type: Point
+        required: true
+      semi_major_meters:
+        type: float
+        required: true
+        description: Semi-major axis in meters
+      semi_minor_meters:
+        type: float
+        required: true
+        description: Semi-minor axis in meters
+      orientation_degrees:
+        type: float
+        required: false
+        default: 0
+        description: Rotation from north (clockwise)
+
+  # ---------------------------------------------------------------------------
+  # Sector & Arc (for radar, visibility, coverage)
+  # ---------------------------------------------------------------------------
+
+  Sector:
+    description: Pie-slice shaped area (radar coverage, field of view)
+    fields:
+      center:
+        type: Point
+        required: true
+      radius_meters:
+        type: float
+        required: true
+      start_bearing:
+        type: float
+        required: true
+        constraints:
+          min: 0
+          max: 360
+        description: Start angle from north (degrees)
+      end_bearing:
+        type: float
+        required: true
+        constraints:
+          min: 0
+          max: 360
+        description: End angle from north (degrees)
+
+  Arc:
+    description: Curved line segment (portion of circle)
+    fields:
+      center:
+        type: Point
+        required: true
+      radius_meters:
+        type: float
+        required: true
+      start_bearing:
+        type: float
+        required: true
+      end_bearing:
+        type: float
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # Geometry Collection
+  # ---------------------------------------------------------------------------
+
+  GeometryCollection:
+    description: Heterogeneous collection of geometries
+    fields:
+      geometries:
+        type: array
+        items:
+          type: Geometry
+        required: true
+        description: Mixed geometry types
+      bounds:
+        type: BoundingBox
+        required: false
+
+  Geometry:
+    description: Abstract base for all geometry types
+    discriminator: type
+    fields:
+      type:
+        type: GeometryType
+        required: true
+      properties:
+        type: object
+        required: false
+        description: Arbitrary metadata
+
+  # ---------------------------------------------------------------------------
+  # GeoJSON Feature (geometry + properties)
+  # ---------------------------------------------------------------------------
+
+  Feature:
+    description: GeoJSON Feature - geometry with properties
+    fields:
+      id:
+        type: string
+        required: false
+      geometry:
+        type: Geometry
+        required: true
+      properties:
+        type: object
+        required: false
+      bbox:
+        type: BoundingBox
+        required: false
+
+  FeatureCollection:
+    description: GeoJSON FeatureCollection
+    fields:
+      features:
+        type: array
+        items:
+          type: Feature
+        required: true
+      bbox:
+        type: BoundingBox
+        required: false
+        description: Bounds containing all features
+
+  # ---------------------------------------------------------------------------
+  # Corridor (buffered line - for routes, trails)
+  # ---------------------------------------------------------------------------
+
+  Corridor:
+    description: Buffered line (path with width)
+    fields:
+      centerline:
+        type: LineString
+        required: true
+        description: Center path
+      width_meters:
+        type: float
+        required: true
+        description: Total width (buffer on each side = width/2)
+      cap_style:
+        type: CapStyle
+        required: false
+        default: ROUND
+        description: End cap style
+      join_style:
+        type: JoinStyle
+        required: false
+        default: ROUND
+        description: Corner join style
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  GeometryType:
+    description: GeoJSON geometry types
+    values:
+      - POINT
+      - MULTI_POINT
+      - LINE_STRING
+      - MULTI_LINE_STRING
+      - POLYGON
+      - MULTI_POLYGON
+      - GEOMETRY_COLLECTION
+      - CIRCLE            # Extension (not in GeoJSON spec)
+      - BOUNDING_BOX      # Extension
+
+  WindingOrder:
+    description: Vertex ordering for polygons
+    values:
+      - CCW   # Counter-clockwise (exterior rings, GeoJSON standard)
+      - CW    # Clockwise (holes)
+
+  CapStyle:
+    description: Line end cap style (for buffers)
+    values:
+      - ROUND   # Semicircle cap
+      - FLAT    # Cut off perpendicular
+      - SQUARE  # Extended by half width
+
+  JoinStyle:
+    description: Line corner join style
+    values:
+      - ROUND   # Rounded corner
+      - MITER   # Sharp corner (extended)
+      - BEVEL   # Flat corner (cut)
+
+  SpatialRelation:
+    description: Topological relationships between geometries (DE-9IM)
+    values:
+      - INTERSECTS    # Geometries share any space
+      - DISJOINT      # No shared space
+      - CONTAINS      # A fully contains B
+      - WITHIN        # A fully within B
+      - OVERLAPS      # Partial overlap (same dimension)
+      - TOUCHES       # Share boundary only
+      - CROSSES       # Lines cross or line crosses polygon
+      - COVERS        # A covers B (boundary may touch)
+      - COVERED_BY    # A covered by B
+      - EQUALS        # Identical geometry
+
+# =============================================================================
+# SPATIAL OPERATIONS (for reference)
+# =============================================================================
+
+operations:
+
+  intersection:
+    description: Compute shared area/line between geometries
+    inputs: [Geometry, Geometry]
+    output: Geometry
+
+  union:
+    description: Combine geometries into single shape
+    inputs: [Geometry, Geometry]
+    output: Geometry
+
+  difference:
+    description: Subtract one geometry from another
+    inputs: [Geometry, Geometry]
+    output: Geometry
+
+  buffer:
+    description: Expand/contract geometry by distance
+    inputs: [Geometry, distance_meters]
+    output: Polygon
+
+  convex_hull:
+    description: Smallest convex polygon containing geometry
+    inputs: [Geometry]
+    output: Polygon
+
+  centroid:
+    description: Geometric center point
+    inputs: [Geometry]
+    output: Point
+
+  simplify:
+    description: Reduce vertices (Douglas-Peucker)
+    inputs: [Geometry, tolerance_meters]
+    output: Geometry
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "GeoJSON RFC 7946: https://tools.ietf.org/html/rfc7946"
+  - "OGC Simple Features: https://www.ogc.org/standards/sfa"
+  - "DE-9IM (spatial relations): https://en.wikipedia.org/wiki/DE-9IM"
+  - "JTS Topology Suite: https://locationtech.github.io/jts/"
+  - "Turf.js: https://turfjs.org/"
+  - "PostGIS: https://postgis.net/"

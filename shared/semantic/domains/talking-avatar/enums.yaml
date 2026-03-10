@@ -1,0 +1,223 @@
+# enums.yaml - Talking Avatar Domain Enums
+# Generated: 2025-11-25
+# Status: PENDING APPROVAL
+
+enums:
+  AvatarType:
+    values:
+      - talking_photo       # Photo-based avatar (D-ID, HeyGen Photo Avatar)
+      - cgi_avatar          # CGI character (Synthesia, HeyGen stock)
+      - custom              # User-trained custom avatar
+      - instant             # Instant avatar (single photo, no training)
+    description: "Type of avatar generation method"
+
+  AvatarProvider:
+    values:
+      - heygen
+      - d_id
+      - synthesia
+      - tavus
+      - custom              # Self-hosted/custom provider
+    description: "Avatar service provider"
+
+  AvatarGender:
+    values:
+      - male
+      - female
+      - neutral
+    description: "Avatar gender presentation"
+
+  AvatarStyle:
+    values:
+      - realistic
+      - cartoon
+      - anime
+      - professional        # Business/corporate style
+      - casual
+    description: "Visual style of avatar"
+
+  AvatarPosition:
+    values:
+      - top_left
+      - top_center
+      - top_right
+      - center_left
+      - center
+      - center_right
+      - bottom_left
+      - bottom_center
+      - bottom_right
+    description: "Avatar placement in frame"
+
+  AvatarSize:
+    values:
+      - small              # Small overlay
+      - medium             # Standard presenter
+      - large              # Prominent presence
+      - fullscreen         # Fill entire frame
+    description: "Avatar size in scene"
+
+  VoiceProvider:
+    values:
+      - heygen
+      - elevenlabs
+      - aws_polly
+      - openai_tts
+      - azure_tts
+      - google_tts
+      - d_id
+      - synthesia
+    description: "Voice synthesis provider"
+
+  VoiceGender:
+    values:
+      - male
+      - female
+      - neutral
+    description: "Voice gender"
+
+  VoiceStyle:
+    values:
+      - conversational
+      - professional
+      - cheerful
+      - calm
+      - energetic
+      - authoritative
+      - friendly
+      - serious
+      - narrative
+    description: "Voice tone and delivery style"
+
+  VideoStatus:
+    values:
+      - pending            # Queued for processing
+      - processing         # Currently generating
+      - completed          # Successfully generated
+      - failed             # Generation failed
+      - cancelled          # User cancelled
+    description: "Video generation lifecycle status"
+
+  VideoQuality:
+    values:
+      - sd                 # 480p
+      - hd                 # 720p
+      - full_hd            # 1080p
+      - 2k                 # 2560x1440
+      - 4k                 # 3840x2160
+    description: "Output video resolution"
+
+  AspectRatio:
+    values:
+      - "16:9"             # Landscape (YouTube, presentations)
+      - "9:16"             # Portrait (TikTok, Instagram Stories)
+      - "1:1"              # Square (Instagram feed)
+      - "4:5"              # Portrait (Instagram)
+      - "4:3"              # Classic video
+      - "21:9"             # Cinematic widescreen
+    description: "Video aspect ratio"
+
+  SceneType:
+    values:
+      - professional       # Office, corporate
+      - casual             # Home, relaxed
+      - outdoor            # Nature, urban
+      - studio             # Clean studio background
+      - greenscreen        # Chroma key for custom background
+      - custom             # User-uploaded scene
+    description: "Scene/template category"
+
+  BackgroundType:
+    values:
+      - solid_color        # Single color background
+      - gradient           # Color gradient
+      - image              # Static image
+      - video              # Video background
+      - greenscreen        # Green screen for compositing
+      - blur               # Blurred background
+    description: "Type of background in scene"
+
+  TrainingStatus:
+    values:
+      - uploading          # Photos being uploaded
+      - validating         # Checking photo quality
+      - queued             # Waiting for training
+      - training           # Model training in progress
+      - processing         # Post-processing avatar
+      - completed          # Avatar ready to use
+      - failed             # Training failed
+      - cancelled          # User cancelled
+    description: "Custom avatar training job status"
+
+  StreamingStatus:
+    values:
+      - initializing       # Setting up session
+      - connecting         # Establishing WebRTC connection
+      - active             # Session running
+      - paused             # Temporarily paused
+      - ended              # Session ended normally
+      - disconnected       # Connection lost
+      - failed             # Session failed
+    description: "Streaming session status"
+
+  StreamingQuality:
+    values:
+      - low                # Lower bandwidth/quality
+      - medium             # Balanced quality
+      - high               # High quality stream
+      - auto               # Adaptive quality
+    description: "Streaming video quality"
+
+  StreamingMessageType:
+    values:
+      - text               # Simple text message
+      - emotion            # Change avatar emotion
+      - task               # Execute specific task
+      - interrupt          # Stop current speech
+      - system             # System command
+    description: "Type of message sent to streaming avatar"
+
+  MessageStatus:
+    values:
+      - pending            # Queued for delivery
+      - sent               # Sent to provider
+      - delivered          # Received by avatar
+      - speaking           # Avatar currently speaking
+      - completed          # Finished speaking
+      - failed             # Delivery failed
+      - cancelled          # Message cancelled
+    description: "Streaming message delivery status"
+
+  AvatarEmotion:
+    values:
+      - neutral
+      - happy
+      - sad
+      - surprised
+      - angry
+      - disgusted
+      - fearful
+      - excited
+      - confident
+      - thoughtful
+      - friendly
+      - serious
+    description: "Avatar facial expression/emotion"
+
+  AvatarPose:
+    values:
+      - standing
+      - sitting
+      - closeup            # Headshot
+      - medium_shot        # Waist up
+      - full_body
+      - profile            # Side view
+      - three_quarter      # Angled view
+    description: "Avatar body positioning"
+
+  LipSyncQuality:
+    values:
+      - standard           # Basic lip sync
+      - enhanced           # Improved accuracy
+      - precise            # Maximum precision
+    description: "Lip synchronization quality level"

@@ -1,0 +1,1098 @@
+# AI Steering Domain Model
+# Composable, context-aware rules for AI behavior guidance
+# Version: 2.0.0
+# Last Updated: 2025-11-24
+
+version: "2.0.0"
+domain: steering
+description: |
+  Domain model for AI steering rules - composable, context-aware behavioral guidance.
+  Inspired by React patterns: Traits (components), Contexts, Props with defaults.
+  Fully aligned with .guardrails/ai-steering/schema.json
+
+# =============================================================================
+# Enums
+# =============================================================================
+
+enums:
+  ConstraintLevel:
+    description: Rule enforcement level (priority order highest to lowest)
+    values:
+      - NEVER      # Absolute prohibition - never do this
+      - ALWAYS     # Absolute requirement - always do this
+      - MUST       # Strong requirement - must do unless impossible
+      - MUST_NOT   # Strong prohibition - must not do unless necessary
+      - SHOULD     # Recommendation - should do in most cases
+      - SHOULD_NOT # Recommendation against - should avoid in most cases
+      - PREFER     # Soft preference - prefer this approach
+      - AVOID      # Soft avoidance - avoid this approach
+    priority_order: [NEVER, ALWAYS, MUST, MUST_NOT, SHOULD, SHOULD_NOT, PREFER, AVOID]
+
+  RuleCategory:
+    description: Functional category for rules
+    values:
+      - tool_usage       # Selecting and using tools (Read, Grep, Edit, etc.)
+      - code_generation  # Code generation patterns and standards
+      - file_operations  # File/directory create, modify, delete
+      - communication    # AI response style, tone, formatting
+      - workflow         # Task execution, planning, progress tracking
+      - git              # Git operations (commit, push, branches)
+      - performance      # Performance optimization
+      - security         # Security considerations
+      - testing          # Testing requirements
+
+  DirectiveType:
+    description: Type of action the rule directs
+    values:
+      - use              # Use this tool/approach
+      - avoid            # Avoid this tool/approach
+      - confirm          # Ask user before proceeding
+      - require          # Require this action/behavior
+      - prohibit         # Prohibit this action/behavior
+      - prefer           # Prefer this approach
+      - paraphrase       # Paraphrase understanding before action
+      - check            # Check condition before proceeding
+      - check-then-confirm  # Check registry then confirm
+      - ask              # Ask user for input
+      - workflow         # Execute workflow steps
+
+  ContextType:
+    description: Execution context affecting resolution
+    values:
+      - poc              # Quick prototype, shortcuts allowed
+      - production       # Full enterprise features
+      - internal         # Corporate internal tools
+
+  TraitType:
+    description: Composable behavior categories (like React components)
+    values:
+      - Publishable      # Can be published to S3/hosting
+      - TypeSafe         # Requires strong typing
+      - UIComponent      # React/UI component
+      - DataModel        # Domain entity/model
+      - BackendService   # Server-side logic
+      - Testable         # Requires tests
+
+  NeedType:
+    description: Types of needs that resolve based on context
+    values:
+      - designSystem     # UI component library choice
+      - auth             # Authentication approach
+      - database         # Database selection
+      - errorHandling    # Error handling strategy
+      - testing          # Testing approach
+      - deployment       # Deployment strategy
+      - framework        # Framework selection
+      - styling          # Styling approach
+
+  ResolutionStatus:
+    description: Status of need resolution
+    values:
+      - pending          # Not yet resolved
+      - resolved         # Resolved with choice
+      - overridden       # User overrode default
+      - skipped          # User skipped
+
+  TaskType:
+    description: Intent detection task types
+    values:
+      - Question         # Information query
+      - Chore            # Routine task
+      - Task             # Implementation task
+      - Brainstorm       # Ideation session
+      - New Script       # Create new script
+      - New Artifact     # Create new artifact
+      - New Idea         # Capture new idea
+      - New Project      # Start new project
+
+  SDLCPhase:
+    description: Software development lifecycle phases
+    values:
+      - PHASE_1_SEED
+      - PHASE_2_RESEARCH
+      - PHASE_2.5_FEASIBILITY
+      - PHASE_3_EXPANSION
+      - PHASE_4_ANALYSIS
+      - PHASE_5_SELECTION
+      - PHASE_6_DESIGN
+      - PHASE_7_TEST_DESIGN
+      - PHASE_8_IMPLEMENTATION
+      - PHASE_8.5_VALIDATION
+      - PHASE_9_REFINEMENT
+      - DIVERGENT
+      - SPIKE
+
+  ToolType:
+    description: Available Claude Code tools
+    values:
+      - Bash
+      - Read
+      - Write
+      - Edit
+      - Glob
+      - Grep
+      - Task
+      - TodoWrite
+      - WebFetch
+      - WebSearch
+      - SlashCommand
+      - Skill
+
+  RuleStatus:
+    description: Rule lifecycle status
+    values:
+      - draft            # Work in progress
+      - approved         # Approved for use
+      - deprecated       # No longer recommended
+      - experimental     # Testing phase
+
+  Severity:
+    description: Linter-style severity levels (ESLint-inspired)
+    values:
+      - off              # Disabled (0)
+      - warn             # Warning (1)
+      - error            # Error (2)
+    aliases:
+      "0": off
+      "1": warn
+      "2": error
+      "false": off
+      "true": error
+
+  BaseTypeName:
+    description: Abstract base types for artifact inheritance
+    values:
+      - Publishable        # Can be published to S3/hosting
+      - UIApplication      # Has a user interface
+      - DataApplication    # Uses data models
+      - BackendApplication # Has server-side logic
+
+  ArtifactTypeName:
+    description: Concrete artifact types
+    values:
+      - Microsite          # Small web app with frontend + optional backend
+      - Website            # Static or dynamic website
+      - Dashboard          # Data visualization interface
+      - API                # Backend API service
+      - PDF                # Generated PDF document
+      - Document           # Markdown/HTML document
+      - Presentation       # Slidev presentation
+      - CLI                # Command-line tool
+      - MobileApp          # iOS/Android mobile app
+
+  WorkflowStateName:
+    description: States in artifact creation workflow
+    values:
+      - IDLE
+      - INTENT_DETECTED
+      - ARTIFACT_INITIALIZED
+      - NEEDS_DEFINED
+      - UI_REGISTRY_CHECKED
+      - DATA_REGISTRY_CHECKED
+      - EXISTING_RESOURCES_IMPORTED
+      - NEW_RESOURCE_PROPOSED
+      - HUMAN_APPROVAL_PENDING
+      - RESOURCE_ADDED_TO_REGISTRY
+      - BUILDING
+      - TESTING
+      - PUBLISHING
+      - COMPLETE
+
+  PublishOptionType:
+    description: Publishing access levels
+    values:
+      - public             # Permanent public URL
+      - temporary          # Presigned URL (7 days)
+      - private            # Internal access only
+
+# =============================================================================
+# Core Entities
+# =============================================================================
+
+entities:
+  Rule:
+    description: Abstract behavioral guidance for AI
+    extends: observer.Rule
+    fields:
+      uuid:
+        type: UUID
+        required: true
+        description: Globally unique identifier (UUID v4), immutable across versions
+        pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+      id:
+        type: string
+        required: true
+        description: Human-readable rule identifier (kebab-case), can change
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+      version:
+        type: SemVer
+        required: true
+        description: Rule version (MAJOR.MINOR.PATCH)
+      level:
+        type: ConstraintLevel
+        required: true
+        description: Enforcement level (priority determines conflict resolution)
+      category:
+        type: RuleCategory
+        required: true
+      description:
+        type: string
+        required: true
+        minLength: 10
+        maxLength: 200
+      abstract:
+        type: boolean
+        default: false
+        description: If true, rule is a template for composition
+      trait:
+        type: TraitType
+        description: Trait this rule belongs to
+      context:
+        type: RuleContext
+        required: true
+      action:
+        type: RuleAction
+        required: true
+      rationale:
+        type: string
+        description: Why this rule exists
+      examples:
+        type: list[RuleExample]
+      compose:
+        type: CompositionSpec
+        description: How this rule composes with others
+      metadata:
+        type: RuleMetadata
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Trait:
+    description: Composable behavior pattern (like React component)
+    fields:
+      name:
+        type: TraitType
+        required: true
+      description:
+        type: string
+        required: true
+      filePatterns:
+        type: list[string]
+        description: File patterns this trait applies to
+      languages:
+        type: map[string, LanguageConfig]
+        description: Language-specific configurations
+      requires:
+        type: list[string]
+        description: Other rules/traits this requires
+      props:
+        type: map[string, any]
+        description: Configurable properties (like React props)
+      rule:
+        type: string
+        description: Associated rule ID
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Context:
+    description: Execution context affecting rule resolution (like React Context)
+    fields:
+      type:
+        type: ContextType
+        required: true
+      name:
+        type: string
+        required: true
+      indicators:
+        type: list[string]
+        description: Keywords that indicate this context
+      defaults:
+        type: ContextDefaults
+        required: true
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Need:
+    description: Requirement that resolves differently by context (like props with defaults)
+    fields:
+      type:
+        type: NeedType
+        required: true
+      description:
+        type: string
+        required: true
+      resolve:
+        type: map[ContextType, NeedResolution]
+        required: true
+        description: Context-specific resolutions
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  Guardrail:
+    description: Tech/architecture preference constraint (legacy - see tech-preferences domain)
+    fields:
+      id:
+        type: string
+        required: true
+      category:
+        type: string
+        required: true
+        description: tech-preferences or architecture-preferences
+      name:
+        type: string
+        required: true
+      preference:
+        type: string
+        required: true
+        description: The preferred choice
+      alternatives:
+        type: list[string]
+        description: Acceptable alternatives
+      rationale:
+        type: string
+      approvedBy:
+        type: string
+      approvedDate:
+        type: date
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ContextMatcher:
+    description: Maps file types or project types to traits
+    fields:
+      fileType:
+        type: map[string, FileTypeMatch]
+        description: File extension to trait mapping
+      projectType:
+        type: map[string, ProjectTypeMatch]
+        description: Project type to trait mapping
+      needs:
+        type: map[string, NeedSuggestion]
+        description: Need keywords to framework suggestions
+
+  # =========================================================================
+  # Artifact Type Hierarchy (from artifact-types.yaml)
+  # =========================================================================
+
+  BaseType:
+    description: Abstract base type for artifact inheritance
+    fields:
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      capabilities:
+        type: list[string]
+        description: Capabilities provided by this base type
+      rules:
+        type: list[string]
+        description: Rule IDs that apply to this base type
+      publish_options:
+        type: list[PublishOption]
+        description: Available publishing options
+      dependencies:
+        type: list[string]
+        description: Directory dependencies
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  ArtifactType:
+    description: Concrete artifact type with inheritance
+    fields:
+      name:
+        type: string
+        required: true
+      inherits:
+        type: list[string]
+        required: true
+        description: Base types this artifact inherits from
+      description:
+        type: string
+        required: true
+      tech_stack:
+        type: TechStack
+        description: Technology stack for this artifact type
+      rules:
+        type: list[string]
+        description: Additional rules specific to this type
+      workflow:
+        type: string
+        description: Workflow ID for creation process
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # =========================================================================
+  # Workflow State Machine (from state-machine.yaml)
+  # =========================================================================
+
+  WorkflowStateMachine:
+    description: State machine definition for artifact workflows
+    fields:
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      initial_state:
+        type: string
+        required: true
+      states:
+        type: map[string, WorkflowState]
+        required: true
+      transitions:
+        type: list[StateTransition]
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  WorkflowState:
+    description: A state in the workflow state machine
+    fields:
+      description:
+        type: string
+        required: true
+      on_enter:
+        type: list[string]
+        description: Actions to perform when entering state
+      on_exit:
+        type: list[string]
+        description: Actions to perform when exiting state
+      rules_applied:
+        type: list[string]
+        description: Rule IDs applied in this state
+
+  StateTransition:
+    description: Transition between workflow states
+    fields:
+      from_state:
+        type: string
+        required: true
+      to_state:
+        type: string
+        required: true
+      trigger:
+        type: string
+        required: true
+        description: Event that triggers transition
+      guard:
+        type: string
+        description: Condition that must be true
+      actions:
+        type: list[string]
+        description: Actions during transition
+
+# =============================================================================
+# Supporting Types
+# =============================================================================
+
+types:
+  RuleContext:
+    description: Conditions under which a rule applies
+    fields:
+      when:
+        type: list[string]
+        description: Conditions that must ALL be true (AND logic)
+      unless:
+        type: list[string]
+        description: Conditions that deactivate rule (exception cases)
+      phase:
+        type: list[SDLCPhase]
+        description: SDLC phases where rule applies
+      filePattern:
+        type: string
+        description: Glob pattern for file matching
+      fileCount:
+        type: FileCountThreshold
+        description: File count thresholds
+      taskType:
+        type: list[TaskType]
+        description: Intent detection task types
+      toolInvolved:
+        type: list[ToolType]
+        description: Tools this rule applies to
+      destructive:
+        type: boolean
+        description: Whether operation is destructive (delete, force push, etc.)
+      detect:
+        type: string
+        description: What to auto-detect (language, requirements, artifact-type)
+
+  FileCountThreshold:
+    description: Min/max file count thresholds
+    fields:
+      min:
+        type: integer
+        minimum: 0
+      max:
+        type: integer
+        minimum: 0
+
+  RuleAction:
+    description: What the rule directs the AI to do
+    fields:
+      directive:
+        type: DirectiveType
+        required: true
+      target:
+        type: string
+        required: true
+        description: What the action targets
+      message:
+        type: string
+        description: Message to display
+      alternative:
+        type: string
+        description: Alternative if primary not applicable
+      questions:
+        type: list[Question]
+        description: Questions to ask for resolution
+      options:
+        type: map[string, FrameworkOption]
+        description: Available options to choose from
+      checks:
+        type: list[RegistryCheck]
+        description: Registry checks to perform
+      ifFound:
+        type: string
+        description: Action if registry match found
+      ifNotFound:
+        type: string
+        description: Action if no registry match
+      steps:
+        type: list[WorkflowStep]
+        description: Workflow steps to execute
+
+  RuleExample:
+    description: Example of rule application
+    fields:
+      scenario:
+        type: string
+        required: true
+      correct:
+        type: string
+        required: true
+      incorrect:
+        type: string
+
+  RuleMetadata:
+    description: Rule administrative metadata
+    fields:
+      approvedBy:
+        type: string
+      approvedDate:
+        type: date
+      status:
+        type: RuleStatus
+        default: draft
+      deprecatedBy:
+        type: UUID
+        description: UUID of rule that replaces this one (if deprecated)
+      relatedRules:
+        type: list[UUID]
+        description: UUIDs of related rules
+      changelog:
+        type: list[ChangelogEntry]
+        description: Version history for this rule
+      source:
+        type: string
+        format: uri
+        description: Source repository URL (for remote rules)
+      namespace:
+        type: string
+        pattern: "^@[a-z0-9-]+/[a-z0-9-]+$"
+        description: Rule namespace (e.g., @protoflow/core)
+
+  ChangelogEntry:
+    description: Version history entry
+    fields:
+      version:
+        type: string
+        required: true
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+      date:
+        type: date
+        required: true
+      changes:
+        type: list[string]
+        required: true
+      author:
+        type: string
+      breaking:
+        type: boolean
+        description: Whether this is a breaking change
+
+  CompositionSpec:
+    description: How a rule composes with others
+    fields:
+      with:
+        type: list[TraitType]
+        description: Traits this rule composes with
+      inherits:
+        type: string
+        description: What properties to inherit
+      adapts:
+        type: map[string, string]
+        description: Language/context-specific adaptations
+      triggers:
+        type: list[string]
+        description: Other rules triggered by this one
+
+  ContextDefaults:
+    description: Default settings for a context
+    fields:
+      complexity:
+        type: string
+        enum: [minimal, moderate, appropriate, full]
+      polish:
+        type: string
+        enum: [low, medium, high]
+      shortcuts:
+        type: boolean
+
+  NeedResolution:
+    description: How a need resolves in a specific context
+    fields:
+      choice:
+        type: string
+        required: true
+        description: The resolved choice identifier
+      message:
+        type: string
+        required: true
+        description: Human-readable explanation
+      options:
+        type: list[string]
+        description: Available options
+      features:
+        type: list[string]
+        description: Features included
+      provider:
+        type: string
+        description: Implementation provider
+      security:
+        type: string
+        description: Security level
+      components:
+        type: string
+        description: Component source
+      styling:
+        type: string
+        description: Styling approach
+      orm:
+        type: string
+        description: ORM requirement
+      monitoring:
+        type: string
+        description: Monitoring approach
+      alerting:
+        type: string
+        description: Alerting approach
+      unit:
+        type: any
+        description: Unit test requirement (bool or string)
+      integration:
+        type: any
+        description: Integration test requirement
+      e2e:
+        type: any
+        description: E2E test requirement
+      infra:
+        type: string
+        description: Infrastructure approach
+      ci:
+        type: string
+        description: CI/CD approach
+      environments:
+        type: list[string]
+        description: Environment list
+
+  LanguageConfig:
+    description: Language-specific trait configuration
+    fields:
+      filePatterns:
+        type: list[string]
+      rule:
+        type: string
+        description: Rule ID to apply
+      props:
+        type: map[string, any]
+
+  Question:
+    description: Decision question for rule resolution
+    fields:
+      q:
+        type: string
+        required: true
+      yes:
+        type: string
+        description: Action if yes
+      no:
+        type: string
+        description: Action if no
+
+  FrameworkOption:
+    description: Framework choice with metadata
+    fields:
+      name:
+        type: string
+        required: true
+      pros:
+        type: list[string]
+      bestFor:
+        type: list[string]
+
+  RegistryCheck:
+    description: Registry check specification
+    fields:
+      type:
+        type: string
+        required: true
+      registry:
+        type: string
+        required: true
+
+  WorkflowStep:
+    description: Workflow step in creation process
+    fields:
+      step:
+        type: string
+        required: true
+      action:
+        type: string
+        required: true
+
+  FileTypeMatch:
+    description: File type to trait mapping
+    fields:
+      traits:
+        type: list[TraitType]
+      mimeType:
+        type: string
+      language:
+        type: string
+
+  ProjectTypeMatch:
+    description: Project type to trait mapping
+    fields:
+      traits:
+        type: list[TraitType]
+      framework:
+        type: string
+
+  NeedSuggestion:
+    description: Need keyword to framework suggestion
+    fields:
+      suggests:
+        type: string
+      complex:
+        type: string
+        description: Suggestion for complex cases
+
+  TechStack:
+    description: Technology stack definition for artifact types
+    fields:
+      frontend:
+        type: string
+        description: Frontend framework (e.g., "Vite + React", "Next.js")
+      backend:
+        type: string
+        description: Backend framework (e.g., "FastAPI")
+      styling:
+        type: string
+        description: Styling solution (e.g., "Tailwind CSS + shadcn/ui")
+      charts:
+        type: string
+        description: Charting library (e.g., "Recharts", "Tremor")
+      validation:
+        type: string
+        description: Validation library (e.g., "Pydantic", "Zod")
+      generator:
+        type: string
+        description: Document generator (e.g., "WeasyPrint", "Puppeteer")
+      format:
+        type: string
+        description: Output format (e.g., "Markdown", "Slidev")
+      framework:
+        type: string
+        description: CLI framework (e.g., "React Ink", "Click")
+
+  PublishOption:
+    description: Publishing option with description
+    fields:
+      type:
+        type: PublishOptionType
+        required: true
+      description:
+        type: string
+        required: true
+
+  RuleResolution:
+    description: Algorithm for resolving applicable rules
+    fields:
+      artifact_type:
+        type: ArtifactTypeName
+        required: true
+      inherited_types:
+        type: list[BaseTypeName]
+      resolved_rules:
+        type: list[string]
+        description: Deduplicated, ordered rule IDs
+
+  RuleConfiguration:
+    description: Rule configuration with severity and options (ESLint-style)
+    fields:
+      severity:
+        type: Severity
+        required: true
+      options:
+        type: map[string, any]
+        description: Rule-specific configuration options
+      preference:
+        type: PreferenceSpec
+        description: Preference with overrides
+
+  PreferenceSpec:
+    description: Numeric preference with multi-dimensional overrides
+    fields:
+      base:
+        type: integer
+        required: true
+        min: 0
+        max: 100
+        description: Default preference strength (0-100)
+      overrides:
+        type: PreferenceOverrides
+
+  PreferenceOverrides:
+    description: Override preferences by context, type, language, or tags
+    fields:
+      byContext:
+        type: map[ContextType, integer]
+        description: Context-specific overrides (poc, production, internal)
+      byType:
+        type: map[string, integer]
+        description: Artifact type overrides (site, microsite, api, etc.)
+      byLanguage:
+        type: map[string, integer]
+        description: Language-specific overrides
+      byTag:
+        type: map[string, integer]
+        description: Custom tag overrides
+
+# =============================================================================
+# Actions
+# =============================================================================
+
+actions:
+  ResolveContext:
+    description: Detect execution context from user input
+    input:
+      userInput:
+        type: string
+        required: true
+    output:
+      context:
+        type: Context
+      confidence:
+        type: float
+      indicators:
+        type: list[string]
+
+  ResolveNeed:
+    description: Resolve a need based on detected context
+    input:
+      need:
+        type: NeedType
+        required: true
+      context:
+        type: ContextType
+        required: true
+    output:
+      resolution:
+        type: NeedResolution
+      canOverride:
+        type: boolean
+
+  MatchTraits:
+    description: Determine which traits apply to an artifact
+    input:
+      artifactType:
+        type: string
+      filePatterns:
+        type: list[string]
+    output:
+      traits:
+        type: list[Trait]
+      rules:
+        type: list[Rule]
+
+  ComposeRules:
+    description: Compose multiple rules based on traits and context
+    input:
+      traits:
+        type: list[TraitType]
+      context:
+        type: ContextType
+      needs:
+        type: list[NeedType]
+    output:
+      rules:
+        type: list[Rule]
+      resolutions:
+        type: map[NeedType, NeedResolution]
+
+  EvaluateGuardrail:
+    description: Check if a choice aligns with guardrails
+    input:
+      choice:
+        type: string
+      category:
+        type: string
+    output:
+      allowed:
+        type: boolean
+      guardrail:
+        type: Guardrail
+      recommendation:
+        type: string
+
+  MatchRules:
+    description: Find rules matching current context
+    input:
+      phase:
+        type: SDLCPhase
+      taskType:
+        type: TaskType
+      filePattern:
+        type: string
+      tools:
+        type: list[ToolType]
+    output:
+      rules:
+        type: list[Rule]
+      conflictResolution:
+        type: map[string, Rule]
+        description: Conflicts resolved by constraint level priority
+
+  ValidateRule:
+    description: Validate rule against JSON schema
+    input:
+      rule:
+        type: Rule
+    output:
+      valid:
+        type: boolean
+      errors:
+        type: list[string]
+
+# =============================================================================
+# Relationships
+# =============================================================================
+
+relationships:
+  - Rule composesWithTrait Trait
+  - Rule triggersRule Rule
+  - Rule deprecatedByRule Rule
+  - Trait requiresTrait Trait
+  - Need resolvesInContext Context
+  - Guardrail constrainsRule Rule
+  - Context determinesResolution NeedResolution
+  - ChangelogEntry belongsToRule Rule
+
+# =============================================================================
+# Index Structure
+# =============================================================================
+
+index:
+  description: Structure for rule category index (index.json)
+  fields:
+    version:
+      type: SemVer
+    lastUpdated:
+      type: date
+    description:
+      type: string
+    categories:
+      type: list[CategoryEntry]
+    summary:
+      type: IndexSummary
+    usage:
+      type: map[string, string]
+    integration:
+      type: map[string, string]
+    generators:
+      type: map[string, GeneratorConfig]
+
+  CategoryEntry:
+    fields:
+      name:
+        type: RuleCategory
+      file:
+        type: string
+      description:
+        type: string
+      ruleCount:
+        type: integer
+      priority:
+        type: string
+        enum: [critical, high, medium, low]
+      type:
+        type: string
+        description: Rule type (standard or meta for composable)
+      features:
+        type: list[string]
+
+  IndexSummary:
+    fields:
+      totalRules:
+        type: integer
+      totalCategories:
+        type: integer
+      constraintLevels:
+        type: map[ConstraintLevel, integer]
+      byPriority:
+        type: map[string, integer]
+
+  GeneratorConfig:
+    fields:
+      script:
+        type: string
+      input:
+        type: string
+      output:
+        type: string
+      description:
+        type: string

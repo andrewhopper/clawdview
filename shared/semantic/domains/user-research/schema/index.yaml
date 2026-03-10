@@ -1,0 +1,18 @@
+# User Research Domain Model
+# Atomic building blocks for customer personas and research artifacts
+# Sources: Cooper (2004), Osterwalder (2014), Christensen (2016), WCAG 2.1
+
+domain:
+  name: user-research
+  version: "1.0.0"
+  description: Atomic entities for user/customer research - personas, motivations, accessibility
+  created_at: "2025-11-28"
+  updated_at: "2025-11-28"
+
+imports:
+  - $ref: actor.yaml
+  - $ref: demographics.yaml
+  - $ref: accessibility.yaml
+  - $ref: motivation.yaml
+  - $ref: behavior.yaml
+  - $ref: enums.yaml

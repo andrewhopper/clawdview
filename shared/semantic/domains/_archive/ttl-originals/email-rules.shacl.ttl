@@ -1,0 +1,215 @@
+@prefix email: <http://hopperlabs.ai/domain/email#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# ============================================
+# SHACL Validation Rules for Email Domain
+# Business constraints and validation logic
+# ============================================
+
+# ----------------
+# Email Entity Constraints
+# ----------------
+
+email:EmailShape a sh:NodeShape ;
+    sh:targetClass email:Email ;
+    rdfs:comment "Validation constraints for Email entity" ;
+
+    # Subject is required, 1-998 characters (RFC 2822)
+    sh:property [
+        sh:path email:subject ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 998 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Subject is required and must be between 1-998 characters per RFC 2822"
+    ] ;
+
+    # Body is required
+    sh:property [
+        sh:path email:body ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Email body is required and must not be empty"
+    ] ;
+
+    # At least one recipient is required
+    sh:property [
+        sh:path email:recipients ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:pattern "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$" ;
+        sh:message "At least one valid recipient email address is required"
+    ] ;
+
+    # Status must be one of valid values
+    sh:property [
+        sh:path email:status ;
+        sh:in (email:Draft email:Sent email:Deleted email:Archived) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Status must be one of: Draft, Sent, Deleted, Archived"
+    ] ;
+
+    # IsRead is boolean
+    sh:property [
+        sh:path email:isRead ;
+        sh:datatype xsd:boolean ;
+        sh:maxCount 1 ;
+        sh:message "isRead must be a boolean value"
+    ] ;
+
+    # SentAt must be valid datetime
+    sh:property [
+        sh:path email:sentAt ;
+        sh:datatype xsd:dateTime ;
+        sh:maxCount 1 ;
+        sh:message "sentAt must be a valid ISO 8601 datetime"
+    ] ;
+
+    # ReadAt must be valid datetime
+    sh:property [
+        sh:path email:readAt ;
+        sh:datatype xsd:dateTime ;
+        sh:maxCount 1 ;
+        sh:message "readAt must be a valid ISO 8601 datetime"
+    ] .
+
+# ----------------
+# Business Rule: Sent emails must have sentAt timestamp
+# ----------------
+
+email:SentEmailRule a sh:NodeShape ;
+    sh:targetClass email:Email ;
+    rdfs:comment "Sent emails must have sentAt timestamp" ;
+    sh:sparql [
+        sh:message "Emails with status 'Sent' must have a sentAt timestamp" ;
+        sh:select """
+            PREFIX email: <http://hopperlabs.ai/domain/email#>
+            SELECT $this
+            WHERE {
+                $this email:status email:Sent .
+                FILTER NOT EXISTS { $this email:sentAt ?sentAt }
+            }
+        """
+    ] .
+
+# ----------------
+# Business Rule: Read emails must have readAt timestamp
+# ----------------
+
+email:ReadEmailRule a sh:NodeShape ;
+    sh:targetClass email:Email ;
+    rdfs:comment "Read emails must have readAt timestamp if isRead is true" ;
+    sh:sparql [
+        sh:message "Emails marked as read (isRead=true) must have a readAt timestamp" ;
+        sh:select """
+            PREFIX email: <http://hopperlabs.ai/domain/email#>
+            SELECT $this
+            WHERE {
+                $this email:isRead true .
+                FILTER NOT EXISTS { $this email:readAt ?readAt }
+            }
+        """
+    ] .
+
+# ----------------
+# Business Rule: Attachment size limits
+# ----------------
+
+email:AttachmentShape a sh:NodeShape ;
+    sh:targetClass email:Attachment ;
+    rdfs:comment "Attachment validation constraints" ;
+
+    # Filename is required
+    sh:property [
+        sh:path email:filename ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 255 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Attachment filename is required and must be 1-255 characters"
+    ] ;
+
+    # Content type is required
+    sh:property [
+        sh:path email:contentType ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:pattern "^[a-z]+/[a-z0-9.+-]+$" ;
+        sh:message "Content type is required and must be valid MIME type"
+    ] ;
+
+    # Size must be positive and <= 25MB (most email providers)
+    sh:property [
+        sh:path email:size ;
+        sh:datatype xsd:integer ;
+        sh:minInclusive 1 ;
+        sh:maxInclusive 26214400 ; # 25MB in bytes
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Attachment size must be between 1 byte and 25MB (26214400 bytes)"
+    ] .
+
+# ----------------
+# Business Rule: Email address format validation
+# ----------------
+
+email:RecipientFormatRule a sh:NodeShape ;
+    sh:targetClass email:Email ;
+    rdfs:comment "Recipient email addresses must follow RFC 5322 format" ;
+    sh:property [
+        sh:path email:recipients ;
+        sh:pattern "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$" ;
+        sh:message "Recipient email must follow RFC 5322 format"
+    ] ;
+    sh:property [
+        sh:path email:cc ;
+        sh:pattern "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$" ;
+        sh:message "CC email must follow RFC 5322 format"
+    ] ;
+    sh:property [
+        sh:path email:bcc ;
+        sh:pattern "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$" ;
+        sh:message "BCC email must follow RFC 5322 format"
+    ] .
+
+# ----------------
+# Business Rule: Folder constraints
+# ----------------
+
+email:FolderShape a sh:NodeShape ;
+    sh:targetClass email:Folder ;
+    rdfs:comment "Email folder validation constraints" ;
+
+    # Folder name is required
+    sh:property [
+        sh:path email:name ;
+        sh:in (email:Inbox email:Sent email:Drafts email:Trash email:Archive) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Folder name must be one of: inbox, sent, drafts, trash, archive"
+    ] .
+
+# ----------------
+# Business Rule: Thread constraints
+# ----------------
+
+email:ThreadShape a sh:NodeShape ;
+    sh:targetClass email:Thread ;
+    rdfs:comment "Email thread validation constraints" ;
+
+    # Thread must have at least one email
+    sh:property [
+        sh:path email:hasEmail ;
+        sh:class email:Email ;
+        sh:minCount 1 ;
+        sh:message "Thread must contain at least one email"
+    ] .

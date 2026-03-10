@@ -1,0 +1,686 @@
+@prefix auth: <http://hopperlabs.ai/ontology/auth#> .
+@prefix action: <http://hopperlabs.ai/ontology/action#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# ============================================
+# Authentication & Authorization Domain Ontology
+# Canonical model for identity, access control, and session management
+# Use case: Consistent auth across services, APIs, and applications
+# Created: 2025-11-21
+# ============================================
+
+# ================================================================================
+# SEMANTIC LAYER: Core Entities (What Exists)
+# ================================================================================
+
+# ----------------
+# Identity Entities
+# ----------------
+
+auth:User a owl:Class ;
+    rdfs:label "User" ;
+    rdfs:comment "Human user identity with authentication credentials" ;
+    rdfs:subClassOf auth:Principal .
+
+auth:ServiceAccount a owl:Class ;
+    rdfs:label "Service Account" ;
+    rdfs:comment "Non-human identity for service-to-service authentication" ;
+    rdfs:subClassOf auth:Principal .
+
+auth:Principal a owl:Class ;
+    rdfs:label "Principal" ;
+    rdfs:comment "Any authenticated entity (user, service, device) that can be granted permissions" .
+
+# ----------------
+# Access Control Entities
+# ----------------
+
+auth:Role a owl:Class ;
+    rdfs:label "Role" ;
+    rdfs:comment "Named collection of permissions that can be assigned to principals" .
+
+auth:Permission a owl:Class ;
+    rdfs:label "Permission" ;
+    rdfs:comment "Granular access right to perform specific action on resource" .
+
+auth:Policy a owl:Class ;
+    rdfs:label "Policy" ;
+    rdfs:comment "Rule that governs access based on conditions (ABAC support)" .
+
+auth:Resource a owl:Class ;
+    rdfs:label "Resource" ;
+    rdfs:comment "Protected entity that requires authorization to access" .
+
+# ----------------
+# Session & Credential Entities
+# ----------------
+
+auth:Session a owl:Class ;
+    rdfs:label "Session" ;
+    rdfs:comment "Authenticated session with expiry and refresh capabilities" .
+
+auth:Credential a owl:Class ;
+    rdfs:label "Credential" ;
+    rdfs:comment "Authentication mechanism (password, token, key, certificate)" .
+
+auth:PasswordCredential a owl:Class ;
+    rdfs:subClassOf auth:Credential ;
+    rdfs:label "Password Credential" ;
+    rdfs:comment "Username/password authentication" .
+
+auth:TokenCredential a owl:Class ;
+    rdfs:subClassOf auth:Credential ;
+    rdfs:label "Token Credential" ;
+    rdfs:comment "JWT, API key, or bearer token authentication" .
+
+auth:OAuthCredential a owl:Class ;
+    rdfs:subClassOf auth:Credential ;
+    rdfs:label "OAuth Credential" ;
+    rdfs:comment "OAuth 2.0 / OIDC authentication with provider" .
+
+auth:CertificateCredential a owl:Class ;
+    rdfs:subClassOf auth:Credential ;
+    rdfs:label "Certificate Credential" ;
+    rdfs:comment "X.509 certificate-based authentication (mTLS)" .
+
+auth:MFACredential a owl:Class ;
+    rdfs:subClassOf auth:Credential ;
+    rdfs:label "MFA Credential" ;
+    rdfs:comment "Multi-factor authentication credential (TOTP, SMS, hardware key)" .
+
+# ================================================================================
+# Properties
+# ================================================================================
+
+# ----------------
+# User Properties
+# ----------------
+
+auth:userId a owl:DatatypeProperty ;
+    rdfs:domain auth:User ;
+    rdfs:range xsd:string ;
+    rdfs:label "User ID" ;
+    rdfs:comment "Unique identifier for user" .
+
+auth:email a owl:DatatypeProperty ;
+    rdfs:domain auth:User ;
+    rdfs:range xsd:string ;
+    rdfs:label "Email" ;
+    rdfs:comment "User email address (often used as username)" .
+
+auth:username a owl:DatatypeProperty ;
+    rdfs:domain auth:Principal ;
+    rdfs:range xsd:string ;
+    rdfs:label "Username" ;
+    rdfs:comment "Unique login identifier" .
+
+auth:displayName a owl:DatatypeProperty ;
+    rdfs:domain auth:Principal ;
+    rdfs:range xsd:string ;
+    rdfs:label "Display Name" ;
+    rdfs:comment "Human-readable name for display" .
+
+auth:isActive a owl:DatatypeProperty ;
+    rdfs:domain auth:Principal ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Is Active" ;
+    rdfs:comment "Whether principal can authenticate" .
+
+auth:createdAt a owl:DatatypeProperty ;
+    rdfs:domain auth:Principal ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Created At" ;
+    rdfs:comment "Timestamp when principal was created" .
+
+auth:lastLoginAt a owl:DatatypeProperty ;
+    rdfs:domain auth:Principal ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Last Login At" ;
+    rdfs:comment "Timestamp of most recent successful authentication" .
+
+# ----------------
+# Role Properties
+# ----------------
+
+auth:roleName a owl:DatatypeProperty ;
+    rdfs:domain auth:Role ;
+    rdfs:range xsd:string ;
+    rdfs:label "Role Name" ;
+    rdfs:comment "Unique identifier for role (e.g., 'admin', 'viewer', 'editor')" .
+
+auth:roleDescription a owl:DatatypeProperty ;
+    rdfs:domain auth:Role ;
+    rdfs:range xsd:string ;
+    rdfs:label "Role Description" ;
+    rdfs:comment "Human-readable description of role purpose" .
+
+auth:isSystemRole a owl:DatatypeProperty ;
+    rdfs:domain auth:Role ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Is System Role" ;
+    rdfs:comment "Whether role is built-in and cannot be deleted" .
+
+# ----------------
+# Permission Properties
+# ----------------
+
+auth:permissionName a owl:DatatypeProperty ;
+    rdfs:domain auth:Permission ;
+    rdfs:range xsd:string ;
+    rdfs:label "Permission Name" ;
+    rdfs:comment "Permission identifier in format 'resource:action' (e.g., 'email:send')" .
+
+auth:permissionScope a owl:DatatypeProperty ;
+    rdfs:domain auth:Permission ;
+    rdfs:range auth:PermissionScope ;
+    rdfs:label "Permission Scope" ;
+    rdfs:comment "Scope of permission (global, org, project, resource)" .
+
+auth:PermissionScope a owl:Class ;
+    rdfs:label "Permission Scope" ;
+    owl:oneOf (auth:GlobalScope auth:OrgScope auth:ProjectScope auth:ResourceScope) .
+
+auth:GlobalScope a auth:PermissionScope ;
+    rdfs:label "Global" .
+
+auth:OrgScope a auth:PermissionScope ;
+    rdfs:label "Organization" .
+
+auth:ProjectScope a auth:PermissionScope ;
+    rdfs:label "Project" .
+
+auth:ResourceScope a auth:PermissionScope ;
+    rdfs:label "Resource" .
+
+# ----------------
+# Session Properties
+# ----------------
+
+auth:sessionId a owl:DatatypeProperty ;
+    rdfs:domain auth:Session ;
+    rdfs:range xsd:string ;
+    rdfs:label "Session ID" ;
+    rdfs:comment "Unique identifier for session" .
+
+auth:accessToken a owl:DatatypeProperty ;
+    rdfs:domain auth:Session ;
+    rdfs:range xsd:string ;
+    rdfs:label "Access Token" ;
+    rdfs:comment "Short-lived token for API access" .
+
+auth:refreshToken a owl:DatatypeProperty ;
+    rdfs:domain auth:Session ;
+    rdfs:range xsd:string ;
+    rdfs:label "Refresh Token" ;
+    rdfs:comment "Long-lived token for obtaining new access tokens" .
+
+auth:expiresAt a owl:DatatypeProperty ;
+    rdfs:domain auth:Session ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "Expires At" ;
+    rdfs:comment "Timestamp when session expires" .
+
+auth:sessionStatus a owl:DatatypeProperty ;
+    rdfs:domain auth:Session ;
+    rdfs:range auth:SessionStatus ;
+    rdfs:label "Session Status" ;
+    rdfs:comment "Current status of session" .
+
+auth:SessionStatus a owl:Class ;
+    rdfs:label "Session Status" ;
+    owl:oneOf (auth:Active auth:Expired auth:Revoked auth:Suspended) .
+
+auth:Active a auth:SessionStatus ;
+    rdfs:label "Active" .
+
+auth:Expired a auth:SessionStatus ;
+    rdfs:label "Expired" .
+
+auth:Revoked a auth:SessionStatus ;
+    rdfs:label "Revoked" .
+
+auth:Suspended a auth:SessionStatus ;
+    rdfs:label "Suspended" .
+
+auth:ipAddress a owl:DatatypeProperty ;
+    rdfs:domain auth:Session ;
+    rdfs:range xsd:string ;
+    rdfs:label "IP Address" ;
+    rdfs:comment "Client IP address for session" .
+
+auth:userAgent a owl:DatatypeProperty ;
+    rdfs:domain auth:Session ;
+    rdfs:range xsd:string ;
+    rdfs:label "User Agent" ;
+    rdfs:comment "Client user agent string" .
+
+# ----------------
+# Credential Properties
+# ----------------
+
+auth:authMethod a owl:DatatypeProperty ;
+    rdfs:domain auth:Credential ;
+    rdfs:range auth:AuthMethod ;
+    rdfs:label "Auth Method" ;
+    rdfs:comment "Authentication method type" .
+
+auth:AuthMethod a owl:Class ;
+    rdfs:label "Auth Method" ;
+    owl:oneOf (auth:Password auth:OAuth auth:SAML auth:APIKey auth:Certificate auth:MFA) .
+
+auth:Password a auth:AuthMethod ;
+    rdfs:label "Password" .
+
+auth:OAuth a auth:AuthMethod ;
+    rdfs:label "OAuth" .
+
+auth:SAML a auth:AuthMethod ;
+    rdfs:label "SAML" .
+
+auth:APIKey a auth:AuthMethod ;
+    rdfs:label "API Key" .
+
+auth:Certificate a auth:AuthMethod ;
+    rdfs:label "Certificate" .
+
+auth:MFA a auth:AuthMethod ;
+    rdfs:label "MFA" .
+
+auth:oauthProvider a owl:DatatypeProperty ;
+    rdfs:domain auth:OAuthCredential ;
+    rdfs:range xsd:string ;
+    rdfs:label "OAuth Provider" ;
+    rdfs:comment "OAuth provider name (google, github, okta, etc.)" .
+
+auth:oauthSubject a owl:DatatypeProperty ;
+    rdfs:domain auth:OAuthCredential ;
+    rdfs:range xsd:string ;
+    rdfs:label "OAuth Subject" ;
+    rdfs:comment "Subject ID from OAuth provider" .
+
+# ----------------
+# Relationships
+# ----------------
+
+auth:hasRole a owl:ObjectProperty ;
+    rdfs:domain auth:Principal ;
+    rdfs:range auth:Role ;
+    rdfs:label "Has Role" ;
+    rdfs:comment "Principal has been assigned role" .
+
+auth:hasPermission a owl:ObjectProperty ;
+    rdfs:domain auth:Role ;
+    rdfs:range auth:Permission ;
+    rdfs:label "Has Permission" ;
+    rdfs:comment "Role includes permission" .
+
+auth:hasDirectPermission a owl:ObjectProperty ;
+    rdfs:domain auth:Principal ;
+    rdfs:range auth:Permission ;
+    rdfs:label "Has Direct Permission" ;
+    rdfs:comment "Principal has permission directly (not via role)" .
+
+auth:hasCredential a owl:ObjectProperty ;
+    rdfs:domain auth:Principal ;
+    rdfs:range auth:Credential ;
+    rdfs:label "Has Credential" ;
+    rdfs:comment "Principal has authentication credential" .
+
+auth:hasSession a owl:ObjectProperty ;
+    rdfs:domain auth:Principal ;
+    rdfs:range auth:Session ;
+    rdfs:label "Has Session" ;
+    rdfs:comment "Principal has active session" .
+
+auth:createdBy a owl:ObjectProperty ;
+    rdfs:domain auth:Session ;
+    rdfs:range auth:Credential ;
+    rdfs:label "Created By" ;
+    rdfs:comment "Credential used to create session" .
+
+auth:parentRole a owl:ObjectProperty ;
+    rdfs:domain auth:Role ;
+    rdfs:range auth:Role ;
+    rdfs:label "Parent Role" ;
+    rdfs:comment "Role inherits permissions from parent (role hierarchy)" .
+
+# ================================================================================
+# KINETIC LAYER: Actions (What Can Be Done)
+# ================================================================================
+
+# ----------------
+# Authentication Actions
+# ----------------
+
+auth:AuthenticateAction a action:CreateAction ;
+    rdfs:label "Authenticate" ;
+    rdfs:comment "Verify credentials and create authenticated session" ;
+    action:operatesOn auth:Session ;
+    action:requiresPermission "auth:login" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Creates session, updates lastLoginAt, logs authentication event" ;
+    action:errorConditions "INVALID_CREDENTIALS, ACCOUNT_LOCKED, ACCOUNT_DISABLED, MFA_REQUIRED" .
+
+auth:AuthenticateAction action:requires [
+    action:parameterName "username" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Username or email"
+] , [
+    action:parameterName "credential" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Password, token, or other credential"
+] , [
+    action:parameterName "authMethod" ;
+    action:parameterType "AuthMethod" ;
+    action:isRequired false ;
+    action:defaultValue "Password" ;
+    rdfs:comment "Authentication method to use"
+] , [
+    action:parameterName "mfaCode" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "MFA code if required"
+] .
+
+auth:AuthenticateAction action:produces [
+    action:resultType "Session" ;
+    rdfs:comment "Authenticated session with access and refresh tokens"
+] .
+
+# ----------------
+
+auth:RefreshSessionAction a action:UpdateAction ;
+    rdfs:label "Refresh Session" ;
+    rdfs:comment "Exchange refresh token for new access token" ;
+    action:operatesOn auth:Session ;
+    action:requiresPermission "auth:refresh" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Issues new access token, may rotate refresh token" ;
+    action:errorConditions "INVALID_REFRESH_TOKEN, SESSION_REVOKED, SESSION_EXPIRED" .
+
+auth:RefreshSessionAction action:requires [
+    action:parameterName "refreshToken" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] .
+
+auth:RefreshSessionAction action:produces [
+    action:resultType "Session" ;
+    rdfs:comment "Updated session with new access token"
+] .
+
+# ----------------
+
+auth:RevokeSessionAction a action:DeleteAction ;
+    rdfs:label "Revoke Session" ;
+    rdfs:comment "Invalidate session (logout)" ;
+    action:operatesOn auth:Session ;
+    action:requiresPermission "auth:logout" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Sets session status to Revoked, invalidates tokens" ;
+    action:errorConditions "SESSION_NOT_FOUND" .
+
+auth:RevokeSessionAction action:requires [
+    action:parameterName "sessionId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] .
+
+auth:RevokeSessionAction action:produces [
+    action:resultType "void"
+] .
+
+# ----------------
+
+auth:RevokeAllSessionsAction a action:DeleteAction ;
+    rdfs:label "Revoke All Sessions" ;
+    rdfs:comment "Invalidate all sessions for a principal (force logout everywhere)" ;
+    action:operatesOn auth:Session ;
+    action:requiresPermission "auth:admin" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Revokes all active sessions for principal" ;
+    action:errorConditions "PRINCIPAL_NOT_FOUND" .
+
+auth:RevokeAllSessionsAction action:requires [
+    action:parameterName "principalId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] .
+
+auth:RevokeAllSessionsAction action:produces [
+    action:resultType "number" ;
+    rdfs:comment "Count of revoked sessions"
+] .
+
+# ----------------
+# Authorization Actions
+# ----------------
+
+auth:AuthorizeAction a action:ValidationAction ;
+    rdfs:label "Authorize" ;
+    rdfs:comment "Check if principal has permission to perform action on resource" ;
+    action:operatesOn auth:Permission ;
+    action:requiresPermission "auth:check" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "None (read-only check)" ;
+    action:errorConditions "INVALID_TOKEN, PERMISSION_DENIED" .
+
+auth:AuthorizeAction action:requires [
+    action:parameterName "principalId" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Principal requesting access"
+] , [
+    action:parameterName "permission" ;
+    action:parameterType "string" ;
+    action:isRequired true ;
+    rdfs:comment "Permission to check (e.g., 'email:send')"
+] , [
+    action:parameterName "resourceId" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "Specific resource to check access for"
+] .
+
+auth:AuthorizeAction action:produces [
+    action:resultType "boolean" ;
+    rdfs:comment "True if authorized, false otherwise"
+] .
+
+# ----------------
+# Role Management Actions
+# ----------------
+
+auth:AssignRoleAction a action:UpdateAction ;
+    rdfs:label "Assign Role" ;
+    rdfs:comment "Grant role to principal" ;
+    action:operatesOn auth:Principal ;
+    action:requiresPermission "auth:manage_roles" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Adds role to principal's role set" ;
+    action:errorConditions "PRINCIPAL_NOT_FOUND, ROLE_NOT_FOUND, INSUFFICIENT_PERMISSIONS" .
+
+auth:AssignRoleAction action:requires [
+    action:parameterName "principalId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "roleName" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] .
+
+auth:AssignRoleAction action:produces [
+    action:resultType "Principal" ;
+    rdfs:comment "Updated principal with new role"
+] .
+
+# ----------------
+
+auth:RevokeRoleAction a action:UpdateAction ;
+    rdfs:label "Revoke Role" ;
+    rdfs:comment "Remove role from principal" ;
+    action:operatesOn auth:Principal ;
+    action:requiresPermission "auth:manage_roles" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Removes role from principal's role set" ;
+    action:errorConditions "PRINCIPAL_NOT_FOUND, ROLE_NOT_FOUND" .
+
+auth:RevokeRoleAction action:requires [
+    action:parameterName "principalId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "roleName" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] .
+
+auth:RevokeRoleAction action:produces [
+    action:resultType "Principal"
+] .
+
+# ----------------
+# User Management Actions
+# ----------------
+
+auth:CreateUserAction a action:CreateAction ;
+    rdfs:label "Create User" ;
+    rdfs:comment "Register new user account" ;
+    action:operatesOn auth:User ;
+    action:requiresPermission "auth:create_user" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Creates user record, sends welcome email" ;
+    action:errorConditions "USERNAME_TAKEN, EMAIL_TAKEN, INVALID_PASSWORD, REGISTRATION_DISABLED" .
+
+auth:CreateUserAction action:requires [
+    action:parameterName "email" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "username" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "Optional, defaults to email"
+] , [
+    action:parameterName "password" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "displayName" ;
+    action:parameterType "string" ;
+    action:isRequired false
+] , [
+    action:parameterName "roles" ;
+    action:parameterType "string[]" ;
+    action:isRequired false ;
+    rdfs:comment "Initial roles to assign"
+] .
+
+auth:CreateUserAction action:produces [
+    action:resultType "User" ;
+    rdfs:comment "Created user (password excluded)"
+] .
+
+# ----------------
+
+auth:DisableUserAction a action:UpdateAction ;
+    rdfs:label "Disable User" ;
+    rdfs:comment "Disable user account (prevent login)" ;
+    action:operatesOn auth:User ;
+    action:requiresPermission "auth:admin" ;
+    action:isIdempotent true ;
+    action:hasSideEffect "Sets isActive to false, revokes all sessions" ;
+    action:errorConditions "USER_NOT_FOUND, CANNOT_DISABLE_SELF" .
+
+auth:DisableUserAction action:requires [
+    action:parameterName "userId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "reason" ;
+    action:parameterType "string" ;
+    action:isRequired false
+] .
+
+auth:DisableUserAction action:produces [
+    action:resultType "User"
+] .
+
+# ----------------
+
+auth:ResetPasswordAction a action:UpdateAction ;
+    rdfs:label "Reset Password" ;
+    rdfs:comment "Change user password" ;
+    action:operatesOn auth:PasswordCredential ;
+    action:requiresPermission "auth:change_password" ;
+    action:isIdempotent false ;
+    action:hasSideEffect "Updates password hash, revokes all sessions, sends notification" ;
+    action:errorConditions "USER_NOT_FOUND, INVALID_CURRENT_PASSWORD, WEAK_PASSWORD" .
+
+auth:ResetPasswordAction action:requires [
+    action:parameterName "userId" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] , [
+    action:parameterName "currentPassword" ;
+    action:parameterType "string" ;
+    action:isRequired false ;
+    rdfs:comment "Required for user-initiated change"
+] , [
+    action:parameterName "newPassword" ;
+    action:parameterType "string" ;
+    action:isRequired true
+] .
+
+auth:ResetPasswordAction action:produces [
+    action:resultType "void"
+] .
+
+# ================================================================================
+# LLM Agent Integration
+# ================================================================================
+
+auth:AuthDomainCapability a action:AgentCapability ;
+    rdfs:label "Authentication & Authorization Capability" ;
+    action:naturalLanguageDescription """
+You can perform the following authentication and authorization operations:
+
+AUTHENTICATION:
+- Authenticate: Verify credentials and create session
+- Refresh Session: Get new access token using refresh token
+- Revoke Session: Logout (invalidate session)
+- Revoke All Sessions: Force logout from all devices
+
+AUTHORIZATION:
+- Authorize: Check if principal has permission for action
+- Assign Role: Grant role to user or service account
+- Revoke Role: Remove role from principal
+
+USER MANAGEMENT:
+- Create User: Register new user account
+- Disable User: Prevent user from logging in
+- Reset Password: Change user password
+
+All operations require appropriate permissions (auth:login, auth:admin, auth:manage_roles).
+""" ;
+    action:exampleUsage """
+Example 1: Authenticate user
+Input: { username: "user@example.com", credential: "password123" }
+Output: { sessionId: "sess-123", accessToken: "eyJ...", refreshToken: "ref-456", expiresAt: "2025-11-21T12:00:00Z" }
+
+Example 2: Check authorization
+Input: { principalId: "user-123", permission: "email:send" }
+Output: true
+
+Example 3: Assign admin role
+Input: { principalId: "user-456", roleName: "admin" }
+Output: { userId: "user-456", roles: ["user", "admin"] }
+""" .

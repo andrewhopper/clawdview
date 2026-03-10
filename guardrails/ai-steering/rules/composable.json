@@ -1,0 +1,456 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-23",
+  "description": "Abstract, composable, context-aware rules - like React components",
+
+  "traits": {
+    "Publishable": {
+      "description": "Any artifact that can be published to S3",
+      "filePatterns": ["*.html", "*.zip", "*.svg", "*.pdf", "*.mp3", "*.mp4", "*.png", "*.jpg", "*.gif", "*.webp"],
+      "rule": "asset-offer-s3-publish",
+      "props": {
+        "publishOptions": ["public", "temporary", "private", "skip"],
+        "script": "prototypes/proto-s3-publish-vayfd-023/s3_publish.py"
+      }
+    },
+    "TypeSafe": {
+      "description": "Any code that requires strong typing from shared domains",
+      "languages": {
+        "typescript": {
+          "filePatterns": ["*.ts", "*.tsx"],
+          "rule": "use-domain-types",
+          "props": {
+            "source": "shared/semantic/domains/",
+            "noAny": true,
+            "runtimeValidation": "zod"
+          }
+        },
+        "python": {
+          "filePatterns": ["*.py"],
+          "rule": "use-pydantic-models",
+          "props": {
+            "source": "shared/semantic/domains/",
+            "baseClass": "BaseModel",
+            "validators": true
+          }
+        }
+      }
+    },
+    "UIComponent": {
+      "description": "Any React/UI component",
+      "filePatterns": ["*.tsx", "*.jsx"],
+      "requires": ["design-system-check", "storybook-story"],
+      "props": {
+        "designSystem": "shared/ui-components/",
+        "baseLibrary": "shadcn/ui",
+        "styling": "tailwind"
+      }
+    },
+    "DataModel": {
+      "description": "Any entity or data model",
+      "requires": ["registry-check", "human-approval-if-new"],
+      "props": {
+        "registry": "shared/semantic/domains/registry.yaml",
+        "usePrimitives": ["Artifact", "Workflow", "Rule", "Guardrail", "Validation"]
+      }
+    }
+  },
+
+  "rules": [
+    {
+      "uuid": "c0mp-0001-0000-0000-000000000001",
+      "id": "asset-offer-s3-publish",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "abstract": true,
+      "trait": "Publishable",
+      "description": "When creating publishable assets, offer to publish to S3",
+      "context": {
+        "when": ["file created", "file complete", "asset generated"],
+        "filePatterns": "$traits.Publishable.filePatterns"
+      },
+      "action": {
+        "directive": "confirm",
+        "target": "S3 publishing",
+        "message": "Asset created: {filename} ({fileType})\n\nPublish to S3?\n  [1] Public (permanent URL)\n  [2] Temporary (presigned, 7 days)\n  [3] Private (internal only)\n  [4] Skip"
+      },
+      "compose": {
+        "with": ["Publishable"],
+        "inherits": "props.publishOptions"
+      }
+    },
+    {
+      "uuid": "c0mp-0002-0000-0000-000000000002",
+      "id": "use-domain-types",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "code_generation",
+      "abstract": true,
+      "trait": "TypeSafe",
+      "description": "Use strongly-typed models from shared domain definitions",
+      "context": {
+        "when": ["creating app", "defining types", "creating models"],
+        "detect": "language"
+      },
+      "action": {
+        "directive": "require",
+        "target": "Domain types from {props.source}",
+        "message": "{language} detected → Use types from shared/semantic/domains/"
+      },
+      "compose": {
+        "with": ["TypeSafe"],
+        "adapts": {
+          "typescript": "Generate interfaces, no 'any', use Zod",
+          "python": "Generate Pydantic BaseModel, use validators"
+        }
+      }
+    },
+    {
+      "uuid": "c0mp-0003-0000-0000-000000000003",
+      "id": "framework-selection",
+      "version": "1.0.0",
+      "level": "SHOULD",
+      "category": "code_generation",
+      "abstract": true,
+      "description": "Select framework based on project needs (context-aware)",
+      "context": {
+        "when": ["creating site", "creating app", "new project"],
+        "detect": "requirements"
+      },
+      "action": {
+        "directive": "ask",
+        "questions": [
+          {"q": "Need SSR/SEO?", "yes": "nextjs", "no": "continue"},
+          {"q": "Need API endpoints?", "yes": "nextjs", "no": "continue"},
+          {"q": "Complex ML/data processing?", "yes": "vite+fastapi", "no": "nextjs-or-vite"}
+        ],
+        "options": {
+          "nextjs": {
+            "name": "Next.js 15.x",
+            "pros": ["SSR/SSG", "SEO", "API routes", "App Router"],
+            "bestFor": ["Public sites", "SEO-critical", "Simple APIs"]
+          },
+          "vite": {
+            "name": "Vite + React 19.x",
+            "pros": ["Fast HMR", "Lightweight", "Simple deployment"],
+            "bestFor": ["SPAs", "Admin dashboards", "Internal tools"]
+          },
+          "vite+fastapi": {
+            "name": "Vite + React + FastAPI",
+            "pros": ["Best of both", "Python ML/AI backend"],
+            "bestFor": ["Complex backends", "ML workloads", "Data processing"]
+          }
+        }
+      }
+    },
+    {
+      "uuid": "c0mp-0004-0000-0000-000000000004",
+      "id": "registry-check",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "abstract": true,
+      "description": "Check shared registries before creating new components/models",
+      "context": {
+        "when": ["creating component", "creating model", "defining entity"],
+        "detect": "artifact-type"
+      },
+      "action": {
+        "directive": "check-then-confirm",
+        "checks": [
+          {"type": "ui-component", "registry": "shared/ui-components/"},
+          {"type": "domain-model", "registry": "shared/semantic/domains/"},
+          {"type": "primitive", "registry": "$traits.DataModel.props.usePrimitives"}
+        ],
+        "ifFound": "Use existing from registry",
+        "ifNotFound": "Create new → Require human approval → Add to registry"
+      }
+    },
+    {
+      "uuid": "c0mp-0005-0000-0000-000000000005",
+      "id": "creation-workflow",
+      "version": "1.0.0",
+      "level": "MUST",
+      "category": "workflow",
+      "abstract": true,
+      "description": "Structured workflow for creating any new artifact",
+      "context": {
+        "when": ["new project", "new feature", "new app"],
+        "detect": "artifact-type"
+      },
+      "action": {
+        "directive": "workflow",
+        "steps": [
+          {"step": "CREATE", "action": "Initialize {artifactType} structure"},
+          {"step": "DEFINE", "action": "List required components and models"},
+          {"step": "CHECK", "action": "Audit registries (UI, Data, Primitives)"},
+          {"step": "USE_OR_CREATE", "action": "Use existing → OR → Create + Approve + Register"}
+        ]
+      },
+      "compose": {
+        "inherits": ["registry-check"],
+        "triggers": ["framework-selection", "use-domain-types"]
+      }
+    }
+  ],
+
+  "contextMatchers": {
+    "fileType": {
+      "html": {"traits": ["Publishable"], "mimeType": "text/html"},
+      "pdf": {"traits": ["Publishable"], "mimeType": "application/pdf"},
+      "svg": {"traits": ["Publishable"], "mimeType": "image/svg+xml"},
+      "zip": {"traits": ["Publishable"], "mimeType": "application/zip"},
+      "mp3": {"traits": ["Publishable"], "mimeType": "audio/mpeg"},
+      "mp4": {"traits": ["Publishable"], "mimeType": "video/mp4"},
+      "ts": {"traits": ["TypeSafe"], "language": "typescript"},
+      "tsx": {"traits": ["TypeSafe", "UIComponent"], "language": "typescript"},
+      "py": {"traits": ["TypeSafe"], "language": "python"}
+    },
+    "projectType": {
+      "site": {"traits": ["Publishable", "UIComponent"], "framework": "framework-selection"},
+      "api": {"traits": ["TypeSafe", "DataModel"], "framework": "fastapi"},
+      "cli": {"traits": ["TypeSafe"], "framework": "click-or-ink"}
+    },
+    "needs": {
+      "ssr": {"suggests": "nextjs"},
+      "seo": {"suggests": "nextjs"},
+      "api": {"suggests": "nextjs", "complex": "fastapi"},
+      "ml": {"suggests": "fastapi"},
+      "realtime": {"suggests": "fastapi-websockets"}
+    }
+  },
+
+  "composition": {
+    "description": "How rules compose together - like React component composition",
+    "example": {
+      "input": "Create a cat lovers website with user accounts",
+      "detection": {
+        "artifactType": "Site",
+        "needs": ["seo", "api"],
+        "fileTypes": ["tsx", "ts"]
+      },
+      "resolvedTraits": ["Publishable", "UIComponent", "TypeSafe", "DataModel"],
+      "resolvedRules": [
+        "framework-selection → nextjs (has SSR + API needs)",
+        "use-domain-types → typescript (generates from domains/)",
+        "registry-check → check ui-components, domains",
+        "creation-workflow → CREATE → DEFINE → CHECK → USE_OR_CREATE",
+        "asset-offer-s3-publish → when site complete"
+      ]
+    }
+  },
+
+  "contexts": {
+    "description": "Context determines how needs are resolved - like React Context",
+    "poc": {
+      "name": "Quick POC / Prototype",
+      "indicators": ["quick", "poc", "prototype", "demo", "spike", "experiment"],
+      "defaults": {
+        "complexity": "minimal",
+        "polish": "low",
+        "shortcuts": true
+      }
+    },
+    "production": {
+      "name": "Production Application",
+      "indicators": ["production", "prod", "customer-facing", "enterprise", "launch"],
+      "defaults": {
+        "complexity": "appropriate",
+        "polish": "high",
+        "shortcuts": false
+      }
+    },
+    "internal": {
+      "name": "Internal Tool",
+      "indicators": ["internal", "admin", "dashboard", "tooling"],
+      "defaults": {
+        "complexity": "moderate",
+        "polish": "medium",
+        "shortcuts": true
+      }
+    }
+  },
+
+  "needs": {
+    "description": "Needs that resolve differently based on context - like props with defaults",
+
+    "designSystem": {
+      "description": "UI component library and styling approach",
+      "resolve": {
+        "poc": {
+          "choice": "shadcn-base",
+          "message": "POC → Using base shadcn/ui components (no customization)",
+          "components": "default shadcn",
+          "styling": "tailwind defaults"
+        },
+        "production": {
+          "choice": "custom-design-system",
+          "message": "Production → Check shared/ui-components/ for branded components",
+          "components": "shared/ui-components/ → extend shadcn",
+          "styling": "tailwind + custom theme tokens"
+        },
+        "internal": {
+          "choice": "shadcn-extended",
+          "message": "Internal → shadcn/ui with minimal customization",
+          "components": "shadcn + shared utilities",
+          "styling": "tailwind defaults"
+        }
+      }
+    },
+
+    "auth": {
+      "description": "Authentication approach",
+      "resolve": {
+        "poc": {
+          "choice": "simple-auth",
+          "message": "POC → Simple user/password auth (no MFA)",
+          "provider": "next-auth credentials OR hardcoded",
+          "features": ["login", "logout"],
+          "security": "basic"
+        },
+        "production": {
+          "choice": "enterprise-auth",
+          "message": "Production → Full auth with MFA, SSO options",
+          "provider": "next-auth + oauth providers + MFA",
+          "features": ["login", "logout", "mfa", "sso", "password-reset", "session-management"],
+          "security": "enterprise"
+        },
+        "internal": {
+          "choice": "sso-auth",
+          "message": "Internal → SSO with corporate identity",
+          "provider": "SAML/OIDC corporate SSO",
+          "features": ["sso-login", "role-based-access"],
+          "security": "corporate"
+        }
+      }
+    },
+
+    "database": {
+      "description": "Data persistence approach",
+      "resolve": {
+        "poc": {
+          "choice": "sqlite-or-json",
+          "message": "POC → SQLite or JSON file (zero setup)",
+          "options": ["sqlite", "json-file", "in-memory"],
+          "orm": "optional"
+        },
+        "production": {
+          "choice": "managed-db",
+          "message": "Production → Managed database (RDS, DynamoDB)",
+          "options": ["postgres-rds", "dynamodb", "aurora"],
+          "orm": "required (prisma/sqlalchemy)"
+        },
+        "internal": {
+          "choice": "simple-managed",
+          "message": "Internal → Simple managed DB",
+          "options": ["postgres-rds", "sqlite"],
+          "orm": "recommended"
+        }
+      }
+    },
+
+    "errorHandling": {
+      "description": "Error handling and monitoring",
+      "resolve": {
+        "poc": {
+          "choice": "console-logs",
+          "message": "POC → Console logs, basic try/catch",
+          "monitoring": "none",
+          "alerting": "none"
+        },
+        "production": {
+          "choice": "full-observability",
+          "message": "Production → Structured logging, error tracking, alerts",
+          "monitoring": "cloudwatch/datadog",
+          "alerting": "pagerduty/slack"
+        },
+        "internal": {
+          "choice": "basic-monitoring",
+          "message": "Internal → CloudWatch logs, basic alerts",
+          "monitoring": "cloudwatch",
+          "alerting": "slack"
+        }
+      }
+    },
+
+    "testing": {
+      "description": "Testing approach",
+      "resolve": {
+        "poc": {
+          "choice": "manual-only",
+          "message": "POC → Manual testing, no automated tests",
+          "unit": false,
+          "integration": false,
+          "e2e": false
+        },
+        "production": {
+          "choice": "full-coverage",
+          "message": "Production → Unit, integration, E2E tests required",
+          "unit": "vitest/pytest",
+          "integration": "required",
+          "e2e": "playwright"
+        },
+        "internal": {
+          "choice": "basic-tests",
+          "message": "Internal → Basic unit tests, manual E2E",
+          "unit": "vitest/pytest",
+          "integration": "optional",
+          "e2e": "manual"
+        }
+      }
+    },
+
+    "deployment": {
+      "description": "Deployment approach",
+      "resolve": {
+        "poc": {
+          "choice": "s3-static",
+          "message": "POC → S3 static hosting or local",
+          "infra": "manual/s3",
+          "ci": "none"
+        },
+        "production": {
+          "choice": "full-cicd",
+          "message": "Production → CDK infra, CI/CD pipeline, staging env",
+          "infra": "cdk",
+          "ci": "github-actions",
+          "environments": ["dev", "staging", "prod"]
+        },
+        "internal": {
+          "choice": "simple-cicd",
+          "message": "Internal → Simple CI/CD, single env",
+          "infra": "cdk-or-manual",
+          "ci": "github-actions",
+          "environments": ["prod"]
+        }
+      }
+    }
+  },
+
+  "needsResolution": {
+    "description": "Algorithm for resolving needs based on context",
+    "algorithm": [
+      "1. Detect context from user input (poc, production, internal)",
+      "2. If ambiguous, ASK: 'Is this a POC/prototype or production app?'",
+      "3. For each need mentioned or inferred:",
+      "   a. Look up need definition",
+      "   b. Resolve using context",
+      "   c. Present choice with rationale",
+      "4. Allow user to override any resolution"
+    ],
+    "example": {
+      "input": "Create a quick demo with user login",
+      "contextDetected": "poc (indicator: 'quick demo')",
+      "needsDetected": ["auth"],
+      "resolution": {
+        "auth": {
+          "context": "poc",
+          "choice": "simple-auth",
+          "message": "POC → Simple user/password auth (no MFA)"
+        }
+      }
+    }
+  }
+}
+

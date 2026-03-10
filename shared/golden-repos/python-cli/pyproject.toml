@@ -1,0 +1,38 @@
+[project]
+name = "python-cli-template"
+version = "0.1.0"
+description = "Gold standard Python CLI template with Click"
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.1",
+    "rich>=13.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "structlog>=24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.3",
+    "mypy>=1.8",
+]
+
+[project.scripts]
+mycli = "src.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]

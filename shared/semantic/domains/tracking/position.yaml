@@ -1,0 +1,651 @@
+# Tracking Domain: Position & Movement
+# Thing-at-place-at-time, tracks, trajectories
+# Version: 1.0.0
+
+domain: tracking-position
+version: "1.0.0"
+status: production
+description: Position tracking, movement history, and trajectory analysis
+dependencies:
+  - geo-point
+  - geo-shape
+  - geo-elevation
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Position (thing at place at time)
+  # ---------------------------------------------------------------------------
+
+  Position:
+    description: Location of a trackable thing at a moment in time
+    aliases: [Fix, Reading, Sample]
+    fields:
+      id:
+        type: string
+        required: false
+      asset_id:
+        type: string
+        required: true
+        description: ID of tracked thing
+      timestamp:
+        type: datetime
+        required: true
+        description: Time of position fix
+      location:
+        type: Point
+        required: true
+        description: Geographic coordinates
+      source:
+        type: PositionSource
+        required: false
+        description: How position was determined
+      accuracy:
+        type: PositionAccuracy
+        required: false
+        description: Position accuracy metrics
+      motion:
+        type: MotionVector
+        required: false
+        description: Speed and heading
+      raw_data:
+        type: object
+        required: false
+        description: Provider-specific raw data
+
+  PositionAccuracy:
+    description: Accuracy metrics for a position fix
+    fields:
+      horizontal_meters:
+        type: float
+        required: false
+        description: Horizontal accuracy (CEP/radius)
+      vertical_meters:
+        type: float
+        required: false
+        description: Vertical accuracy
+      confidence:
+        type: float
+        required: false
+        constraints:
+          min: 0
+          max: 1
+        description: Confidence level (0-1)
+      hdop:
+        type: float
+        required: false
+        description: Horizontal Dilution of Precision
+      vdop:
+        type: float
+        required: false
+        description: Vertical Dilution of Precision
+      pdop:
+        type: float
+        required: false
+        description: Position Dilution of Precision
+      satellite_count:
+        type: integer
+        required: false
+        description: Number of satellites used
+      fix_type:
+        type: GPSFixType
+        required: false
+
+  MotionVector:
+    description: Movement speed and direction
+    fields:
+      speed_mps:
+        type: float
+        required: false
+        description: Speed in meters per second
+      speed_knots:
+        type: float
+        required: false
+        description: Speed in knots (marine/aviation)
+      heading:
+        type: float
+        required: false
+        constraints:
+          min: 0
+          max: 360
+        description: Direction of travel (degrees from north)
+      course:
+        type: float
+        required: false
+        constraints:
+          min: 0
+          max: 360
+        description: Course over ground
+      climb_rate_mps:
+        type: float
+        required: false
+        description: Vertical speed (positive = ascending)
+      acceleration:
+        type: Acceleration
+        required: false
+
+  Acceleration:
+    description: Acceleration vector
+    fields:
+      x:
+        type: float
+        required: false
+        description: Lateral acceleration (m/s²)
+      y:
+        type: float
+        required: false
+        description: Longitudinal acceleration
+      z:
+        type: float
+        required: false
+        description: Vertical acceleration
+      total:
+        type: float
+        required: false
+        description: Total acceleration magnitude
+
+  # ---------------------------------------------------------------------------
+  # Track (sequence of positions)
+  # ---------------------------------------------------------------------------
+
+  Track:
+    description: Sequence of positions forming a path
+    aliases: [Trail, Breadcrumb, History]
+    fields:
+      id:
+        type: string
+        required: false
+      asset_id:
+        type: string
+        required: true
+        description: ID of tracked thing
+      positions:
+        type: array
+        items:
+          type: Position
+        required: true
+        description: Ordered list of positions
+      start_time:
+        type: datetime
+        required: false
+      end_time:
+        type: datetime
+        required: false
+      geometry:
+        type: LineString
+        required: false
+        description: Path as LineString
+      bounds:
+        type: BoundingBox
+        required: false
+      statistics:
+        type: TrackStatistics
+        required: false
+      segments:
+        type: array
+        items:
+          type: TrackSegment
+        required: false
+        description: Track divided into segments
+
+  TrackStatistics:
+    description: Computed statistics for a track
+    fields:
+      point_count:
+        type: integer
+        required: true
+      total_distance_meters:
+        type: float
+        required: true
+      total_duration_seconds:
+        type: float
+        required: true
+      average_speed_mps:
+        type: float
+        required: false
+      max_speed_mps:
+        type: float
+        required: false
+      moving_time_seconds:
+        type: float
+        required: false
+        description: Time actually moving (excluding stops)
+      stopped_time_seconds:
+        type: float
+        required: false
+      stop_count:
+        type: integer
+        required: false
+      elevation_gain_meters:
+        type: float
+        required: false
+      elevation_loss_meters:
+        type: float
+        required: false
+      min_elevation_meters:
+        type: float
+        required: false
+      max_elevation_meters:
+        type: float
+        required: false
+
+  TrackSegment:
+    description: Contiguous portion of a track
+    fields:
+      id:
+        type: string
+        required: false
+      segment_type:
+        type: SegmentType
+        required: false
+      positions:
+        type: array
+        items:
+          type: Position
+        required: true
+      start_time:
+        type: datetime
+        required: false
+      end_time:
+        type: datetime
+        required: false
+      distance_meters:
+        type: float
+        required: false
+      duration_seconds:
+        type: float
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Trip (intentional journey with context)
+  # ---------------------------------------------------------------------------
+
+  Trip:
+    description: Intentional journey from start to finish
+    fields:
+      id:
+        type: string
+        required: true
+      asset_id:
+        type: string
+        required: true
+      status:
+        type: TripStatus
+        required: true
+      started_at:
+        type: datetime
+        required: false
+      ended_at:
+        type: datetime
+        required: false
+      origin:
+        type: Place
+        required: false
+        description: Starting location
+      destination:
+        type: Place
+        required: false
+        description: End location
+      track:
+        type: Track
+        required: false
+        description: Recorded path
+      planned_route:
+        type: Route
+        required: false
+        description: Planned route (if any)
+      purpose:
+        type: TripPurpose
+        required: false
+      driver_id:
+        type: string
+        required: false
+      vehicle_id:
+        type: string
+        required: false
+      odometer_start:
+        type: float
+        required: false
+        description: Odometer at trip start
+      odometer_end:
+        type: float
+        required: false
+        description: Odometer at trip end
+      fuel_used:
+        type: float
+        required: false
+        description: Fuel consumed (liters/gallons)
+      events:
+        type: array
+        items:
+          type: TripEvent
+        required: false
+
+  TripEvent:
+    description: Event during a trip
+    fields:
+      timestamp:
+        type: datetime
+        required: true
+      event_type:
+        type: TripEventType
+        required: true
+      location:
+        type: Point
+        required: false
+      details:
+        type: object
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Stop Detection
+  # ---------------------------------------------------------------------------
+
+  DetectedStop:
+    description: Automatically detected stop
+    fields:
+      id:
+        type: string
+        required: false
+      asset_id:
+        type: string
+        required: true
+      location:
+        type: Point
+        required: true
+        description: Center of stop
+      arrived_at:
+        type: datetime
+        required: true
+      departed_at:
+        type: datetime
+        required: false
+      duration_seconds:
+        type: float
+        required: false
+      radius_meters:
+        type: float
+        required: false
+        description: Radius of position scatter
+      positions:
+        type: array
+        items:
+          type: Position
+        required: false
+        description: Positions during stop
+      matched_place:
+        type: Place
+        required: false
+        description: Reverse geocoded place
+      stop_classification:
+        type: StopClassification
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Trajectory Prediction
+  # ---------------------------------------------------------------------------
+
+  TrajectoryPrediction:
+    description: Predicted future path
+    fields:
+      asset_id:
+        type: string
+        required: true
+      predicted_at:
+        type: datetime
+        required: true
+        description: When prediction was made
+      horizon_seconds:
+        type: float
+        required: true
+        description: How far ahead predicted
+      positions:
+        type: array
+        items:
+          type: PredictedPosition
+        required: true
+      confidence:
+        type: float
+        required: false
+        constraints:
+          min: 0
+          max: 1
+      method:
+        type: PredictionMethod
+        required: false
+
+  PredictedPosition:
+    description: Single predicted future position
+    fields:
+      timestamp:
+        type: datetime
+        required: true
+      location:
+        type: Point
+        required: true
+      confidence:
+        type: float
+        required: false
+      uncertainty_meters:
+        type: float
+        required: false
+        description: Prediction uncertainty radius
+
+  # ---------------------------------------------------------------------------
+  # Position Subscription
+  # ---------------------------------------------------------------------------
+
+  PositionSubscription:
+    description: Subscription for position updates
+    fields:
+      id:
+        type: string
+        required: true
+      asset_id:
+        type: string
+        required: true
+        description: Asset to track
+      subscriber_id:
+        type: string
+        required: true
+      status:
+        type: SubscriptionStatus
+        required: true
+      created_at:
+        type: datetime
+        required: true
+      expires_at:
+        type: datetime
+        required: false
+      update_interval_seconds:
+        type: integer
+        required: false
+        description: Minimum time between updates
+      min_distance_meters:
+        type: float
+        required: false
+        description: Minimum movement for update
+      delivery:
+        type: DeliveryConfig
+        required: true
+
+  DeliveryConfig:
+    description: How to deliver position updates
+    fields:
+      method:
+        type: DeliveryMethod
+        required: true
+      webhook_url:
+        type: string
+        required: false
+      topic:
+        type: string
+        required: false
+        description: Pub/sub topic
+      format:
+        type: DeliveryFormat
+        required: false
+        default: JSON
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  PositionSource:
+    description: Source of position data
+    values:
+      # Satellite
+      - GPS             # US GPS
+      - GLONASS         # Russian GLONASS
+      - GALILEO         # European Galileo
+      - BEIDOU          # Chinese BeiDou
+      - GNSS            # Multiple satellite systems
+      # Cellular
+      - CELL_TOWER      # Cell tower triangulation
+      - LTE             # LTE positioning
+      - 5G              # 5G positioning
+      # Other
+      - WIFI            # WiFi positioning
+      - BLUETOOTH       # Bluetooth beacon
+      - UWB             # Ultra-wideband
+      - RFID            # RFID tag
+      - IP_GEOLOCATION  # IP-based location
+      - MANUAL          # Manual entry
+      - AIS             # Automatic Identification System (marine)
+      - ADS_B           # Aircraft transponder
+      - LORAN           # LORAN-C (legacy)
+      - DEAD_RECKONING  # Inertial/odometer
+      - FUSED           # Sensor fusion
+      - UNKNOWN
+
+  GPSFixType:
+    description: Type of GPS fix
+    values:
+      - NO_FIX          # No position
+      - GPS             # Standard GPS
+      - DGPS            # Differential GPS
+      - PPS             # Precise Positioning Service
+      - RTK_FIX         # Real-Time Kinematic (fixed)
+      - RTK_FLOAT       # RTK (float)
+      - ESTIMATED       # Dead reckoning
+      - MANUAL          # Manual input
+      - SIMULATION      # Simulated
+
+  SegmentType:
+    description: Type of track segment
+    values:
+      - MOVING          # In motion
+      - STOPPED         # Stationary
+      - UNKNOWN         # Cannot determine
+      - GAP             # Missing data gap
+
+  TripStatus:
+    description: Status of a trip
+    values:
+      - PLANNED         # Scheduled future trip
+      - IN_PROGRESS     # Currently active
+      - PAUSED          # Temporarily stopped
+      - COMPLETED       # Successfully finished
+      - CANCELLED       # Cancelled before completion
+      - ABANDONED       # Started but not completed
+
+  TripPurpose:
+    description: Purpose of trip
+    values:
+      - COMMUTE         # Work commute
+      - BUSINESS        # Business travel
+      - PERSONAL        # Personal trip
+      - DELIVERY        # Cargo delivery
+      - PICKUP          # Cargo pickup
+      - SERVICE         # Service call
+      - INSPECTION      # Inspection visit
+      - RECREATION      # Recreational
+      - EXERCISE        # Exercise/fitness
+      - OTHER
+
+  TripEventType:
+    description: Types of trip events
+    values:
+      - TRIP_START
+      - TRIP_END
+      - STOP_START
+      - STOP_END
+      - SPEEDING
+      - HARD_BRAKE
+      - HARD_ACCELERATION
+      - HARSH_CORNERING
+      - COLLISION
+      - GEOFENCE_ENTER
+      - GEOFENCE_EXIT
+      - ROUTE_DEVIATION
+      - FUEL_FILL
+      - ENGINE_ON
+      - ENGINE_OFF
+      - DRIVER_CHANGE
+      - ALERT
+
+  StopClassification:
+    description: Classification of detected stop
+    values:
+      - UNKNOWN         # Unclassified
+      - HOME            # Residence
+      - WORK            # Workplace
+      - CUSTOMER        # Customer location
+      - FUEL            # Gas/charging station
+      - REST            # Rest stop
+      - TRAFFIC         # Traffic stop
+      - PARKING         # Parking lot
+      - LOADING         # Loading/unloading
+      - OTHER
+
+  PredictionMethod:
+    description: Method used for trajectory prediction
+    values:
+      - LINEAR          # Linear extrapolation
+      - CURVILINEAR     # Curve fitting
+      - ROUTE_BASED     # Based on planned route
+      - HISTORICAL      # Based on historical patterns
+      - ML_MODEL        # Machine learning model
+      - KALMAN          # Kalman filter
+
+  SubscriptionStatus:
+    description: Status of position subscription
+    values:
+      - ACTIVE
+      - PAUSED
+      - EXPIRED
+      - CANCELLED
+
+  DeliveryMethod:
+    description: How to deliver updates
+    values:
+      - WEBHOOK         # HTTP webhook
+      - WEBSOCKET       # WebSocket stream
+      - MQTT            # MQTT topic
+      - PUBSUB          # Pub/sub (Kafka, etc.)
+      - POLLING         # Client polls API
+
+  DeliveryFormat:
+    description: Format for position updates
+    values:
+      - JSON
+      - GEOJSON
+      - PROTOBUF
+      - NMEA
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "GPS/GNSS: https://www.gps.gov/"
+  - "GPX 1.1 Schema: https://www.topografix.com/gpx.asp"
+  - "GeoJSON RFC 7946"
+  - "AIS: https://www.imo.org/en/OurWork/Safety/Pages/AIS.aspx"
+  - "ADS-B: https://www.faa.gov/air_traffic/technology/adsb"

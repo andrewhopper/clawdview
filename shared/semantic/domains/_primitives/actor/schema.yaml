@@ -1,0 +1,336 @@
+# Primitive: Actor
+# Who/what initiates action - agents that can act
+# Physics: Observer (in quantum mechanics), system boundary
+# Philosophy: Agent (that which acts with intention)
+# Biology: Organism (autonomous living system)
+
+domain:
+  name: primitive-actor
+  version: "1.0.0"
+  description: Actors and agents - entities that can initiate action
+  layer: primitive
+  dependencies: [primitive-entity]
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  # ============================================
+  # ACTOR FUNDAMENTALS
+  # ============================================
+
+  Actor:
+    description: Any entity capable of initiating action
+    properties:
+      id: { type: string, required: true }
+      type: { type: ActorType, required: true }
+      name: { type: string }
+      status: { type: ActorStatus, default: active }
+      capabilities: { type: array, items: Capability }
+      permissions: { type: array, items: Permission }
+      constraints: { type: array, items: Constraint }
+    meta:
+      philosophy: "Agent - that which has causal power"
+      biology: "Organism - autonomous system that acts"
+      physics: "System with agency boundary"
+
+  # ============================================
+  # ACTOR TYPES
+  # ============================================
+
+  HumanActor:
+    extends: Actor
+    description: A human being as actor
+    properties:
+      personId: { type: string }
+      skills: { type: array, items: Skill }
+      availability: { type: Availability }
+      preferences: { type: Preferences }
+      contactInfo: { type: object }
+    meta:
+      biology: "Homo sapiens"
+      philosophy: "Rational agent"
+
+  MachineActor:
+    extends: Actor
+    description: Automated system as actor
+    properties:
+      serviceId: { type: string }
+      version: { type: string }
+      endpoint: { type: string }
+      throughput: { type: Throughput }
+      healthStatus: { type: HealthStatus }
+    meta:
+      examples: ["Server", "Robot", "IoT device", "Cron job"]
+
+  AIActor:
+    extends: Actor
+    description: Artificial intelligence as actor
+    properties:
+      modelId: { type: string }
+      provider: { type: string }
+      temperature: { type: number }
+      maxTokens: { type: integer }
+      systemPrompt: { type: string }
+      tools: { type: array, items: string }
+      autonomyLevel: { type: AutonomyLevel }
+    meta:
+      examples: ["LLM", "Agent", "Copilot", "Bot"]
+
+  OrganizationActor:
+    extends: Actor
+    description: Collective entity acting as one
+    properties:
+      organizationId: { type: string }
+      representatives: { type: array, items: string, description: "Person IDs who can act for org" }
+      delegationPolicy: { type: DelegationPolicy }
+    meta:
+      philosophy: "Corporate personhood"
+      examples: ["Company", "Department", "Team", "Committee"]
+
+  SystemActor:
+    extends: Actor
+    description: The system itself as implicit actor
+    properties:
+      component: { type: string }
+      triggerType: { type: SystemTriggerType }
+    examples:
+      - "Scheduled tasks"
+      - "System-generated events"
+      - "Default behaviors"
+
+  # ============================================
+  # CAPABILITIES & PERMISSIONS
+  # ============================================
+
+  Capability:
+    description: What an actor can do
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      verbs: { type: array, items: string, description: "Actions: create, read, update, delete, execute" }
+      resourceTypes: { type: array, items: string }
+      prerequisites: { type: array, items: string }
+      cost: { type: Cost }
+
+  Permission:
+    description: Authorization to perform action
+    properties:
+      capability: { type: string, required: true }
+      scope: { type: string, description: "What resources it applies to" }
+      conditions: { type: array, items: string }
+      grantedAt: { type: datetime }
+      grantedBy: { type: string }
+      expiresAt: { type: datetime }
+
+  Skill:
+    description: Learned capability of human actor
+    properties:
+      name: { type: string, required: true }
+      level: { type: SkillLevel }
+      verifiedAt: { type: datetime }
+      verifiedBy: { type: string }
+      certifications: { type: array, items: string }
+
+  Constraint:
+    description: Limitation on actor's actions
+    properties:
+      type: { type: ConstraintType, required: true }
+      expression: { type: string }
+      severity: { type: ConstraintSeverity }
+
+  # ============================================
+  # AVAILABILITY & CAPACITY
+  # ============================================
+
+  Availability:
+    description: When an actor can act
+    properties:
+      type: { type: AvailabilityType }
+      schedule: { type: Schedule }
+      timezone: { type: string }
+      exceptions: { type: array, items: AvailabilityException }
+
+  Schedule:
+    description: Regular availability pattern
+    properties:
+      periods: { type: array, items: SchedulePeriod }
+
+  SchedulePeriod:
+    description: Single period of availability
+    properties:
+      dayOfWeek: { type: array, items: string }
+      startTime: { type: string, description: "HH:MM" }
+      endTime: { type: string, description: "HH:MM" }
+
+  AvailabilityException:
+    description: Override to regular schedule
+    properties:
+      date: { type: date }
+      available: { type: boolean }
+      reason: { type: string }
+
+  Throughput:
+    description: Rate at which actor can process
+    properties:
+      rateValue: { type: number, required: true }
+      rateUnit: { type: string, required: true }
+      burstCapacity: { type: number }
+      cooldownPeriod: { type: string }
+
+  # ============================================
+  # DELEGATION & REPRESENTATION
+  # ============================================
+
+  DelegationPolicy:
+    description: Rules for one actor acting on behalf of another
+    properties:
+      allowDelegation: { type: boolean, default: false }
+      maxDepth: { type: integer, default: 1, description: "How many levels of delegation" }
+      requiresApproval: { type: boolean, default: false }
+      auditLevel: { type: AuditLevel }
+
+  Delegation:
+    description: One actor authorized to act for another
+    properties:
+      delegator: { type: string, required: true }
+      delegate: { type: string, required: true }
+      scope: { type: string }
+      capabilities: { type: array, items: string }
+      validFrom: { type: datetime }
+      validTo: { type: datetime }
+
+  Preferences:
+    description: Actor's preferences for how things are done
+    properties:
+      communicationChannel: { type: string }
+      notificationFrequency: { type: string }
+      language: { type: string }
+      timezone: { type: string }
+      customPreferences: { type: object }
+
+  # ============================================
+  # COST MODELING
+  # ============================================
+
+  Cost:
+    description: Resource cost of actor performing action
+    properties:
+      type: { type: CostType }
+      value: { type: number }
+      unit: { type: string }
+      currency: { type: string }
+
+enums:
+
+  ActorType:
+    description: Fundamental categories of actors
+    values:
+      - human           # Biological human
+      - machine         # Automated system
+      - ai              # Artificial intelligence
+      - organization    # Collective entity
+      - system          # The system itself
+
+  ActorStatus:
+    description: Actor's current status
+    values:
+      - active          # Currently able to act
+      - inactive        # Temporarily unable
+      - suspended       # Administratively disabled
+      - terminated      # Permanently ended
+
+  AutonomyLevel:
+    description: How independently AI actor can act
+    values:
+      - supervised      # Human approves each action
+      - assisted        # Human can intervene
+      - autonomous      # Acts independently within bounds
+      - full            # No restrictions
+
+  SystemTriggerType:
+    description: What causes system to act
+    values:
+      - scheduled       # Time-based
+      - event_driven    # Response to event
+      - threshold       # Metric crossed limit
+      - fallback        # No other actor available
+
+  SkillLevel:
+    description: Proficiency level
+    values:
+      - novice
+      - beginner
+      - intermediate
+      - advanced
+      - expert
+
+  ConstraintType:
+    description: Type of constraint on actor
+    values:
+      - temporal        # Time-based limits
+      - resource        # Resource consumption limits
+      - scope           # What they can affect
+      - rate            # How fast they can act
+      - approval        # Requires authorization
+
+  ConstraintSeverity:
+    description: How strictly enforced
+    values:
+      - hard            # Cannot be violated
+      - soft            # Warning on violation
+      - advisory        # Logged but allowed
+
+  AvailabilityType:
+    description: Pattern of availability
+    values:
+      - always          # 24/7
+      - scheduled       # Fixed schedule
+      - on_demand       # Available when invoked
+      - limited         # Restricted availability
+
+  HealthStatus:
+    description: Operational status of machine actor
+    values:
+      - healthy
+      - degraded
+      - unhealthy
+      - unknown
+
+  AuditLevel:
+    description: How much auditing is required
+    values:
+      - none
+      - basic
+      - detailed
+      - full
+
+  CostType:
+    description: Type of cost incurred
+    values:
+      - monetary        # Money
+      - time            # Duration
+      - compute         # Processing resources
+      - tokens          # LLM tokens
+      - energy          # Power consumption
+
+meta:
+  theoretical_basis:
+    philosophy: "Agency - capacity to act with intention"
+    biology: "Organism - autonomous system maintaining itself"
+    economics: "Economic agent - actor in market"
+    sociology: "Social actor - participant in society"
+
+  patterns:
+    - "AITR framework (Actor-Intent-Tool-Resource)"
+    - "Actor model (Hewitt)"
+    - "Capability-based security"
+    - "Role-based access control"
+
+  composition_role: "Who performs actions"
+
+  related_primitives:
+    - intent: "Actors have intents"
+    - tool: "Actors use tools"
+    - resource: "Actors consume resources"
+    - event: "Actors cause events"

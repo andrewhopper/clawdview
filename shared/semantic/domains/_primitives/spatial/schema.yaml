@@ -1,0 +1,279 @@
+# Primitive: Spatial
+# Spatial containers, bounds, and regions
+# Physics: Space - the arena in which objects exist
+# Mathematics: Geometry - shapes, distances, areas
+# GIS: Geographic containment and regions
+
+domain:
+  name: primitive-spatial
+  version: "1.0.0"
+  description: Spatial bounds, containers, and regions
+  layer: primitive
+  dependencies: [primitive-quantity]
+  created_at: "2025-12-04"
+  updated_at: "2025-12-04"
+
+entities:
+
+  # ============================================
+  # 2D PRIMITIVES
+  # ============================================
+
+  Point2D:
+    description: A point in 2D space
+    properties:
+      x:
+        type: number
+        required: true
+        description: X coordinate
+      y:
+        type: number
+        required: true
+        description: Y coordinate
+      unit:
+        type: SpatialUnit
+        default: pixel
+        description: Unit of measurement for coordinates
+    meta:
+      mathematics: "Ordered pair (x, y)"
+
+  Vector2D:
+    description: Direction and magnitude in 2D
+    properties:
+      dx: { type: number, required: true }
+      dy: { type: number, required: true }
+      unit: { type: SpatialUnit, default: pixel }
+    computed:
+      magnitude: { formula: "sqrt(dx^2 + dy^2)" }
+      angle: { formula: "atan2(dy, dx)" }
+
+  BoundingBox:
+    description: Axis-aligned rectangle in 2D
+    properties:
+      x:
+        type: number
+        required: true
+        description: Left edge X coordinate
+      y:
+        type: number
+        required: true
+        description: Top edge Y coordinate
+      width:
+        type: number
+        required: true
+        minimum: 0
+        description: Width of box
+      height:
+        type: number
+        required: true
+        minimum: 0
+        description: Height of box
+      unit:
+        type: SpatialUnit
+        default: pixel
+    computed:
+      center:
+        type: Point2D
+        formula: "{ x: x + width/2, y: y + height/2 }"
+      area:
+        type: number
+        formula: "width * height"
+      right:
+        type: number
+        formula: "x + width"
+      bottom:
+        type: number
+        formula: "y + height"
+    meta:
+      aliases: ["AABB", "Rect", "Rectangle"]
+      usage: "Object detection, UI layout, collision detection"
+
+  Polygon2D:
+    description: Arbitrary closed polygon in 2D
+    properties:
+      vertices:
+        type: array
+        items: Point2D
+        minItems: 3
+        required: true
+      closed:
+        type: boolean
+        default: true
+      unit:
+        type: SpatialUnit
+        default: pixel
+    computed:
+      area: { description: "Calculated via shoelace formula" }
+      centroid: { type: Point2D }
+      boundingBox: { type: BoundingBox }
+    meta:
+      usage: "Floor plan zones, geofences, irregular regions"
+
+  Circle:
+    description: Circle defined by center and radius
+    properties:
+      center: { type: Point2D, required: true }
+      radius: { type: number, required: true, minimum: 0 }
+      unit: { type: SpatialUnit, default: pixel }
+    computed:
+      area: { formula: "pi * radius^2" }
+      circumference: { formula: "2 * pi * radius" }
+      boundingBox: { type: BoundingBox }
+
+  # ============================================
+  # 3D PRIMITIVES
+  # ============================================
+
+  Point3D:
+    description: A point in 3D space
+    properties:
+      x: { type: number, required: true }
+      y: { type: number, required: true }
+      z: { type: number, required: true }
+      unit: { type: SpatialUnit, default: meter }
+    meta:
+      mathematics: "Ordered triple (x, y, z)"
+
+  Vector3D:
+    description: Direction and magnitude in 3D
+    properties:
+      dx: { type: number, required: true }
+      dy: { type: number, required: true }
+      dz: { type: number, required: true }
+      unit: { type: SpatialUnit, default: meter }
+    computed:
+      magnitude: { formula: "sqrt(dx^2 + dy^2 + dz^2)" }
+
+  BoundingVolume:
+    description: Axis-aligned box in 3D space
+    properties:
+      x: { type: number, required: true }
+      y: { type: number, required: true }
+      z: { type: number, required: true }
+      width: { type: number, required: true, minimum: 0 }
+      height: { type: number, required: true, minimum: 0 }
+      depth: { type: number, required: true, minimum: 0 }
+      unit: { type: SpatialUnit, default: meter }
+    computed:
+      center: { type: Point3D }
+      volume: { formula: "width * height * depth" }
+    meta:
+      aliases: ["AABB3D", "Box3D"]
+
+  # ============================================
+  # SPATIAL CONTAINERS
+  # ============================================
+
+  SpatialContainer:
+    description: Abstract bounded region that can contain other objects
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        description: Human-readable name
+      bounds:
+        type: BoundingBox | BoundingVolume | Polygon2D | Circle
+        required: true
+        description: Shape defining the container boundary
+      coordinateSystem:
+        type: CoordinateSystem
+        description: Reference frame for coordinates
+      parentId:
+        type: uuid
+        description: Parent container for hierarchical nesting
+      metadata:
+        type: object
+        description: Additional properties
+    meta:
+      pattern: "Composite pattern - containers can nest"
+      usage: "Zones, rooms, regions, areas"
+
+  CoordinateSystem:
+    description: Reference frame for interpreting coordinates
+    properties:
+      type:
+        type: CoordinateType
+        default: cartesian
+      origin:
+        type: Point2D | Point3D
+        description: Origin point of the coordinate system
+      unit:
+        type: SpatialUnit
+        default: pixel
+      scale:
+        type: number
+        default: 1.0
+        description: Multiplier to convert to base unit
+      rotation:
+        type: number
+        default: 0
+        description: Rotation angle in degrees
+
+  # ============================================
+  # SPATIAL RELATIONSHIPS
+  # ============================================
+
+  SpatialRelation:
+    description: Topological relationship between spatial objects
+    properties:
+      subjectId: { type: uuid, required: true }
+      objectId: { type: uuid, required: true }
+      relation: { type: SpatialRelationType, required: true }
+      distance:
+        type: number
+        description: Distance between objects (if applicable)
+      distanceUnit: { type: SpatialUnit }
+
+enums:
+
+  SpatialUnit:
+    description: Units of spatial measurement
+    values:
+      - pixel          # Screen pixels
+      - point          # Typography points (1/72 inch)
+      - meter          # SI meter
+      - centimeter     # SI centimeter
+      - millimeter     # SI millimeter
+      - foot           # Imperial foot
+      - inch           # Imperial inch
+      - normalized     # 0-1 range (percentage of container)
+
+  CoordinateType:
+    description: Type of coordinate system
+    values:
+      - cartesian      # X, Y (and Z) axes
+      - polar          # Angle and radius
+      - geographic     # Latitude, longitude
+      - pixel          # Screen coordinates (origin top-left)
+      - normalized     # 0-1 range
+
+  SpatialRelationType:
+    description: Topological relations (based on DE-9IM)
+    values:
+      - contains       # A fully contains B
+      - within         # A is fully within B
+      - intersects     # A and B overlap
+      - touches        # A and B share boundary only
+      - disjoint       # A and B do not touch
+      - adjacent       # A and B share an edge
+      - near           # A is within threshold distance of B
+
+meta:
+  theoretical_basis:
+    mathematics: "Euclidean geometry, topology"
+    physics: "Spatial dimensions, reference frames"
+    gis: "Spatial containment, DE-9IM relations"
+
+  patterns:
+    - "Bounding Volume Hierarchy"
+    - "Spatial Indexing (R-tree, Quadtree)"
+    - "Composite Pattern (nested containers)"
+
+  composition_role: "Where things are and what contains them"
+
+  related_primitives:
+    - quantity: "Distances are quantities"
+    - entity: "Entities exist in space"
+    - event: "Events occur at spatial locations"

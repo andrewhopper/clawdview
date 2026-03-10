@@ -1,0 +1,475 @@
+# Material Domain
+# Fundamental primitive for physical and abstract materials/substances
+# Used by: recipes, manufacturing, lab protocols, inventory
+# Version: 1.0.0
+
+domain:
+  name: material
+  version: "1.0.0"
+  status: production
+  description: Physical and abstract materials - ingredients, raw materials, reagents, parts, components
+  dependencies: [core]
+  use_case: Recipes, manufacturing BOMs, lab protocols, supply chain
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Material:
+    description: Any substance or component that can be input to or output from a process
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+
+      # Classification
+      material_type:
+        type: MaterialType
+        required: true
+      category:
+        type: string
+        description: Domain-specific category (protein, fastener, reagent)
+      subcategory:
+        type: string
+
+      # Identifiers
+      identifiers:
+        type: array
+        items: Identifier
+        description: SKU, UPC, CAS number, part number, etc.
+
+      # Properties
+      properties:
+        type: array
+        items: MaterialProperty
+
+      # Composition (for composite materials)
+      composition:
+        type: array
+        items: Composition
+        description: What this material is made of
+      is_composite:
+        type: boolean
+        default: false
+
+      # Units
+      default_unit:
+        type: string
+        required: true
+        description: Default unit of measure (kg, L, each, etc.)
+      unit_conversions:
+        type: array
+        items: UnitConversion
+        description: Conversion factors to other units
+
+      # State
+      state:
+        type: MaterialState
+        description: Solid, liquid, gas, etc.
+
+      # Handling
+      storage_requirements:
+        type: StorageRequirements
+      handling_instructions:
+        type: array
+        items: string
+      hazards:
+        type: array
+        items: Hazard
+
+      # Substitutes
+      substitutes:
+        type: array
+        items: Substitute
+        description: Acceptable substitutes
+
+      # Source
+      source_type:
+        type: SourceType
+      manufacturer_id:
+        type: string
+        description: FK to Organization
+
+      # Lifecycle
+      shelf_life:
+        type: Duration
+      perishable:
+        type: boolean
+        default: false
+
+      # Status
+      status:
+        type: MaterialStatus
+        required: true
+        default: active
+
+      # Audit
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  MaterialProperty:
+    description: A measurable property of a material
+    properties:
+      name:
+        type: string
+        required: true
+        description: Property name (density, viscosity, tensile_strength)
+      value:
+        type: string
+        required: true
+      unit:
+        type: string
+      property_type:
+        type: PropertyType
+        required: true
+      min_value:
+        type: decimal
+        description: For range properties
+      max_value:
+        type: decimal
+      conditions:
+        type: string
+        description: Conditions under which property applies (at 20°C, etc.)
+
+  Composition:
+    description: Component of a composite material
+    properties:
+      material_id:
+        type: uuid
+        required: true
+        description: FK to Material
+      percentage:
+        type: decimal
+        description: Percentage by weight or volume (0.0-1.0)
+      quantity:
+        type: Quantity
+        description: Absolute quantity if percentage not applicable
+      is_primary:
+        type: boolean
+        default: false
+      is_optional:
+        type: boolean
+        default: false
+      purpose:
+        type: string
+        description: Why this component is included
+
+  UnitConversion:
+    description: Conversion factor between units for this material
+    properties:
+      from_unit:
+        type: string
+        required: true
+      to_unit:
+        type: string
+        required: true
+      factor:
+        type: decimal
+        required: true
+        description: Multiply from_unit by factor to get to_unit
+      conditions:
+        type: string
+        description: Conditions affecting conversion (temperature, etc.)
+
+  StorageRequirements:
+    description: How material should be stored
+    properties:
+      temperature_min:
+        type: decimal
+        description: Minimum temperature (Celsius)
+      temperature_max:
+        type: decimal
+        description: Maximum temperature (Celsius)
+      humidity_min:
+        type: decimal
+        description: Minimum humidity (0.0-1.0)
+      humidity_max:
+        type: decimal
+        description: Maximum humidity (0.0-1.0)
+      light_sensitive:
+        type: boolean
+        default: false
+      moisture_sensitive:
+        type: boolean
+        default: false
+      ventilation_required:
+        type: boolean
+        default: false
+      segregation_required:
+        type: boolean
+        default: false
+        description: Must be stored separately from incompatible materials
+      incompatible_with:
+        type: array
+        items: string
+        description: Material categories to keep away from
+      container_type:
+        type: string
+        description: Required container type
+      notes:
+        type: string
+
+  Hazard:
+    description: Safety hazard associated with material
+    properties:
+      hazard_type:
+        type: HazardType
+        required: true
+      severity:
+        type: HazardSeverity
+        required: true
+      description:
+        type: string
+      pictogram:
+        type: string
+        description: GHS pictogram code
+      signal_word:
+        type: string
+        description: Danger, Warning, etc.
+      precautionary_statements:
+        type: array
+        items: string
+      first_aid:
+        type: string
+      regulatory_codes:
+        type: array
+        items: string
+        description: OSHA, EPA, DOT codes
+
+  Substitute:
+    description: Acceptable substitute for this material
+    properties:
+      material_id:
+        type: uuid
+        required: true
+        description: FK to substitute Material
+      conversion_ratio:
+        type: decimal
+        default: 1.0
+        description: How much substitute per unit of original
+      quality_impact:
+        type: QualityImpact
+        description: Effect on output quality
+      notes:
+        type: string
+
+enums:
+
+  MaterialType:
+    values:
+      # Physical
+      - raw_material      # Unprocessed input
+      - component         # Manufactured part
+      - ingredient        # Food/recipe input
+      - reagent           # Chemical/lab input
+      - consumable        # Used up in process (fuel, lubricant)
+      - packaging         # Containers, wrapping
+
+      # Intermediate
+      - work_in_progress  # Partially processed
+      - subassembly       # Assembled component
+
+      # Output
+      - finished_good     # Final product
+      - byproduct         # Secondary output
+      - waste             # Disposal output
+
+      # Abstract
+      - digital           # Software, data, content
+      - service           # Service as input/output
+
+  MaterialState:
+    values:
+      - solid
+      - liquid
+      - gas
+      - plasma
+      - powder
+      - granular
+      - gel
+      - paste
+      - suspension
+      - solution
+      - mixed             # Multiple states
+
+  PropertyType:
+    values:
+      # Physical
+      - density
+      - viscosity
+      - melting_point
+      - boiling_point
+      - flash_point
+      - hardness
+      - tensile_strength
+      - conductivity
+      - color
+      - odor
+
+      # Chemical
+      - ph
+      - molecular_weight
+      - purity
+      - concentration
+      - reactivity
+
+      # Nutritional
+      - calories
+      - protein
+      - fat
+      - carbohydrates
+      - fiber
+      - sodium
+      - sugar
+
+      # Quality
+      - grade
+      - certification
+
+      # Custom
+      - custom
+
+  HazardType:
+    values:
+      - flammable
+      - oxidizer
+      - explosive
+      - corrosive
+      - toxic
+      - irritant
+      - carcinogen
+      - mutagen
+      - environmental
+      - compressed_gas
+      - cryogenic
+      - radioactive
+      - biohazard
+      - asphyxiant
+      - allergen
+      - sensitizer
+
+  HazardSeverity:
+    values:
+      - low
+      - moderate
+      - high
+      - extreme
+
+  SourceType:
+    values:
+      - manufactured
+      - natural
+      - synthetic
+      - recycled
+      - harvested
+      - mined
+      - refined
+
+  QualityImpact:
+    values:
+      - none              # No quality difference
+      - minimal           # Barely noticeable
+      - moderate          # Noticeable but acceptable
+      - significant       # Noticeable, may affect acceptability
+      - not_recommended   # Should avoid if possible
+
+  MaterialStatus:
+    values:
+      - active
+      - discontinued
+      - pending_approval
+      - restricted
+      - recalled
+      - archived
+
+examples:
+
+  flour:
+    name: "All-Purpose Flour"
+    material_type: ingredient
+    category: "grain"
+    default_unit: "g"
+    state: powder
+    properties:
+      - name: protein
+        value: "10"
+        unit: "g/100g"
+        property_type: nutritional
+      - name: calories
+        value: "364"
+        unit: "kcal/100g"
+        property_type: nutritional
+    storage_requirements:
+      temperature_max: 25
+      humidity_max: 0.6
+      moisture_sensitive: true
+    substitutes:
+      - material_id: "bread_flour_001"
+        conversion_ratio: 1.0
+        quality_impact: moderate
+        notes: "Higher protein, may need more liquid"
+
+  steel_bolt:
+    name: "M8x20 Hex Bolt"
+    material_type: component
+    category: "fastener"
+    subcategory: "bolt"
+    identifiers:
+      - type: sku
+        value: "BOLT-M8-20-SS"
+      - type: din
+        value: "DIN 933"
+    default_unit: "each"
+    state: solid
+    properties:
+      - name: tensile_strength
+        value: "800"
+        unit: "MPa"
+        property_type: tensile_strength
+      - name: grade
+        value: "A2-70"
+        property_type: grade
+
+  sulfuric_acid:
+    name: "Sulfuric Acid"
+    material_type: reagent
+    category: "acid"
+    identifiers:
+      - type: cas
+        value: "7664-93-9"
+    default_unit: "mL"
+    state: liquid
+    properties:
+      - name: concentration
+        value: "98"
+        unit: "%"
+        property_type: concentration
+      - name: density
+        value: "1.84"
+        unit: "g/mL"
+        property_type: density
+    hazards:
+      - hazard_type: corrosive
+        severity: extreme
+        signal_word: "Danger"
+        pictogram: "GHS05"
+    storage_requirements:
+      temperature_max: 30
+      container_type: "Glass or PTFE"
+      segregation_required: true
+      incompatible_with: ["water", "bases", "metals"]
+
+sources:
+  - "GHS Globally Harmonized System"
+  - "OSHA Hazard Communication Standard"
+  - "USDA Food Composition Database"
+  - "ISO 10303 STEP standard"

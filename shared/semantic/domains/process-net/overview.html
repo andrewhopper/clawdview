@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Process-Net Domain Overview</title>
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --bg-card: #161b22;
+      --bg-code: #1c2128;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-purple: #a371f7;
+      --accent-orange: #d29922;
+      --accent-red: #f85149;
+      --accent-cyan: #39c5cf;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, #1a1f35 0%, #0d1117 100%);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    header .subtitle {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin: 0.25rem;
+    }
+
+    .badge-blue { background: rgba(88, 166, 255, 0.2); color: var(--accent-blue); }
+    .badge-green { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+    .badge-purple { background: rgba(163, 113, 247, 0.2); color: var(--accent-purple); }
+    .badge-orange { background: rgba(210, 153, 34, 0.2); color: var(--accent-orange); }
+
+    section {
+      margin-bottom: 3rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      color: var(--accent-blue);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    h3 {
+      font-size: 1.2rem;
+      color: var(--text);
+      margin: 1.5rem 0 1rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg-code);
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: rgba(88, 166, 255, 0.05);
+    }
+
+    code {
+      background: var(--bg-code);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.9em;
+      color: var(--accent-cyan);
+    }
+
+    pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .diagram {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 1rem 0;
+      overflow-x: auto;
+    }
+
+    .diagram pre {
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 0;
+      color: var(--text);
+    }
+
+    .flow-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 2rem;
+    }
+
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .flow-node {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 500;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .flow-place {
+      background: rgba(63, 185, 80, 0.2);
+      border: 2px solid var(--accent-green);
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+
+    .flow-transition {
+      background: rgba(88, 166, 255, 0.2);
+      border: 2px solid var(--accent-blue);
+    }
+
+    .flow-arrow {
+      color: var(--text-muted);
+      font-size: 1.5rem;
+    }
+
+    .layer-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .layer {
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .layer:first-child {
+      border-radius: 12px 12px 0 0;
+    }
+
+    .layer:last-child {
+      border-radius: 0 0 12px 12px;
+    }
+
+    .layer-3 { background: linear-gradient(90deg, rgba(163, 113, 247, 0.1), rgba(163, 113, 247, 0.05)); border-color: var(--accent-purple); }
+    .layer-2 { background: linear-gradient(90deg, rgba(88, 166, 255, 0.1), rgba(88, 166, 255, 0.05)); border-color: var(--accent-blue); }
+    .layer-1 { background: linear-gradient(90deg, rgba(63, 185, 80, 0.1), rgba(63, 185, 80, 0.05)); border-color: var(--accent-green); }
+    .layer-0 { background: linear-gradient(90deg, rgba(210, 153, 34, 0.1), rgba(210, 153, 34, 0.05)); border-color: var(--accent-orange); }
+
+    .layer-label {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      font-weight: 600;
+      opacity: 0.7;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 1.5rem;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 1.5rem;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2rem;
+      top: 0.5rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      border: 2px solid var(--bg-dark);
+    }
+
+    .timeline-item.completed::before {
+      background: var(--accent-green);
+    }
+
+    .check {
+      color: var(--accent-green);
+    }
+
+    .file-tree {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+
+    .file-tree .folder {
+      color: var(--accent-blue);
+    }
+
+    .file-tree .file {
+      color: var(--text);
+    }
+
+    .file-tree .comment {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .priority-queue {
+      background: var(--bg-code);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+    }
+
+    .queue-item:nth-child(1) { background: rgba(63, 185, 80, 0.2); }
+    .queue-item:nth-child(2) { background: rgba(88, 166, 255, 0.1); }
+    .queue-item:nth-child(3) { background: rgba(210, 153, 34, 0.1); }
+
+    .queue-rank {
+      font-weight: 700;
+      font-size: 1.25rem;
+      width: 30px;
+    }
+
+    .queue-score {
+      background: var(--bg-card);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    .petri-net-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .pn-place {
+      width: 60px;
+      height: 60px;
+      border: 3px solid var(--accent-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(63, 185, 80, 0.1);
+      font-size: 0.7rem;
+      text-align: center;
+    }
+
+    .pn-transition {
+      width: 20px;
+      height: 50px;
+      background: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pn-arc {
+      font-size: 1.5rem;
+      color: var(--text-muted);
+    }
+
+    .pn-token {
+      width: 16px;
+      height: 16px;
+      background: var(--text);
+      border-radius: 50%;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <h1>Process-Net Domain</h1>
+      <p class="subtitle">Deterministic Agent Orchestration with Petri Net Semantics</p>
+      <div style="margin-top: 1rem;">
+        <span class="badge badge-blue">v0.1.0</span>
+        <span class="badge badge-green">Schema Complete</span>
+        <span class="badge badge-purple">SDLC Validated</span>
+        <span class="badge badge-orange">Event Sourcing</span>
+      </div>
+    </header>
+
+    <!-- Problem Statement -->
+    <section>
+      <h2>The Problem</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(248, 81, 73, 0.2);">
+              <span style="color: var(--accent-red);">!</span>
+            </div>
+            <strong>AI Agents Are Non-Deterministic</strong>
+          </div>
+          <ul style="padding-left: 1.25rem; color: var(--text-muted);">
+            <li>Same input can yield different execution paths</li>
+            <li>Debugging failures is difficult</li>
+            <li>No ability to "rewind" and try alternatives</li>
+            <li>Hard to reproduce issues</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(63, 185, 80, 0.2);">
+              <span style="color: var(--accent-green);">✓</span>
+            </div>
+            <strong>The Solution</strong>
+          </div>
+          <ul style="padding-left: 1.25rem; color: var(--text-muted);">
+            <li>Force agents to follow deterministic graphs</li>
+            <li>Event sourcing for full replay/rewind</li>
+            <li>Priority queue of valid next actions</li>
+            <li>Formal Petri net semantics</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Research Findings -->
+    <section>
+      <h2>Research Foundations</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Contribution</th>
+            <th>Key Insight</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Petri Nets</strong> (1962)</td>
+            <td>Mathematical primitives</td>
+            <td>Place, Transition, Token, Arc, Marking</td>
+          </tr>
+          <tr>
+            <td><strong>Workflow Nets</strong> (Van Der Aalst, 1998)</td>
+            <td>Soundness property</td>
+            <td>k tokens in → k tokens out (verifiable)</td>
+          </tr>
+          <tr>
+            <td><strong>BPMN 2.0</strong> (OMG)</td>
+            <td>Standard patterns</td>
+            <td>XOR-split, AND-join, loops</td>
+          </tr>
+          <tr>
+            <td><strong>AS9100/MES</strong></td>
+            <td>Manufacturing semantics</td>
+            <td>Traveler, Operation, Station, Signoff</td>
+          </tr>
+          <tr>
+            <td><strong>DELMIA</strong> (Dassault)</td>
+            <td>Process planning</td>
+            <td>MBOM, routing, work instructions</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Layer Architecture -->
+    <section>
+      <h2>Layer Architecture</h2>
+      <div class="layer-stack">
+        <div class="layer layer-3">
+          <strong style="color: var(--accent-purple);">L3: Agent Layer</strong>
+          <p style="margin-top: 0.5rem; color: var(--text-muted);">Agent-specific bindings (Claude Code, Kiro, Cursor), SOP instructions, priority scoring rules</p>
+          <span class="layer-label" style="color: var(--accent-purple);">EXTENDS</span>
+        </div>
+        <div class="layer layer-2">
+          <strong style="color: var(--accent-blue);">L2: Workflow Patterns</strong>
+          <p style="margin-top: 0.5rem; color: var(--text-muted);">ExclusiveChoice (XOR), ParallelSplit (AND), Synchronization, ArbitraryLoop, DeferredChoice</p>
+          <span class="layer-label" style="color: var(--accent-blue);">COMPOSES</span>
+        </div>
+        <div class="layer layer-1">
+          <strong style="color: var(--accent-green);">L1: Process-Net Domain</strong>
+          <p style="margin-top: 0.5rem; color: var(--text-muted);">Net, WorkflowNet, Case, Firing, GetEnabledTransitions, Fire, ReplayTo, ForkCase</p>
+          <span class="layer-label" style="color: var(--accent-green);">BUILT ON</span>
+        </div>
+        <div class="layer layer-0">
+          <strong style="color: var(--accent-orange);">L0: Petri Net Primitives</strong>
+          <p style="margin-top: 0.5rem; color: var(--text-muted);">Place, Transition, Arc, Token, Marking, Guard, Inhibitor</p>
+          <span class="layer-label" style="color: var(--accent-orange);">FOUNDATION</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Petri Net Basics -->
+    <section>
+      <h2>Petri Net Primitives</h2>
+      <div class="diagram">
+        <div class="petri-net-visual">
+          <div class="pn-place">
+            <div>
+              <div class="pn-token" style="margin: 0 auto;"></div>
+              <div style="margin-top: 4px;">P1</div>
+            </div>
+          </div>
+          <span class="pn-arc">→</span>
+          <div class="pn-transition"></div>
+          <span class="pn-arc">→</span>
+          <div class="pn-place">P2</div>
+          <span class="pn-arc">→</span>
+          <div class="pn-transition"></div>
+          <span class="pn-arc">→</span>
+          <div class="pn-place">P3</div>
+        </div>
+        <div style="text-align: center; margin-top: 1rem;">
+          <span class="badge badge-green">○ Place</span>
+          <span class="badge badge-blue">▮ Transition</span>
+          <span class="badge badge-orange">● Token</span>
+          <span style="color: var(--text-muted); margin-left: 1rem;">→ Arc</span>
+        </div>
+      </div>
+
+      <div class="grid grid-4" style="margin-top: 1.5rem;">
+        <div class="card stat-card">
+          <div style="font-size: 2rem;">○</div>
+          <div style="color: var(--accent-green); font-weight: 600;">Place</div>
+          <div class="stat-label">State where tokens rest</div>
+        </div>
+        <div class="card stat-card">
+          <div style="font-size: 2rem;">▮</div>
+          <div style="color: var(--accent-blue); font-weight: 600;">Transition</div>
+          <div class="stat-label">Atomic action</div>
+        </div>
+        <div class="card stat-card">
+          <div style="font-size: 2rem;">●</div>
+          <div style="color: var(--text); font-weight: 600;">Token</div>
+          <div class="stat-label">Work item marker</div>
+        </div>
+        <div class="card stat-card">
+          <div style="font-size: 2rem;">→</div>
+          <div style="color: var(--text-muted); font-weight: 600;">Arc</div>
+          <div class="stat-label">Directed connection</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Files Created -->
+    <section>
+      <h2>Files Created</h2>
+      <div class="card">
+        <pre class="file-tree">
+<span class="folder">shared/semantic/domains/process-net/</span>
+├── <span class="folder">schema/</span>
+│   ├── <span class="file">primitives.yaml</span>    <span class="comment"># Place, Transition, Arc, Token, Marking, Guard</span>
+│   ├── <span class="file">structure.yaml</span>     <span class="comment"># Net, WorkflowNet, Case, Firing</span>
+│   ├── <span class="file">patterns.yaml</span>      <span class="comment"># XOR-split, AND-join, loops, etc.</span>
+│   ├── <span class="file">execution.yaml</span>     <span class="comment"># GetEnabledTransitions, Fire, ReplayTo, Fork</span>
+│   └── <span class="file">index.yaml</span>         <span class="comment"># Domain metadata and exports</span>
+│
+├── <span class="folder">examples/</span>
+│   ├── <span class="file">sdlc-workflow.yaml</span>      <span class="comment"># Full SDLC 9-phase WorkflowNet</span>
+│   └── <span class="file">sdlc-workflow-diagram.md</span> <span class="comment"># Visual diagram + soundness proof</span>
+│
+└── <span class="file">overview.html</span>              <span class="comment"># This file</span>
+
+<span class="folder">project-management/ideas/active/</span>
+└── <span class="file">deterministic-agent-graph-f18e2141.md</span>  <span class="comment"># Revised idea with research</span>
+
+<span class="folder">shared/semantic/domains/</span>
+└── <span class="file">registry.yaml</span>             <span class="comment"># Updated with process-net domain</span>
+        </pre>
+      </div>
+    </section>
+
+    <!-- Schema Exports -->
+    <section>
+      <h2>Domain Exports</h2>
+      <div class="grid grid-3">
+        <div class="card">
+          <h3 style="color: var(--accent-orange);">Primitives</h3>
+          <code>Place</code> <code>Transition</code> <code>Arc</code><br>
+          <code>Token</code> <code>Marking</code> <code>Guard</code><br>
+          <code>Inhibitor</code>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--accent-green);">Entities</h3>
+          <code>Net</code> <code>WorkflowNet</code><br>
+          <code>Case</code> <code>Firing</code><br>
+          <code>GuardResult</code> <code>EnabledSet</code>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--accent-blue);">Actions</h3>
+          <code>CreateNet</code> <code>StartCase</code><br>
+          <code>GetEnabledTransitions</code><br>
+          <code>Fire</code> <code>ReplayTo</code> <code>ForkCase</code>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top: 1rem;">
+        <div class="card">
+          <h3 style="color: var(--accent-purple);">Events</h3>
+          <code>CaseStartedEvent</code> <code>TransitionFiredEvent</code><br>
+          <code>CaseSuspendedEvent</code> <code>CaseResumedEvent</code><br>
+          <code>CaseCompletedEvent</code> <code>CaseForkedEvent</code>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--accent-cyan);">Patterns</h3>
+          <code>Sequence</code> <code>ExclusiveChoice</code><br>
+          <code>ParallelSplit</code> <code>Synchronization</code><br>
+          <code>ArbitraryLoop</code> <code>DeferredChoice</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- Priority Queue -->
+    <section>
+      <h2>The Priority Queue</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">
+        <code>GetEnabledTransitions</code> returns all transitions that CAN fire, ordered by priority.
+        The agent picks from the top. Fully deterministic.
+      </p>
+
+      <div class="card">
+        <div class="priority-queue">
+          <div class="queue-item">
+            <span class="queue-rank" style="color: var(--accent-green);">#1</span>
+            <span class="queue-score">score: 95</span>
+            <strong>t_implementation</strong>
+            <span style="color: var(--text-muted);">— Phase 8: Implementation</span>
+            <span class="badge badge-green">ENABLED</span>
+          </div>
+          <div class="queue-item">
+            <span class="queue-rank" style="color: var(--accent-blue);">#2</span>
+            <span class="queue-score">score: 70</span>
+            <strong>t_request_approval</strong>
+            <span style="color: var(--text-muted);">— Request human approval</span>
+            <span class="badge badge-blue">ENABLED</span>
+          </div>
+          <div class="queue-item">
+            <span class="queue-rank" style="color: var(--text-muted);">#3</span>
+            <span class="queue-score">score: 50</span>
+            <strong>t_skip_to_deploy</strong>
+            <span style="color: var(--text-muted);">— Skip to deployment</span>
+            <span class="badge badge-orange">BLOCKED</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SDLC Validation -->
+    <section>
+      <h2>SDLC WorkflowNet Validation</h2>
+
+      <div class="grid grid-4">
+        <div class="card stat-card">
+          <div class="stat-value">18</div>
+          <div class="stat-label">Places</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value">20</div>
+          <div class="stat-label">Transitions</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value">38</div>
+          <div class="stat-label">Arcs</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value" style="color: var(--accent-green);">✓</div>
+          <div class="stat-label">Sound</div>
+        </div>
+      </div>
+
+      <div class="diagram" style="margin-top: 1.5rem;">
+        <pre style="font-size: 0.8rem; line-height: 1.4;">
+SDLC 9-Phase Standard Path (WorkflowNet)
+
+   ● p_idle (source)
+   │
+   ▼ t_start
+   ○ p_seed_done ──────────────────────────────────────────────┐
+   │                                                            │
+   ▼ t_research                                                 │
+   ○ p_research_done                                            │  Phase
+   │                                                            │
+   ▼ t_check_feasibility                                        │    1
+   ○ p_feasibility_required                                     │
+   │                                                            │    2
+   ◆─────────────────────┬──────────────────┐                   │
+   │                     │                  │                   │   2.5
+   ▼ t_feasibility       ▼ t_skip_feasibility                   │
+   │ [production]        │ [non-production]                     │    3
+   └──────────○──────────┘                                      │
+              p_feasibility_done                                │    4
+              │                                                 │
+              ▼ t_expansion                                     │    5
+              ○ p_expansion_done                                │
+              │                                                 │   5.5
+              ▼ t_analysis                                      │
+              ○ p_analysis_done                                 │    6
+              │                                                 │
+              ▼ t_selection                                     │    7
+              ○ p_selection_done                                │
+              │                                                 │    8
+              ◆──────────────┬──────────────┐                   │
+              │              │              │                   │   8.5
+              ▼ t_requirements ▼ t_skip_req                     │
+              └──────○───────┘                                  │    9
+                     │                                          │
+                     ▼  ... (continues through Phase 9)         │
+                     │                                          │
+                     ○ p_complete (sink)  ◄─────────────────────┘
+
+XOR-Splits:
+  ◆ Phase 2→2.5/3:  project_type == 'production'
+  ◆ Phase 5→5.5/6:  project_type == 'production'
+  ◆ Phase 8→8.5/9:  has_web_ui == true
+        </pre>
+      </div>
+
+      <div class="card" style="margin-top: 1rem;">
+        <h3>Soundness Verification <span class="check">✓</span></h3>
+        <table>
+          <tr>
+            <td>Single source place</td>
+            <td><code>p_idle</code></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Single sink place</td>
+            <td><code>p_complete</code></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>All nodes reachable</td>
+            <td>All places/transitions on path i→o</td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>No dead transitions</td>
+            <td>Every transition can fire in some marking</td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Proper termination</td>
+            <td>k tokens in → k tokens out</td>
+            <td><span class="check">✓</span></td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Event Sourcing -->
+    <section>
+      <h2>Event Sourcing</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">
+        Every <code>Fire</code> action produces a <code>Firing</code> record. Full replay/rewind capability.
+      </p>
+
+      <div class="card">
+        <pre>
+<span style="color: var(--accent-blue);">// events.jsonl (append-only log)</span>
+
+{"id":"f-001","transition":"t_start","seq":1,"marking_after":{"p_seed_done":1},"actor":"claude-code","ts":"10:00:00"}
+{"id":"f-002","transition":"t_research","seq":2,"marking_after":{"p_research_done":1},"actor":"claude-code","ts":"10:05:00"}
+{"id":"f-003","transition":"t_skip_feasibility","seq":3,"marking_after":{"p_feasibility_done":1},"actor":"claude-code","ts":"10:05:01"}
+{"id":"f-004","transition":"t_expansion","seq":4,"marking_after":{"p_expansion_done":1},"actor":"claude-code","ts":"10:10:00"}
+<span style="color: var(--text-muted);">...</span>
+
+<span style="color: var(--accent-green);">// Replay to sequence 3:</span>
+ReplayTo(case_id, target_sequence=3)
+→ Reconstructs marking: { p_feasibility_done: 1 }
+
+<span style="color: var(--accent-purple);">// Fork from sequence 3:</span>
+ForkCase(case_id, fork_at=3, name="try-different-approach")
+→ New case starting at p_feasibility_done
+        </pre>
+      </div>
+    </section>
+
+    <!-- Integration -->
+    <section>
+      <h2>Domain Integration</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Domain</th>
+            <th>Integration Point</th>
+            <th>How</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>steering</code></td>
+            <td>Guards</td>
+            <td>Reference <code>steering.Guardrail</code> for tech preferences</td>
+          </tr>
+          <tr>
+            <td><code>workflow</code></td>
+            <td>Case</td>
+            <td><code>WorkflowInstance</code> wraps <code>process-net.Case</code></td>
+          </tr>
+          <tr>
+            <td><code>events</code></td>
+            <td>Firing</td>
+            <td><code>Firing</code> extends <code>events.DomainEvent</code></td>
+          </tr>
+          <tr>
+            <td><code>work-system</code></td>
+            <td>Guards</td>
+            <td><code>Check</code> becomes a Guard expression</td>
+          </tr>
+          <tr>
+            <td><code>protocol</code></td>
+            <td>Transitions</td>
+            <td><code>ProtocolStep.instructions</code> maps to Transition metadata</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Next Steps -->
+    <section>
+      <h2>Next Steps</h2>
+      <div class="timeline">
+        <div class="timeline-item completed">
+          <strong>Research foundations</strong>
+          <p style="color: var(--text-muted);">Petri nets, BPMN, AS9100, DELMIA</p>
+        </div>
+        <div class="timeline-item completed">
+          <strong>Create process-net domain schema</strong>
+          <p style="color: var(--text-muted);">Primitives, structure, patterns, execution</p>
+        </div>
+        <div class="timeline-item completed">
+          <strong>Validate with SDLC WorkflowNet</strong>
+          <p style="color: var(--text-muted);">18 places, 20 transitions, soundness verified</p>
+        </div>
+        <div class="timeline-item">
+          <strong>Add spike/divergent paths</strong>
+          <p style="color: var(--text-muted);">Model spike exception and divergent implementation</p>
+        </div>
+        <div class="timeline-item">
+          <strong>Prototype Python runner</strong>
+          <p style="color: var(--text-muted);">Implement GetEnabledTransitions, Fire, ReplayTo</p>
+        </div>
+        <div class="timeline-item">
+          <strong>Integrate with steering guards</strong>
+          <p style="color: var(--text-muted);">Connect to existing guardrails system</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>Process-Net Domain v0.1.0 | Created 2025-12-02</p>
+      <p style="margin-top: 0.5rem;">
+        <a href="https://en.wikipedia.org/wiki/Petri_net" style="color: var(--accent-blue);">Petri Nets</a> ·
+        <a href="https://www.omg.org/spec/BPMN/2.0.2/PDF/" style="color: var(--accent-blue);">BPMN 2.0</a> ·
+        <a href="http://www.workflowpatterns.com/" style="color: var(--accent-blue);">Workflow Patterns</a>
+      </p>
+    </footer>
+
+  </div>
+</body>
+</html>

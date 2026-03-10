@@ -1,0 +1,713 @@
+# Economic Domain: Modifier
+# Coupons, discounts, adjustments that modify exchange value
+# Version: 1.0.0
+
+domain: economic-modifier
+version: "1.0.0"
+status: production
+description: Value modifiers - coupons, discounts, surcharges, adjustments
+dependencies:
+  - core
+  - economic-value
+
+# =============================================================================
+# DESIGN PHILOSOPHY
+# =============================================================================
+#
+# A Modifier changes the value in an exchange:
+# - Discount: reduces value (coupon, promo, loyalty)
+# - Surcharge: increases value (rush fee, holiday rate)
+# - Adjustment: corrects value (error fix, goodwill)
+#
+# Modifiers can be:
+# - Percentage based (-10%)
+# - Fixed amount (-$20)
+# - Conditional (if order > $100)
+# - Stackable or exclusive
+#
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # Modifier Definition
+  # ---------------------------------------------------------------------------
+
+  Modifier:
+    description: Definition of a value modifier
+    fields:
+      id:
+        type: string
+        required: true
+      code:
+        type: string
+        required: false
+        description: Promo/coupon code (if applicable)
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+        required: false
+
+      # Type
+      modifier_type:
+        type: ModifierType
+        required: true
+      direction:
+        type: ModifierDirection
+        required: true
+        description: Reduces or increases value
+
+      # Effect
+      effect:
+        type: ModifierEffect
+        required: true
+
+      # Validity
+      valid_from:
+        type: datetime
+        required: false
+      valid_until:
+        type: datetime
+        required: false
+      max_uses:
+        type: integer
+        required: false
+        description: Maximum total uses
+      max_uses_per_actor:
+        type: integer
+        required: false
+        description: Maximum uses per consumer
+      current_uses:
+        type: integer
+        required: false
+        default: 0
+
+      # Conditions
+      conditions:
+        type: array
+        items:
+          type: ModifierCondition
+        required: false
+        description: When modifier applies
+
+      # Stacking
+      stackable:
+        type: boolean
+        required: false
+        default: false
+        description: Can combine with other modifiers
+      exclusion_group:
+        type: string
+        required: false
+        description: Modifiers in same group are mutually exclusive
+      priority:
+        type: integer
+        required: false
+        default: 0
+        description: Order of application (higher = first)
+
+      # Status
+      status:
+        type: ModifierStatus
+        required: true
+        default: ACTIVE
+
+  # ---------------------------------------------------------------------------
+  # Modifier Effect
+  # ---------------------------------------------------------------------------
+
+  ModifierEffect:
+    description: How the modifier changes value
+    fields:
+      effect_type:
+        type: EffectType
+        required: true
+      amount:
+        type: float
+        required: false
+        description: Fixed amount or percentage
+      currency:
+        type: string
+        required: false
+        description: Currency for fixed amounts
+      cap:
+        type: float
+        required: false
+        description: Maximum discount (for percentages)
+      floor:
+        type: float
+        required: false
+        description: Minimum final value
+
+  # ---------------------------------------------------------------------------
+  # Modifier Condition
+  # ---------------------------------------------------------------------------
+
+  ModifierCondition:
+    description: Condition for modifier to apply
+    fields:
+      condition_type:
+        type: ConditionType
+        required: true
+      operator:
+        type: Operator
+        required: true
+      value:
+        type: string
+        required: true
+      description:
+        type: string
+        required: false
+
+  # ---------------------------------------------------------------------------
+  # Modifier Application (used in Exchange)
+  # ---------------------------------------------------------------------------
+
+  ModifierApplication:
+    description: Record of modifier being applied
+    fields:
+      modifier_id:
+        type: string
+        required: true
+      code_used:
+        type: string
+        required: false
+        description: Code entered (if any)
+      original_value:
+        type: Value
+        required: true
+      modified_value:
+        type: Value
+        required: true
+      effect_applied:
+        type: Value
+        required: true
+        description: The actual adjustment (e.g., -$20)
+      applied_at:
+        type: datetime
+        required: true
+      applied_by:
+        type: string
+        required: false
+        description: Who/what applied it (user, system, etc.)
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  ModifierType:
+    description: Type of modifier
+    values:
+      # Discounts
+      - COUPON            # Promotional coupon
+      - PROMO_CODE        # Promo code
+      - LOYALTY           # Loyalty reward
+      - VOLUME            # Volume discount
+      - EARLY_BIRD        # Early booking
+      - BUNDLE            # Bundle discount
+      - REFERRAL          # Referral credit
+      - FIRST_TIME        # New customer
+
+      # Surcharges
+      - RUSH_FEE          # Rush/expedite
+      - HOLIDAY           # Holiday surcharge
+      - OVERTIME          # Overtime premium
+      - PEAK              # Peak pricing
+      - FUEL              # Fuel surcharge
+      - SERVICE_FEE       # Service fee
+
+      # Adjustments
+      - GOODWILL          # Customer satisfaction
+      - ERROR_CORRECTION  # Fix a mistake
+      - CREDIT            # Account credit
+      - ROUNDING          # Rounding adjustment
+
+      # Tax
+      - TAX               # Tax amount
+      - TAX_EXEMPT        # Tax exemption
+
+  ModifierDirection:
+    description: Whether modifier reduces or increases value
+    values:
+      - DECREASE          # Reduces value (discount)
+      - INCREASE          # Increases value (surcharge)
+
+  EffectType:
+    description: How effect is calculated
+    values:
+      - PERCENTAGE        # % of value (e.g., 10% off)
+      - FIXED             # Fixed amount (e.g., $20 off)
+      - FREE_UNITS        # Free quantity (buy 2 get 1)
+      - REPLACEMENT       # Replace with new value
+      - TIERED            # Tiered based on quantity
+
+  ConditionType:
+    description: What condition is checked
+    values:
+      - MINIMUM_VALUE     # Minimum purchase amount
+      - MINIMUM_QUANTITY  # Minimum quantity
+      - ACTOR_TYPE        # Type of consumer
+      - FIRST_EXCHANGE    # First transaction
+      - DATE_RANGE        # Within date range
+      - TIME_OF_DAY       # Time-based
+      - DAY_OF_WEEK       # Day-based
+      - PRODUCT_TYPE      # Specific products
+      - AGREEMENT_TYPE    # Type of agreement
+      - PAYMENT_METHOD    # Specific payment method
+
+  Operator:
+    description: Comparison operator
+    values:
+      - EQUALS
+      - NOT_EQUALS
+      - GREATER_THAN
+      - GREATER_THAN_OR_EQUALS
+      - LESS_THAN
+      - LESS_THAN_OR_EQUALS
+      - IN                # In list
+      - NOT_IN            # Not in list
+      - BETWEEN           # Between two values
+      - CONTAINS          # Contains substring
+
+  ModifierStatus:
+    description: Status of modifier
+    values:
+      - DRAFT             # Being created
+      - ACTIVE            # Available for use
+      - PAUSED            # Temporarily disabled
+      - EXPIRED           # Past validity
+      - EXHAUSTED         # Max uses reached
+      - CANCELLED         # Manually cancelled
+
+# =============================================================================
+# EXAMPLES
+# =============================================================================
+
+examples:
+
+  percentage_coupon:
+    modifier_type: COUPON
+    code: "SAVE20"
+    name: "20% Off"
+    direction: DECREASE
+    effect:
+      effect_type: PERCENTAGE
+      amount: 20
+      cap: 100  # Max $100 discount
+    valid_until: "2025-12-31T23:59:59Z"
+    max_uses_per_actor: 1
+    conditions:
+      - condition_type: MINIMUM_VALUE
+        operator: GREATER_THAN_OR_EQUALS
+        value: "50"
+
+  fixed_discount:
+    modifier_type: PROMO_CODE
+    code: "FLAT10"
+    name: "$10 Off"
+    direction: DECREASE
+    effect:
+      effect_type: FIXED
+      amount: 10
+      currency: "USD"
+    conditions:
+      - condition_type: FIRST_EXCHANGE
+        operator: EQUALS
+        value: "true"
+
+  rush_fee:
+    modifier_type: RUSH_FEE
+    name: "24-Hour Rush"
+    direction: INCREASE
+    effect:
+      effect_type: PERCENTAGE
+      amount: 50
+    stackable: true
+
+  volume_discount:
+    modifier_type: VOLUME
+    name: "Bulk Discount"
+    direction: DECREASE
+    effect:
+      effect_type: TIERED
+      # Tiers defined separately
+    conditions:
+      - condition_type: MINIMUM_QUANTITY
+        operator: GREATER_THAN_OR_EQUALS
+        value: "100"
+
+# =============================================================================
+# DYNAMIC PRICING RULES
+# Time-based, demand-based, and contextual pricing
+# =============================================================================
+
+entities:
+
+  PricingRule:
+    description: Rule for dynamic price adjustments based on time, demand, or context
+    fields:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+
+      # Type
+      rule_type:
+        type: PricingRuleType
+        required: true
+
+      # Effect
+      effect:
+        type: PriceEffect
+        required: true
+
+      # Conditions
+      conditions:
+        type: array
+        items:
+          type: PricingCondition
+        required: true
+        description: All conditions must be true for rule to apply
+
+      # Priority and stacking
+      priority:
+        type: integer
+        default: 0
+        description: Higher priority rules evaluated first
+      stackable:
+        type: boolean
+        default: false
+        description: Can combine with other rules
+      exclusion_group:
+        type: string
+        description: Rules in same group are mutually exclusive
+
+      # Validity
+      valid_from:
+        type: datetime
+      valid_until:
+        type: datetime
+      applies_to:
+        type: array
+        items:
+          type: string
+        description: Product/service IDs this rule applies to (empty = all)
+
+      # Status
+      status:
+        type: ModifierStatus
+        default: ACTIVE
+
+  PriceEffect:
+    description: How the rule modifies price
+    fields:
+      effect_type:
+        type: PriceEffectType
+        required: true
+      direction:
+        type: ModifierDirection
+        required: true
+      amount:
+        type: decimal
+        description: Fixed amount or percentage value
+      currency:
+        type: string
+        description: For fixed amounts
+      cap:
+        type: decimal
+        description: Maximum adjustment (for percentages)
+      floor:
+        type: decimal
+        description: Minimum final price
+      override_price:
+        type: decimal
+        description: For OVERRIDE effect type - the exact price to charge
+
+  PricingCondition:
+    description: Condition that triggers a pricing rule
+    fields:
+      condition_type:
+        type: PricingConditionType
+        required: true
+      operator:
+        type: Operator
+        required: true
+      value:
+        type: string
+        required: true
+        description: Single value, comma-separated list, or range (10-20)
+      secondary_value:
+        type: string
+        description: For BETWEEN operator - the upper bound
+
+  PriceCalculation:
+    description: Result of applying pricing rules to a base price
+    fields:
+      base_price:
+        type: Money
+        required: true
+      applied_rules:
+        type: array
+        items:
+          type: AppliedPricingRule
+        required: true
+      adjustments:
+        type: array
+        items:
+          type: PriceAdjustment
+        required: true
+      final_price:
+        type: Money
+        required: true
+      calculated_at:
+        type: datetime
+        required: true
+      valid_until:
+        type: datetime
+        description: When this calculated price expires
+
+  AppliedPricingRule:
+    description: Record of a pricing rule that was applied
+    fields:
+      rule_id:
+        type: string
+        required: true
+      rule_name:
+        type: string
+        required: true
+      matched_conditions:
+        type: array
+        items:
+          type: string
+        description: Which conditions matched
+
+  PriceAdjustment:
+    description: Individual adjustment to the price
+    fields:
+      rule_id:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+      adjustment_amount:
+        type: Money
+        required: true
+      running_total:
+        type: Money
+        required: true
+        description: Price after this adjustment
+
+enums:
+
+  PricingRuleType:
+    description: Type of dynamic pricing rule
+    values:
+      # Time-based
+      - day_of_week       # Mon-Sun pricing (e.g., weekend surcharge)
+      - time_of_day       # Morning/afternoon/evening/night
+      - season            # Seasonal pricing (summer, winter, etc.)
+      - holiday           # Specific holiday pricing
+      - date_range        # Specific date range
+
+      # Demand-based
+      - occupancy         # Based on capacity utilization
+      - demand            # Based on real-time demand
+      - inventory         # Based on stock levels
+
+      # Booking behavior
+      - advance_booking   # Days/weeks in advance
+      - last_minute       # Close to date
+      - length_of_stay    # Duration of rental/booking
+      - early_bird        # First N bookings
+
+      # Context
+      - event             # Local event/conference
+      - weather           # Weather conditions
+      - competitor        # Competitor pricing
+
+      # Customer
+      - loyalty_tier      # Based on customer tier
+      - return_customer   # Returning customer discount
+
+  PricingConditionType:
+    description: What condition is checked for pricing rules
+    values:
+      # Time-based
+      - day_of_week       # Monday, Tuesday, etc.
+      - time_of_day       # HH:MM range
+      - date              # Specific date
+      - date_range        # Between two dates
+      - month             # January, February, etc.
+      - season            # Spring, Summer, Fall, Winter
+      - holiday           # Named holiday (Christmas, July4, etc.)
+
+      # Demand/Inventory
+      - occupancy_percent # Current occupancy level
+      - available_units   # Number of available units
+      - bookings_today    # Number of bookings made today
+
+      # Booking behavior
+      - days_in_advance   # How far ahead booking is made
+      - hours_in_advance  # How far ahead (for same-day)
+      - duration_days     # Length of booking/rental
+      - duration_hours    # Length in hours
+
+      # Customer
+      - loyalty_tier      # Customer tier level
+      - booking_count     # Number of past bookings
+      - is_member         # Boolean membership check
+
+      # External
+      - event_in_area     # Named event happening
+      - weather_condition # Weather type
+
+  PriceEffectType:
+    description: How price is modified
+    values:
+      - percentage        # Percentage increase/decrease
+      - fixed             # Fixed amount increase/decrease
+      - override          # Replace base price entirely
+      - per_unit          # Per unit/day/hour adjustment
+      - tiered            # Tiered pricing based on quantity
+
+# =============================================================================
+# PRICING RULE EXAMPLES
+# =============================================================================
+
+pricing_examples:
+
+  weekend_surcharge:
+    description: "Hotel weekend rate increase"
+    rule_type: day_of_week
+    effect:
+      effect_type: percentage
+      direction: INCREASE
+      amount: 25
+    conditions:
+      - condition_type: day_of_week
+        operator: IN
+        value: "Friday,Saturday"
+    priority: 10
+    stackable: true
+
+  summer_season:
+    description: "Summer peak season pricing"
+    rule_type: season
+    effect:
+      effect_type: percentage
+      direction: INCREASE
+      amount: 30
+      cap: 150  # Max $150 increase
+    conditions:
+      - condition_type: date_range
+        operator: BETWEEN
+        value: "2025-06-01"
+        secondary_value: "2025-08-31"
+    priority: 20
+    stackable: true
+
+  advance_booking_discount:
+    description: "Book 30+ days ahead, save 15%"
+    rule_type: advance_booking
+    effect:
+      effect_type: percentage
+      direction: DECREASE
+      amount: 15
+    conditions:
+      - condition_type: days_in_advance
+        operator: GREATER_THAN_OR_EQUALS
+        value: "30"
+    priority: 5
+    stackable: false
+    exclusion_group: "booking_timing"
+
+  last_minute_premium:
+    description: "Same-day booking surcharge"
+    rule_type: last_minute
+    effect:
+      effect_type: percentage
+      direction: INCREASE
+      amount: 20
+    conditions:
+      - condition_type: hours_in_advance
+        operator: LESS_THAN
+        value: "24"
+    priority: 15
+    stackable: false
+    exclusion_group: "booking_timing"
+
+  weekly_rental_discount:
+    description: "7+ day rental discount"
+    rule_type: length_of_stay
+    effect:
+      effect_type: percentage
+      direction: DECREASE
+      amount: 15
+    conditions:
+      - condition_type: duration_days
+        operator: GREATER_THAN_OR_EQUALS
+        value: "7"
+    priority: 10
+    stackable: true
+
+  high_occupancy_surge:
+    description: "Surge pricing when >80% occupied"
+    rule_type: occupancy
+    effect:
+      effect_type: percentage
+      direction: INCREASE
+      amount: 35
+    conditions:
+      - condition_type: occupancy_percent
+        operator: GREATER_THAN
+        value: "80"
+    priority: 25
+    stackable: true
+
+  holiday_pricing:
+    description: "July 4th premium"
+    rule_type: holiday
+    effect:
+      effect_type: override
+      direction: INCREASE
+      override_price: 299.99
+    conditions:
+      - condition_type: holiday
+        operator: EQUALS
+        value: "independence_day"
+    priority: 100  # Highest priority
+    stackable: false
+
+  loyalty_discount:
+    description: "Gold member rate"
+    rule_type: loyalty_tier
+    effect:
+      effect_type: percentage
+      direction: DECREASE
+      amount: 10
+    conditions:
+      - condition_type: loyalty_tier
+        operator: IN
+        value: "gold,platinum"
+    priority: 5
+    stackable: true
+
+# =============================================================================
+# SOURCES
+# =============================================================================
+
+sources:
+  - "Promotional pricing best practices"
+  - "E-commerce discount patterns"
+  - "Revenue management systems (airlines, hotels)"
+  - "Dynamic pricing algorithms"
+  - "Yield management"

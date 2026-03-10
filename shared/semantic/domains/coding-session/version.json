@@ -1,0 +1,51 @@
+{
+  "domain": "coding-session",
+  "version": "1.0.0",
+  "status": "production",
+  "created": "2025-12-19",
+  "updated": "2025-12-19",
+  "dependencies": {
+    "core": "^1.0.0",
+    "auth": "^1.0.0",
+    "infrastructure": "^1.0.0"
+  },
+  "entities": [
+    "CodingSession",
+    "ComputeConfig",
+    "EnvironmentConfig",
+    "GitRepoConfig",
+    "AIAssistantConfig",
+    "Terminal",
+    "SSHKey",
+    "APIKey",
+    "ShareLink",
+    "SessionUsageMetrics"
+  ],
+  "enums": [
+    "CodingSessionStatus",
+    "ComputeType",
+    "ComputeSize",
+    "AIAssistantProvider",
+    "TerminalStatus",
+    "SharePermissions"
+  ],
+  "actions": [
+    "CreateCodingSession",
+    "AttachToSession",
+    "TerminateSession",
+    "RenameSession",
+    "ListSessions",
+    "CreateTerminal",
+    "AttachToTerminal",
+    "ResizeTerminal",
+    "CloseTerminal",
+    "CreateShareLink",
+    "JoinViaShareLink",
+    "RevokeShareLink",
+    "CreateSSHKey",
+    "RemoveSSHKey",
+    "CreateAPIKey",
+    "RevokeAPIKey",
+    "GetSessionMetrics"
+  ]
+}

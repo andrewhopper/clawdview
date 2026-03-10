@@ -1,0 +1,13 @@
+#!/bin/bash
+# Wrapper for kiro-pytool (non-interactive wrapper for kiro-cli)
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_ROOT="$SCRIPT_DIR/.."
+VENV_PYTHON="$REPO_ROOT/.venv/bin/python3"
+
+# Use venv Python if available, otherwise system Python
+if [ -f "$VENV_PYTHON" ]; then
+    exec "$VENV_PYTHON" -m mcp_cli_wrappers.kiro_cli "$@"
+else
+    exec python3 -m mcp_cli_wrappers.kiro_cli "$@"
+fi

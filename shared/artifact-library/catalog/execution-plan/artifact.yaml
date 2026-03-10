@@ -1,0 +1,223 @@
+# Execution Plan Document
+# Category: planning
+# Complexity: moderate
+
+id: execution-plan
+name: Execution Plan
+version: "1.0.0"
+description: Step-by-step implementation roadmap with dependencies and milestones
+category: planning
+complexity: moderate
+created_at: "2025-12-10"
+updated_at: "2025-12-10"
+
+# -----------------------------------------
+# SDLC GATE ASSOCIATION
+# -----------------------------------------
+sdlc_gate:
+  phase: 8  # Implementation phase
+  gate_name: Implementation Gate
+  purpose: Define clear implementation steps before coding begins
+  approval_required: false
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: overview
+      name: Overview
+      description: What we're building and why
+      required: true
+      format: prose
+      word_limit: 200
+
+    - id: scope
+      name: Scope
+      description: What's included and excluded
+      required: true
+      format: bullets
+      subsections:
+        - id: in-scope
+          name: In Scope
+          format: bullets
+        - id: out-of-scope
+          name: Out of Scope
+          format: bullets
+
+    - id: prerequisites
+      name: Prerequisites
+      description: What must be in place before starting
+      required: true
+      format: bullets
+
+    - id: phases
+      name: Execution Phases
+      description: Major phases of implementation
+      required: true
+      format: numbered
+      subsections:
+        - id: phase-detail
+          name: Phase Detail
+          format: mixed
+
+    - id: milestones
+      name: Milestones
+      description: Key checkpoints and deliverables
+      required: true
+      format: table
+      columns:
+        - Milestone
+        - Deliverables
+        - Success Criteria
+
+    - id: dependencies
+      name: Dependencies
+      description: External and internal dependencies
+      required: true
+      format: table
+      columns:
+        - Dependency
+        - Owner
+        - Status
+        - Impact if Delayed
+
+    - id: risks
+      name: Risks & Mitigations
+      description: What could go wrong and how to handle it
+      required: true
+      format: table
+      columns:
+        - Risk
+        - Probability
+        - Impact
+        - Mitigation
+
+    - id: success-criteria
+      name: Success Criteria
+      description: How we know we're done
+      required: true
+      format: bullets
+
+    - id: next-steps
+      name: Immediate Next Steps
+      description: First actions to take
+      required: true
+      format: numbered
+      item_limit: 5
+
+  required_inputs:
+    - name: project_name
+      type: string
+      description: Name of the project or feature
+      required: true
+    - name: context
+      type: text
+      description: Project background and requirements
+      required: true
+    - name: constraints
+      type: text
+      description: Resource, timeline, or technical constraints
+      required: false
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a technical project lead creating an execution plan.
+
+    Your approach:
+    - Break work into clear, actionable phases
+    - Identify dependencies upfront
+    - Define measurable success criteria
+    - Anticipate risks and blockers
+    - Keep it practical and achievable
+
+    Writing style:
+    - Action-oriented (verbs, not nouns)
+    - Clear ownership implied
+    - Measurable milestones
+    - No time estimates (only sequence and dependencies)
+
+  task: |
+    Generate an Execution Plan for {{PROJECT_NAME}}.
+
+    Context:
+    {{CONTEXT}}
+
+    Constraints:
+    {{CONSTRAINTS}}
+
+    Structure the document with:
+    1. **Overview** - What and why
+    2. **Scope** - In/out of scope
+    3. **Prerequisites** - What's needed first
+    4. **Execution Phases** - Numbered phases with details
+    5. **Milestones** - Key checkpoints
+    6. **Dependencies** - What we depend on
+    7. **Risks & Mitigations** - What could go wrong
+    8. **Success Criteria** - How we know we're done
+    9. **Immediate Next Steps** - First 3-5 actions
+
+    Total length: 1000-3000 words.
+    Do NOT include time estimates or dates.
+
+  tone: professional
+  reading_level: technical
+  density: standard
+
+# -----------------------------------------
+# VALIDATORS
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 1000
+      max: 3000
+    severity: error
+    message: "Execution plan must be 1000-3000 words"
+
+  - id: no-dates
+    name: No Time Estimates
+    type: regex
+    rule:
+      pattern: "(weeks?|days?|months?|Q[1-4]|sprint \\d)"
+      should_not_match: true
+    severity: warning
+    message: "Avoid time estimates - focus on sequence and dependencies"
+
+  - id: has-phases
+    name: Has Phases
+    type: section_presence
+    rule:
+      required:
+        - phases
+        - milestones
+        - next-steps
+    severity: error
+    message: "Must include phases, milestones, and next steps"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 1000
+  max_words: 3000
+  reading_level: technical
+  density: standard
+  output_formats:
+    - markdown
+    - docx
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - execution
+  - plan
+  - implementation
+  - roadmap
+  - phases

@@ -1,0 +1,79 @@
+name: Update hmode methodology
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Weekly on Monday at 9am UTC
+  workflow_dispatch: # Manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-hmode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for hmode updates
+        id: check
+        run: |
+          git remote add hmode https://github.com/andrewhopper/hmode.git 2>/dev/null || true
+          git fetch hmode main
+
+          # Compare the subtree content hash vs remote
+          LOCAL_TREE=$(git ls-tree HEAD -- hmode/ 2>/dev/null | awk '{print $3}' | head -1)
+          REMOTE_TREE=$(git ls-tree hmode/main 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
+
+          if git diff --quiet HEAD -- hmode/ && git subtree split --prefix=hmode -q 2>/dev/null | head -1 | diff - <(git rev-parse hmode/main) > /dev/null 2>&1; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "hmode is up to date"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "hmode has updates available"
+          fi
+
+      - name: Create update branch and pull subtree
+        if: steps.check.outputs.changed == 'true'
+        id: update
+        run: |
+          BRANCH="chore/hmode-update-$(date +%Y%m%d-%H%M%S)"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          git checkout -b "$BRANCH"
+          git subtree pull --prefix=hmode https://github.com/andrewhopper/hmode.git main --squash -m "chore: update hmode methodology"
+          git push origin "$BRANCH"
+
+      - name: Create pull request
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          # Check if an open hmode update PR already exists
+          EXISTING=$(gh pr list --search "chore: update hmode" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -n "$EXISTING" ]; then
+            echo "PR #$EXISTING already open — skipping"
+            exit 0
+          fi
+
+          gh pr create \
+            --title "chore: update hmode methodology" \
+            --body "$(cat <<'EOF'
+          ## Summary
+          - Automated weekly pull of the latest hmode shared methodology via `git subtree pull`
+
+          ## What to check
+          - Review CLAUDE.md changes for any breaking methodology updates
+          - Verify symlinks still work after merge: `./hmode/bin/hmode-doctor`
+          EOF
+          )" \
+            --label "dependencies" 2>/dev/null || \
+          gh pr create \
+            --title "chore: update hmode methodology" \
+            --body "Automated weekly pull of the latest hmode shared methodology."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,43 @@
+# Measurement & Quantity
+
+entities:
+
+  Quantity:
+    description: Numeric value with unit of measure
+    properties:
+      value:
+        type: decimal
+        required: true
+      unit:
+        type: string
+        required: true
+        description: Unit symbol (kg, m, L, etc.)
+
+  Weight:
+    extends: Quantity
+    description: Mass measurement
+
+  Length:
+    extends: Quantity
+    description: Distance measurement
+
+  Volume:
+    extends: Quantity
+    description: Capacity measurement
+
+  Temperature:
+    extends: Quantity
+    description: Heat measurement
+
+  Percentage:
+    extends: Quantity
+    description: Value between 0 and 100
+    validation:
+      value:
+        min: 0
+        max: 100
+
+enums:
+
+  UnitSystem:
+    values: [Metric, Imperial, USCustomary]

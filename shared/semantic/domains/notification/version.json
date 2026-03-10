@@ -1,0 +1,46 @@
+{
+  "domain": "notification",
+  "version": "1.0.0",
+  "description": "Push notifications for mobile, web, and desktop platforms",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - extracted from mobile domain"
+  },
+  "entities": [
+    "Notification",
+    "NotificationService",
+    "DeviceBinding",
+    "Device",
+    "PushCredential",
+    "UserNotificationPreferences",
+    "ChannelPreference",
+    "QuietHours",
+    "Segment",
+    "SegmentCriteria",
+    "SegmentRule",
+    "DeliveryEvent"
+  ],
+  "enums": [
+    "NotificationPriority",
+    "NotificationStatus",
+    "BindingType",
+    "DevicePlatform",
+    "CredentialType",
+    "NotificationFrequency",
+    "DeliveryStatus",
+    "LogicalOperator",
+    "ComparisonOperator"
+  ],
+  "actions": [
+    "SendNotification",
+    "RegisterDevice",
+    "CreateBinding",
+    "DeleteBinding",
+    "UpdatePreferences",
+    "CreateSegment",
+    "GetDeliveryStatus"
+  ],
+  "dependencies": ["core", "auth"],
+  "extracted_from": ["mobile/notification.yaml", "mobile/device.yaml"],
+  "source": "Twilio Notify, Firebase Cloud Messaging, APNs"
+}

@@ -1,0 +1,144 @@
+# Code Validation Rules
+# Source: CRITICAL_RULES.md (Rules 15, 18)
+# Generated rules for Observer validation system
+
+rules:
+  - id: CODE-001
+    name: Python Type Hints
+    description: Python functions should have type hints
+    category: code_quality
+    tags: [python, typing, type-hints]
+    validator_name: python_has_type_hints
+    severity: warning
+    enforcement: warn
+    fix_hint: "Add type hints: def func(arg: Type) -> ReturnType:"
+    asset_types: [python]
+    critical_rule_ref: 15
+    source: CRITICAL_RULES.md
+
+  - id: CODE-002
+    name: Model Timestamps
+    description: Pydantic/dataclass models must have created_at and updated_at
+    category: compliance
+    tags: [python, pydantic, timestamps, audit]
+    validator_name: python_models_have_timestamps
+    severity: warning
+    enforcement: warn
+    fix_hint: "Add: created_at: datetime and updated_at: Optional[datetime]"
+    asset_types: [python]
+    critical_rule_ref: 18
+    source: CRITICAL_RULES.md
+
+  - id: CODE-003
+    name: Avoid Any Type
+    description: "Avoid using 'Any' type - use specific types"
+    category: code_quality
+    tags: [python, typing, any]
+    validator_name: no_any_type
+    severity: info
+    enforcement: allow
+    fix_hint: Replace Any with specific types
+    asset_types: [python]
+    critical_rule_ref: 15
+    source: CRITICAL_RULES.md
+
+  - id: CODE-004
+    name: TypeScript Types
+    description: TypeScript functions should have type annotations
+    category: code_quality
+    tags: [typescript, typing]
+    validator_name: typescript_has_types
+    severity: warning
+    enforcement: warn
+    fix_hint: Add type annotations
+    asset_types: [typescript]
+    critical_rule_ref: 15
+    source: CRITICAL_RULES.md
+
+  - id: CODE-005
+    name: No Hardcoded Secrets
+    description: API keys, passwords, and tokens must not be hardcoded
+    category: security
+    tags: [security, secrets, credentials, blocking]
+    validator_name: no_hardcoded_secrets
+    severity: critical
+    enforcement: block
+    fix_hint: Use environment variables or secrets manager
+    asset_types: [python, typescript, javascript]
+
+  - id: CODE-006
+    name: Use Logging
+    description: Prefer logging over print() statements
+    category: code_quality
+    tags: [python, logging, debugging]
+    validator_name: no_print_statements
+    severity: info
+    enforcement: allow
+    fix_hint: Replace print() with logging.info()
+    asset_types: [python]
+
+  - id: CODE-007
+    name: Module Docstring
+    description: Python modules should have docstrings
+    category: documentation
+    tags: [python, docstring, documentation]
+    validator_name: has_docstring
+    severity: info
+    enforcement: allow
+    fix_hint: Add a docstring at the top of the module
+    asset_types: [python]
+
+  - id: CODE-008
+    name: No console.log
+    description: Avoid console.log in production code
+    category: code_quality
+    tags: [typescript, javascript, logging, debugging]
+    anti_pattern: '^\s*console\.log\s*\('
+    severity: info
+    enforcement: allow
+    fix_hint: Remove console.log or use proper logging
+    asset_types: [typescript, javascript]
+
+  - id: CODE-009
+    name: Bare Except
+    description: Avoid bare except clauses
+    category: code_quality
+    tags: [python, exceptions, error-handling]
+    validator_name: no_bare_except
+    severity: warning
+    enforcement: warn
+    fix_hint: "Use 'except Exception:' or specific types"
+    asset_types: [python]
+
+  - id: CODE-010
+    name: Star Imports
+    description: "Avoid 'from x import *'"
+    category: code_quality
+    tags: [python, imports, namespace]
+    validator_name: no_star_imports
+    severity: warning
+    enforcement: warn
+    fix_hint: "Import specific names: from x import foo, bar"
+    asset_types: [python]
+
+  - id: CODE-011
+    name: Tracked TODOs
+    description: TODO/FIXME should include issue reference
+    category: compliance
+    tags: [todo, tracking, issues]
+    anti_pattern: '(?i)#\s*(?:TODO|FIXME)(?!.*#\d+):'
+    severity: info
+    enforcement: allow
+    fix_hint: "Add issue reference: # TODO(#123): description"
+    asset_types: [python, typescript, javascript]
+
+  - id: CODE-012
+    name: Import at Top
+    description: Imports should be at the top of the file
+    category: style
+    tags: [python, imports, organization]
+    pattern: '^(?:#!/.*\n)?(?:#.*\n)*(?:"""[\s\S]*?""")?(?:\s*\n)*(?:from|import)'
+    severity: info
+    enforcement: allow
+    fix_hint: Move imports to the top of the file
+    asset_types: [python]

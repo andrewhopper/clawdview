@@ -1,0 +1,62 @@
+# Access Control
+
+entities:
+
+  Role:
+    extends: core.Entity
+    description: Named collection of permissions
+    properties:
+      name:
+        type: string
+        required: true
+        pattern: "^[a-z][a-z0-9_-]*$"
+        description: Unique role identifier (admin, viewer, editor)
+      description:
+        type: string
+        maxLength: 500
+      isSystem:
+        type: boolean
+        default: false
+        description: Built-in role, cannot be deleted
+      permissions:
+        type: Permission[]
+      parentRole:
+        type: Role
+        description: Inherits permissions from parent
+
+  Permission:
+    description: Granular access right
+    properties:
+      name:
+        type: string
+        required: true
+        pattern: "^[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*$"
+        description: Format 'resource:action' (e.g., 'email:send')
+      scope:
+        type: PermissionScope
+      description:
+        type: string
+
+  Policy:
+    extends: core.Entity
+    description: Conditional access rule (ABAC)
+    properties:
+      effect:
+        type: string
+        enum: [Allow, Deny]
+      conditions:
+        type: string
+        description: JSON condition expression
+      resources:
+        type: string[]
+      actions:
+        type: string[]
+
+enums:
+
+  PermissionScope:
+    values:
+      - Global    # Applies everywhere
+      - Org       # Organization level
+      - Project   # Project level
+      - Resource  # Specific resource

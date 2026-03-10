@@ -1,0 +1,36 @@
+{
+  "domain": "messaging",
+  "version": "1.0.0",
+  "description": "SMS, MMS, and chat messaging for any platform",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - extracted from mobile domain"
+  },
+  "entities": [
+    "Message",
+    "MessageMedia",
+    "MessagingService",
+    "PhoneNumber",
+    "PhoneCapabilities",
+    "Conversation",
+    "ConversationParticipant"
+  ],
+  "enums": [
+    "MessageStatus",
+    "MessageDirection",
+    "MessageChannel",
+    "ConversationState"
+  ],
+  "actions": [
+    "SendMessage",
+    "GetMessage",
+    "DeleteMessage",
+    "ListMessages",
+    "CreateConversation",
+    "AddParticipant",
+    "SendConversationMessage"
+  ],
+  "dependencies": ["core"],
+  "extracted_from": ["mobile/message.yaml"],
+  "source": "Twilio Programmable Messaging API"
+}

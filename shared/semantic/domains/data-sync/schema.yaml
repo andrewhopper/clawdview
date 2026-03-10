@@ -1,0 +1,1002 @@
+# Data Synchronization Domain Model
+# Decomposed, reusable sync primitives for any data movement scenario
+#
+# Use Cases:
+#   - Mobile offline/online sync
+#   - System-to-system replication (email, transactions)
+#   - Analytics pipeline ingestion
+#   - Multi-region data replication
+#   - Event sourcing / CDC
+#
+# Inspired by: Kafka Connect, Debezium CDC, CRDTs, Realm Sync, Firebase
+
+domain:
+  name: data-sync
+  version: "1.0.0"
+  description: Decomposed data synchronization primitives - sources, targets, checkpoints, conflicts, and change events
+  dependencies: [core]
+  use_case: Offline/online sync, system replication, CDC, analytics pipelines, multi-region sync
+  sources:
+    - "Kafka Connect (connectors, offsets)"
+    - "Debezium CDC (change data capture)"
+    - "CRDTs (conflict-free replicated data types)"
+    - "Realm Sync, Firebase Realtime Database"
+    - "AWS DMS (Database Migration Service)"
+  created_at: "2025-11-25"
+  updated_at: "2025-11-25"
+
+entities:
+
+  # ============================================
+  # SYNC ENDPOINTS (Sources & Targets)
+  # ============================================
+
+  SyncEndpoint:
+    description: Abstract endpoint for sync (source or target)
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true, maxLength: 100 }
+      description: { type: string }
+      type: { type: EndpointType, required: true }
+      role: { type: EndpointRole, required: true }
+      # Connection
+      connectionConfig: { type: ConnectionConfig, required: true }
+      # Authentication
+      authConfig: { type: AuthConfig }
+      # Schema
+      schemaVersion: { type: string }
+      schemaRegistry: { type: uri, description: "Schema registry URL if applicable" }
+      # Health
+      status: { type: EndpointStatus, required: true, default: unknown }
+      lastHealthCheck: { type: datetime }
+      lastSuccessfulSync: { type: datetime }
+      errorCount: { type: integer, default: 0 }
+      # Metadata
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ConnectionConfig:
+    description: Connection configuration for an endpoint
+    properties:
+      protocol: { type: ConnectionProtocol, required: true }
+      host: { type: string }
+      port: { type: integer }
+      database: { type: string }
+      schema: { type: string }
+      table: { type: string }
+      topic: { type: string, description: "Kafka/event stream topic" }
+      bucket: { type: string, description: "S3/GCS bucket" }
+      path: { type: string }
+      connectionString: { type: string, description: "Full connection string (encrypted)" }
+      customProperties: { type: object, description: "Endpoint-specific config" }
+      # Timeouts
+      connectionTimeoutMs: { type: integer, default: 30000 }
+      readTimeoutMs: { type: integer, default: 60000 }
+      # Pooling
+      minConnections: { type: integer, default: 1 }
+      maxConnections: { type: integer, default: 10 }
+
+  AuthConfig:
+    description: Authentication configuration
+    properties:
+      method: { type: AuthMethod, required: true }
+      # Credentials (references to secrets, not actual values)
+      credentialRef: { type: string, description: "Reference to credential store" }
+      username: { type: string }
+      passwordRef: { type: string, description: "Secret reference" }
+      apiKeyRef: { type: string }
+      tokenRef: { type: string }
+      certificateRef: { type: string }
+      # OAuth
+      oauthClientId: { type: string }
+      oauthClientSecretRef: { type: string }
+      oauthTokenUrl: { type: uri }
+      oauthScopes: { type: array, items: string }
+      # AWS
+      awsRoleArn: { type: string }
+      awsRegion: { type: string }
+
+  # ============================================
+  # SYNC STREAM (What flows between endpoints)
+  # ============================================
+
+  SyncStream:
+    description: A named channel of data flowing between endpoints
+    properties:
+      id: { type: uuid, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      # Endpoints
+      sourceId: { type: uuid, required: true, description: "FK to SyncEndpoint" }
+      targetId: { type: uuid, required: true, description: "FK to SyncEndpoint" }
+      # What to sync
+      entityType: { type: string, required: true, description: "Type of entity being synced" }
+      entityFilter: { type: EntityFilter, description: "Optional filter criteria" }
+      # Transform
+      transformations: { type: array, items: Transformation }
+      # Policy
+      syncPolicy: { type: SyncPolicy, required: true }
+      conflictPolicy: { type: ConflictPolicy, required: true }
+      # State
+      status: { type: StreamStatus, required: true, default: inactive }
+      currentCheckpoint: { type: uuid, description: "FK to SyncCheckpoint" }
+      lag: { type: integer, description: "Events behind source" }
+      # Metrics
+      totalEventsProcessed: { type: integer, default: 0 }
+      totalBytesTransferred: { type: integer, default: 0 }
+      lastEventTime: { type: datetime }
+      averageLatencyMs: { type: integer }
+      # Metadata
+      tags: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  EntityFilter:
+    description: Filter criteria for what entities to sync
+    properties:
+      includePatterns: { type: array, items: string, description: "Glob/regex patterns to include" }
+      excludePatterns: { type: array, items: string, description: "Glob/regex patterns to exclude" }
+      whereClause: { type: string, description: "SQL-like filter expression" }
+      modifiedAfter: { type: datetime, description: "Only sync changes after this time" }
+      modifiedBefore: { type: datetime }
+      customFilter: { type: object, description: "Endpoint-specific filter config" }
+
+  Transformation:
+    description: Data transformation applied during sync
+    properties:
+      id: { type: uuid, required: true }
+      order: { type: integer, required: true }
+      type: { type: TransformationType, required: true }
+      # Field mapping
+      sourceField: { type: string }
+      targetField: { type: string }
+      # Expression
+      expression: { type: string, description: "Transform expression (SQL, JSONPath, etc.)" }
+      expressionLanguage: { type: ExpressionLanguage }
+      # Lookup
+      lookupStreamId: { type: uuid, description: "FK to another SyncStream for enrichment" }
+      lookupKeyField: { type: string }
+      # Masking/PII
+      maskingRule: { type: MaskingRule }
+      # Validation
+      validationRule: { type: string }
+      onValidationFail: { type: ValidationAction, default: skip }
+
+  # ============================================
+  # SYNC POLICIES
+  # ============================================
+
+  SyncPolicy:
+    description: Rules governing sync behavior
+    properties:
+      mode: { type: SyncMode, required: true }
+      direction: { type: SyncDirection, required: true }
+      # Timing
+      frequency: { type: SyncFrequency, required: true }
+      intervalSeconds: { type: integer, description: "For scheduled mode" }
+      cronExpression: { type: string, description: "Cron schedule" }
+      # Batching
+      batchSize: { type: integer, default: 1000 }
+      maxBatchBytes: { type: integer, default: 10485760, description: "10MB default" }
+      flushIntervalMs: { type: integer, default: 5000 }
+      # Ordering
+      orderingKey: { type: string, description: "Field to order by" }
+      orderingGuarantee: { type: OrderingGuarantee, default: none }
+      # Delivery
+      deliveryGuarantee: { type: DeliveryGuarantee, required: true, default: at_least_once }
+      maxRetries: { type: integer, default: 3 }
+      retryBackoffMs: { type: integer, default: 1000 }
+      retryBackoffMultiplier: { type: decimal, default: 2.0 }
+      maxRetryBackoffMs: { type: integer, default: 60000 }
+      # Dead letter
+      deadLetterEnabled: { type: boolean, default: true }
+      deadLetterTargetId: { type: uuid, description: "FK to SyncEndpoint for dead letters" }
+      # Parallelism
+      parallelism: { type: integer, default: 1 }
+      partitionKey: { type: string, description: "Field to partition by" }
+
+  ConflictPolicy:
+    description: How to handle sync conflicts
+    properties:
+      strategy: { type: ConflictStrategy, required: true }
+      # Timestamp-based
+      timestampField: { type: string, default: "updatedAt" }
+      # Priority-based
+      sourcePriority: { type: integer, description: "Higher wins" }
+      # Custom
+      customResolverRef: { type: string, description: "Reference to custom resolver function" }
+      # Fallback
+      fallbackStrategy: { type: ConflictStrategy, default: source_wins }
+      # Logging
+      logConflicts: { type: boolean, default: true }
+      conflictLogTargetId: { type: uuid, description: "Where to log conflicts" }
+      # Manual review
+      requireManualReview: { type: boolean, default: false }
+      manualReviewThreshold: { type: integer, description: "Auto-resolve if below threshold" }
+
+  # ============================================
+  # CHECKPOINTS & CURSORS
+  # ============================================
+
+  SyncCheckpoint:
+    description: Position marker for resumable sync
+    properties:
+      id: { type: uuid, required: true }
+      streamId: { type: uuid, required: true }
+      # Position (multiple cursor types supported)
+      cursorType: { type: CursorType, required: true }
+      # Offset-based
+      offset: { type: integer }
+      partition: { type: integer }
+      # Timestamp-based
+      timestamp: { type: datetime }
+      # Sequence-based
+      sequenceNumber: { type: string }
+      # LSN-based (database)
+      lsn: { type: string, description: "Log Sequence Number" }
+      # Custom
+      customCursor: { type: object }
+      # Snapshot
+      snapshotId: { type: string }
+      isSnapshotComplete: { type: boolean, default: false }
+      # State
+      status: { type: CheckpointStatus, required: true }
+      confirmedAt: { type: datetime }
+      # Metadata
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # CHANGE EVENTS (CDC-style)
+  # ============================================
+
+  ChangeEvent:
+    description: Individual data change event (CDC pattern)
+    properties:
+      id: { type: uuid, required: true }
+      streamId: { type: uuid, required: true }
+      # Event identity
+      eventId: { type: string, required: true, description: "Idempotency key" }
+      correlationId: { type: string, description: "Request correlation" }
+      causationId: { type: string, description: "Parent event that caused this" }
+      # Type
+      operation: { type: ChangeOperation, required: true }
+      entityType: { type: string, required: true }
+      entityId: { type: string, required: true }
+      # Payload
+      beforeState: { type: object, description: "State before change (for updates/deletes)" }
+      afterState: { type: object, description: "State after change (for inserts/updates)" }
+      changedFields: { type: array, items: string, description: "Fields that changed" }
+      # Ordering
+      sequenceNumber: { type: integer }
+      partitionKey: { type: string }
+      # Timing
+      sourceTimestamp: { type: datetime, required: true, description: "When change occurred at source" }
+      captureTimestamp: { type: datetime, description: "When change was captured" }
+      processedTimestamp: { type: datetime, description: "When change was applied to target" }
+      # Provenance
+      sourceSystem: { type: string }
+      sourceUser: { type: string }
+      sourceTransaction: { type: string, description: "Source transaction ID" }
+      # Status
+      status: { type: EventStatus, required: true, default: pending }
+      retryCount: { type: integer, default: 0 }
+      lastError: { type: string }
+      # Metadata
+      headers: { type: object, description: "Event headers/metadata" }
+      schemaVersion: { type: string }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # SYNC STATE (Per-Entity)
+  # ============================================
+
+  EntitySyncState:
+    description: Sync state for a specific entity instance
+    properties:
+      id: { type: uuid, required: true }
+      streamId: { type: uuid, required: true }
+      entityType: { type: string, required: true }
+      entityId: { type: string, required: true }
+      # Versioning
+      localVersion: { type: integer, required: true }
+      remoteVersion: { type: integer }
+      vectorClock: { type: object, description: "For CRDT/multi-master" }
+      # Hashing
+      contentHash: { type: string, description: "Hash of entity content" }
+      # Status
+      status: { type: EntitySyncStatus, required: true }
+      direction: { type: SyncDirection }
+      # Timestamps
+      localModifiedAt: { type: datetime }
+      remoteModifiedAt: { type: datetime }
+      lastSyncedAt: { type: datetime }
+      # Conflict
+      hasConflict: { type: boolean, default: false }
+      conflictId: { type: uuid, description: "FK to SyncConflict" }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # CONFLICTS
+  # ============================================
+
+  SyncConflict:
+    description: Detected sync conflict requiring resolution
+    properties:
+      id: { type: uuid, required: true }
+      streamId: { type: uuid, required: true }
+      entityType: { type: string, required: true }
+      entityId: { type: string, required: true }
+      # Versions
+      localVersion: { type: object, required: true }
+      remoteVersion: { type: object, required: true }
+      baseVersion: { type: object, description: "Common ancestor if known" }
+      # Diff
+      conflictingFields: { type: array, items: string }
+      localChanges: { type: object }
+      remoteChanges: { type: object }
+      # Resolution
+      status: { type: ConflictStatus, required: true, default: pending }
+      resolutionStrategy: { type: ConflictStrategy }
+      resolvedVersion: { type: object }
+      resolvedBy: { type: string, description: "User or system that resolved" }
+      resolvedAt: { type: datetime }
+      resolutionNotes: { type: string }
+      # Auto-resolution
+      autoResolutionAttempted: { type: boolean, default: false }
+      autoResolutionFailed: { type: boolean, default: false }
+      autoResolutionError: { type: string }
+      # Metadata
+      detectedAt: { type: datetime, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # SYNC JOBS (Execution instances)
+  # ============================================
+
+  SyncJob:
+    description: Instance of a sync operation execution
+    properties:
+      id: { type: uuid, required: true }
+      streamId: { type: uuid, required: true }
+      # Trigger
+      triggerType: { type: TriggerType, required: true }
+      triggeredBy: { type: string }
+      # Timing
+      scheduledAt: { type: datetime }
+      startedAt: { type: datetime }
+      completedAt: { type: datetime }
+      durationMs: { type: integer }
+      # Progress
+      status: { type: JobStatus, required: true, default: pending }
+      phase: { type: JobPhase }
+      progressPercent: { type: integer }
+      currentItem: { type: string }
+      # Checkpoints
+      startCheckpointId: { type: uuid }
+      endCheckpointId: { type: uuid }
+      # Metrics
+      eventsRead: { type: integer, default: 0 }
+      eventsWritten: { type: integer, default: 0 }
+      eventsSkipped: { type: integer, default: 0 }
+      eventsFailed: { type: integer, default: 0 }
+      bytesTransferred: { type: integer, default: 0 }
+      conflictsDetected: { type: integer, default: 0 }
+      conflictsResolved: { type: integer, default: 0 }
+      # Errors
+      errorCount: { type: integer, default: 0 }
+      lastError: { type: string }
+      errorDetails: { type: array, items: JobError }
+      # Metadata
+      metadata: { type: object }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  JobError:
+    description: Error that occurred during sync job
+    properties:
+      id: { type: uuid, required: true }
+      jobId: { type: uuid, required: true }
+      eventId: { type: uuid, description: "FK to ChangeEvent if applicable" }
+      entityType: { type: string }
+      entityId: { type: string }
+      errorType: { type: ErrorType, required: true }
+      errorCode: { type: string }
+      errorMessage: { type: string, required: true }
+      stackTrace: { type: string }
+      retryable: { type: boolean }
+      retryCount: { type: integer, default: 0 }
+      occurredAt: { type: datetime, required: true }
+
+  # ============================================
+  # DEAD LETTER QUEUE
+  # ============================================
+
+  DeadLetterEntry:
+    description: Failed event sent to dead letter queue
+    properties:
+      id: { type: uuid, required: true }
+      streamId: { type: uuid, required: true }
+      jobId: { type: uuid }
+      originalEventId: { type: uuid, required: true }
+      # Original event data
+      operation: { type: ChangeOperation }
+      entityType: { type: string }
+      entityId: { type: string }
+      payload: { type: object, required: true }
+      # Failure info
+      failureReason: { type: string, required: true }
+      errorType: { type: ErrorType }
+      errorCode: { type: string }
+      errorDetails: { type: object }
+      attemptCount: { type: integer, default: 1 }
+      lastAttemptAt: { type: datetime }
+      # Resolution
+      status: { type: DeadLetterStatus, required: true, default: pending }
+      reprocessedAt: { type: datetime }
+      discardedAt: { type: datetime }
+      discardedBy: { type: string }
+      discardReason: { type: string }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  # ============================================
+  # OFFLINE SYNC (Mobile-specific)
+  # ============================================
+
+  OfflineSyncQueue:
+    description: Queue of changes made while offline (mobile use case)
+    properties:
+      id: { type: uuid, required: true }
+      deviceId: { type: string, required: true }
+      userId: { type: string, required: true }
+      # Status
+      status: { type: QueueStatus, required: true, default: pending }
+      pendingCount: { type: integer, default: 0 }
+      totalSize: { type: integer, description: "Bytes" }
+      # Sync state
+      lastOnlineAt: { type: datetime }
+      lastSyncAttempt: { type: datetime }
+      lastSuccessfulSync: { type: datetime }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  OfflineChange:
+    description: Individual change made while offline
+    properties:
+      id: { type: uuid, required: true }
+      queueId: { type: uuid, required: true }
+      # Change info
+      operation: { type: ChangeOperation, required: true }
+      entityType: { type: string, required: true }
+      entityId: { type: string, required: true }
+      payload: { type: object, required: true }
+      # Ordering
+      sequenceNumber: { type: integer, required: true }
+      localTimestamp: { type: datetime, required: true }
+      # Dependencies
+      dependsOn: { type: array, items: uuid, description: "Changes that must sync first" }
+      # Status
+      status: { type: OfflineChangeStatus, required: true, default: pending }
+      syncedAt: { type: datetime }
+      conflictId: { type: uuid }
+      errorMessage: { type: string }
+      retryCount: { type: integer, default: 0 }
+      # Metadata
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+# ============================================
+# ENUMS
+# ============================================
+
+enums:
+
+  EndpointType:
+    values:
+      # Databases
+      - postgresql
+      - mysql
+      - mongodb
+      - dynamodb
+      - cosmosdb
+      - sqlite
+      - redis
+      # Message queues
+      - kafka
+      - sqs
+      - sns
+      - rabbitmq
+      - redis_stream
+      - kinesis
+      - eventbridge
+      # Storage
+      - s3
+      - gcs
+      - azure_blob
+      - local_filesystem
+      # APIs
+      - rest_api
+      - graphql
+      - grpc
+      - websocket
+      # Email
+      - imap
+      - exchange
+      - gmail_api
+      # Analytics
+      - snowflake
+      - bigquery
+      - redshift
+      - databricks
+      # Mobile/Apps
+      - realm
+      - firebase
+      - couchbase
+      - sqlite_mobile
+      # Custom
+      - custom
+
+  EndpointRole:
+    values:
+      - source
+      - target
+      - bidirectional
+
+  EndpointStatus:
+    values:
+      - healthy
+      - degraded
+      - unhealthy
+      - unknown
+      - maintenance
+
+  ConnectionProtocol:
+    values:
+      - tcp
+      - ssl
+      - http
+      - https
+      - websocket
+      - grpc
+      - jdbc
+      - odbc
+      - native
+
+  AuthMethod:
+    values:
+      - none
+      - basic
+      - api_key
+      - bearer_token
+      - oauth2
+      - mtls
+      - aws_iam
+      - gcp_service_account
+      - azure_ad
+      - kerberos
+      - custom
+
+  StreamStatus:
+    values:
+      - inactive
+      - starting
+      - active
+      - paused
+      - stopping
+      - stopped
+      - error
+      - maintenance
+
+  SyncMode:
+    values:
+      - full_refresh        # Complete replacement
+      - incremental         # Only changes since last sync
+      - snapshot_then_cdc   # Initial snapshot + ongoing CDC
+      - cdc_only            # CDC from current position
+      - merge               # Merge/upsert semantics
+
+  SyncDirection:
+    values:
+      - source_to_target    # One-way pull
+      - target_to_source    # One-way push
+      - bidirectional       # Two-way sync
+
+  SyncFrequency:
+    values:
+      - realtime            # Continuous/streaming
+      - near_realtime       # Sub-minute polling
+      - scheduled           # Cron/interval
+      - on_demand           # Manual trigger only
+      - on_change           # Event-driven
+
+  OrderingGuarantee:
+    values:
+      - none
+      - per_key             # Ordered within partition key
+      - per_entity          # Ordered per entity
+      - global              # Total ordering (expensive)
+
+  DeliveryGuarantee:
+    values:
+      - at_most_once        # Fire and forget
+      - at_least_once       # May have duplicates
+      - exactly_once        # Idempotent delivery
+
+  ConflictStrategy:
+    values:
+      - source_wins         # Source always wins
+      - target_wins         # Target always wins
+      - latest_wins         # Most recent timestamp wins
+      - merge               # Field-level merge
+      - crdt                # CRDT resolution
+      - manual              # Require manual resolution
+      - custom              # Custom resolver function
+
+  CursorType:
+    values:
+      - offset              # Numeric offset
+      - timestamp           # DateTime cursor
+      - sequence            # Sequence number
+      - lsn                 # Log Sequence Number
+      - version             # Version vector
+      - composite           # Multiple fields
+      - custom
+
+  CheckpointStatus:
+    values:
+      - pending
+      - confirmed
+      - expired
+      - invalid
+
+  ChangeOperation:
+    values:
+      - insert
+      - update
+      - delete
+      - upsert
+      - truncate
+      - schema_change
+
+  EventStatus:
+    values:
+      - pending
+      - processing
+      - applied
+      - skipped
+      - failed
+      - dead_lettered
+
+  EntitySyncStatus:
+    values:
+      - synced
+      - pending_upload
+      - pending_download
+      - syncing
+      - conflict
+      - error
+
+  ConflictStatus:
+    values:
+      - pending
+      - auto_resolved
+      - manually_resolved
+      - discarded
+      - escalated
+
+  TriggerType:
+    values:
+      - scheduled
+      - manual
+      - event_driven
+      - api_request
+      - webhook
+      - system
+
+  JobStatus:
+    values:
+      - pending
+      - queued
+      - running
+      - paused
+      - completed
+      - failed
+      - cancelled
+      - timeout
+
+  JobPhase:
+    values:
+      - initializing
+      - connecting
+      - snapshot
+      - streaming
+      - transforming
+      - writing
+      - committing
+      - cleanup
+      - finalizing
+
+  ErrorType:
+    values:
+      - connection
+      - authentication
+      - authorization
+      - timeout
+      - rate_limit
+      - schema_mismatch
+      - validation
+      - transformation
+      - conflict
+      - serialization
+      - deserialization
+      - constraint_violation
+      - resource_exhausted
+      - internal
+      - unknown
+
+  DeadLetterStatus:
+    values:
+      - pending
+      - reprocessing
+      - reprocessed
+      - discarded
+
+  QueueStatus:
+    values:
+      - pending
+      - syncing
+      - synced
+      - error
+
+  OfflineChangeStatus:
+    values:
+      - pending
+      - syncing
+      - synced
+      - conflict
+      - failed
+      - discarded
+
+  TransformationType:
+    values:
+      - field_rename
+      - field_drop
+      - field_add
+      - type_cast
+      - expression
+      - lookup_enrich
+      - flatten
+      - unflatten
+      - mask
+      - encrypt
+      - decrypt
+      - hash
+      - filter
+      - aggregate
+      - split
+      - merge
+      - custom
+
+  ExpressionLanguage:
+    values:
+      - sql
+      - jsonpath
+      - jmespath
+      - jq
+      - javascript
+      - python
+      - custom
+
+  MaskingRule:
+    values:
+      - redact
+      - hash
+      - partial_mask
+      - tokenize
+      - pseudonymize
+      - generalize
+
+  ValidationAction:
+    values:
+      - skip
+      - fail
+      - dead_letter
+      - log_and_continue
+
+# ============================================
+# ACTIONS
+# ============================================
+
+actions:
+
+  # Endpoint management
+  CreateEndpoint:
+    description: Create a new sync endpoint
+    parameters:
+      name: { type: string, required: true }
+      type: { type: EndpointType, required: true }
+      role: { type: EndpointRole, required: true }
+      connectionConfig: { type: ConnectionConfig, required: true }
+      authConfig: { type: AuthConfig }
+    result: SyncEndpoint
+    permission: sync:admin
+
+  TestEndpointConnection:
+    description: Test connectivity to an endpoint
+    parameters:
+      endpointId: { type: uuid, required: true }
+    result: { type: object, properties: { success: boolean, latencyMs: integer, error: string } }
+    permission: sync:read
+
+  # Stream management
+  CreateSyncStream:
+    description: Create a new sync stream between endpoints
+    parameters:
+      name: { type: string, required: true }
+      sourceId: { type: uuid, required: true }
+      targetId: { type: uuid, required: true }
+      entityType: { type: string, required: true }
+      syncPolicy: { type: SyncPolicy, required: true }
+      conflictPolicy: { type: ConflictPolicy, required: true }
+    result: SyncStream
+    permission: sync:admin
+
+  StartStream:
+    description: Start syncing a stream
+    parameters:
+      streamId: { type: uuid, required: true }
+      fromCheckpoint: { type: uuid, description: "Resume from checkpoint" }
+    result: SyncJob
+    permission: sync:operate
+
+  PauseStream:
+    description: Pause a running stream
+    parameters:
+      streamId: { type: uuid, required: true }
+      reason: { type: string }
+    result: SyncStream
+    permission: sync:operate
+
+  ResumeStream:
+    description: Resume a paused stream
+    parameters:
+      streamId: { type: uuid, required: true }
+    result: SyncJob
+    permission: sync:operate
+
+  # Checkpoint management
+  CreateCheckpoint:
+    description: Create a checkpoint for resumable sync
+    parameters:
+      streamId: { type: uuid, required: true }
+      cursorType: { type: CursorType, required: true }
+      cursorValue: { type: object, required: true }
+    result: SyncCheckpoint
+    permission: sync:operate
+
+  ResetToCheckpoint:
+    description: Reset stream to a specific checkpoint
+    parameters:
+      streamId: { type: uuid, required: true }
+      checkpointId: { type: uuid, required: true }
+    result: SyncStream
+    permission: sync:admin
+    errors: [CHECKPOINT_EXPIRED, CHECKPOINT_INVALID]
+
+  # Conflict resolution
+  ResolveConflict:
+    description: Manually resolve a sync conflict
+    parameters:
+      conflictId: { type: uuid, required: true }
+      resolution: { type: object, required: true }
+      strategy: { type: ConflictStrategy }
+      notes: { type: string }
+    result: SyncConflict
+    permission: sync:resolve
+
+  # Dead letter management
+  ReprocessDeadLetter:
+    description: Reprocess a dead letter entry
+    parameters:
+      entryId: { type: uuid, required: true }
+    result: DeadLetterEntry
+    permission: sync:operate
+
+  DiscardDeadLetter:
+    description: Discard a dead letter entry
+    parameters:
+      entryId: { type: uuid, required: true }
+      reason: { type: string, required: true }
+    result: DeadLetterEntry
+    permission: sync:admin
+
+  # Offline sync
+  SyncOfflineQueue:
+    description: Synchronize offline change queue
+    parameters:
+      queueId: { type: uuid, required: true }
+      conflictStrategy: { type: ConflictStrategy }
+    result: OfflineSyncQueue
+    permission: sync:operate
+
+  # Monitoring
+  GetStreamStatus:
+    description: Get current status and metrics for a stream
+    parameters:
+      streamId: { type: uuid, required: true }
+    result: SyncStream
+    permission: sync:read
+
+  GetStreamLag:
+    description: Get lag metrics for a stream
+    parameters:
+      streamId: { type: uuid, required: true }
+    result: { type: object, properties: { lagEvents: integer, lagSeconds: integer, oldestPendingEvent: datetime } }
+    permission: sync:read
+
+# ============================================
+# RELATIONSHIPS
+# ============================================
+
+relationships:
+
+  - type: one_to_many
+    from: SyncEndpoint
+    to: SyncStream
+    foreign_key: sourceId
+    description: Endpoint can be source for many streams
+
+  - type: one_to_many
+    from: SyncEndpoint
+    to: SyncStream
+    foreign_key: targetId
+    description: Endpoint can be target for many streams
+
+  - type: one_to_many
+    from: SyncStream
+    to: SyncCheckpoint
+    foreign_key: streamId
+    description: Stream has many checkpoints
+
+  - type: one_to_many
+    from: SyncStream
+    to: ChangeEvent
+    foreign_key: streamId
+    description: Stream processes many change events
+
+  - type: one_to_many
+    from: SyncStream
+    to: SyncJob
+    foreign_key: streamId
+    description: Stream has many job executions
+
+  - type: one_to_many
+    from: SyncStream
+    to: EntitySyncState
+    foreign_key: streamId
+    description: Stream tracks state per entity
+
+  - type: one_to_many
+    from: SyncStream
+    to: SyncConflict
+    foreign_key: streamId
+    description: Stream may have conflicts
+
+  - type: one_to_many
+    from: SyncJob
+    to: JobError
+    foreign_key: jobId
+    description: Job may have errors
+
+  - type: one_to_many
+    from: OfflineSyncQueue
+    to: OfflineChange
+    foreign_key: queueId
+    description: Offline queue contains pending changes

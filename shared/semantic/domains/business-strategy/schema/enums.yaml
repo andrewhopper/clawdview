@@ -1,0 +1,592 @@
+enums:
+
+  # Business Model Canvas Enums
+  CustomerSegmentType:
+    values:
+      - Mass_Market
+      - Niche_Market
+      - Segmented
+      - Diversified
+      - Multi_Sided_Platform
+
+  SegmentPriority:
+    values: [Primary, Secondary, Tertiary]
+
+  ValueType:
+    values:
+      - Newness
+      - Performance
+      - Customization
+      - Getting_The_Job_Done
+      - Design
+      - Brand_Status
+      - Price
+      - Cost_Reduction
+      - Risk_Reduction
+      - Accessibility
+      - Convenience_Usability
+
+  ChannelType:
+    values:
+      - Direct_Sales_Force
+      - Web_Sales
+      - Own_Stores
+      - Partner_Stores
+      - Wholesaler
+
+  ChannelPhase:
+    values:
+      - Awareness
+      - Evaluation
+      - Purchase
+      - Delivery
+      - After_Sales
+
+  ChannelOwnership:
+    values: [Owned, Partner]
+
+  RelationshipType:
+    values:
+      - Personal_Assistance
+      - Dedicated_Personal_Assistance
+      - Self_Service
+      - Automated_Services
+      - Communities
+      - Co_Creation
+
+  RelationshipMotivation:
+    values:
+      - Customer_Acquisition
+      - Customer_Retention
+      - Upselling
+
+  RevenueType:
+    values:
+      - Asset_Sale
+      - Usage_Fee
+      - Subscription_Fee
+      - Lending_Renting_Leasing
+      - Licensing
+      - Brokerage_Fee
+      - Advertising
+
+  RevenueFrequency:
+    values: [One_Time, Recurring]
+
+  PricingMechanism:
+    values:
+      - Fixed_List_Price
+      - Product_Feature_Dependent
+      - Customer_Segment_Dependent
+      - Volume_Dependent
+      - Negotiation
+      - Yield_Management
+      - Real_Time_Market
+      - Auction
+
+  ResourceType:
+    values:
+      - Physical
+      - Intellectual
+      - Human
+      - Financial
+
+  ResourceOwnership:
+    values: [Owned, Leased, Partner_Provided]
+
+  ActivityType:
+    values:
+      - Production
+      - Problem_Solving
+      - Platform_Network
+
+  PartnershipType:
+    values:
+      - Strategic_Alliance
+      - Coopetition
+      - Joint_Venture
+      - Buyer_Supplier
+
+  PartnershipMotivation:
+    values:
+      - Optimization_Economy_Of_Scale
+      - Risk_Reduction
+      - Resource_Acquisition
+      - Activity_Acquisition
+
+  CostStructureType:
+    values:
+      - Cost_Driven
+      - Value_Driven
+
+  # Lean Canvas Enums
+  ProblemSeverity:
+    values: [Critical, Major, Minor]
+
+  UnfairAdvantageType:
+    values:
+      - Insider_Information
+      - Right_Expert_Endorsements
+      - Dream_Team
+      - Personal_Authority
+      - Large_Network_Effects
+      - Community
+      - Existing_Customers
+      - SEO_Ranking
+
+  MetricType:
+    values:
+      - Acquisition
+      - Activation
+      - Retention
+      - Revenue
+      - Referral
+
+  # Four Steps Enums
+  CustomerDevPhase:
+    values:
+      - Customer_Discovery
+      - Customer_Validation
+      - Customer_Creation
+      - Company_Building
+
+  PhaseStatus:
+    values:
+      - Not_Started
+      - In_Progress
+      - Completed
+      - Needs_Pivot
+
+  HypothesisType:
+    values:
+      - Problem
+      - Customer
+      - Solution
+      - Business_Model
+      - Channel
+      - Revenue
+
+  HypothesisStatus:
+    values:
+      - Untested
+      - Testing
+      - Validated
+      - Invalidated
+
+  InterestLevel:
+    values: [None, Low, Medium, High, Very_High]
+
+  WillingnessLevel:
+    description: Customer willingness to pay/try
+    values:
+      - Would_Not_Use
+      - Might_Use_If_Free
+      - Would_Pay_Something
+      - Would_Pay_Premium
+
+  PivotType:
+    values:
+      - Zoom_In
+      - Zoom_Out
+      - Customer_Segment
+      - Customer_Need
+      - Platform
+      - Business_Architecture
+      - Value_Capture
+      - Engine_Of_Growth
+      - Channel
+      - Technology
+
+  EarlyvangelistStatus:
+    values:
+      - Identified
+      - Contacted
+      - Engaged
+      - Committed
+      - Purchased
+      - Evangelizing
+
+  MarketType:
+    values:
+      - Existing_Market
+      - Resegmented_Market_Niche
+      - Resegmented_Market_Low_Cost
+      - New_Market
+      - Clone_Market
+
+  LaunchType:
+    values:
+      - Onslaught
+      - Niche
+      - Early_Adopter
+
+  DemandCreationType:
+    values:
+      - PR
+      - Advertising
+      - Trade_Shows
+      - Direct_Marketing
+      - Webinars
+      - Content_Marketing
+      - Social_Media
+      - Partnerships
+
+  OrgStructureType:
+    values:
+      - Mission_Centric
+      - Process_Centric
+      - Functional
+
+  # Lean Startup Enums
+  CycleStatus:
+    values:
+      - Planning
+      - Building
+      - Measuring
+      - Learning
+      - Completed
+
+  MVPType:
+    values:
+      - Landing_Page
+      - Explainer_Video
+      - Concierge
+      - Wizard_Of_Oz
+      - Piecemeal
+      - Crowdfunding
+      - Single_Feature
+      - Smoke_Test
+      - Prototype
+
+  MVPStatus:
+    values:
+      - Planned
+      - In_Development
+      - Launched
+      - Measuring
+      - Retired
+
+  PivotOrPersevere:
+    values:
+      - Pivot
+      - Persevere
+      - Undecided
+
+  MetricCategory:
+    values:
+      - Acquisition
+      - Activation
+      - Retention
+      - Referral
+      - Revenue
+
+  EngineOfGrowth:
+    values:
+      - Sticky
+      - Viral
+      - Paid
+
+  GrowthMetricType:
+    values:
+      - Churn_Rate
+      - Viral_Coefficient
+      - Customer_Acquisition_Cost
+      - Lifetime_Value
+      - Growth_Rate
+
+  # Validation & Experimentation Toolkit Enums
+  TestCardStatus:
+    values:
+      - Draft
+      - Ready
+      - In_Progress
+      - Completed
+      - Cancelled
+
+  TestCost:
+    description: Relative cost/investment required for the test
+    values:
+      - Very_Low      # < $100, hours
+      - Low           # $100-1K, days
+      - Medium        # $1K-10K, weeks
+      - High          # $10K-100K, months
+      - Very_High     # > $100K, quarters
+
+  TestStrength:
+    description: How strong the evidence from this test type is
+    values:
+      - Weak          # Opinions, stated preferences
+      - Medium        # Behavioral signals, intent
+      - Strong        # Actual behavior, transactions
+
+  DataReliability:
+    description: How reliable/trustworthy the data is
+    values:
+      - Low           # Self-reported, small sample
+      - Medium        # Larger sample, some bias
+      - High          # Large sample, controlled, actual behavior
+
+  ConfidenceLevel:
+    values:
+      - Very_Low      # 0-20%
+      - Low           # 20-40%
+      - Medium        # 40-60%
+      - High          # 60-80%
+      - Very_High     # 80-100%
+
+  ValidationStage:
+    description: Stages in the validation board pipeline
+    values:
+      - Backlog
+      - Testing
+      - Validated
+      - Invalidated
+
+  HypothesisCategoryBMC:
+    description: BMC building block the hypothesis relates to
+    values:
+      - Desirability_Customer_Segment
+      - Desirability_Value_Proposition
+      - Desirability_Channels
+      - Desirability_Customer_Relationships
+      - Viability_Revenue_Streams
+      - Viability_Cost_Structure
+      - Feasibility_Key_Resources
+      - Feasibility_Key_Activities
+      - Feasibility_Key_Partners
+
+  HypothesisImportance:
+    values:
+      - Critical      # Business fails without this
+      - Important     # Significant impact
+      - Nice_To_Have  # Would be good to validate
+
+  BoardHypothesisStatus:
+    values:
+      - Active
+      - Validated
+      - Invalidated
+      - Pivoted
+      - Parked
+
+  ExperimentType:
+    description: Types of experiments from Testing Business Ideas
+    values:
+      # Discovery Experiments
+      - Customer_Interview
+      - Expert_Interview
+      - Focus_Group
+      - Online_Survey
+      - Ethnography
+      - Day_In_Life
+      - Customer_Safari
+      # Validation Experiments
+      - Landing_Page
+      - Feature_Stub
+      - 404_Test
+      - A_B_Test
+      - Clickable_Prototype
+      - Paper_Prototype
+      - Storyboard
+      - Data_Sheet
+      - Brochure
+      - Explainer_Video
+      - Boomerang
+      - Fake_Door
+      - Presale
+      - Validation_Survey
+      # Generative Experiments
+      - Concierge
+      - Wizard_Of_Oz
+      - Single_Feature_MVP
+      - Crowdfunding
+      - Letter_Of_Intent
+      - Pop_Up_Store
+      - Mock_Sale
+      - Ad_Tracking
+      - Link_Tracking
+      - Referral_Program
+      - Split_Test
+      - Life_Sized_Prototype
+
+  ExperimentCategory:
+    description: High-level experiment categories
+    values:
+      - Discovery     # Learn about customers and problems
+      - Validation    # Test if solution is desirable
+      - Efficiency    # Optimize and improve
+
+  ExperimentStatus:
+    values:
+      - Planned
+      - Setup
+      - Running
+      - Analyzing
+      - Completed
+      - Cancelled
+
+  # ============================================
+  # MARKET ANALYSIS ENUMS
+  # ============================================
+
+  MarketSizingMethodology:
+    values:
+      - Top_Down          # Start with total market, narrow down
+      - Bottom_Up         # Build from unit economics
+      - Value_Theory      # Based on value delivered
+      - Comparable        # Based on similar markets
+
+  TrendImpact:
+    values:
+      - Positive_Major    # Strong tailwind
+      - Positive_Minor    # Slight tailwind
+      - Neutral           # No significant impact
+      - Negative_Minor    # Slight headwind
+      - Negative_Major    # Strong headwind
+
+  TrendTimeframe:
+    values:
+      - Immediate         # 0-6 months
+      - Short_Term        # 6-18 months
+      - Medium_Term       # 18 months - 3 years
+      - Long_Term         # 3+ years
+
+  MarketConcentration:
+    values:
+      - Fragmented        # Many small players
+      - Moderate          # Mix of sizes
+      - Concentrated      # Few large players
+      - Monopoly          # Single dominant player
+
+  CompetitiveIntensity:
+    values: [Low, Moderate, High, Intense]
+
+  CompetitorType:
+    values:
+      - Direct            # Same solution, same customer
+      - Indirect          # Different solution, same problem
+      - Potential         # Could enter market
+      - Substitute        # Alternative approach
+
+  ThreatLevel:
+    values: [Low, Medium, High, Critical]
+
+  SwitchingCost:
+    values:
+      - None              # Easy to switch
+      - Low               # Minor inconvenience
+      - Medium            # Some effort required
+      - High              # Significant effort
+      - Very_High         # Major migration required
+
+  ForceRating:
+    description: Porter's Five Forces rating
+    values:
+      - Very_Low
+      - Low
+      - Moderate
+      - High
+      - Very_High
+
+  RegulatoryImpact:
+    values:
+      - Blocker           # Cannot operate without compliance
+      - Major             # Significant compliance cost
+      - Minor             # Some compliance needed
+      - None              # No regulatory impact
+
+  BarrierType:
+    values:
+      - Capital           # High capital requirements
+      - Technical         # Technical expertise needed
+      - Regulatory        # Regulatory hurdles
+      - Network_Effects   # Incumbent network advantages
+      - Brand             # Brand recognition needed
+      - Switching_Costs   # Customer lock-in
+      - Distribution      # Access to channels
+      - IP                # Patents/trade secrets
+
+  BarrierSeverity:
+    values: [Low, Medium, High, Prohibitive]
+
+  BuyingRole:
+    values:
+      - Decision_Maker    # Final authority
+      - Influencer        # Shapes decision
+      - Champion          # Internal advocate
+      - Gatekeeper        # Controls access
+      - User              # End user
+      - Blocker           # Potential objector
+      - Budget_Holder     # Controls funds
+
+  BusinessModelType:
+    values:
+      - SaaS              # Software as a Service
+      - Marketplace       # Two-sided platform
+      - Ecommerce         # Direct product sales
+      - Subscription      # Recurring access
+      - Freemium          # Free + paid tiers
+      - Usage_Based       # Pay per use
+      - Licensing         # IP licensing
+      - Agency            # Service for fee
+      - Affiliate         # Commission based
+      - Hardware_Plus     # Hardware + recurring
+      - Transactional     # Per transaction fee
+
+  RevenueModelType:
+    values:
+      - Subscription      # Recurring payments
+      - Transaction       # Per transaction fee
+      - Usage             # Pay per use
+      - License           # One-time or periodic license
+      - Advertising       # Ad-supported
+      - Commission        # Take rate on GMV
+      - Data              # Data monetization
+      - Professional_Services
+      - Support_Maintenance
+
+  PricingType:
+    values:
+      - Flat_Rate         # Single price
+      - Tiered            # Good/better/best
+      - Per_Seat          # Per user
+      - Usage_Based       # Metered
+      - Freemium          # Free + paid
+      - Custom            # Negotiated
+      - Auction           # Market-based
+      - Pay_What_You_Want
+
+  PricingPosition:
+    values:
+      - Premium           # Above market
+      - Competitive       # At market
+      - Value             # Below market
+      - Penetration       # Aggressive low
+
+  BillingFrequency:
+    values:
+      - One_Time
+      - Monthly
+      - Quarterly
+      - Annual
+      - Usage_Based
+
+  GTMApproach:
+    values:
+      - Product_Led       # PLG - product drives adoption
+      - Sales_Led         # Enterprise sales motion
+      - Marketing_Led     # Inbound marketing focus
+      - Community_Led     # Community-driven growth
+      - Partner_Led       # Channel partnerships
+      - Hybrid            # Combination
+
+  ChannelPriority:
+    values: [Primary, Secondary, Experimental]
+
+  SalesModelType:
+    values:
+      - Self_Serve        # No sales involvement
+      - Inside_Sales      # Remote sales team
+      - Field_Sales       # In-person enterprise
+      - Channel           # Partner sales
+      - Hybrid            # Combination

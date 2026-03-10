@@ -1,0 +1,242 @@
+# =============================================================================
+# Domain: changelog
+# Version: 1.0.0
+# Status: active
+# Dependencies: core@^1.0.0, project@^1.0.0
+# Created: 2025-12-04
+# Updated: 2025-12-04
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# =============================================================================
+
+domain:
+  name: changelog
+  version: "1.1.0"
+  description: "Strongly-typed changelog entries for tracking monorepo changes"
+  namespace: "https://protoflow.ai/ontology/changelog#"
+  created_at: "2025-12-04"
+  updated_at: "2025-12-05"
+  dependencies:
+    core: "^1.0.0"
+    project: "^1.0.0"
+
+  changelog:
+    "1.1.0": "Add commit_hash as required field on base entity"
+    "1.0.0": "Initial version with ChangelogEntry, ProjectEntry, IdeaEntry"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  ChangelogEntry:
+    description: "Base changelog entry with common fields"
+    extends: core.Entity
+    properties:
+      row_id:
+        type: string
+        required: true
+        pattern: "^cl-[a-z][0-9]{2,3}$"
+        description: "Unique row identifier (e.g., cl-p01, cl-i07, cl-f123)"
+      date:
+        type: date
+        required: true
+        format: "YYYY-MM-DD"
+        description: "Date when change was recorded"
+      commit_hash:
+        type: string
+        required: true
+        pattern: "^[a-f0-9]{7,8}$"
+        description: "Git commit hash (short 7-8 char)"
+      entry_type:
+        type: EntryType
+        required: true
+        description: "Type of changelog entry"
+      name:
+        type: string
+        required: true
+        maxLength: 100
+        description: "Name of project, idea, or feature"
+      uuid:
+        type: string
+        required: false
+        description: "UUID of the referenced item (8-char or full)"
+      path:
+        type: string
+        required: false
+        description: "Relative path from repo root"
+      description:
+        type: string
+        required: true
+        minLength: 15
+        maxLength: 80
+        description: "5-10 word description of the change"
+      created_at:
+        type: datetime
+        required: true
+        description: "Creation timestamp"
+      updated_at:
+        type: datetime
+        required: true
+        description: "Last update timestamp"
+
+  ProjectEntry:
+    description: "Changelog entry for new projects"
+    extends: ChangelogEntry
+    properties:
+      project_uuid:
+        type: string
+        required: true
+        description: "Project UUID from .project file"
+      classification:
+        type: ProjectClassification
+        required: true
+        description: "Project classification (work, personal, shared, oss)"
+      phase:
+        type: integer
+        required: false
+        minimum: 1
+        maximum: 9
+        description: "Current SDLC phase (1-9)"
+
+  IdeaEntry:
+    description: "Changelog entry for new ideas"
+    extends: ChangelogEntry
+    properties:
+      idea_uuid:
+        type: string
+        required: true
+        description: "Idea UUID from frontmatter"
+      status:
+        type: IdeaStatus
+        required: true
+        description: "Idea status (active, promoted, parked, implemented)"
+      promoted_to:
+        type: string
+        required: false
+        description: "Project ID if idea was promoted"
+
+  FeatureEntry:
+    description: "Changelog entry for features, fixes, infrastructure"
+    extends: ChangelogEntry
+    properties:
+      category:
+        type: FeatureCategory
+        required: true
+        description: "Feature category"
+      commit_hash:
+        type: string
+        required: false
+        pattern: "^[a-f0-9]{7,40}$"
+        description: "Git commit hash (short or full)"
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  EntryType:
+    description: "Type of changelog entry"
+    values:
+      - project
+      - idea
+      - feature
+      - fix
+      - infrastructure
+      - documentation
+      - refactor
+
+  ProjectClassification:
+    description: "Project classification"
+    values:
+      - work
+      - personal
+      - shared
+      - oss
+      - unspecified
+
+  IdeaStatus:
+    description: "Idea lifecycle status"
+    values:
+      - active
+      - promoted
+      - parked
+      - implemented
+      - archived
+
+  FeatureCategory:
+    description: "Category for feature entries"
+    values:
+      - feature
+      - fix
+      - infrastructure
+      - documentation
+      - refactor
+      - chore
+
+# =============================================================================
+# JSONL FORMAT SPECIFICATION
+# =============================================================================
+
+jsonl_spec:
+  file: "changelog.jsonl"
+  description: "Line-delimited JSON with typed header"
+
+  header_format:
+    line_1: "Schema reference and version"
+    line_2: "Column definitions with types"
+    line_3+: "Data rows"
+
+  header_example: |
+    {"$schema": "changelog@1.0.0", "generated": "2025-12-04T00:00:00Z"}
+    {"$cols": {"row_id": "string", "date": "date", "entry_type": "EntryType", "name": "string", "uuid": "string?", "path": "string", "description": "string", "classification": "ProjectClassification?", "status": "IdeaStatus?", "category": "FeatureCategory?"}}
+    {"row_id": "cl-p01", "date": "2025-12-04", "entry_type": "project", "name": "auto-doc-generator", ...}
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+
+  AddEntry:
+    type: create
+    description: "Add a new changelog entry"
+    operatesOn: ChangelogEntry
+    params:
+      entry_type:
+        type: EntryType
+        required: true
+      name:
+        type: string
+        required: true
+      path:
+        type: string
+        required: true
+      description:
+        type: string
+        required: true
+    returns: ChangelogEntry
+
+  QueryByDate:
+    type: query
+    description: "Query changelog entries by date range"
+    operatesOn: ChangelogEntry
+    params:
+      start_date:
+        type: date
+        required: true
+      end_date:
+        type: date
+        required: false
+    returns: "list[ChangelogEntry]"
+
+  QueryByType:
+    type: query
+    description: "Query changelog entries by type"
+    operatesOn: ChangelogEntry
+    params:
+      entry_type:
+        type: EntryType
+        required: true
+    returns: "list[ChangelogEntry]"

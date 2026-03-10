@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Model Router - Cost-Optimized LLM Routing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        accent: '#06b6d4',
+                        dark: '#0f172a',
+                        light: '#f1f5f9'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        .gradient-bg { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%); }
+        .gradient-text { background: linear-gradient(135deg, #6366f1, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card { backdrop-filter: blur(10px); background: rgba(255,255,255,0.9); }
+        .diagram-box { border: 2px solid #6366f1; border-radius: 8px; padding: 12px 16px; background: white; }
+        .diagram-arrow { stroke: #6366f1; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .scroll-reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .scroll-reveal.revealed { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body class="bg-light text-dark">
+    <!-- Hero Section -->
+    <header class="gradient-bg text-white min-h-screen flex items-center relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <svg width="100%" height="100%">
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1"/>
+                </pattern>
+                <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+        </div>
+        <div class="container mx-auto px-6 py-20 relative z-10">
+            <div class="max-w-4xl">
+                <div class="inline-block px-4 py-2 bg-white/20 rounded-full text-sm mb-6">
+                    🚀 RFC Draft - Open for Feedback
+                </div>
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                    Dynamic<br/>Model Router
+                </h1>
+                <p class="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl">
+                    Multi-dimensional constraint-based LLM routing for <span class="font-semibold">50-80% cost reduction</span> without sacrificing quality.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="#how-it-works" class="px-8 py-4 bg-white text-primary font-semibold rounded-lg hover:bg-opacity-90 transition">
+                        How It Works →
+                    </a>
+                    <a href="#examples" class="px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition">
+                        See Examples
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+        </div>
+    </header>
+
+    <!-- Problem Section -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto text-center mb-16">
+                <h2 class="text-4xl font-bold mb-6">The Problem</h2>
+                <p class="text-xl text-gray-600">
+                    Using frontier models for every task wastes 80% of your AI budget.
+                </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-8 rounded-2xl bg-red-50 border border-red-100">
+                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+                        <span class="text-2xl">💸</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Cost Waste</h3>
+                    <p class="text-gray-600">Simple tasks like sentiment analysis don't need $15/1M token models when $0.001 traditional ML works.</p>
+                </div>
+                <div class="p-8 rounded-2xl bg-orange-50 border border-orange-100">
+                    <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
+                        <span class="text-2xl">🤯</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">50+ Models</h3>
+                    <p class="text-gray-600">Tracking capabilities, costs, and performance across dozens of models is overwhelming.</p>
+                </div>
+                <div class="p-8 rounded-2xl bg-yellow-50 border border-yellow-100">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-4">
+                        <span class="text-2xl">⚡</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Wrong Tradeoffs</h3>
+                    <p class="text-gray-600">No automatic way to balance cost, quality, latency, and capabilities per request.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section id="how-it-works" class="py-20 bg-gradient-to-b from-white to-light">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto text-center mb-16">
+                <h2 class="text-4xl font-bold mb-6">The Solution</h2>
+                <p class="text-xl text-gray-600">
+                    Constraint-based routing that finds the <span class="font-semibold text-primary">cheapest model</span> meeting all your requirements.
+                </p>
+            </div>
+
+            <!-- 8 Dimensions Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+                <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="text-3xl mb-2">🎯</div>
+                    <h4 class="font-semibold">Capabilities</h4>
+                    <p class="text-sm text-gray-500">vision, code, math...</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="text-3xl mb-2">⚡</div>
+                    <h4 class="font-semibold">Latency</h4>
+                    <p class="text-sm text-gray-500">&lt;1s, &lt;10s, &lt;60s</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="text-3xl mb-2">✨</div>
+                    <h4 class="font-semibold">Quality</h4>
+                    <p class="text-sm text-gray-500">0.5-0.95 threshold</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="text-3xl mb-2">📏</div>
+                    <h4 class="font-semibold">Context</h4>
+                    <p class="text-sm text-gray-500">4K to 1M+ tokens</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="text-3xl mb-2">🎫</div>
+                    <h4 class="font-semibold">Token Budget</h4>
+                    <p class="text-sm text-gray-500">Max tokens/request</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="text-3xl mb-2">💰</div>
+                    <h4 class="font-semibold">Cost Budget</h4>
+                    <p class="text-sm text-gray-500">$0.001 - $1.00</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="text-3xl mb-2">🎚️</div>
+                    <h4 class="font-semibold">SLO/Priority</h4>
+                    <p class="text-sm text-gray-500">urgent, batch, async</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="text-3xl mb-2">🏢</div>
+                    <h4 class="font-semibold">Provider</h4>
+                    <p class="text-sm text-gray-500">local, cloud, OSS</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Diagram -->
+    <section class="py-20 bg-dark text-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16">Architecture</h2>
+
+            <!-- SVG Architecture Diagram -->
+            <div class="max-w-4xl mx-auto">
+                <svg viewBox="0 0 800 500" class="w-full" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/>
+                        </marker>
+                        <linearGradient id="boxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Request Box -->
+                    <rect x="320" y="20" width="160" height="50" rx="8" fill="url(#boxGradient)"/>
+                    <text x="400" y="50" text-anchor="middle" fill="white" font-weight="600">Request + Constraints</text>
+
+                    <!-- Arrow down -->
+                    <line x1="400" y1="70" x2="400" y2="100" class="diagram-arrow"/>
+
+                    <!-- Constraint Solver -->
+                    <rect x="200" y="100" width="400" height="80" rx="8" fill="#1e293b" stroke="#6366f1" stroke-width="2"/>
+                    <text x="400" y="130" text-anchor="middle" fill="white" font-weight="600">Constraint Solver</text>
+
+                    <!-- Filter boxes -->
+                    <rect x="220" y="145" width="70" height="25" rx="4" fill="#6366f1" opacity="0.8"/>
+                    <text x="255" y="162" text-anchor="middle" fill="white" font-size="10">Capability</text>
+
+                    <rect x="300" y="145" width="60" height="25" rx="4" fill="#8b5cf6" opacity="0.8"/>
+                    <text x="330" y="162" text-anchor="middle" fill="white" font-size="10">Latency</text>
+
+                    <rect x="370" y="145" width="60" height="25" rx="4" fill="#a855f7" opacity="0.8"/>
+                    <text x="400" y="162" text-anchor="middle" fill="white" font-size="10">Quality</text>
+
+                    <rect x="440" y="145" width="60" height="25" rx="4" fill="#06b6d4" opacity="0.8"/>
+                    <text x="470" y="162" text-anchor="middle" fill="white" font-size="10">Context</text>
+
+                    <rect x="510" y="145" width="70" height="25" rx="4" fill="#0891b2" opacity="0.8"/>
+                    <text x="545" y="162" text-anchor="middle" fill="white" font-size="10">Cost Min</text>
+
+                    <!-- Arrow down -->
+                    <line x1="400" y1="180" x2="400" y2="220" class="diagram-arrow"/>
+
+                    <!-- Model Registry -->
+                    <rect x="250" y="220" width="300" height="100" rx="8" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+                    <text x="400" y="250" text-anchor="middle" fill="white" font-weight="600">Model Registry</text>
+
+                    <!-- Model boxes -->
+                    <rect x="270" y="265" width="50" height="40" rx="4" fill="#22c55e"/>
+                    <text x="295" y="282" text-anchor="middle" fill="white" font-size="9">Haiku</text>
+                    <text x="295" y="296" text-anchor="middle" fill="white" font-size="8">$0.80</text>
+
+                    <rect x="330" y="265" width="50" height="40" rx="4" fill="#3b82f6"/>
+                    <text x="355" y="282" text-anchor="middle" fill="white" font-size="9">Qwen</text>
+                    <text x="355" y="296" text-anchor="middle" fill="white" font-size="8">$0.30</text>
+
+                    <rect x="390" y="265" width="50" height="40" rx="4" fill="#f59e0b"/>
+                    <text x="415" y="282" text-anchor="middle" fill="white" font-size="9">DeepSeek</text>
+                    <text x="415" y="296" text-anchor="middle" fill="white" font-size="8">$0.27</text>
+
+                    <rect x="450" y="265" width="50" height="40" rx="4" fill="#ef4444"/>
+                    <text x="475" y="282" text-anchor="middle" fill="white" font-size="9">Llama</text>
+                    <text x="475" y="296" text-anchor="middle" fill="white" font-size="8">$0.59</text>
+
+                    <!-- Arrow down -->
+                    <line x1="400" y1="320" x2="400" y2="360" class="diagram-arrow"/>
+
+                    <!-- Quality Judge -->
+                    <rect x="300" y="360" width="200" height="50" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="400" y="390" text-anchor="middle" fill="white" font-weight="600">Quality Judge</text>
+
+                    <!-- Escalation arrow -->
+                    <path d="M 500 385 L 580 385 L 580 270 L 530 270" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+                    <text x="590" y="330" fill="#f59e0b" font-size="11" transform="rotate(-90 590 330)">Escalate</text>
+
+                    <!-- Arrow down -->
+                    <line x1="400" y1="410" x2="400" y2="450" class="diagram-arrow"/>
+
+                    <!-- Response -->
+                    <rect x="320" y="450" width="160" height="40" rx="8" fill="url(#boxGradient)"/>
+                    <text x="400" y="475" text-anchor="middle" fill="white" font-weight="600">Response</text>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- Delegation Examples -->
+    <section id="examples" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-6">Delegation Examples</h2>
+            <p class="text-xl text-gray-600 text-center mb-16 max-w-2xl mx-auto">
+                See how the router selects different models based on task requirements.
+            </p>
+
+            <div class="space-y-8 max-w-4xl mx-auto">
+                <!-- Example 1: Sentiment -->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-8 border border-green-100">
+                    <div class="flex items-start gap-6">
+                        <div class="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <span class="text-3xl">😊</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-xl font-semibold">Sentiment Analysis</h3>
+                                <span class="px-3 py-1 bg-green-500 text-white text-sm rounded-full font-medium">99.97% savings</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">Classify sentiment of 10,000 customer reviews</p>
+                            <div class="flex items-center gap-4 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-gray-500">Routes to:</span>
+                                    <span class="px-2 py-1 bg-green-100 rounded font-mono text-green-700">sklearn-bert</span>
+                                </div>
+                                <div class="text-gray-400">|</div>
+                                <div><span class="font-medium text-gray-500">Cost:</span> $0.001/1M</div>
+                                <div class="text-gray-400">|</div>
+                                <div><span class="font-medium text-gray-500">Latency:</span> 1ms</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example 2: Research -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+                    <div class="flex items-start gap-6">
+                        <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <span class="text-3xl">🔍</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-xl font-semibold">Company Research</h3>
+                                <span class="px-3 py-1 bg-blue-500 text-white text-sm rounded-full font-medium">73% savings</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">Research 100 companies and extract key information</p>
+                            <div class="flex items-center gap-4 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-gray-500">Routes to:</span>
+                                    <span class="px-2 py-1 bg-blue-100 rounded font-mono text-blue-700">Qwen 2.5 72B</span>
+                                </div>
+                                <div class="text-gray-400">|</div>
+                                <div><span class="font-medium text-gray-500">Cost:</span> $0.30/1M</div>
+                                <div class="text-gray-400">|</div>
+                                <div><span class="font-medium text-gray-500">Escalation:</span> 5%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example 3: Code -->
+                <div class="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-8 border border-purple-100">
+                    <div class="flex items-start gap-6">
+                        <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <span class="text-3xl">⚡</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-xl font-semibold">Real-time Code Completion</h3>
+                                <span class="px-3 py-1 bg-purple-500 text-white text-sm rounded-full font-medium">300 tok/s</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">Autocomplete code in IDE with &lt;500ms latency requirement</p>
+                            <div class="flex items-center gap-4 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-gray-500">Routes to:</span>
+                                    <span class="px-2 py-1 bg-purple-100 rounded font-mono text-purple-700">Llama 3.3 (Groq)</span>
+                                </div>
+                                <div class="text-gray-400">|</div>
+                                <div><span class="font-medium text-gray-500">Latency:</span> 150ms</div>
+                                <div class="text-gray-400">|</div>
+                                <div><span class="font-medium text-gray-500">Cost:</span> $0.59/1M</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example 4: Math -->
+                <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-8 border border-amber-100">
+                    <div class="flex items-start gap-6">
+                        <div class="w-16 h-16 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <span class="text-3xl">🧮</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-xl font-semibold">Math Reasoning</h3>
+                                <span class="px-3 py-1 bg-amber-500 text-white text-sm rounded-full font-medium">89% savings</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">Solve complex mathematical proofs with detailed work</p>
+                            <div class="flex items-center gap-4 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-gray-500">Routes to:</span>
+                                    <span class="px-2 py-1 bg-amber-100 rounded font-mono text-amber-700">DeepSeek V3</span>
+                                </div>
+                                <div class="text-gray-400">|</div>
+                                <div><span class="font-medium text-gray-500">Cost:</span> $0.27/1M</div>
+                                <div class="text-gray-400">|</div>
+                                <div><span class="font-medium text-gray-500">Quality:</span> 0.97</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example 5: Hybrid -->
+                <div class="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-2xl p-8 border border-cyan-100">
+                    <div class="flex items-start gap-6">
+                        <div class="w-16 h-16 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <span class="text-3xl">📄</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-xl font-semibold">Document Processing Pipeline</h3>
+                                <span class="px-3 py-1 bg-cyan-500 text-white text-sm rounded-full font-medium">95% savings</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">Extract entities from 1000 legal documents + classify</p>
+                            <div class="flex flex-wrap items-center gap-4 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-gray-500">Stage 1:</span>
+                                    <span class="px-2 py-1 bg-cyan-100 rounded font-mono text-cyan-700">spaCy NER</span>
+                                    <span class="text-gray-400">→</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-gray-500">Stage 2:</span>
+                                    <span class="px-2 py-1 bg-teal-100 rounded font-mono text-teal-700">Gemini Flash</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Advanced Features -->
+    <section class="py-20 bg-light">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16">Advanced Features</h2>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Orchestrator -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm">
+                    <div class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Prompt Decomposition</h3>
+                    <p class="text-gray-600 mb-4">Automatically split complex tasks into subtasks and route each to the optimal model.</p>
+                    <div class="bg-gray-50 rounded-lg p-4 font-mono text-sm">
+                        <div class="text-gray-500"># Complex task → 4 subtasks</div>
+                        <div class="text-green-600">Extract → spaCy ($0.0001)</div>
+                        <div class="text-blue-600">Sentiment → BERT ($0.001)</div>
+                        <div class="text-purple-600">Analyze → Qwen ($0.30)</div>
+                        <div class="text-amber-600">Summary → Haiku ($0.80)</div>
+                        <div class="mt-2 text-gray-700 font-semibold">Total: $1.18 vs $15+</div>
+                    </div>
+                </div>
+
+                <!-- Batch Queue -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm">
+                    <div class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Batch Queue</h3>
+                    <p class="text-gray-600 mb-4">Queue low-priority requests for cheaper batch inference with spot pricing.</p>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Spot pricing</span>
+                            <span class="text-green-600 font-semibold">60-90% off</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Batch APIs</span>
+                            <span class="text-green-600 font-semibold">50% off</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Off-peak hours</span>
+                            <span class="text-green-600 font-semibold">20-40% off</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Local Models -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm">
+                    <div class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Local Models</h3>
+                    <p class="text-gray-600 mb-4">Route to Ollama, vLLM, or llama.cpp for privacy and zero cost.</p>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span class="text-gray-600">Ollama - Easy setup</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span class="text-gray-600">vLLM - High throughput</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-purple-500 rounded-full"></span>
+                            <span class="text-gray-600">llama.cpp - CPU inference</span>
+                        </div>
+                        <div class="mt-3 text-green-600 font-semibold">$0 cost • Data never leaves</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Example -->
+    <section class="py-20 bg-dark text-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16">Simple API</h2>
+
+            <div class="max-w-3xl mx-auto">
+                <div class="bg-gray-900 rounded-2xl overflow-hidden">
+                    <div class="flex items-center gap-2 px-4 py-3 bg-gray-800">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="ml-2 text-gray-400 text-sm">example.py</span>
+                    </div>
+                    <pre class="p-6 overflow-x-auto text-sm"><code class="language-python"><span class="text-purple-400">from</span> <span class="text-cyan-400">model_router</span> <span class="text-purple-400">import</span> Router, Budget
+
+router = Router()
+
+<span class="text-gray-500"># Simple routing - finds cheapest model for the task</span>
+response = router.<span class="text-yellow-400">route</span>(
+    prompt=<span class="text-green-400">"Analyze sentiment of this review"</span>,
+    capabilities=[<span class="text-green-400">"sentiment"</span>],
+    quality=<span class="text-amber-400">0.8</span>,
+)
+<span class="text-gray-500"># → Routes to sklearn-bert ($0.001/1M)</span>
+
+<span class="text-gray-500"># Full constraint specification</span>
+response = router.<span class="text-yellow-400">route</span>(
+    prompt=<span class="text-green-400">"Analyze this financial chart and extract metrics"</span>,
+    capabilities=[<span class="text-green-400">"vision"</span>, <span class="text-green-400">"extraction"</span>, <span class="text-green-400">"finance"</span>],
+    latency=<span class="text-green-400">"&lt;10s"</span>,
+    quality=<span class="text-amber-400">0.9</span>,
+    context=<span class="text-amber-400">50000</span>,
+    budget=Budget(
+        max_cost=<span class="text-amber-400">0.05</span>,  <span class="text-gray-500"># $0.05 max</span>
+        max_tokens=<span class="text-amber-400">10000</span>,
+    ),
+)
+<span class="text-gray-500"># → Routes to GPT-4o-mini, escalates to GPT-4o if needed</span></code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Matrix -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-6">Model Capability Matrix</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+                The router maintains a registry of 50+ models with their capabilities and costs.
+            </p>
+
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[800px]">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200">
+                            <th class="text-left py-4 px-4 font-semibold">Model</th>
+                            <th class="text-center py-4 px-2 font-semibold">Vision</th>
+                            <th class="text-center py-4 px-2 font-semibold">Code</th>
+                            <th class="text-center py-4 px-2 font-semibold">Math</th>
+                            <th class="text-center py-4 px-2 font-semibold">Research</th>
+                            <th class="text-center py-4 px-2 font-semibold">Context</th>
+                            <th class="text-center py-4 px-2 font-semibold">Latency</th>
+                            <th class="text-right py-4 px-4 font-semibold">Cost/1M</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-medium">Claude 3.5 Haiku</td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-yellow-500">○</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-yellow-500">○</span></td>
+                            <td class="text-center py-4 px-2">200K</td>
+                            <td class="text-center py-4 px-2"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Fast</span></td>
+                            <td class="text-right py-4 px-4 font-mono">$0.80</td>
+                        </tr>
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-medium">Claude Sonnet 4</td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2">200K</td>
+                            <td class="text-center py-4 px-2"><span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">Medium</span></td>
+                            <td class="text-right py-4 px-4 font-mono">$3.00</td>
+                        </tr>
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-medium">DeepSeek V3</td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2">64K</td>
+                            <td class="text-center py-4 px-2"><span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">Medium</span></td>
+                            <td class="text-right py-4 px-4 font-mono">$0.27</td>
+                        </tr>
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-medium">Qwen 2.5 72B</td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2">128K</td>
+                            <td class="text-center py-4 px-2"><span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">Medium</span></td>
+                            <td class="text-right py-4 px-4 font-mono">$0.30</td>
+                        </tr>
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-medium">Llama 3.3 70B (Groq)</td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-yellow-500">○</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-yellow-500">○</span></td>
+                            <td class="text-center py-4 px-2">128K</td>
+                            <td class="text-center py-4 px-2"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Fast</span></td>
+                            <td class="text-right py-4 px-4 font-mono">$0.59</td>
+                        </tr>
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-medium">Gemini 2.0 Flash</td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-green-500">✓</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-yellow-500">○</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-yellow-500">○</span></td>
+                            <td class="text-center py-4 px-2">1M</td>
+                            <td class="text-center py-4 px-2"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Fast</span></td>
+                            <td class="text-right py-4 px-4 font-mono">$0.075</td>
+                        </tr>
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 bg-blue-50">
+                            <td class="py-4 px-4 font-medium">BERT Classifier <span class="text-xs text-blue-600">(Traditional ML)</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2">512</td>
+                            <td class="text-center py-4 px-2"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Instant</span></td>
+                            <td class="text-right py-4 px-4 font-mono text-green-600 font-semibold">$0.001</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 bg-blue-50">
+                            <td class="py-4 px-4 font-medium">spaCy NER <span class="text-xs text-blue-600">(Traditional ML)</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2"><span class="text-red-400">✗</span></td>
+                            <td class="text-center py-4 px-2">100K</td>
+                            <td class="text-center py-4 px-2"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Instant</span></td>
+                            <td class="text-right py-4 px-4 font-mono text-green-600 font-semibold">$0.0001</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-center text-gray-500 text-sm mt-6">
+                <span class="text-green-500">✓</span> Strong &nbsp;|&nbsp; <span class="text-yellow-500">○</span> Adequate &nbsp;|&nbsp; <span class="text-red-400">✗</span> Missing
+            </p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 gradient-bg text-white">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl font-bold mb-6">Ready to Cut Your AI Costs?</h2>
+            <p class="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+                The Dynamic Model Router is an open RFC. We welcome feedback on the design.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="https://github.com/andrewhopper/protoflow" class="px-8 py-4 bg-white text-primary font-semibold rounded-lg hover:bg-opacity-90 transition inline-flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View on GitHub
+                </a>
+                <a href="#examples" class="px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition">
+                    See More Examples
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 bg-dark text-white">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="text-xl font-bold gradient-text">Dynamic Model Router</div>
+                    <p class="text-gray-400 text-sm mt-1">RFC Draft • November 2025</p>
+                </div>
+                <div class="flex gap-6 text-gray-400 text-sm">
+                    <a href="#how-it-works" class="hover:text-white transition">How It Works</a>
+                    <a href="#examples" class="hover:text-white transition">Examples</a>
+                    <a href="https://github.com/andrewhopper/protoflow" class="hover:text-white transition">GitHub</a>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
+                Built with ❤️ for the AI community • Apache 2.0 License
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll Reveal Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const reveals = document.querySelectorAll('.scroll-reveal');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                    }
+                });
+            }, { threshold: 0.1 });
+            reveals.forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+</html>

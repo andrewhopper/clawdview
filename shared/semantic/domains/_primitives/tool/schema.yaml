@@ -1,0 +1,401 @@
+# Primitive: Tool
+# How actors accomplish their intents - instruments of action
+# Physics: Force/mechanism (what enables change)
+# Philosophy: Instrumental cause (means to an end)
+# Biology: Extended phenotype (beaver dam, bird nest)
+# Technology: Technology as extension of capability
+
+domain:
+  name: primitive-tool
+  version: "1.0.0"
+  description: Tools and capabilities - how actors accomplish intents
+  layer: primitive
+  dependencies: [primitive-entity, primitive-actor]
+  created_at: "2025-11-27"
+  updated_at: "2025-11-27"
+
+entities:
+
+  # ============================================
+  # TOOL FUNDAMENTALS
+  # ============================================
+
+  Tool:
+    description: Instrument that enables an actor to perform actions
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      type: { type: ToolType, required: true }
+      capabilities: { type: array, items: Capability }
+      inputs: { type: array, items: Parameter }
+      outputs: { type: array, items: Result }
+      prerequisites: { type: array, items: string }
+      cost: { type: Cost }
+    meta:
+      philosophy: "Instrumental cause - means to achieve end"
+      biology: "Extended phenotype - tool as expression of organism"
+      anthropology: "Homo faber - man the maker"
+
+  # ============================================
+  # CAPABILITIES
+  # ============================================
+
+  Capability:
+    description: What a tool can do
+    properties:
+      name: { type: string, required: true }
+      verb: { type: ActionVerb, required: true }
+      operatesOn: { type: string, description: "Entity type affected" }
+      description: { type: string }
+      naturalLanguage: { type: string, description: "Human-readable description" }
+      idempotent: { type: boolean }
+      sideEffects: { type: array, items: string }
+
+  Parameter:
+    description: Input to a tool
+    properties:
+      name: { type: string, required: true }
+      type: { type: string, required: true }
+      description: { type: string }
+      required: { type: boolean, default: true }
+      default: { type: any }
+      validation: { type: Validation }
+      examples: { type: array, items: any }
+
+  Result:
+    description: Output from a tool
+    properties:
+      name: { type: string, required: true }
+      type: { type: string, required: true }
+      description: { type: string }
+      isArray: { type: boolean, default: false }
+
+  Validation:
+    description: Input validation rules
+    properties:
+      type: { type: ValidationType }
+      pattern: { type: string, description: "Regex pattern" }
+      min: { type: number }
+      max: { type: number }
+      enum: { type: array, items: any }
+      custom: { type: string, description: "Custom validation expression" }
+
+  # ============================================
+  # TOOL TYPES
+  # ============================================
+
+  Function:
+    extends: Tool
+    description: Executable operation
+    properties:
+      signature: { type: string }
+      implementation: { type: string }
+      isAsync: { type: boolean }
+      timeout: { type: number }
+    meta:
+      pattern: "Function as first-class tool"
+
+  Service:
+    extends: Tool
+    description: Remote service endpoint
+    properties:
+      endpoint: { type: string, required: true }
+      protocol: { type: Protocol, required: true }
+      authentication: { type: Authentication }
+      rateLimit: { type: RateLimit }
+      sla: { type: SLA }
+
+  APIEndpoint:
+    extends: Service
+    description: HTTP API endpoint
+    properties:
+      method: { type: HttpMethod, required: true }
+      path: { type: string, required: true }
+      headers: { type: object }
+      queryParams: { type: array, items: Parameter }
+      bodySchema: { type: string }
+      responseSchema: { type: string }
+
+  CLITool:
+    extends: Tool
+    description: Command-line interface tool
+    properties:
+      command: { type: string, required: true }
+      arguments: { type: array, items: Parameter }
+      flags: { type: array, items: Flag }
+      workingDirectory: { type: string }
+      environment: { type: object }
+
+  Flag:
+    description: CLI flag/option
+    properties:
+      name: { type: string, required: true }
+      shorthand: { type: string }
+      description: { type: string }
+      type: { type: string, default: boolean }
+      default: { type: any }
+
+  # ============================================
+  # TOOL COMPOSITION
+  # ============================================
+
+  Workflow:
+    extends: Tool
+    description: Composed sequence of tools
+    properties:
+      steps: { type: array, items: WorkflowStep }
+      parallelism: { type: ParallelismType }
+      errorHandling: { type: ErrorHandling }
+
+  WorkflowStep:
+    description: Single step in a workflow
+    properties:
+      name: { type: string, required: true }
+      toolId: { type: string, required: true }
+      inputs: { type: object, description: "Mapping from workflow context" }
+      condition: { type: string }
+      onSuccess: { type: string }
+      onFailure: { type: string }
+      retries: { type: RetryPolicy }
+
+  Pipeline:
+    extends: Tool
+    description: Data transformation pipeline
+    properties:
+      stages: { type: array, items: PipelineStage }
+      inputFormat: { type: string }
+      outputFormat: { type: string }
+
+  PipelineStage:
+    description: Single transformation stage
+    properties:
+      name: { type: string, required: true }
+      transform: { type: string, required: true }
+      filter: { type: string }
+      map: { type: string }
+
+  # ============================================
+  # TOOL REGISTRY
+  # ============================================
+
+  ToolRegistry:
+    description: Collection of available tools
+    properties:
+      name: { type: string, required: true }
+      tools: { type: array, items: Tool }
+      version: { type: string }
+      schema: { type: string, description: "Schema format (OpenAPI, JSON Schema)" }
+
+  ToolInvocation:
+    description: Record of tool being used
+    properties:
+      toolId: { type: string, required: true }
+      actorId: { type: string, required: true }
+      inputs: { type: object }
+      outputs: { type: object }
+      invokedAt: { type: datetime }
+      completedAt: { type: datetime }
+      status: { type: InvocationStatus }
+      error: { type: Error }
+
+  # ============================================
+  # SUPPORTING TYPES
+  # ============================================
+
+  Cost:
+    description: Resource cost of using tool
+    properties:
+      type: { type: CostType }
+      value: { type: number }
+      unit: { type: string }
+      perInvocation: { type: boolean }
+
+  RateLimit:
+    description: Usage limits
+    properties:
+      requests: { type: number, required: true }
+      period: { type: string, required: true }
+      burstSize: { type: number }
+
+  SLA:
+    description: Service level agreement
+    properties:
+      availability: { type: number, description: "Percentage uptime" }
+      latencyP50: { type: number }
+      latencyP99: { type: number }
+      throughput: { type: number }
+
+  Authentication:
+    description: How to authenticate with tool
+    properties:
+      type: { type: AuthType, required: true }
+      credentials: { type: string }
+      scopes: { type: array, items: string }
+
+  RetryPolicy:
+    description: How to handle failures
+    properties:
+      maxAttempts: { type: integer, default: 3 }
+      backoffType: { type: BackoffType }
+      initialDelay: { type: number }
+      maxDelay: { type: number }
+      retryOn: { type: array, items: string }
+
+  Error:
+    description: Error from tool invocation
+    properties:
+      code: { type: string, required: true }
+      message: { type: string, required: true }
+      details: { type: object }
+      retryable: { type: boolean }
+
+  ErrorHandling:
+    description: How workflow handles errors
+    properties:
+      strategy: { type: ErrorStrategy, required: true }
+      fallback: { type: string }
+      compensation: { type: string }
+
+enums:
+
+  ToolType:
+    description: Category of tool
+    values:
+      - function        # Local function
+      - service         # Remote service
+      - api             # HTTP API
+      - cli             # Command line
+      - workflow        # Composed workflow
+      - pipeline        # Data pipeline
+      - agent           # AI agent tool
+
+  ActionVerb:
+    description: What the capability does
+    values:
+      - create
+      - read
+      - update
+      - delete
+      - list
+      - search
+      - transform
+      - validate
+      - execute
+      - send
+      - receive
+
+  HttpMethod:
+    description: HTTP methods
+    values:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - HEAD
+      - OPTIONS
+
+  Protocol:
+    description: Communication protocol
+    values:
+      - http
+      - https
+      - grpc
+      - graphql
+      - websocket
+      - mqtt
+      - amqp
+
+  AuthType:
+    description: Authentication method
+    values:
+      - none
+      - api_key
+      - bearer_token
+      - basic
+      - oauth2
+      - mtls
+
+  ValidationType:
+    description: Input validation type
+    values:
+      - string
+      - number
+      - integer
+      - boolean
+      - array
+      - object
+      - email
+      - url
+      - uuid
+      - date
+      - datetime
+      - pattern
+      - custom
+
+  InvocationStatus:
+    description: Status of tool invocation
+    values:
+      - pending
+      - running
+      - succeeded
+      - failed
+      - cancelled
+      - timeout
+
+  CostType:
+    description: Type of cost
+    values:
+      - monetary
+      - compute
+      - tokens
+      - time
+      - rate_limited
+
+  BackoffType:
+    description: Retry backoff strategy
+    values:
+      - none
+      - fixed
+      - linear
+      - exponential
+      - jittered
+
+  ErrorStrategy:
+    description: How to handle errors
+    values:
+      - fail_fast       # Stop immediately
+      - continue        # Skip and continue
+      - retry           # Retry failed step
+      - rollback        # Undo previous steps
+      - compensate      # Run compensation logic
+
+  ParallelismType:
+    description: How steps can run
+    values:
+      - sequential      # One at a time
+      - parallel        # All at once
+      - controlled      # Limited parallelism
+
+meta:
+  theoretical_basis:
+    philosophy: "Techne (Aristotle) - craft/art of making"
+    anthropology: "Tool use defines homo sapiens"
+    cybernetics: "Amplifiers of human capability"
+    ai: "Tool use as key agent capability"
+
+  patterns:
+    - "MCP (Model Context Protocol)"
+    - "OpenAPI / Swagger"
+    - "Function calling (LLM)"
+    - "Service catalog"
+    - "Workflow engines"
+
+  composition_role: "How actors accomplish intents"
+
+  related_primitives:
+    - actor: "Actors use tools"
+    - intent: "Tools help achieve intents"
+    - resource: "Tools consume/produce resources"
+    - action: "Tools enable actions"

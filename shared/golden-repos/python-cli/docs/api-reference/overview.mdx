@@ -1,0 +1,125 @@
+---
+title: 'API Overview'
+description: 'Learn about our REST API'
+---
+
+## Base URL
+
+All API requests should be made to:
+
+```
+https://api.example.com/api
+```
+
+For local development:
+
+```
+http://localhost:3000/api
+```
+
+## Authentication
+
+<Note>
+  Most endpoints require authentication via Bearer token.
+</Note>
+
+Include the token in the `Authorization` header:
+
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  https://api.example.com/api/items
+```
+
+## Response Format
+
+All responses follow this format:
+
+<ResponseField name="data" type="object">
+  The response data (varies by endpoint)
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Error message (only present on errors)
+</ResponseField>
+
+### Success Response
+
+```json
+{
+  "id": "abc123",
+  "name": "Example Item",
+  "createdAt": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Error Response
+
+```json
+{
+  "error": "Item not found"
+}
+```
+
+## HTTP Status Codes
+
+| Code | Description |
+|------|-------------|
+| `200` | Success |
+| `201` | Created |
+| `204` | No Content (successful delete) |
+| `400` | Bad Request - Invalid input |
+| `401` | Unauthorized - Missing or invalid token |
+| `403` | Forbidden - Insufficient permissions |
+| `404` | Not Found |
+| `422` | Validation Error |
+| `500` | Internal Server Error |
+
+## Rate Limiting
+
+API requests are rate limited to:
+
+- **100 requests per minute** for authenticated users
+- **20 requests per minute** for unauthenticated requests
+
+Rate limit headers are included in responses:
+
+```
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1705312200
+```
+
+## Pagination
+
+List endpoints support pagination:
+
+<ParamField query="page" type="number" default="1">
+  Page number (1-indexed)
+</ParamField>
+
+<ParamField query="pageSize" type="number" default="10">
+  Items per page (max 100)
+</ParamField>
+
+### Paginated Response
+
+```json
+{
+  "items": [...],
+  "total": 150,
+  "page": 1,
+  "pageSize": 10,
+  "hasNext": true
+}
+```
+
+## OpenAPI Specification
+
+The full OpenAPI spec is available at:
+
+- **Interactive Docs**: `/api/docs`
+- **JSON Spec**: `/api/docs.json`
+
+<Card title="View Interactive API Docs" icon="swagger" href="http://localhost:3000/api/docs">
+  Try out endpoints directly in the browser
+</Card>

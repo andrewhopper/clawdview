@@ -1,0 +1,340 @@
+# Gesture Domain Model
+# Universal interaction primitives - swipe, tap, drag, pinch, long-press
+# Platform-agnostic (mobile, desktop, watch, VR)
+
+domain:
+  name: gesture
+  version: "1.0.0"
+  description: Universal gesture and interaction primitives for touch, mouse, pen, and VR interfaces
+  dependencies: [core]
+  use_case: Card swipes, map panning, photo pinch-zoom, drag-and-drop, long-press menus
+  created_at: "2025-12-01"
+  updated_at: "2025-12-01"
+
+entities:
+
+  # ============================================
+  # GESTURE RECORDING & RECOGNITION
+  # ============================================
+
+  Gesture:
+    description: A recognized interaction pattern from raw input events
+    properties:
+      id: { type: uuid, required: true }
+      type: { type: GestureType, required: true }
+      inputDevice: { type: InputDevice, required: true }
+      startedAt: { type: datetime, required: true }
+      completedAt: { type: datetime }
+      durationMs: { type: integer }
+      velocity: { type: Velocity }
+      distance: { type: Distance }
+      angle: { type: decimal, description: "Degrees 0-360, for directional swipes" }
+      pressure: { type: decimal, min: 0.0, max: 1.0, description: "For pressure-sensitive inputs" }
+      targetRef: { type: TargetRef, description: "What was interacted with" }
+      state: { type: GestureState, required: true }
+      createdAt: { type: datetime, required: true }
+
+  GestureSequence:
+    description: Multiple gestures combined into a pattern (e.g., double-tap, swipe-then-hold)
+    properties:
+      id: { type: uuid, required: true }
+      gestures: { type: array, items: uuid, required: true, description: "FK to Gesture[] in order" }
+      patternType: { type: SequencePatternType, required: true }
+      maxIntervalMs: { type: integer, description: "Max time between gestures to count as sequence" }
+      isComplete: { type: boolean, required: true }
+      recognizedAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+
+  # ============================================
+  # SWIPE GESTURES
+  # ============================================
+
+  Swipe:
+    description: Directional drag gesture with velocity threshold
+    extends: Gesture
+    properties:
+      direction: { type: SwipeDirection, required: true }
+      startPoint: { type: Point2D, required: true }
+      endPoint: { type: Point2D, required: true }
+      velocity: { type: Velocity, required: true }
+      distance: { type: Distance, required: true }
+      fingerCount: { type: integer, default: 1 }
+      canceled: { type: boolean, default: false }
+      snapThreshold: { type: decimal, description: "0.0-1.0, determines commit point" }
+
+  # ============================================
+  # TAP GESTURES
+  # ============================================
+
+  Tap:
+    description: Quick press-and-release at a point
+    extends: Gesture
+    properties:
+      point: { type: Point2D, required: true }
+      tapCount: { type: integer, required: true, default: 1, description: "1=single, 2=double, 3=triple" }
+      fingerCount: { type: integer, default: 1 }
+      maxTapIntervalMs: { type: integer, default: 300, description: "Max time for multi-tap" }
+
+  LongPress:
+    description: Press and hold at a point for duration threshold
+    extends: Gesture
+    properties:
+      point: { type: Point2D, required: true }
+      thresholdMs: { type: integer, required: true, default: 500 }
+      hapticFired: { type: boolean, description: "Whether haptic feedback was triggered" }
+      menuDisplayed: { type: boolean, description: "Whether context menu was shown" }
+
+  # ============================================
+  # DRAG GESTURES
+  # ============================================
+
+  Drag:
+    description: Continuous movement while pressing
+    extends: Gesture
+    properties:
+      startPoint: { type: Point2D, required: true }
+      currentPoint: { type: Point2D, required: true }
+      path: { type: array, items: PathPoint }
+      velocity: { type: Velocity }
+      draggedObjectRef: { type: TargetRef }
+      dropTargetRef: { type: TargetRef }
+      isValidDrop: { type: boolean }
+
+  # ============================================
+  # PINCH & ZOOM GESTURES
+  # ============================================
+
+  Pinch:
+    description: Two-finger pinch for zoom/scale
+    extends: Gesture
+    properties:
+      finger1Start: { type: Point2D, required: true }
+      finger2Start: { type: Point2D, required: true }
+      finger1Current: { type: Point2D, required: true }
+      finger2Current: { type: Point2D, required: true }
+      startDistance: { type: Distance, required: true }
+      currentDistance: { type: Distance, required: true }
+      scale: { type: decimal, required: true, description: "Multiplier from original (1.0 = no change)" }
+      rotation: { type: decimal, description: "Degrees rotated during pinch" }
+
+  # ============================================
+  # GESTURE CONFIGURATION
+  # ============================================
+
+  GestureRecognizer:
+    description: Configuration for recognizing a gesture type
+    properties:
+      id: { type: string, required: true }
+      gestureType: { type: GestureType, required: true }
+      isEnabled: { type: boolean, required: true }
+      simultaneousRecognizers: { type: array, items: string, description: "Other recognizers that can run at same time" }
+      thresholds: { type: GestureThresholds, required: true }
+      priority: { type: integer, default: 0, description: "Higher priority wins conflicts" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  GestureThresholds:
+    description: Sensitivity thresholds for gesture recognition
+    properties:
+      minVelocity: { type: decimal, description: "px/ms for swipes" }
+      maxVelocity: { type: decimal }
+      minDistance: { type: Distance, description: "For swipes/drags" }
+      maxDistance: { type: Distance }
+      minDuration: { type: integer, description: "ms for long-press" }
+      maxDuration: { type: integer }
+      angleToleranceDegrees: { type: decimal, description: "For directional swipes" }
+      pressureMin: { type: decimal, min: 0.0, max: 1.0 }
+      pressureMax: { type: decimal, min: 0.0, max: 1.0 }
+
+  # ============================================
+  # GESTURE ACTIONS & FEEDBACK
+  # ============================================
+
+  GestureAction:
+    description: Action triggered by a gesture
+    properties:
+      id: { type: uuid, required: true }
+      gestureId: { type: uuid, required: true }
+      actionType: { type: ActionType, required: true }
+      targetRef: { type: TargetRef, required: true }
+      parameters: { type: object, description: "Action-specific params" }
+      feedback: { type: GestureFeedback }
+      result: { type: ActionResult }
+      executedAt: { type: datetime, required: true }
+
+  GestureFeedback:
+    description: Visual/haptic/audio feedback for gesture
+    properties:
+      visual: { type: VisualFeedback }
+      haptic: { type: HapticFeedback }
+      audio: { type: AudioFeedback }
+
+  VisualFeedback:
+    properties:
+      type: { type: VisualFeedbackType, required: true }
+      color: { type: string, description: "Hex color for tint" }
+      opacity: { type: decimal, min: 0.0, max: 1.0 }
+      scale: { type: decimal, description: "Scale multiplier" }
+      rotation: { type: decimal, description: "Degrees" }
+      translation: { type: Point2D, description: "x/y offset" }
+
+  HapticFeedback:
+    properties:
+      type: { type: HapticType, required: true }
+      intensity: { type: decimal, min: 0.0, max: 1.0 }
+      sharpness: { type: decimal, min: 0.0, max: 1.0, description: "For Apple Taptic Engine" }
+
+  AudioFeedback:
+    properties:
+      soundId: { type: string, required: true }
+      volume: { type: decimal, min: 0.0, max: 1.0 }
+
+  # ============================================
+  # SUPPORTING VALUE OBJECTS
+  # ============================================
+
+  Point2D:
+    properties:
+      x: { type: decimal, required: true }
+      y: { type: decimal, required: true }
+
+  PathPoint:
+    properties:
+      point: { type: Point2D, required: true }
+      timestamp: { type: datetime, required: true }
+      pressure: { type: decimal, min: 0.0, max: 1.0 }
+
+  Velocity:
+    properties:
+      x: { type: decimal, required: true, description: "px/ms horizontal" }
+      y: { type: decimal, required: true, description: "px/ms vertical" }
+      magnitude: { type: decimal, required: true, description: "Overall speed" }
+
+  Distance:
+    properties:
+      pixels: { type: decimal, required: true }
+      percentOfScreen: { type: decimal, description: "For device-independent thresholds" }
+
+  TargetRef:
+    description: Reference to the UI element being interacted with
+    properties:
+      domain: { type: string, required: true, description: "card, content, product, map" }
+      entity: { type: string, required: true, description: "Card, Post, Photo, Marker" }
+      id: { type: string, required: true }
+      version: { type: integer }
+
+  ActionResult:
+    properties:
+      success: { type: boolean, required: true }
+      message: { type: string }
+      data: { type: object }
+
+enums:
+
+  # Gesture Types
+  GestureType:
+    values:
+      - Tap
+      - DoubleTap
+      - TripleTap
+      - LongPress
+      - Swipe
+      - Pan           # Continuous drag without velocity threshold
+      - Drag
+      - Pinch
+      - Rotate
+      - Hover         # Mouse/pen hover without press
+      - ForceTouch    # 3D Touch / Force Press
+
+  SwipeDirection:
+    values: [Up, Down, Left, Right, UpLeft, UpRight, DownLeft, DownRight]
+
+  GestureState:
+    values:
+      - Possible      # Recognizer is evaluating input
+      - Began         # Gesture started
+      - Changed       # Ongoing (for continuous gestures)
+      - Ended         # Gesture completed successfully
+      - Cancelled     # Gesture was cancelled
+      - Failed        # Gesture did not meet thresholds
+
+  SequencePatternType:
+    values:
+      - DoubleTap
+      - TripleTap
+      - SwipeThenHold
+      - TapThenDrag
+      - Custom
+
+  # Input Devices
+  InputDevice:
+    values:
+      - Touch         # Capacitive touchscreen
+      - Mouse
+      - Trackpad
+      - Stylus        # Apple Pencil, Surface Pen
+      - Controller    # Game controller
+      - VR            # VR controller
+      - Haptic        # Haptic device (e.g., Force Touch trackpad)
+      - Keyboard      # For keyboard-driven gestures
+
+  # Actions
+  ActionType:
+    values:
+      - Navigate
+      - Approve
+      - Reject
+      - Defer
+      - Delete
+      - Share
+      - Like
+      - OpenMenu
+      - Zoom
+      - Dismiss
+      - Reorder
+      - Custom
+
+  # Feedback Types
+  VisualFeedbackType:
+    values:
+      - Highlight     # Tint/glow
+      - Shake         # Wiggle animation
+      - Bounce        # Elastic bounce
+      - Fade          # Opacity change
+      - Scale         # Size change
+      - Slide         # Position translation
+      - Ripple        # Material Design ripple
+      - None
+
+  HapticType:
+    values:
+      - Selection     # Light tap (picker scrolling)
+      - Impact        # Medium impact
+      - Notification  # Success/warning/error patterns
+      - Light
+      - Medium
+      - Heavy
+      - Soft
+      - Rigid
+      - None
+
+actions:
+
+  RecordGesture:
+    description: Record a completed gesture
+    parameters:
+      type: { type: GestureType, required: true }
+      inputDevice: { type: InputDevice, required: true }
+      properties: { type: object, required: true, description: "Type-specific properties" }
+      targetRef: { type: TargetRef }
+    result: Gesture
+    permission: gesture:record
+    idempotent: false
+
+  TriggerFeedback:
+    description: Trigger haptic/visual/audio feedback
+    parameters:
+      feedback: { type: GestureFeedback, required: true }
+    result: ActionResult
+    permission: gesture:feedback
+    idempotent: false

@@ -1,0 +1,243 @@
+# AI/ML Technologies Registry
+
+technologies:
+
+  # LLM Provider SDKs
+
+  anthropic-sdk:
+    name: Anthropic SDK
+    description: Official SDK for the Anthropic API (Claude)
+    category: library
+    subcategory: llm-sdk
+    author: Anthropic
+    website: https://anthropic.com
+    repository: https://github.com/anthropics/anthropic-sdk-python
+    documentation: https://docs.anthropic.com
+    npm_package: "@anthropic-ai/sdk"
+    pypi_package: anthropic
+    license: MIT
+    language: TypeScript
+    tags: [llm, claude, ai, api-client]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@anthropic-ai/sdk" }
+      - { type: pypi_dependency, pattern: "anthropic" }
+    related_to: [langchain, baml]
+
+  openai-sdk:
+    name: OpenAI SDK
+    description: Official SDK for the OpenAI API (GPT, DALL-E, etc.)
+    category: library
+    subcategory: llm-sdk
+    author: OpenAI
+    website: https://openai.com
+    repository: https://github.com/openai/openai-python
+    documentation: https://platform.openai.com/docs
+    npm_package: openai
+    pypi_package: openai
+    license: MIT
+    language: TypeScript
+    tags: [llm, gpt, ai, api-client]
+    detection_rules:
+      - { type: npm_dependency, pattern: "openai" }
+      - { type: pypi_dependency, pattern: "openai" }
+    related_to: [langchain]
+    alternative_to: [anthropic-sdk]
+
+  # LLM Frameworks
+
+  langchain:
+    name: LangChain
+    description: Build context-aware reasoning applications
+    category: framework
+    subcategory: llm-orchestration
+    author: LangChain Inc
+    website: https://langchain.com
+    repository: https://github.com/langchain-ai/langchain
+    documentation: https://python.langchain.com/docs
+    npm_package: langchain
+    pypi_package: langchain
+    license: MIT
+    first_release: "2022-10-25"
+    language: Python
+    tags: [llm, chains, agents, rag, orchestration]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@langchain/core" }
+      - { type: npm_dependency, pattern: "langchain" }
+      - { type: pypi_dependency, pattern: "langchain" }
+      - { type: pypi_dependency, pattern: "langchain-core" }
+    alternative_to: [llamaindex, strands]
+
+  llamaindex:
+    name: LlamaIndex
+    description: Data framework for LLM applications
+    category: framework
+    subcategory: llm-orchestration
+    author: LlamaIndex
+    website: https://llamaindex.ai
+    repository: https://github.com/run-llama/llama_index
+    documentation: https://docs.llamaindex.ai
+    npm_package: llamaindex
+    pypi_package: llama-index
+    license: MIT
+    first_release: "2022-11-01"
+    language: Python
+    tags: [llm, rag, indexing, data-connectors]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "llama-index" }
+      - { type: npm_dependency, pattern: "llamaindex" }
+    alternative_to: [langchain]
+
+  strands:
+    name: Strands Agents
+    description: AWS agent framework for building AI applications
+    category: framework
+    subcategory: agent
+    author: AWS
+    website: https://github.com/strands-agents/strands-agents
+    repository: https://github.com/strands-agents/strands-agents
+    documentation: https://strands-agents.github.io
+    pypi_package: strands-agents
+    license: Apache-2.0
+    language: Python
+    runtime: python
+    tags: [llm, agents, aws, bedrock, tools]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "strands" }
+      - { type: pypi_dependency, pattern: "strands-agents" }
+    alternative_to: [langchain, autogen]
+
+  autogen:
+    name: AutoGen
+    description: Multi-agent conversation framework
+    category: framework
+    subcategory: agent
+    author: Microsoft
+    website: https://microsoft.github.io/autogen
+    repository: https://github.com/microsoft/autogen
+    documentation: https://microsoft.github.io/autogen/docs
+    pypi_package: pyautogen
+    license: MIT
+    first_release: "2023-09-01"
+    language: Python
+    tags: [llm, agents, multi-agent, conversation]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "autogen" }
+      - { type: pypi_dependency, pattern: "pyautogen" }
+    alternative_to: [crewai, langchain]
+
+  crewai:
+    name: CrewAI
+    description: Framework for orchestrating role-playing AI agents
+    category: framework
+    subcategory: agent
+    author: CrewAI
+    website: https://crewai.com
+    repository: https://github.com/joaomdmoura/crewAI
+    documentation: https://docs.crewai.com
+    pypi_package: crewai
+    license: MIT
+    first_release: "2023-12-01"
+    language: Python
+    tags: [llm, agents, multi-agent, roles, tasks]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "crewai" }
+    alternative_to: [autogen, langchain]
+
+  # Prompt Engineering / Structured Output
+
+  baml:
+    name: BAML (BoundaryML)
+    description: Domain-specific language for type-safe LLM function calls
+    category: tool
+    subcategory: prompt-engineering
+    author: BoundaryML
+    website: https://boundaryml.com
+    repository: https://github.com/BoundaryML/baml
+    documentation: https://docs.boundaryml.com
+    npm_package: "@boundaryml/baml"
+    pypi_package: baml-py
+    license: Apache-2.0
+    first_release: "2023-06-01"
+    language: TypeScript
+    tags: [llm, type-safety, structured-output, dsl, code-generation]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@boundaryml/baml" }
+      - { type: pypi_dependency, pattern: "baml" }
+      - { type: pypi_dependency, pattern: "baml-py" }
+      - { type: file_extension, pattern: "*.baml" }
+      - { type: file_exists, pattern: "baml_src/" }
+      - { type: file_exists, pattern: "baml_client/" }
+    alternative_to: [instructor, outlines]
+
+  instructor:
+    name: Instructor
+    description: Structured outputs from LLMs using Pydantic
+    category: library
+    subcategory: prompt-engineering
+    author: Jason Liu
+    website: https://python.useinstructor.com
+    repository: https://github.com/jxnl/instructor
+    documentation: https://python.useinstructor.com
+    pypi_package: instructor
+    npm_package: "@instructor-ai/instructor"
+    license: MIT
+    language: Python
+    tags: [llm, pydantic, structured-output, validation]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "instructor" }
+      - { type: npm_dependency, pattern: "@instructor-ai/instructor" }
+    alternative_to: [baml, outlines]
+
+  outlines:
+    name: Outlines
+    description: Structured text generation with LLMs
+    category: library
+    subcategory: prompt-engineering
+    author: .txt
+    website: https://outlines-dev.github.io/outlines
+    repository: https://github.com/outlines-dev/outlines
+    documentation: https://outlines-dev.github.io/outlines
+    pypi_package: outlines
+    license: Apache-2.0
+    language: Python
+    tags: [llm, structured-output, grammar, json-schema]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "outlines" }
+    alternative_to: [baml, instructor]
+
+  dspy:
+    name: DSPy
+    description: Programming—not prompting—foundation models
+    category: framework
+    subcategory: prompt-engineering
+    author: Stanford NLP
+    website: https://dspy-docs.vercel.app
+    repository: https://github.com/stanfordnlp/dspy
+    documentation: https://dspy-docs.vercel.app
+    pypi_package: dspy-ai
+    license: MIT
+    language: Python
+    tags: [llm, programming, optimization, signatures]
+    detection_rules:
+      - { type: pypi_dependency, pattern: "dspy-ai" }
+
+  # MCP
+
+  mcp-sdk:
+    name: Model Context Protocol SDK
+    description: Official SDK for building MCP servers and clients
+    category: library
+    subcategory: mcp
+    author: Anthropic
+    website: https://modelcontextprotocol.io
+    repository: https://github.com/modelcontextprotocol/sdk
+    documentation: https://modelcontextprotocol.io/docs
+    npm_package: "@modelcontextprotocol/sdk"
+    pypi_package: mcp
+    license: MIT
+    language: TypeScript
+    tags: [mcp, tools, context, llm-integration]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@modelcontextprotocol/sdk" }
+      - { type: pypi_dependency, pattern: "mcp" }
+      - { type: file_content, pattern: "McpServer|mcp.Server|@server.tool" }

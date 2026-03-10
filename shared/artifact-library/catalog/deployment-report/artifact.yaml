@@ -1,0 +1,216 @@
+# File UUID: d3p10y-r3p0rt-4rt1-f4ct
+# Deployment Report Artifact Definition
+# Category: report
+# Complexity: moderate
+
+id: deployment-report
+name: Deployment Report
+version: "1.0.0"
+description: Comprehensive deployment documentation with pre/post checks, verification results, and rollback procedures
+category: report
+complexity: moderate
+created_at: "2026-02-23"
+updated_at: "2026-02-23"
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: summary
+      name: Deployment Summary
+      description: High-level overview of what was deployed, when, and by whom
+      required: true
+      format: prose
+      word_limit: 100
+
+    - id: environment
+      name: Environment Details
+      description: Target environment, region, account, and infrastructure details
+      required: true
+      format: table
+
+    - id: changes
+      name: Changes Deployed
+      description: List of changes, features, or fixes included in this deployment
+      required: true
+      format: bullets
+      bullet_count: 3-20
+
+    - id: pre-deployment
+      name: Pre-Deployment Checklist
+      description: Verification steps completed before deployment
+      required: true
+      format: bullets
+      bullet_count: 5-15
+
+    - id: deployment-steps
+      name: Deployment Steps
+      description: Chronological list of deployment actions taken
+      required: true
+      format: numbered
+      item_count: 3-20
+
+    - id: verification
+      name: Post-Deployment Verification
+      description: Tests and checks performed after deployment
+      required: true
+      format: table
+
+    - id: smoke-tests
+      name: Smoke Test Results
+      description: Results of smoke tests with pass/fail status
+      required: true
+      format: table
+
+    - id: rollback
+      name: Rollback Procedure
+      description: Steps to rollback if issues are discovered
+      required: true
+      format: numbered
+      item_count: 3-10
+
+    - id: issues
+      name: Issues Encountered
+      description: Any issues found during deployment and their resolution
+      required: false
+      format: bullets
+
+    - id: next-steps
+      name: Next Steps
+      description: Follow-up actions or monitoring requirements
+      required: true
+      format: bullets
+      bullet_count: 2-5
+
+  required_inputs:
+    - name: project_name
+      type: string
+      description: Name of the project being deployed
+      required: true
+    - name: environment
+      type: string
+      description: Target environment (dev, staging, prod)
+      required: true
+    - name: version
+      type: string
+      description: Version or git hash being deployed
+      required: true
+    - name: deployer
+      type: string
+      description: Person or system performing the deployment
+      required: true
+    - name: changes
+      type: text
+      description: List of changes included in this deployment
+      required: true
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a senior DevOps engineer documenting deployments for audit and operational purposes.
+
+    Your documentation style:
+    - Clear, factual, and chronological
+    - Include timestamps where relevant
+    - Document both successes and issues
+    - Provide actionable rollback steps
+    - Focus on verifiable outcomes
+
+  task: |
+    Generate a deployment report for {{PROJECT_NAME}} deployed to {{ENVIRONMENT}}.
+
+    Version: {{VERSION}}
+    Deployer: {{DEPLOYER}}
+
+    Changes included:
+    {{CHANGES}}
+
+    Structure your response with these sections:
+    1. **Deployment Summary** - One paragraph overview
+    2. **Environment Details** - Table with account, region, resources
+    3. **Changes Deployed** - Bulleted list of all changes
+    4. **Pre-Deployment Checklist** - What was verified before deploying
+    5. **Deployment Steps** - Numbered chronological steps
+    6. **Post-Deployment Verification** - Table of verification checks
+    7. **Smoke Test Results** - Table with test name, status, notes
+    8. **Rollback Procedure** - Numbered steps to rollback
+    9. **Issues Encountered** - Any problems and resolutions (if applicable)
+    10. **Next Steps** - Follow-up actions
+
+  tone: professional
+  reading_level: technical
+  density: standard
+
+# -----------------------------------------
+# VALIDATORS: Quality Checks
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 400
+      max: 2000
+    severity: warning
+    message: "Deployment report should be 400-2000 words"
+
+  - id: section-presence
+    name: Required Sections
+    type: section_presence
+    rule:
+      required:
+        - summary
+        - environment
+        - changes
+        - pre-deployment
+        - deployment-steps
+        - verification
+        - smoke-tests
+        - rollback
+        - next-steps
+    severity: error
+    message: "Missing required section"
+
+  - id: has-version
+    name: Contains Version
+    type: regex
+    rule:
+      pattern: "(v\\d+\\.\\d+|[a-f0-9]{7,40})"
+      should_match: true
+    severity: warning
+    message: "Should include version number or git hash"
+
+  - id: has-timestamps
+    name: Contains Timestamps
+    type: regex
+    rule:
+      pattern: "\\d{4}-\\d{2}-\\d{2}|\\d{2}:\\d{2}"
+      should_match: true
+    severity: info
+    message: "Consider adding timestamps for audit trail"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 400
+  max_words: 2000
+  reading_level: technical
+  density: standard
+  output_formats:
+    - markdown
+    - html
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - deployment
+  - devops
+  - infrastructure
+  - release
+  - audit
+  - operations

@@ -1,0 +1,51 @@
+@prefix domain: <http://hopperlabs.ai/ontology/DOMAIN_NAME#> .
+@prefix action: <http://hopperlabs.ai/ontology/action#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# ============================================
+# DOMAIN_NAME Domain Ontology
+# Description: DOMAIN_DESCRIPTION
+# Created: YYYY-MM-DD
+# ============================================
+
+# ----------------
+# SEMANTIC LAYER: Entities (What Exists)
+# ----------------
+
+domain:Entity1 a owl:Class ;
+    rdfs:label "Entity1" ;
+    rdfs:comment "Description of Entity1" .
+
+# ----------------
+# Properties
+# ----------------
+
+domain:property1 a owl:DatatypeProperty ;
+    rdfs:domain domain:Entity1 ;
+    rdfs:range xsd:string ;
+    rdfs:label "Property1" ;
+    rdfs:comment "Description of property1" .
+
+# ----------------
+# KINETIC LAYER: Actions (What Can Be Done)
+# ----------------
+
+domain:Entity1Action a action:CreateAction ;
+    rdfs:label "Create Entity1" ;
+    rdfs:comment "Creates a new Entity1 instance" ;
+    action:operatesOn domain:Entity1 ;
+    action:requiresPermission "domain:create" ;
+    action:isIdempotent false .
+
+# ----------------
+# LLM Agent Integration (Optional)
+# ----------------
+
+domain:DomainCapability a action:AgentCapability ;
+    rdfs:label "Domain Capability" ;
+    action:naturalLanguageDescription "Description of domain capabilities for LLM agents" .

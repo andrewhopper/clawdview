@@ -1,0 +1,111 @@
+{
+  "domain": "story",
+  "version": "1.0.0",
+  "description": "Canonical story generation domain model based on analysis of 10 classic children's books",
+  "languages": ["typescript", "rust", "python"],
+  "changelog": {
+    "1.0.0": "Initial release with high and medium priority features: time modeling (character aging, timelines), transformation (metamorphosis, aging), reality status (real vs imaginary), repetitive patterns, object inventories, symbolic objects, anthropomorphic traits, character groups"
+  },
+  "entities": [
+    "Story",
+    "Character",
+    "Scene",
+    "Location",
+    "Object",
+    "Plot",
+    "Theme",
+    "Conflict",
+    "Dialogue",
+    "Arc",
+    "TimePoint",
+    "CharacterAtTime",
+    "StoryTimeline",
+    "TimeOfDay",
+    "Season",
+    "SeasonalProgression",
+    "Transformation",
+    "RealityStatus",
+    "RepetitivePattern",
+    "Variation",
+    "ObjectInventory",
+    "CatalogedObject",
+    "Symbol",
+    "CharacterGroup",
+    "GroupMember"
+  ],
+  "enums": [
+    "StoryStatus",
+    "CharacterRole",
+    "CharacterType",
+    "ConflictType",
+    "GenreType",
+    "LocationType",
+    "ObjectType",
+    "LifeStage",
+    "TransformationType",
+    "PatternType",
+    "AnthropomorphicTrait"
+  ],
+  "features": {
+    "high_priority": [
+      "Time modeling - character aging across life stages",
+      "Transformation - metamorphosis, aging, imaginary creation",
+      "Reality status - distinguish real vs imaginary elements",
+      "Character at time - same character at different ages/states"
+    ],
+    "medium_priority": [
+      "Repetitive patterns - refrain, ritual, question-answer",
+      "Object inventories - detailed cataloging (Goodnight Moon)",
+      "Symbolic objects - objects with deeper meaning",
+      "Anthropomorphic traits - realistic vs talking animals",
+      "Character groups - siblings with individual traits"
+    ]
+  },
+  "w3c_standards": [
+    "RDF",
+    "OWL",
+    "SHACL",
+    "Schema.org"
+  ],
+  "books_analyzed": [
+    "Make Way for Ducklings (1941)",
+    "Where the Wild Things Are (1963)",
+    "Charlotte's Web (1952)",
+    "The Very Hungry Caterpillar (1969)",
+    "Goodnight Moon (1947)",
+    "Harold and the Purple Crayon (1955)",
+    "The Giving Tree (1964)",
+    "Green Eggs and Ham (1960)",
+    "Corduroy (1968)",
+    "The Snowy Day (1962)"
+  ],
+  "generated": {
+    "typescript": {
+      "file": "generated/typescript/story.types.ts",
+      "exports": [
+        "Story",
+        "Character",
+        "Scene",
+        "Location",
+        "Object",
+        "TimePoint",
+        "CharacterAtTime",
+        "Transformation",
+        "RepetitivePattern",
+        "CharacterGroup",
+        "StoryStatus",
+        "CharacterType",
+        "LifeStage",
+        "TransformationType"
+      ]
+    },
+    "rust": {
+      "file": "generated/rust/story.rs",
+      "exports": ["Story", "Character", "Scene", "Location", "Object"]
+    },
+    "python": {
+      "file": "generated/python/story.py",
+      "exports": ["Story", "Character", "Scene", "Location", "Object"]
+    }
+  }
+}

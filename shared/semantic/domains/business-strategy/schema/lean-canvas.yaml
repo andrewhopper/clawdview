@@ -1,0 +1,89 @@
+# Lean Canvas Entities
+# Source: Running Lean (Maurya, 2012)
+
+entities:
+
+  LeanCanvas:
+    description: One-page business plan adapted for startups, focuses on problems and solutions
+    source: "Running Lean (Maurya, 2012)"
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      version: { type: string }
+      problem: { type: ProblemBlock, required: true }
+      customerSegments: { type: array, items: LeanCustomerSegment, required: true }
+      uniqueValueProposition: { type: UVP, required: true }
+      solution: { type: SolutionBlock, required: true }
+      unfairAdvantage: { type: UnfairAdvantage }
+      channels: { type: array, items: string, required: true }
+      keyMetrics: { type: array, items: KeyMetric, required: true }
+      costStructure: { type: array, items: string, required: true }
+      revenueStreams: { type: array, items: string, required: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ProblemBlock:
+    description: Top 3 problems worth solving
+    properties:
+      id: { type: string, required: true }
+      problems: { type: array, items: Problem, required: true, maxItems: 3 }
+      existingAlternatives: { type: array, items: string, description: "How customers solve this today" }
+
+  Problem:
+    description: A specific customer problem
+    properties:
+      id: { type: string, required: true }
+      statement: { type: string, required: true }
+      severity: { type: ProblemSeverity, required: true }
+      frequency: { type: string }
+      currentWorkaround: { type: string }
+
+  LeanCustomerSegment:
+    description: Target customers with early adopters identified
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      isEarlyAdopter: { type: boolean, required: true }
+      characteristics: { type: array, items: string }
+      accessStrategy: { type: string, description: "How to reach them" }
+
+  UVP:
+    description: Single, clear, compelling message stating why you are different and worth buying
+    properties:
+      id: { type: string, required: true }
+      headline: { type: string, required: true, description: "Main tagline (< 10 words)" }
+      subheadline: { type: string, description: "Supporting statement" }
+      highLevelConcept: { type: string, description: "X for Y analogy (e.g., 'YouTube for podcasts')" }
+
+  SolutionBlock:
+    description: Top 3 features addressing the top problems
+    properties:
+      id: { type: string, required: true }
+      features: { type: array, items: SolutionFeature, required: true, maxItems: 3 }
+      mvpDefinition: { type: string, description: "Minimum viable product scope" }
+
+  SolutionFeature:
+    description: A solution feature mapped to a problem
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      addressesProblemId: { type: string, required: true }
+
+  UnfairAdvantage:
+    description: Something that cannot be easily copied or bought
+    properties:
+      id: { type: string, required: true }
+      type: { type: UnfairAdvantageType, required: true }
+      description: { type: string, required: true }
+      defensibility: { type: string }
+
+  KeyMetric:
+    description: Key number that tells you how your business is doing
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: MetricType, required: true }
+      target: { type: string }
+      currentValue: { type: string }
+      measurement: { type: string, description: "How it's measured" }

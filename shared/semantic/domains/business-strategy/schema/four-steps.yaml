@@ -1,0 +1,181 @@
+# Four Steps to the Epiphany Entities
+# Source: The Four Steps to the Epiphany (Blank, 2013)
+
+entities:
+
+  CustomerDevelopmentProcess:
+    description: Four-step process for discovering and validating customers
+    source: "The Four Steps to the Epiphany (Blank, 2013)"
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      currentPhase: { type: CustomerDevPhase, required: true }
+      customerDiscovery: { type: CustomerDiscovery }
+      customerValidation: { type: CustomerValidation }
+      customerCreation: { type: CustomerCreation }
+      companyBuilding: { type: CompanyBuilding }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  CustomerDiscovery:
+    description: "Phase 1: Test hypotheses about problem, product, and customers"
+    properties:
+      id: { type: string, required: true }
+      status: { type: PhaseStatus, required: true }
+      problemHypotheses: { type: array, items: Hypothesis }
+      productHypotheses: { type: array, items: Hypothesis }
+      customerHypotheses: { type: array, items: Hypothesis }
+      interviews: { type: array, items: CustomerInterview }
+      pivots: { type: array, items: Pivot }
+      exitCriteria: { type: array, items: ExitCriterion }
+
+  CustomerValidation:
+    description: "Phase 2: Test sales roadmap and business model"
+    properties:
+      id: { type: string, required: true }
+      status: { type: PhaseStatus, required: true }
+      salesRoadmap: { type: SalesRoadmap }
+      earlyvangelists: { type: array, items: Earlyvangelist }
+      ordersTaken: { type: integer }
+      revenueGenerated: { type: decimal }
+      pivots: { type: array, items: Pivot }
+      exitCriteria: { type: array, items: ExitCriterion }
+
+  CustomerCreation:
+    description: "Phase 3: Create end-user demand and drive it into sales channel"
+    properties:
+      id: { type: string, required: true }
+      status: { type: PhaseStatus, required: true }
+      marketType: { type: MarketType, required: true }
+      positioningStrategy: { type: PositioningStrategy }
+      launchType: { type: LaunchType }
+      demandCreationActivities: { type: array, items: DemandCreationActivity }
+      exitCriteria: { type: array, items: ExitCriterion }
+
+  CompanyBuilding:
+    description: "Phase 4: Transition from learning organization to execution machine"
+    properties:
+      id: { type: string, required: true }
+      status: { type: PhaseStatus, required: true }
+      organizationalStructure: { type: OrgStructure }
+      departments: { type: array, items: Department }
+      processes: { type: array, items: string }
+      exitCriteria: { type: array, items: ExitCriterion }
+
+  Hypothesis:
+    description: Testable assumption about problem, solution, or customer
+    properties:
+      id: { type: string, required: true }
+      type: { type: HypothesisType, required: true }
+      statement: { type: string, required: true }
+      status: { type: HypothesisStatus, required: true }
+      validationMethod: { type: string }
+      evidence: { type: array, items: string }
+      confidence: { type: decimal, description: "0-1 confidence level" }
+
+  CustomerInterview:
+    description: Structured conversation with potential customer
+    properties:
+      id: { type: string, required: true }
+      date: { type: datetime, required: true }
+      intervieweeRole: { type: string }
+      intervieweeCompany: { type: string }
+      problemValidated: { type: boolean }
+      solutionInterest: { type: InterestLevel }
+      willingness: { type: WillingnessLevel }
+      keyInsights: { type: array, items: string }
+      hypothesesTested: { type: array, items: string }
+
+  Pivot:
+    description: Structured change in strategy based on validated learning
+    properties:
+      id: { type: string, required: true }
+      date: { type: datetime, required: true }
+      type: { type: PivotType, required: true }
+      fromState: { type: string, required: true }
+      toState: { type: string, required: true }
+      rationale: { type: string, required: true }
+      validationThatTriggered: { type: string }
+
+  Earlyvangelist:
+    description: Early adopter who will buy incomplete product and evangelize
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      company: { type: string }
+      hasProblem: { type: boolean, required: true }
+      isAwareOfProblem: { type: boolean, required: true }
+      hasTriedToSolve: { type: boolean, required: true }
+      hasBudget: { type: boolean, required: true }
+      canBuy: { type: boolean, required: true }
+      status: { type: EarlyvangelistStatus }
+
+  SalesRoadmap:
+    description: Repeatable sales process for early customers
+    properties:
+      id: { type: string, required: true }
+      salesCycle: { type: string }
+      averageDealSize: { type: decimal }
+      stages: { type: array, items: SalesStage }
+      objectionHandling: { type: array, items: Objection }
+
+  SalesStage:
+    description: Stage in the sales process
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      sequence: { type: integer, required: true }
+      activities: { type: array, items: string }
+      exitCriteria: { type: string }
+
+  Objection:
+    description: Common customer objection and response
+    properties:
+      id: { type: string, required: true }
+      objection: { type: string, required: true }
+      response: { type: string, required: true }
+      frequency: { type: string }
+
+  ExitCriterion:
+    description: Measurable criterion for phase completion
+    properties:
+      id: { type: string, required: true }
+      criterion: { type: string, required: true }
+      target: { type: string, required: true }
+      currentValue: { type: string }
+      met: { type: boolean }
+
+  DemandCreationActivity:
+    description: Marketing activity to create demand
+    properties:
+      id: { type: string, required: true }
+      type: { type: DemandCreationType }
+      name: { type: string, required: true }
+      description: { type: string }
+      targetAudience: { type: string }
+      budget: { type: decimal }
+      expectedReach: { type: integer }
+
+  PositioningStrategy:
+    description: How product is positioned in market
+    properties:
+      id: { type: string, required: true }
+      positioning: { type: string, required: true }
+      competitors: { type: array, items: string }
+      differentiators: { type: array, items: string }
+      targetMarket: { type: string }
+
+  OrgStructure:
+    description: Organizational structure type
+    properties:
+      id: { type: string, required: true }
+      type: { type: OrgStructureType, required: true }
+      description: { type: string }
+
+  Department:
+    description: Organizational department
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      headcount: { type: integer }
+      responsibilities: { type: array, items: string }

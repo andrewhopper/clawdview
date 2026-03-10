@@ -1,0 +1,30 @@
+{
+  "domain": "workflow",
+  "version": "1.0.0",
+  "description": "Reusable approval workflows, state machines, and process automation",
+  "languages": ["typescript", "python"],
+  "changelog": {
+    "1.0.0": "Initial release - WorkflowDefinition, WorkflowInstance, StepDefinition, StepInstance, ApprovalRequest, Escalation"
+  },
+  "entities": [
+    "WorkflowDefinition",
+    "StepDefinition",
+    "TransitionDefinition",
+    "WorkflowInstance",
+    "StepInstance",
+    "ApprovalRequest",
+    "Escalation"
+  ],
+  "enums": [
+    "WorkflowStatus",
+    "StepStatus",
+    "StepType",
+    "StepDecision",
+    "ApprovalStatus",
+    "AssigneeType",
+    "TransitionTrigger",
+    "EscalationReason"
+  ],
+  "dependencies": ["core", "auth"],
+  "extracted_from": ["expense-report (ApprovalStep)"]
+}

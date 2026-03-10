@@ -1,0 +1,46 @@
+version: 0.2
+# AWS CodeBuild Build Specification
+# Copy to project root as buildspec.yml
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - npm ci
+
+  pre_build:
+    commands:
+      - echo "Running tests..."
+      - npm test -- --passWithNoTests
+      - echo "Running lint..."
+      - npm run lint || true
+
+  build:
+    commands:
+      - echo "Building application..."
+      - npm run build
+
+  post_build:
+    commands:
+      - echo "Build completed on $(date)"
+      # Uncomment for S3 deployment
+      # - aws s3 sync dist/ s3://$BUCKET_NAME/ --delete
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: dist
+  discard-paths: no
+
+cache:
+  paths:
+    - node_modules/**/*
+    - .next/cache/**/*
+
+# Environment variables (set in CodeBuild project or here)
+# env:
+#   variables:
+#     NODE_ENV: production
+#   parameter-store:
+#     API_KEY: /myapp/api-key

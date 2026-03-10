@@ -1,0 +1,400 @@
+# Thread Domain
+# Hierarchical discussions - threads, replies, nesting
+# Version: 1.0.0
+
+domain:
+  name: thread
+  version: "1.0.0"
+  status: production
+  description: Threaded discussions - comments, replies, nested conversations
+  dependencies: [core, content]
+  use_case: Forums, comments, chat threads, Q&A, support tickets
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Thread:
+    description: A discussion thread on content or standalone
+    properties:
+      id:
+        type: uuid
+        required: true
+
+      # What this thread is on
+      subject_type:
+        type: string
+        required: true
+        description: Type of thing being discussed (content, product, ticket)
+      subject_id:
+        type: uuid
+        required: true
+        description: ID of the thing being discussed
+
+      # Thread metadata
+      title:
+        type: string
+        description: Thread title (for standalone threads)
+      thread_type:
+        type: ThreadType
+        required: true
+        default: discussion
+
+      # Root post (optional - thread may start with subject itself)
+      root_post_id:
+        type: uuid
+        description: FK to first Post in thread
+
+      # Participation
+      started_by:
+        type: string
+        required: true
+        description: User who started thread
+      started_at:
+        type: datetime
+        required: true
+      participants:
+        type: array
+        items: string
+        description: User IDs who have participated
+
+      # Stats (denormalized)
+      post_count:
+        type: integer
+        default: 0
+      participant_count:
+        type: integer
+        default: 0
+      last_post_at:
+        type: datetime
+      last_post_by:
+        type: string
+
+      # Status
+      status:
+        type: ThreadStatus
+        required: true
+        default: open
+      locked:
+        type: boolean
+        default: false
+      locked_at:
+        type: datetime
+      locked_by:
+        type: string
+      lock_reason:
+        type: string
+
+      # Pinning
+      pinned:
+        type: boolean
+        default: false
+      pinned_at:
+        type: datetime
+      pinned_by:
+        type: string
+
+      # Resolution (for Q&A, support)
+      resolved:
+        type: boolean
+        default: false
+      resolved_at:
+        type: datetime
+      accepted_answer_id:
+        type: uuid
+        description: FK to Post that answered the question
+
+      # Visibility
+      visibility:
+        type: ThreadVisibility
+        default: public
+
+  Post:
+    description: A post/reply in a thread
+    properties:
+      id:
+        type: uuid
+        required: true
+      thread_id:
+        type: uuid
+        required: true
+        description: FK to Thread
+
+      # Nesting
+      parent_id:
+        type: uuid
+        description: FK to parent Post (null for top-level)
+      depth:
+        type: integer
+        default: 0
+        description: Nesting depth (0 = top-level)
+      path:
+        type: string
+        description: Materialized path for efficient tree queries
+
+      # Content
+      body:
+        type: string
+        required: true
+      format:
+        type: ContentFormat
+        default: markdown
+      attachments:
+        type: array
+        items: MediaObject
+
+      # Author
+      author_id:
+        type: string
+        required: true
+      author_type:
+        type: AuthorType
+        default: user
+      posted_at:
+        type: datetime
+        required: true
+
+      # Editing
+      edited:
+        type: boolean
+        default: false
+      edited_at:
+        type: datetime
+      edit_count:
+        type: integer
+        default: 0
+      edit_history:
+        type: array
+        items: PostEdit
+
+      # Mentions
+      mentions:
+        type: array
+        items: Mention
+
+      # Reply stats (denormalized)
+      reply_count:
+        type: integer
+        default: 0
+      direct_reply_count:
+        type: integer
+        default: 0
+
+      # Reactions (denormalized)
+      reaction_summary:
+        type: object
+        description: "{like: 5, love: 2, ...}"
+      total_reactions:
+        type: integer
+        default: 0
+
+      # Status
+      status:
+        type: PostStatus
+        required: true
+        default: visible
+      hidden_at:
+        type: datetime
+      hidden_by:
+        type: string
+      hidden_reason:
+        type: string
+
+      # Special flags
+      is_answer:
+        type: boolean
+        default: false
+        description: Marked as accepted answer
+      is_staff_reply:
+        type: boolean
+        default: false
+      is_pinned:
+        type: boolean
+        default: false
+
+      # Sequence
+      sequence:
+        type: integer
+        description: Order within thread (for flat views)
+
+  PostEdit:
+    description: Record of a post edit
+    properties:
+      edited_at:
+        type: datetime
+        required: true
+      edited_by:
+        type: string
+        required: true
+      previous_body:
+        type: string
+      edit_reason:
+        type: string
+
+  Mention:
+    description: A mention of a user or entity in a post
+    properties:
+      mentioned_type:
+        type: MentionType
+        required: true
+      mentioned_id:
+        type: string
+        required: true
+        description: User ID, team ID, etc.
+      display_name:
+        type: string
+        description: Display text (@username)
+      position:
+        type: integer
+        description: Character position in body
+      notified:
+        type: boolean
+        default: false
+
+  ThreadSubscription:
+    description: User subscription to thread notifications
+    properties:
+      id:
+        type: uuid
+        required: true
+      thread_id:
+        type: uuid
+        required: true
+      user_id:
+        type: string
+        required: true
+      subscription_type:
+        type: SubscriptionType
+        required: true
+      subscribed_at:
+        type: datetime
+        required: true
+      muted_until:
+        type: datetime
+        description: Temporarily mute notifications
+      last_read_at:
+        type: datetime
+      last_read_post_id:
+        type: uuid
+      unread_count:
+        type: integer
+        default: 0
+
+  ReadReceipt:
+    description: Record of user reading a thread/post
+    properties:
+      user_id:
+        type: string
+        required: true
+      thread_id:
+        type: uuid
+        required: true
+      last_post_id:
+        type: uuid
+        required: true
+      read_at:
+        type: datetime
+        required: true
+
+enums:
+
+  ThreadType:
+    values:
+      - discussion        # General discussion
+      - question          # Q&A format
+      - announcement      # Announcement (replies allowed)
+      - support           # Support ticket/issue
+      - feedback          # Feedback/suggestion
+      - poll              # Thread with poll
+      - ama               # Ask Me Anything
+
+  ThreadStatus:
+    values:
+      - open              # Active, accepts posts
+      - closed            # No new posts
+      - archived          # Read-only, may be hidden
+      - deleted           # Soft deleted
+
+  ThreadVisibility:
+    values:
+      - public            # Anyone can see
+      - members           # Logged-in users
+      - private           # Specific users/groups
+      - unlisted          # Only via direct link
+
+  PostStatus:
+    values:
+      - visible           # Normal visible post
+      - hidden            # Hidden by mod
+      - pending           # Awaiting moderation
+      - spam              # Marked as spam
+      - deleted           # Soft deleted
+
+  AuthorType:
+    values:
+      - user              # Regular user
+      - staff             # Staff member
+      - bot               # Automated bot
+      - system            # System message
+      - anonymous         # Anonymous poster
+
+  MentionType:
+    values:
+      - user
+      - team
+      - role
+      - everyone
+      - here
+
+  SubscriptionType:
+    values:
+      - all               # All new posts
+      - replies           # Only replies to my posts
+      - mentions          # Only when mentioned
+      - watching          # Watching without notifications
+      - muted             # No notifications
+
+  ContentFormat:
+    values:
+      - plain_text
+      - markdown
+      - html
+      - rich_text
+
+examples:
+
+  comment_thread:
+    subject_type: "blog_post"
+    subject_id: "post_123"
+    thread_type: discussion
+    started_by: "user_456"
+    started_at: "2025-01-15T10:00:00Z"
+    post_count: 5
+    participant_count: 3
+    status: open
+
+  support_thread:
+    subject_type: "support_ticket"
+    subject_id: "ticket_789"
+    title: "Issue with payment processing"
+    thread_type: support
+    started_by: "customer_abc"
+    started_at: "2025-01-15T10:00:00Z"
+    status: open
+    resolved: false
+
+  nested_reply:
+    thread_id: "thread_001"
+    parent_id: "post_001"
+    depth: 1
+    path: "001.002"
+    body: "I agree with your point about..."
+    author_id: "user_xyz"
+    posted_at: "2025-01-15T11:30:00Z"
+    status: visible
+
+sources:
+  - "Reddit Threading Model"
+  - "Discourse Discussion Model"
+  - "HackerNews Comments"
+  - "GitHub Issues/Discussions"

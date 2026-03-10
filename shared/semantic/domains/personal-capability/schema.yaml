@@ -1,0 +1,617 @@
+# =============================================================================
+# Domain: personal-capability (CapM - Personal Capability Manager)
+# Version: 1.0.0
+# Status: development
+# Dependencies: core@^1.0.0
+# Created: 2025-12-10
+# Updated: 2025-12-10
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# =============================================================================
+
+domain:
+  name: personal-capability
+  version: "1.0.0"
+  description: |
+    Simple personal capability model - tracks what resources and abilities a user
+    currently has available. Designed to help AI make better recommendations by
+    understanding real-world constraints.
+
+    Four core dimensions:
+    - Time: How much time is available (hours, days, schedule blocks)
+    - Money: Budget and financial constraints
+    - Skills: What the user knows how to do
+    - Constraints: Limitations they're working with
+
+    Unlike personal-context (momentary state), capabilities are more stable but
+    still change. Someone might have 2 hours free today but be fully booked tomorrow.
+  namespace: "https://protoflow.ai/ontology/personal-capability#"
+  created_at: "2025-12-10"
+  updated_at: "2025-12-10"
+  dependencies:
+    core: "^1.0.0"
+
+  changelog:
+    "1.0.0": "Initial version with time, money, skills, and constraints"
+
+  use_cases:
+    - "AI task planning - knows user has 2 hours free, suggests appropriately scoped tasks"
+    - "Learning recommendations - knows user's current skill level"
+    - "Project planning - understands budget and time constraints"
+    - "Delegation decisions - knows what user can vs should delegate"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ============================================
+  # CORE CAPABILITY SNAPSHOT
+  # ============================================
+
+  UserCapabilities:
+    description: "Current capability snapshot for a user - what resources and abilities they have"
+    extends: core.Entity
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Capability snapshot ID"
+      user_id:
+        type: uuid
+        required: true
+        description: "User this capability set belongs to"
+      timestamp:
+        type: datetime
+        required: true
+        description: "When this capability snapshot was captured"
+      time:
+        type: TimeCapability
+        description: "Available time resources"
+      money:
+        type: MoneyCapability
+        description: "Financial resources and constraints"
+      skills:
+        type: SkillsCapability
+        description: "Current skills and abilities"
+      constraints:
+        type: ConstraintsCapability
+        description: "Current limitations and restrictions"
+      notes:
+        type: string
+        description: "Free-form notes about current situation"
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ============================================
+  # TIME CAPABILITY
+  # ============================================
+
+  TimeCapability:
+    description: "Available time resources - when and how much"
+    properties:
+      available_hours_today:
+        type: decimal
+        minimum: 0
+        maximum: 24
+        description: "Hours available today for non-committed work"
+      available_hours_week:
+        type: decimal
+        minimum: 0
+        maximum: 168
+        description: "Hours available this week"
+      next_free_block:
+        type: TimeBlock
+        description: "Next available time block"
+      busy_level:
+        type: BusyLevel
+        required: true
+        default: moderate
+        description: "Overall busyness level"
+      schedule_flexibility:
+        type: FlexibilityLevel
+        default: moderate
+        description: "How flexible is the schedule"
+      time_of_day_preference:
+        type: TimeOfDayPreference
+        description: "When they prefer to do focused work"
+      deadline_pressure:
+        type: PressureLevel
+        default: none
+        description: "Are there pressing deadlines"
+
+  TimeBlock:
+    description: "A block of available time"
+    properties:
+      start:
+        type: datetime
+        required: true
+      end:
+        type: datetime
+        required: true
+      duration_hours:
+        type: decimal
+        description: "Computed duration in hours"
+      quality:
+        type: TimeQuality
+        default: normal
+        description: "Quality of this time block for focused work"
+
+  # ============================================
+  # MONEY CAPABILITY
+  # ============================================
+
+  MoneyCapability:
+    description: "Financial resources and budget constraints"
+    properties:
+      discretionary_budget:
+        type: BudgetRange
+        description: "Available discretionary spending"
+      budget_period:
+        type: BudgetPeriod
+        default: monthly
+        description: "What period the budget applies to"
+      financial_comfort:
+        type: ComfortLevel
+        required: true
+        default: moderate
+        description: "Overall financial comfort level"
+      willing_to_invest:
+        type: boolean
+        default: true
+        description: "Open to spending money on solutions"
+      spending_priority:
+        type: SpendingPriority
+        description: "Current spending priorities"
+      notes:
+        type: string
+        description: "Additional context about finances"
+
+  BudgetRange:
+    description: "Budget expressed as a range (avoids specific numbers)"
+    properties:
+      level:
+        type: BudgetLevel
+        required: true
+        description: "General budget level"
+      min_usd:
+        type: decimal
+        description: "Optional: minimum budget in USD"
+      max_usd:
+        type: decimal
+        description: "Optional: maximum budget in USD"
+
+  # ============================================
+  # SKILLS CAPABILITY
+  # ============================================
+
+  SkillsCapability:
+    description: "Current skills, abilities, and learning capacity"
+    properties:
+      skill_areas:
+        type: array
+        items: SkillArea
+        description: "List of skill areas with proficiency"
+      learning_capacity:
+        type: LearningCapacity
+        default: moderate
+        description: "Current capacity to learn new things"
+      preferred_learning_style:
+        type: LearningStyle
+        description: "How they prefer to learn"
+      tools_available:
+        type: array
+        items: string
+        description: "Tools/software they have access to"
+      certifications:
+        type: array
+        items: string
+        description: "Relevant certifications or credentials"
+
+  SkillArea:
+    description: "A specific skill area with proficiency level"
+    properties:
+      name:
+        type: string
+        required: true
+        description: "Skill name (e.g., 'Python', 'Project Management')"
+      category:
+        type: SkillCategory
+        description: "Category of skill"
+      proficiency:
+        type: ProficiencyLevel
+        required: true
+        description: "Current proficiency level"
+      years_experience:
+        type: decimal
+        description: "Years of experience"
+      last_used:
+        type: date
+        description: "When this skill was last actively used"
+      notes:
+        type: string
+        description: "Additional context"
+
+  # ============================================
+  # CONSTRAINTS CAPABILITY
+  # ============================================
+
+  ConstraintsCapability:
+    description: "Current limitations, restrictions, and blockers"
+    properties:
+      hard_constraints:
+        type: array
+        items: Constraint
+        description: "Non-negotiable limitations"
+      soft_constraints:
+        type: array
+        items: Constraint
+        description: "Preferences that can be flexible"
+      blockers:
+        type: array
+        items: Blocker
+        description: "Current blockers or obstacles"
+      dependencies:
+        type: array
+        items: string
+        description: "Things they're waiting on"
+      risk_tolerance:
+        type: RiskTolerance
+        default: moderate
+        description: "Willingness to take risks"
+
+  Constraint:
+    description: "A specific limitation or restriction"
+    properties:
+      type:
+        type: ConstraintType
+        required: true
+      description:
+        type: string
+        required: true
+        description: "What the constraint is"
+      severity:
+        type: SeverityLevel
+        default: moderate
+      expiration:
+        type: date
+        description: "When this constraint ends (if temporary)"
+
+  Blocker:
+    description: "Something preventing progress"
+    properties:
+      description:
+        type: string
+        required: true
+      category:
+        type: BlockerCategory
+        required: true
+      severity:
+        type: SeverityLevel
+        default: moderate
+      waiting_on:
+        type: string
+        description: "Who/what they're waiting on"
+      expected_resolution:
+        type: date
+        description: "When it might be resolved"
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  # Time
+  BusyLevel:
+    description: "Overall busyness level"
+    values:
+      - free           # Wide open, lots of availability
+      - light          # Some commitments but mostly free
+      - moderate       # Normal workload
+      - busy           # Above normal, less flexibility
+      - overwhelmed    # At or over capacity
+
+  FlexibilityLevel:
+    description: "How flexible the schedule is"
+    values:
+      - rigid          # Fixed schedule, no flexibility
+      - low            # Limited flexibility
+      - moderate       # Some flexibility
+      - high           # Very flexible
+      - completely_flexible  # Can rearrange anything
+
+  TimeOfDayPreference:
+    description: "When they prefer focused work"
+    values:
+      - early_morning  # Before 8am
+      - morning        # 8am-12pm
+      - afternoon      # 12pm-5pm
+      - evening        # 5pm-9pm
+      - night          # After 9pm
+      - no_preference
+
+  PressureLevel:
+    description: "Deadline pressure level"
+    values:
+      - none           # No pressing deadlines
+      - low            # Deadlines are distant
+      - moderate       # Some pressure but manageable
+      - high           # Significant deadline pressure
+      - critical       # Urgent deadlines
+
+  TimeQuality:
+    description: "Quality of a time block for focused work"
+    values:
+      - fragmented     # Likely to be interrupted
+      - normal         # Standard work conditions
+      - focused        # Good conditions for concentration
+      - optimal        # Ideal conditions, protected time
+
+  # Money
+  BudgetLevel:
+    description: "General budget level without specific numbers"
+    values:
+      - zero           # No budget available
+      - minimal        # Very limited budget
+      - modest         # Small but workable budget
+      - moderate       # Reasonable budget
+      - comfortable    # Good budget available
+      - generous       # Substantial budget
+      - unlimited      # Budget is not a constraint
+
+  BudgetPeriod:
+    description: "Time period for budget"
+    values:
+      - one_time       # Single purchase
+      - weekly
+      - monthly
+      - quarterly
+      - yearly
+      - project        # Per-project basis
+
+  ComfortLevel:
+    description: "Financial comfort level"
+    values:
+      - stressed       # Financial pressure
+      - tight          # Watching spending closely
+      - moderate       # Comfortable but mindful
+      - comfortable    # No financial concerns
+      - abundant       # Plenty of resources
+
+  SpendingPriority:
+    description: "Current spending priority"
+    values:
+      - saving         # Prioritizing saving
+      - necessities    # Only essentials
+      - value          # Looking for good value
+      - convenience    # Willing to pay for convenience
+      - quality        # Willing to pay for quality
+      - investment     # Focused on ROI
+
+  # Skills
+  SkillCategory:
+    description: "Category of skill"
+    values:
+      - technical      # Programming, engineering, etc.
+      - creative       # Design, writing, art
+      - analytical     # Data, research, analysis
+      - communication  # Writing, speaking, presenting
+      - management     # Leadership, organization
+      - domain         # Industry-specific knowledge
+      - interpersonal  # Social, negotiation
+      - physical       # Physical skills
+      - other
+
+  ProficiencyLevel:
+    description: "Skill proficiency level"
+    values:
+      - none           # No experience
+      - beginner       # Just starting
+      - intermediate   # Working knowledge
+      - advanced       # Strong skills
+      - expert         # Deep expertise
+      - master         # World-class
+
+  LearningCapacity:
+    description: "Current capacity to learn new things"
+    values:
+      - none           # No capacity right now
+      - minimal        # Very limited capacity
+      - moderate       # Some capacity for learning
+      - high           # Good capacity for learning
+      - maximum        # Actively seeking to learn
+
+  LearningStyle:
+    description: "Preferred learning style"
+    values:
+      - reading        # Books, articles, docs
+      - video          # Tutorials, courses
+      - hands_on       # Learning by doing
+      - mentorship     # Learning from others
+      - structured     # Courses, curricula
+      - self_directed  # Exploring on own
+
+  # Constraints
+  ConstraintType:
+    description: "Type of constraint"
+    values:
+      - time           # Time-related limitation
+      - financial      # Budget limitation
+      - technical      # Technical limitation
+      - regulatory     # Legal/compliance
+      - organizational # Company/team rules
+      - physical       # Physical limitation
+      - geographic     # Location-based
+      - dependency     # Waiting on something
+      - personal       # Personal circumstances
+      - other
+
+  BlockerCategory:
+    description: "Category of blocker"
+    values:
+      - waiting_on_others     # Waiting for someone else
+      - waiting_on_approval   # Needs approval
+      - waiting_on_resources  # Need resources
+      - technical_issue       # Technical problem
+      - unclear_requirements  # Need clarity
+      - knowledge_gap         # Don't know how
+      - capacity              # At capacity
+      - external              # External dependency
+      - other
+
+  SeverityLevel:
+    description: "How severe a constraint or blocker is"
+    values:
+      - minor          # Small impact
+      - moderate       # Notable impact
+      - major          # Significant impact
+      - critical       # Blocking progress
+
+  RiskTolerance:
+    description: "Willingness to take risks"
+    values:
+      - risk_averse    # Avoid risk
+      - cautious       # Prefer low risk
+      - moderate       # Balanced approach
+      - risk_tolerant  # Comfortable with risk
+      - risk_seeking   # Actively seeking risk
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+
+  CaptureCapabilities:
+    type: create
+    description: "Capture current capability snapshot"
+    operatesOn: UserCapabilities
+    params:
+      user_id:
+        type: uuid
+        required: true
+      time:
+        type: TimeCapability
+      money:
+        type: MoneyCapability
+      skills:
+        type: SkillsCapability
+      constraints:
+        type: ConstraintsCapability
+      notes:
+        type: string
+    returns: UserCapabilities
+    permission: capability:write
+
+  GetCurrentCapabilities:
+    type: read
+    description: "Get current capabilities for a user (what AI apps call)"
+    operatesOn: UserCapabilities
+    params:
+      user_id:
+        type: uuid
+        required: true
+    returns: UserCapabilities
+    permission: capability:read
+
+  UpdateTimeCapability:
+    type: update
+    description: "Update time availability"
+    operatesOn: TimeCapability
+    params:
+      user_id:
+        type: uuid
+        required: true
+      available_hours_today:
+        type: decimal
+      busy_level:
+        type: BusyLevel
+      deadline_pressure:
+        type: PressureLevel
+    returns: TimeCapability
+    permission: capability:write
+
+  UpdateMoneyCapability:
+    type: update
+    description: "Update financial capability"
+    operatesOn: MoneyCapability
+    params:
+      user_id:
+        type: uuid
+        required: true
+      discretionary_budget:
+        type: BudgetRange
+      financial_comfort:
+        type: ComfortLevel
+    returns: MoneyCapability
+    permission: capability:write
+
+  AddSkill:
+    type: update
+    description: "Add or update a skill"
+    operatesOn: SkillsCapability
+    params:
+      user_id:
+        type: uuid
+        required: true
+      skill:
+        type: SkillArea
+        required: true
+    returns: SkillsCapability
+    permission: capability:write
+
+  AddConstraint:
+    type: update
+    description: "Add a constraint or blocker"
+    operatesOn: ConstraintsCapability
+    params:
+      user_id:
+        type: uuid
+        required: true
+      constraint:
+        type: Constraint
+      blocker:
+        type: Blocker
+    returns: ConstraintsCapability
+    permission: capability:write
+
+  RemoveConstraint:
+    type: update
+    description: "Remove a resolved constraint or blocker"
+    operatesOn: ConstraintsCapability
+    params:
+      user_id:
+        type: uuid
+        required: true
+      constraint_description:
+        type: string
+        description: "Description of constraint to remove"
+    returns: ConstraintsCapability
+    permission: capability:write
+
+# =============================================================================
+# META
+# =============================================================================
+
+meta:
+  use_cases:
+    - "User says 'I have 2 hours free' - AI suggests appropriately scoped tasks"
+    - "User says 'budget is tight' - AI suggests free or low-cost options"
+    - "User says 'I don't know Python' - AI avoids Python-based solutions"
+    - "User says 'waiting on approval' - AI factors in the blocker"
+
+  integrations:
+    - "Calendar systems for time availability"
+    - "Finance apps for budget awareness"
+    - "Learning platforms for skill tracking"
+    - "Project management for constraint tracking"
+
+  related_domains:
+    - personal-context: "Momentary state vs stable capabilities"
+    - personal-values: "What matters vs what's possible"
+    - personal-priorities: "What to focus on vs what's achievable"

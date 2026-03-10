@@ -1,0 +1,706 @@
+# Financing Domain
+# Loans, mortgages, amortization, payment schedules
+# Version: 1.0.0
+
+domain:
+  name: financing
+  version: "1.0.0"
+  status: production
+  description: Lending and financing - loans, mortgages, amortization
+  dependencies: [core, economic-exchange, economic-agreement]
+  use_case: Home loans, auto loans, equipment financing, personal loans
+  created_at: "2025-11-26"
+  updated_at: "2025-11-26"
+
+entities:
+
+  Loan:
+    description: A loan/financing agreement
+    properties:
+      id:
+        type: uuid
+        required: true
+      loan_type:
+        type: LoanType
+        required: true
+      loan_number:
+        type: string
+        description: Lender's loan number
+
+      # Parties
+      lender_id:
+        type: string
+        required: true
+        description: FK to lender organization
+      borrower_id:
+        type: string
+        required: true
+        description: FK to borrower
+      co_borrower_ids:
+        type: array
+        items: string
+      guarantor_ids:
+        type: array
+        items: string
+
+      # Collateral
+      secured:
+        type: boolean
+        required: true
+      collateral_type:
+        type: CollateralType
+      collateral_id:
+        type: string
+        description: FK to collateral (property, vehicle, etc.)
+      collateral_description:
+        type: string
+
+      # Principal
+      original_principal:
+        type: Money
+        required: true
+      current_principal:
+        type: Money
+        required: true
+      disbursed_amount:
+        type: Money
+        description: Amount actually disbursed (may differ)
+
+      # Interest
+      interest_rate:
+        type: decimal
+        required: true
+        description: Annual interest rate as decimal (0.05 = 5%)
+      rate_type:
+        type: RateType
+        required: true
+      apr:
+        type: decimal
+        description: Annual percentage rate (includes fees)
+      margin:
+        type: decimal
+        description: Margin above index (for adjustable)
+      index_type:
+        type: IndexType
+        description: Index for adjustable rates (SOFR, Prime, etc.)
+      initial_rate:
+        type: decimal
+        description: Initial rate for ARM loans
+      rate_cap:
+        type: decimal
+        description: Lifetime rate cap
+      rate_floor:
+        type: decimal
+        description: Lifetime rate floor
+      periodic_cap:
+        type: decimal
+        description: Per-adjustment cap
+
+      # Term
+      term_months:
+        type: integer
+        required: true
+      amortization_months:
+        type: integer
+        description: Amortization period if different from term
+      origination_date:
+        type: date
+        required: true
+      first_payment_date:
+        type: date
+        required: true
+      maturity_date:
+        type: date
+        required: true
+
+      # Payments
+      payment_frequency:
+        type: PaymentFrequency
+        required: true
+        default: monthly
+      payment_amount:
+        type: Money
+        required: true
+        description: Regular payment amount (P&I)
+      escrow_amount:
+        type: Money
+        description: Escrow portion of payment
+      total_payment:
+        type: Money
+        description: Total payment including escrow
+      payment_day:
+        type: integer
+        description: Day of month payment is due
+
+      # Status
+      status:
+        type: LoanStatus
+        required: true
+        default: active
+      payoff_date:
+        type: date
+      delinquent:
+        type: boolean
+        default: false
+      days_delinquent:
+        type: integer
+        default: 0
+
+      # Balances
+      accrued_interest:
+        type: Money
+      escrow_balance:
+        type: Money
+      late_fees_due:
+        type: Money
+      total_amount_due:
+        type: Money
+
+      # Fees
+      origination_fee:
+        type: Money
+      points:
+        type: decimal
+        description: Discount points paid
+      prepayment_penalty:
+        type: boolean
+        default: false
+      prepayment_terms:
+        type: string
+
+      # Servicing
+      servicer_id:
+        type: string
+        description: FK to loan servicer
+      servicing_transfer_date:
+        type: date
+
+      # Insurance (for mortgages)
+      pmi_required:
+        type: boolean
+        default: false
+      pmi_monthly:
+        type: Money
+      ltv:
+        type: decimal
+        description: Loan to value ratio
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  AmortizationSchedule:
+    description: Full amortization schedule for a loan
+    properties:
+      loan_id:
+        type: uuid
+        required: true
+      generated_at:
+        type: datetime
+        required: true
+      schedule_type:
+        type: ScheduleType
+        default: original
+      payments:
+        type: array
+        items: ScheduledPayment
+        required: true
+      total_interest:
+        type: Money
+        required: true
+      total_payments:
+        type: Money
+        required: true
+
+  ScheduledPayment:
+    description: A scheduled payment in amortization schedule
+    properties:
+      payment_number:
+        type: integer
+        required: true
+      due_date:
+        type: date
+        required: true
+      payment_amount:
+        type: Money
+        required: true
+      principal_amount:
+        type: Money
+        required: true
+      interest_amount:
+        type: Money
+        required: true
+      escrow_amount:
+        type: Money
+      total_payment:
+        type: Money
+      beginning_balance:
+        type: Money
+        required: true
+      ending_balance:
+        type: Money
+        required: true
+      cumulative_interest:
+        type: Money
+      cumulative_principal:
+        type: Money
+
+  LoanPayment:
+    description: Actual payment made on a loan
+    properties:
+      id:
+        type: uuid
+        required: true
+      loan_id:
+        type: uuid
+        required: true
+      payment_number:
+        type: integer
+        description: Scheduled payment number this applies to
+
+      # Amount
+      payment_amount:
+        type: Money
+        required: true
+      principal_applied:
+        type: Money
+        required: true
+      interest_applied:
+        type: Money
+        required: true
+      escrow_applied:
+        type: Money
+      late_fee_applied:
+        type: Money
+      extra_principal:
+        type: Money
+        description: Extra payment to principal
+
+      # Timing
+      due_date:
+        type: date
+        required: true
+      payment_date:
+        type: date
+        required: true
+      received_date:
+        type: date
+      posted_date:
+        type: date
+
+      # Method
+      payment_method:
+        type: PaymentMethod
+        required: true
+      reference_number:
+        type: string
+      payment_source:
+        type: string
+        description: Account number, check number, etc.
+
+      # Balance after
+      principal_balance_after:
+        type: Money
+        required: true
+
+      # Status
+      status:
+        type: PaymentStatus
+        required: true
+        default: posted
+      returned:
+        type: boolean
+        default: false
+      return_reason:
+        type: string
+
+  Escrow:
+    description: Escrow account for taxes and insurance
+    properties:
+      id:
+        type: uuid
+        required: true
+      loan_id:
+        type: uuid
+        required: true
+      balance:
+        type: Money
+        required: true
+
+      # Monthly amounts
+      monthly_tax:
+        type: Money
+      monthly_insurance:
+        type: Money
+      monthly_pmi:
+        type: Money
+      monthly_hoa:
+        type: Money
+      total_monthly:
+        type: Money
+        required: true
+
+      # Analysis
+      last_analysis_date:
+        type: date
+      next_analysis_date:
+        type: date
+      shortage:
+        type: Money
+      surplus:
+        type: Money
+
+      # Disbursements
+      disbursements:
+        type: array
+        items: EscrowDisbursement
+
+  EscrowDisbursement:
+    description: Disbursement from escrow account
+    properties:
+      id:
+        type: uuid
+        required: true
+      disbursement_type:
+        type: EscrowDisbursementType
+        required: true
+      amount:
+        type: Money
+        required: true
+      payee:
+        type: string
+        required: true
+      paid_date:
+        type: date
+        required: true
+      due_date:
+        type: date
+      reference:
+        type: string
+
+  Refinance:
+    description: Refinance transaction
+    properties:
+      id:
+        type: uuid
+        required: true
+      original_loan_id:
+        type: uuid
+        required: true
+      new_loan_id:
+        type: uuid
+        required: true
+      refinance_type:
+        type: RefinanceType
+        required: true
+      closing_date:
+        type: date
+        required: true
+
+      # Payoff
+      payoff_amount:
+        type: Money
+        required: true
+      new_loan_amount:
+        type: Money
+        required: true
+      cash_out:
+        type: Money
+        description: For cash-out refinance
+
+      # Savings
+      old_rate:
+        type: decimal
+        required: true
+      new_rate:
+        type: decimal
+        required: true
+      old_payment:
+        type: Money
+        required: true
+      new_payment:
+        type: Money
+        required: true
+      monthly_savings:
+        type: Money
+      lifetime_savings:
+        type: Money
+
+      # Costs
+      closing_costs:
+        type: Money
+      break_even_months:
+        type: integer
+
+  LoanApplication:
+    description: Application for a loan
+    properties:
+      id:
+        type: uuid
+        required: true
+      application_type:
+        type: LoanType
+        required: true
+      status:
+        type: ApplicationStatus
+        required: true
+        default: submitted
+
+      # Applicant
+      applicant_id:
+        type: string
+        required: true
+      co_applicant_ids:
+        type: array
+        items: string
+
+      # Request
+      requested_amount:
+        type: Money
+        required: true
+      requested_term:
+        type: integer
+      purpose:
+        type: LoanPurpose
+        required: true
+      property_type:
+        type: string
+        description: For mortgages
+      property_address:
+        type: Address
+
+      # Income/Assets (summary)
+      annual_income:
+        type: Money
+      monthly_debt:
+        type: Money
+      credit_score:
+        type: integer
+      dti_ratio:
+        type: decimal
+        description: Debt-to-income ratio
+
+      # Decision
+      approved_amount:
+        type: Money
+      approved_rate:
+        type: decimal
+      approved_term:
+        type: integer
+      conditions:
+        type: array
+        items: string
+      denial_reasons:
+        type: array
+        items: string
+
+      # Dates
+      submitted_at:
+        type: datetime
+        required: true
+      decision_date:
+        type: date
+      expiration_date:
+        type: date
+
+      # Resulting loan
+      loan_id:
+        type: uuid
+
+enums:
+
+  LoanType:
+    values:
+      # Mortgage
+      - conventional
+      - fha
+      - va
+      - usda
+      - jumbo
+      - heloc
+      - home_equity
+
+      # Vehicle
+      - auto
+      - boat
+      - rv
+      - motorcycle
+
+      # Business
+      - business
+      - sba
+      - equipment
+      - working_capital
+      - line_of_credit
+
+      # Personal
+      - personal
+      - student
+      - debt_consolidation
+      - medical
+
+  RateType:
+    values:
+      - fixed
+      - adjustable         # ARM
+      - variable
+      - hybrid             # Fixed then adjustable (5/1 ARM)
+      - step               # Graduated payments
+
+  IndexType:
+    values:
+      - sofr               # Secured Overnight Financing Rate
+      - prime              # Prime Rate
+      - libor              # LIBOR (being phased out)
+      - treasury           # Treasury rate
+      - constant_maturity
+
+  CollateralType:
+    values:
+      - real_property
+      - vehicle
+      - equipment
+      - inventory
+      - accounts_receivable
+      - securities
+      - cash
+      - personal_guarantee
+      - none
+
+  PaymentFrequency:
+    values:
+      - weekly
+      - biweekly
+      - semi_monthly
+      - monthly
+      - quarterly
+      - annually
+      - balloon
+
+  LoanStatus:
+    values:
+      - pending
+      - active
+      - delinquent
+      - default
+      - forbearance
+      - modification
+      - paid_off
+      - charged_off
+      - foreclosure
+      - bankruptcy
+
+  ScheduleType:
+    values:
+      - original
+      - modified
+      - projected
+
+  PaymentMethod:
+    values:
+      - ach
+      - check
+      - wire
+      - cashiers_check
+      - money_order
+      - online
+      - autopay
+
+  PaymentStatus:
+    values:
+      - pending
+      - posted
+      - returned
+      - reversed
+      - partial
+
+  EscrowDisbursementType:
+    values:
+      - property_tax
+      - homeowners_insurance
+      - flood_insurance
+      - pmi
+      - hoa_dues
+      - other
+
+  RefinanceType:
+    values:
+      - rate_term           # Just changing rate/term
+      - cash_out            # Taking cash out
+      - streamline          # Simplified refinance (FHA/VA)
+
+  ApplicationStatus:
+    values:
+      - draft
+      - submitted
+      - in_review
+      - conditional_approval
+      - approved
+      - denied
+      - withdrawn
+      - expired
+      - funded
+
+  LoanPurpose:
+    values:
+      - purchase
+      - refinance
+      - cash_out_refinance
+      - home_improvement
+      - debt_consolidation
+      - business_expansion
+      - equipment_purchase
+      - working_capital
+      - education
+      - medical
+      - other
+
+examples:
+
+  mortgage:
+    loan_type: conventional
+    original_principal: { amount: 400000, currency: "USD" }
+    current_principal: { amount: 385000, currency: "USD" }
+    interest_rate: 0.0625
+    rate_type: fixed
+    apr: 0.0645
+    term_months: 360
+    payment_frequency: monthly
+    payment_amount: { amount: 2431.00, currency: "USD" }
+    escrow_amount: { amount: 450.00, currency: "USD" }
+    total_payment: { amount: 2881.00, currency: "USD" }
+    secured: true
+    collateral_type: real_property
+    status: active
+    ltv: 0.80
+
+  auto_loan:
+    loan_type: auto
+    original_principal: { amount: 35000, currency: "USD" }
+    current_principal: { amount: 28000, currency: "USD" }
+    interest_rate: 0.049
+    rate_type: fixed
+    term_months: 60
+    payment_frequency: monthly
+    payment_amount: { amount: 659.00, currency: "USD" }
+    secured: true
+    collateral_type: vehicle
+    status: active
+
+  amortization_payment:
+    payment_number: 13
+    due_date: "2026-01-01"
+    payment_amount: { amount: 2431.00, currency: "USD" }
+    principal_amount: { amount: 539.00, currency: "USD" }
+    interest_amount: { amount: 1892.00, currency: "USD" }
+    beginning_balance: { amount: 385000, currency: "USD" }
+    ending_balance: { amount: 384461, currency: "USD" }
+
+sources:
+  - "MISMO (Mortgage Industry Standards Maintenance Org)"
+  - "Fannie Mae/Freddie Mac Guidelines"
+  - "Consumer Financial Protection Bureau"
+  - "Loan Servicing Standards"

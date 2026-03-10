@@ -1,0 +1,194 @@
+# Executive Brief Artifact Definition
+# Category: brief
+# Complexity: simple
+
+id: executive-brief
+name: Executive Brief
+version: "1.0.0"
+description: Concise 1-2 page summary for executive decision-makers
+category: brief
+complexity: simple
+created_at: "2025-11-22"
+updated_at: "2025-11-22"
+
+# -----------------------------------------
+# SCHEMA: Document Structure
+# -----------------------------------------
+schema:
+  sections:
+    - id: headline
+      name: Headline
+      description: Single compelling sentence that captures the key message
+      required: true
+      format: prose
+      word_limit: 20
+
+    - id: executive-summary
+      name: Executive Summary
+      description: 2-3 sentence overview of situation, recommendation, and impact
+      required: true
+      format: prose
+      word_limit: 75
+
+    - id: situation
+      name: Current Situation
+      description: Brief context on the problem or opportunity
+      required: true
+      format: bullets
+      bullet_count: 3-5
+
+    - id: recommendation
+      name: Recommendation
+      description: Clear, actionable recommendation
+      required: true
+      format: prose
+      word_limit: 100
+
+    - id: key-benefits
+      name: Key Benefits
+      description: Top 3 benefits of the recommendation
+      required: true
+      format: bullets
+      bullet_count: 3
+
+    - id: next-steps
+      name: Next Steps
+      description: Immediate actions required
+      required: true
+      format: numbered
+      item_count: 2-4
+
+  required_inputs:
+    - name: topic
+      type: string
+      description: Subject of the brief
+      required: true
+    - name: context
+      type: text
+      description: Background information, data, or source material
+      required: true
+    - name: audience
+      type: string
+      description: Target reader (e.g., "CTO", "Board", "VP Engineering")
+      default: "Executive leadership"
+    - name: objective
+      type: string
+      description: What decision or action is needed
+      required: true
+
+# -----------------------------------------
+# PROMPT: Generation Instructions
+# -----------------------------------------
+prompt:
+  system: |
+    You are a senior business strategist who writes executive briefs for C-suite leaders.
+
+    Your writing style:
+    - Lead with the conclusion (pyramid principle)
+    - Use active voice and strong verbs
+    - Quantify impact whenever possible
+    - Eliminate jargon and buzzwords
+    - Every sentence must earn its place
+
+    Follow Amazon's writing standards:
+    - No weasel words (nearly, almost, most)
+    - Specific over vague
+    - Data over opinion
+
+  task: |
+    Generate an executive brief on {{TOPIC}} for {{AUDIENCE}}.
+
+    Context provided:
+    {{CONTEXT}}
+
+    Objective: {{OBJECTIVE}}
+
+    Structure your response with these sections:
+    1. **Headline** - Single compelling sentence
+    2. **Executive Summary** - 2-3 sentences max
+    3. **Current Situation** - 3-5 bullets
+    4. **Recommendation** - Clear action statement
+    5. **Key Benefits** - Top 3 benefits
+    6. **Next Steps** - 2-4 numbered actions
+
+    Total length: 400-500 words maximum.
+
+  tone: professional
+  reading_level: executive
+  density: dense
+
+# -----------------------------------------
+# VALIDATORS: Quality Checks
+# -----------------------------------------
+validators:
+  - id: word-count
+    name: Word Count Check
+    type: word_count
+    rule:
+      min: 300
+      max: 500
+    severity: error
+    message: "Executive brief must be 300-500 words"
+
+  - id: section-presence
+    name: Required Sections
+    type: section_presence
+    rule:
+      required:
+        - headline
+        - executive-summary
+        - situation
+        - recommendation
+        - key-benefits
+        - next-steps
+    severity: error
+    message: "Missing required section"
+
+  - id: headline-length
+    name: Headline Length
+    type: regex
+    rule:
+      pattern: "^#.*$"
+      max_chars: 100
+    severity: warning
+    message: "Headline should be under 100 characters"
+
+  - id: no-weasel-words
+    name: No Weasel Words
+    type: regex
+    rule:
+      pattern: "\\b(nearly|almost|most|many|some|often|usually|generally)\\b"
+      should_not_match: true
+    severity: warning
+    message: "Avoid weasel words - be specific"
+
+  - id: has-metrics
+    name: Contains Metrics
+    type: regex
+    rule:
+      pattern: "\\d+%|\\$\\d+|\\d+x|\\d+ (days|weeks|months|hours)"
+      should_match: true
+    severity: info
+    message: "Consider adding quantified metrics"
+
+# -----------------------------------------
+# CONSTRAINTS
+# -----------------------------------------
+constraints:
+  min_words: 300
+  max_words: 500
+  reading_level: executive
+  density: dense
+  output_formats:
+    - markdown
+    - docx
+
+# -----------------------------------------
+# TAGS
+# -----------------------------------------
+tags:
+  - executive
+  - brief
+  - summary
+  - decision-support
+  - c-suite

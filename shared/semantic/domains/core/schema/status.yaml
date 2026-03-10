@@ -1,0 +1,89 @@
+# Status & Identifiers
+
+entities:
+
+  Status:
+    description: Generic status indicator
+    properties:
+      code:
+        type: string
+      label:
+        type: string
+
+  Identifier:
+    description: External identifier from another system
+    properties:
+      value:
+        type: string
+        required: true
+      type:
+        type: IdentifierType
+        required: true
+        description: Type of identifier
+      source:
+        type: string
+        description: System that issued the identifier
+      issuedAt:
+        type: datetime
+        description: When identifier was issued
+      expiresAt:
+        type: datetime
+        description: When identifier expires (licenses, registrations)
+      verificationUrl:
+        type: string
+        description: URL to verify identifier (NHTSA VIN lookup, etc.)
+
+enums:
+
+  GenericStatus:
+    values: [Active, Inactive, Pending, Archived, Deleted]
+
+  IdentifierType:
+    description: Types of unique identifiers across domains
+    values:
+      # General
+      - uuid              # Universally unique identifier
+      - sku               # Stock keeping unit (internal)
+      - upc               # Universal Product Code (12 digits)
+      - ean               # European Article Number (13 digits)
+      - isbn              # International Standard Book Number
+      - issn              # International Standard Serial Number
+      - gtin              # Global Trade Item Number
+      # Vehicles
+      - vin               # Vehicle Identification Number (17 chars)
+      - hin               # Hull Identification Number (boats, 12 chars)
+      - license_plate     # Vehicle registration plate
+      - title_number      # Vehicle/boat title document number
+      # Aircraft
+      - tail_number       # Aircraft registration (N-number in US)
+      - mode_s            # Mode S transponder code
+      # Equipment & Firearms
+      - serial_number     # Manufacturer serial number
+      - ffl               # Federal Firearms License number
+      - imei              # International Mobile Equipment Identity
+      - mac_address       # Network device MAC address
+      # Real Property
+      - parcel_number     # Assessor's parcel number (APN)
+      - legal_description # Metes and bounds, lot/block
+      - deed_number       # Recorded deed document number
+      # People
+      - ssn               # Social Security Number
+      - ein               # Employer Identification Number
+      - passport          # Passport number
+      - drivers_license   # Driver's license number
+      # Government/Regulatory
+      - duns              # Dun & Bradstreet number
+      - lei               # Legal Entity Identifier
+      - cage_code         # Commercial and Government Entity code
+      # Healthcare
+      - npi               # National Provider Identifier
+      - dea               # DEA registration number
+      # Intellectual Property
+      - patent_number     # Patent registration
+      - trademark_number  # Trademark registration
+      - copyright_number  # Copyright registration
+      # Financial
+      - routing_number    # Bank routing/ABA number
+      - account_number    # Bank account number
+      - cusip             # Securities identifier
+      - isin              # International Securities Identification Number

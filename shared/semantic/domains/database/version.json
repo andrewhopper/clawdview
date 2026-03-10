@@ -1,0 +1,133 @@
+{
+  "domain": "database",
+  "version": "1.0.0",
+  "description": "Comprehensive database domain model covering schemas, tables, indexes, constraints, queries, transactions, and migrations",
+  "languages": ["typescript"],
+  "changelog": {
+    "1.0.0": "Initial release with schemas, tables, columns, indexes (B-tree, hash, GIN, GiST, BRIN), constraints (PK, FK, unique, check), views, materialized views, stored procedures, triggers, sequences, partitioning, query execution plans, transactions, locks, migrations, replication, and sharding"
+  },
+  "entities": [
+    "DatabaseSchema",
+    "Table",
+    "Column",
+    "PrimaryKey",
+    "ForeignKey",
+    "UniqueConstraint",
+    "CheckConstraint",
+    "Index",
+    "IndexColumn",
+    "View",
+    "MaterializedView",
+    "StoredProcedure",
+    "ProcedureParameter",
+    "Trigger",
+    "Sequence",
+    "Partition",
+    "PartitionBounds",
+    "Query",
+    "QueryParameter",
+    "QueryPlan",
+    "ExecutionNode",
+    "Transaction",
+    "Savepoint",
+    "Lock",
+    "Migration",
+    "MigrationStep",
+    "Replica",
+    "Shard",
+    "ShardKeyRange"
+  ],
+  "enums": [
+    "DataType",
+    "IndexType",
+    "SortOrder",
+    "ReferentialAction",
+    "ViewCheckOption",
+    "ProcedureLanguage",
+    "ParameterMode",
+    "SecurityType",
+    "TriggerTiming",
+    "TriggerEvent",
+    "TriggerLevel",
+    "PartitionStrategy",
+    "QueryType",
+    "ExecutionNodeType",
+    "ScanMethod",
+    "JoinType",
+    "IsolationLevel",
+    "TransactionStatus",
+    "LockResourceType",
+    "LockMode",
+    "MigrationStatus",
+    "MigrationDirection",
+    "MigrationOperation",
+    "ReplicaRole",
+    "ReplicaStatus",
+    "ShardStatus"
+  ],
+  "features": {
+    "core": [
+      "Database schemas and tables with full column definitions",
+      "Primary keys, foreign keys, unique and check constraints",
+      "Multiple index types: B-tree, Hash, GIN, GiST, BRIN, bitmap, full-text, spatial",
+      "Views and materialized views",
+      "Stored procedures and functions in multiple languages",
+      "Database triggers (before/after/instead-of)",
+      "Auto-increment sequences"
+    ],
+    "advanced": [
+      "Table partitioning (range, list, hash, composite)",
+      "Query execution plans with node-level statistics",
+      "Transaction management with ACID isolation levels",
+      "Database locks and concurrency control",
+      "Schema migrations with up/down operations",
+      "Read replicas with replication lag tracking",
+      "Horizontal sharding with key ranges"
+    ]
+  },
+  "index_types": {
+    "btree": {
+      "description": "Balanced tree index (default)",
+      "use_case": "General-purpose, range queries, sorting"
+    },
+    "hash": {
+      "description": "Hash-based index for equality",
+      "use_case": "Exact match lookups only"
+    },
+    "gin": {
+      "description": "Generalized Inverted Index",
+      "use_case": "Full-text search, JSONB, arrays"
+    },
+    "gist": {
+      "description": "Generalized Search Tree",
+      "use_case": "Geometric data, full-text search"
+    },
+    "brin": {
+      "description": "Block Range Index",
+      "use_case": "Very large tables with natural ordering"
+    }
+  },
+  "generated": {
+    "typescript": {
+      "file": "generated/typescript/database.types.ts",
+      "exports": [
+        "DatabaseSchema",
+        "Table",
+        "Column",
+        "Index",
+        "View",
+        "StoredProcedure",
+        "Trigger",
+        "Query",
+        "Transaction",
+        "Migration",
+        "Replica",
+        "Shard",
+        "DataType",
+        "IndexType",
+        "IsolationLevel",
+        "MigrationStatus"
+      ]
+    }
+  }
+}

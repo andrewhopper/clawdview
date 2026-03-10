@@ -1,0 +1,454 @@
+# models.yaml - Claim/Evidence Domain Models
+# Generated: 2025-11-25
+# Status: PENDING APPROVAL
+# Purpose: Converting text to structured claims with evidence and confidence scores
+
+entities:
+  Claim:
+    description: "A statement, assertion, or proposition that can be verified or contested"
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique identifier"
+      text:
+        type: text
+        required: true
+        description: "The actual claim statement"
+      claim_type:
+        type: enum
+        enum_ref: ClaimType
+        required: true
+        default: fact
+      status:
+        type: enum
+        enum_ref: ClaimStatus
+        required: true
+        default: pending_review
+      context:
+        type: text
+        required: false
+        description: "Additional context or background for the claim"
+      parent_claim_id:
+        type: uuid
+        required: false
+        references: Claim.id
+        description: "Parent claim if this is a sub-claim or refinement"
+      source_id:
+        type: uuid
+        required: false
+        references: Source.id
+        description: "Primary source where this claim originated"
+      extracted_by:
+        type: string
+        required: false
+        max_length: 100
+        description: "System, model, or person who extracted this claim"
+      extracted_at:
+        type: datetime
+        required: false
+        description: "When this claim was extracted from source text"
+      verified_by:
+        type: string
+        required: false
+        max_length: 100
+        description: "Person or system that verified this claim"
+      verified_at:
+        type: datetime
+        required: false
+      tags:
+        type: json
+        required: false
+        description: "Array of category tags for classification"
+      metadata:
+        type: json
+        required: false
+        description: "Additional structured metadata"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [status]
+      - [claim_type]
+      - [parent_claim_id]
+      - [source_id]
+      - [extracted_at]
+
+  Evidence:
+    description: "Supporting information, data, or documentation that supports or refutes claims"
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique identifier"
+      text:
+        type: text
+        required: true
+        description: "The evidence content or excerpt"
+      evidence_type:
+        type: enum
+        enum_ref: EvidenceType
+        required: true
+      quality_score:
+        type: decimal
+        precision: 3
+        scale: 2
+        required: false
+        description: "Quality/reliability score 0.00-1.00"
+      source_id:
+        type: uuid
+        required: true
+        references: Source.id
+        description: "Where this evidence came from"
+      source_location:
+        type: string
+        required: false
+        max_length: 500
+        description: "Page number, URL fragment, timestamp, etc."
+      extracted_by:
+        type: string
+        required: false
+        max_length: 100
+        description: "System, model, or person who extracted this evidence"
+      extracted_at:
+        type: datetime
+        required: false
+      is_primary:
+        type: boolean
+        required: true
+        default: false
+        description: "Whether this is primary (original) vs secondary evidence"
+      contradicts:
+        type: json
+        required: false
+        description: "Array of claim IDs this evidence contradicts"
+      metadata:
+        type: json
+        required: false
+        description: "Additional structured metadata"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [evidence_type]
+      - [source_id]
+      - [is_primary]
+      - [extracted_at]
+
+  ClaimEvidenceLink:
+    description: "Many-to-many relationship linking claims to supporting/refuting evidence"
+    properties:
+      id:
+        type: uuid
+        required: true
+      claim_id:
+        type: uuid
+        required: true
+        references: Claim.id
+      evidence_id:
+        type: uuid
+        required: true
+        references: Evidence.id
+      relationship_type:
+        type: enum
+        enum_ref: EvidenceRelationship
+        required: true
+        default: supports
+      strength:
+        type: decimal
+        precision: 3
+        scale: 2
+        required: true
+        default: 0.50
+        description: "How strongly this evidence relates (0.00-1.00)"
+      confidence_score_id:
+        type: uuid
+        required: false
+        references: ConfidenceScore.id
+        description: "Confidence assessment for this link"
+      notes:
+        type: text
+        required: false
+        description: "Explanation of how evidence relates to claim"
+      created_by:
+        type: string
+        required: false
+        max_length: 100
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [claim_id]
+      - [evidence_id]
+      - [relationship_type]
+
+  ConfidenceScore:
+    description: "Confidence assessment for claims, evidence, or claim-evidence links"
+    properties:
+      id:
+        type: uuid
+        required: true
+      score:
+        type: decimal
+        precision: 5
+        scale: 4
+        required: true
+        description: "Numerical confidence score 0.0000-1.0000"
+      confidence_level:
+        type: enum
+        enum_ref: ConfidenceLevel
+        required: true
+      scoring_method:
+        type: enum
+        enum_ref: ScoringMethod
+        required: true
+      scorer:
+        type: string
+        required: true
+        max_length: 100
+        description: "Who/what generated this score (AI model, human, algorithm)"
+      reasoning:
+        type: text
+        required: false
+        description: "Explanation of confidence score"
+      factors:
+        type: json
+        required: false
+        description: "Structured factors that influenced the score"
+      entity_type:
+        type: enum
+        enum_ref: ScoredEntityType
+        required: true
+        description: "What type of entity this scores (claim, evidence, link)"
+      entity_id:
+        type: uuid
+        required: true
+        description: "ID of the entity being scored"
+      model_version:
+        type: string
+        required: false
+        max_length: 100
+        description: "Version of AI model or algorithm used"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [entity_type, entity_id]
+      - [confidence_level]
+      - [scoring_method]
+      - [created_at]
+
+  Source:
+    description: "Origin of claims or evidence (documents, websites, databases, etc.)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      title:
+        type: string
+        required: true
+        max_length: 500
+        description: "Title of source document/website/etc"
+      source_type:
+        type: enum
+        enum_ref: SourceType
+        required: true
+      url:
+        type: string
+        required: false
+        max_length: 1000
+        description: "URL if applicable"
+      author:
+        type: string
+        required: false
+        max_length: 255
+      published_date:
+        type: datetime
+        required: false
+      accessed_date:
+        type: datetime
+        required: false
+        description: "When this source was accessed/retrieved"
+      isbn:
+        type: string
+        required: false
+        max_length: 20
+        description: "ISBN for books"
+      doi:
+        type: string
+        required: false
+        max_length: 100
+        description: "DOI for academic papers"
+      reliability_score:
+        type: decimal
+        precision: 3
+        scale: 2
+        required: false
+        description: "Source reliability rating 0.00-1.00"
+      content_hash:
+        type: string
+        required: false
+        max_length: 64
+        description: "SHA-256 hash of source content for verification"
+      metadata:
+        type: json
+        required: false
+        description: "Additional bibliographic or source metadata"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [source_type]
+      - [url]
+      - [doi]
+      - [published_date]
+
+  ClaimRelationship:
+    description: "Relationships between claims (supports, contradicts, refines, etc.)"
+    properties:
+      id:
+        type: uuid
+        required: true
+      source_claim_id:
+        type: uuid
+        required: true
+        references: Claim.id
+        description: "The claim making the relationship"
+      target_claim_id:
+        type: uuid
+        required: true
+        references: Claim.id
+        description: "The claim being related to"
+      relationship_type:
+        type: enum
+        enum_ref: ClaimRelationshipType
+        required: true
+      strength:
+        type: decimal
+        precision: 3
+        scale: 2
+        required: false
+        description: "Strength of relationship 0.00-1.00"
+      notes:
+        type: text
+        required: false
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [source_claim_id]
+      - [target_claim_id]
+      - [relationship_type]
+
+  TemporalRelevance:
+    description: "Time-based relevance tracking for evidence with configurable decay functions"
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique identifier"
+      evidence_id:
+        type: uuid
+        required: true
+        references: Evidence.id
+        description: "Evidence being assessed for temporal relevance"
+      as_of_date:
+        type: datetime
+        required: true
+        description: "Date/time this relevance assessment applies"
+      base_relevance:
+        type: decimal
+        precision: 3
+        scale: 2
+        required: true
+        description: "Initial relevance score before decay (0.00-1.00)"
+      current_relevance:
+        type: decimal
+        precision: 3
+        scale: 2
+        required: true
+        description: "Time-adjusted relevance score (0.00-1.00)"
+      decay_function:
+        type: enum
+        enum_ref: DecayFunction
+        required: true
+        default: linear
+      decay_rate:
+        type: decimal
+        precision: 5
+        scale: 4
+        required: false
+        description: "Decay rate parameter (meaning depends on function)"
+      half_life_days:
+        type: integer
+        required: false
+        description: "Days until relevance drops to 50% (exponential decay)"
+      step_threshold_days:
+        type: integer
+        required: false
+        description: "Threshold for step function decay"
+      step_size:
+        type: decimal
+        precision: 3
+        scale: 2
+        required: false
+        description: "Size of step decrease (0.00-1.00)"
+      reference_date:
+        type: datetime
+        required: true
+        description: "Starting point for decay calculation (usually evidence.extracted_at or source.published_date)"
+      custom_parameters:
+        type: json
+        required: false
+        description: "Additional parameters for custom decay functions"
+      notes:
+        type: text
+        required: false
+        description: "Explanation of relevance assessment"
+      calculated_by:
+        type: string
+        required: false
+        max_length: 100
+        description: "System or person who calculated this relevance"
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+    indexes:
+      - [evidence_id]
+      - [as_of_date]
+      - [decay_function]

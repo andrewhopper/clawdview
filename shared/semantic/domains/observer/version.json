@@ -1,0 +1,33 @@
+{
+  "domain": "observer",
+  "version": "1.0.0",
+  "description": "Deterministic validation system for AI outputs - like ECC RAM for LLMs",
+  "languages": ["python"],
+  "changelog": {
+    "1.0.0": "Initial release - Rule, Violation, CheckResult, Observer with YAML-based rule definitions"
+  },
+  "entities": [
+    "Rule",
+    "Violation",
+    "CheckResult",
+    "ObserverConfig"
+  ],
+  "enums": [
+    "Severity",
+    "EnforcementLevel",
+    "LogLevel",
+    "AssetType",
+    "RuleCategory"
+  ],
+  "dependencies": ["core"],
+  "features": [
+    "zero LLM inference validation",
+    "regex pattern matching",
+    "enforcement levels (allow, warn, block)",
+    "severity levels (critical, error, warning, info)",
+    "YAML-based rule definitions",
+    "asset type targeting",
+    "file pattern matching"
+  ],
+  "notes": "Observer validates Claude outputs against deterministic rules. Rules are defined as YAML data, validators as Python functions."
+}

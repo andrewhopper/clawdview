@@ -1,0 +1,248 @@
+# Frontend & Fullstack Frameworks Registry
+# Technologies reference organizations via created_by
+
+technologies:
+
+  react:
+    name: React
+    description: A JavaScript library for building user interfaces
+    category: framework
+    subcategory: frontend
+    created_by: meta
+    websites:
+      - { url: "https://react.dev", type: main }
+      - { url: "https://react.dev/learn", type: documentation }
+    repository:
+      url: https://github.com/facebook/react
+      platform: github
+    packages:
+      - { registry: npm, name: react }
+    license: MIT
+    first_release: "2013-05-29"
+    language: JavaScript
+    runtime: node
+    tags: [ui, declarative, component-based, virtual-dom]
+    detection_rules:
+      - { type: npm_dependency, pattern: "react" }
+    related_to: [next, remix, react-native]
+    alternative_to: [vue, svelte, angular]
+
+  vue:
+    name: Vue.js
+    description: The Progressive JavaScript Framework
+    category: framework
+    subcategory: frontend
+    created_by: evan-you
+    websites:
+      - { url: "https://vuejs.org", type: main }
+      - { url: "https://vuejs.org/guide", type: documentation }
+    repository:
+      url: https://github.com/vuejs/core
+      platform: github
+    packages:
+      - { registry: npm, name: vue }
+    license: MIT
+    first_release: "2014-02-01"
+    language: JavaScript
+    runtime: node
+    tags: [ui, reactive, component-based, progressive]
+    detection_rules:
+      - { type: npm_dependency, pattern: "vue" }
+    related_to: [nuxt, pinia]
+    alternative_to: [react, svelte, angular]
+
+  svelte:
+    name: Svelte
+    description: Cybernetically enhanced web apps - compile-time framework
+    category: framework
+    subcategory: frontend
+    created_by: rich-harris
+    websites:
+      - { url: "https://svelte.dev", type: main }
+      - { url: "https://svelte.dev/docs", type: documentation }
+    repository:
+      url: https://github.com/sveltejs/svelte
+      platform: github
+    packages:
+      - { registry: npm, name: svelte }
+    license: MIT
+    first_release: "2016-11-26"
+    language: JavaScript
+    runtime: node
+    tags: [ui, compiler, no-virtual-dom, reactive]
+    detection_rules:
+      - { type: npm_dependency, pattern: "svelte" }
+    related_to: [sveltekit]
+    alternative_to: [react, vue, angular]
+
+  angular:
+    name: Angular
+    description: Platform for building mobile and desktop web applications
+    category: framework
+    subcategory: frontend
+    created_by: google
+    websites:
+      - { url: "https://angular.dev", type: main }
+      - { url: "https://angular.dev/overview", type: documentation }
+    repository:
+      url: https://github.com/angular/angular
+      platform: github
+    packages:
+      - { registry: npm, name: "@angular/core", scope: "@angular" }
+    license: MIT
+    first_release: "2016-09-14"
+    language: TypeScript
+    runtime: node
+    tags: [ui, full-framework, dependency-injection, rxjs]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@angular/core" }
+    alternative_to: [react, vue, svelte]
+
+  solid:
+    name: Solid
+    description: Simple and performant reactivity for building user interfaces
+    category: framework
+    subcategory: frontend
+    created_by: ryan-carniato  # Note: would need to add to organizations
+    websites:
+      - { url: "https://solidjs.com", type: main }
+      - { url: "https://docs.solidjs.com", type: documentation }
+    repository:
+      url: https://github.com/solidjs/solid
+      platform: github
+    packages:
+      - { registry: npm, name: solid-js }
+    license: MIT
+    first_release: "2021-06-28"
+    language: TypeScript
+    runtime: node
+    tags: [ui, fine-grained-reactivity, no-virtual-dom, signals]
+    detection_rules:
+      - { type: npm_dependency, pattern: "solid-js" }
+    alternative_to: [react, vue, svelte]
+
+  # Meta-frameworks
+
+  next:
+    name: Next.js
+    description: The React Framework for the Web
+    category: framework
+    subcategory: fullstack
+    created_by: vercel
+    websites:
+      - { url: "https://nextjs.org", type: main }
+      - { url: "https://nextjs.org/docs", type: documentation }
+    repository:
+      url: https://github.com/vercel/next.js
+      platform: github
+    packages:
+      - { registry: npm, name: next }
+    license: MIT
+    first_release: "2016-10-25"
+    language: TypeScript
+    runtime: node
+    tags: [react, ssr, ssg, app-router, rsc]
+    detection_rules:
+      - { type: npm_dependency, pattern: "next" }
+      - { type: file_exists, pattern: "next.config.js" }
+      - { type: file_exists, pattern: "next.config.mjs" }
+      - { type: file_exists, pattern: "next.config.ts" }
+    extends: react
+    alternative_to: [nuxt, remix, sveltekit]
+
+  nuxt:
+    name: Nuxt
+    description: The Intuitive Vue Framework
+    category: framework
+    subcategory: fullstack
+    created_by: nuxt-labs  # Note: would need to add to organizations
+    websites:
+      - { url: "https://nuxt.com", type: main }
+      - { url: "https://nuxt.com/docs", type: documentation }
+    repository:
+      url: https://github.com/nuxt/nuxt
+      platform: github
+    packages:
+      - { registry: npm, name: nuxt }
+    license: MIT
+    first_release: "2016-10-26"
+    language: TypeScript
+    runtime: node
+    tags: [vue, ssr, ssg, auto-imports]
+    detection_rules:
+      - { type: npm_dependency, pattern: "nuxt" }
+      - { type: file_exists, pattern: "nuxt.config.ts" }
+    extends: vue
+    alternative_to: [next, remix, sveltekit]
+
+  remix:
+    name: Remix
+    description: Full stack web framework focused on web standards
+    category: framework
+    subcategory: fullstack
+    created_by: shopify
+    websites:
+      - { url: "https://remix.run", type: main }
+      - { url: "https://remix.run/docs", type: documentation }
+    repository:
+      url: https://github.com/remix-run/remix
+      platform: github
+    packages:
+      - { registry: npm, name: "@remix-run/react", scope: "@remix-run" }
+    license: MIT
+    first_release: "2021-11-22"
+    language: TypeScript
+    runtime: node
+    tags: [react, web-standards, nested-routing, progressive-enhancement]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@remix-run/react" }
+    extends: react
+    alternative_to: [next, nuxt, sveltekit]
+
+  sveltekit:
+    name: SvelteKit
+    description: Web development, streamlined
+    category: framework
+    subcategory: fullstack
+    created_by: rich-harris
+    websites:
+      - { url: "https://kit.svelte.dev", type: main }
+      - { url: "https://kit.svelte.dev/docs", type: documentation }
+    repository:
+      url: https://github.com/sveltejs/kit
+      platform: github
+    packages:
+      - { registry: npm, name: "@sveltejs/kit", scope: "@sveltejs" }
+    license: MIT
+    first_release: "2022-12-14"
+    language: TypeScript
+    runtime: node
+    tags: [svelte, ssr, ssg, file-based-routing]
+    detection_rules:
+      - { type: npm_dependency, pattern: "@sveltejs/kit" }
+    extends: svelte
+    alternative_to: [next, nuxt, remix]
+
+  astro:
+    name: Astro
+    description: The web framework for content-driven websites
+    category: framework
+    subcategory: fullstack
+    created_by: astro-team  # Note: would need to add to organizations
+    websites:
+      - { url: "https://astro.build", type: main }
+      - { url: "https://docs.astro.build", type: documentation }
+    repository:
+      url: https://github.com/withastro/astro
+      platform: github
+    packages:
+      - { registry: npm, name: astro }
+    license: MIT
+    first_release: "2022-08-09"
+    language: TypeScript
+    runtime: node
+    tags: [islands, multi-framework, content-focused, zero-js-default]
+    detection_rules:
+      - { type: npm_dependency, pattern: "astro" }
+      - { type: file_exists, pattern: "astro.config.mjs" }
+    alternative_to: [next, nuxt, gatsby]

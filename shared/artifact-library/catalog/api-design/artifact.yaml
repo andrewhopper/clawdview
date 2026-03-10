@@ -1,0 +1,211 @@
+# File UUID: 8f2a3b4c-5d6e-7f8a-9b0c-1d2e3f4a5b6c
+# API Design Document Artifact Specification
+
+id: api-design
+name: API Design Document
+category: architecture
+complexity: moderate
+word_range: [1500, 4000]
+version: "1.0.0"
+created_at: "2025-11-22"
+updated_at: "2026-02-23"
+
+description: >
+  API endpoints, schemas, authentication, and usage patterns.
+  Comprehensive API design documentation following REST best practices.
+
+aliases:
+  - api design
+  - api spec
+  - rest api design
+  - api documentation
+  - openapi spec
+
+triggers:
+  - api design
+  - design the api
+  - rest endpoints
+  - document the api
+
+tags:
+  - api
+  - rest
+  - design
+  - openapi
+  - endpoints
+
+sections:
+  - id: overview
+    name: API Overview
+    description: High-level description of the API purpose and scope
+    required: true
+    format: prose
+    word_limit: 200
+
+  - id: authentication
+    name: Authentication
+    description: Authentication mechanism (OAuth, API keys, JWT, etc.)
+    required: true
+    format: prose
+    word_limit: 300
+
+  - id: base-url
+    name: Base URL & Versioning
+    description: API base URL structure and versioning strategy
+    required: true
+    format: prose
+    word_limit: 100
+
+  - id: endpoints
+    name: Endpoints
+    description: List of all API endpoints with methods, paths, and descriptions
+    required: true
+    format: table
+
+  - id: request-response
+    name: Request/Response Schemas
+    description: JSON schemas for request bodies and response payloads
+    required: true
+    format: code
+
+  - id: error-handling
+    name: Error Handling
+    description: Error codes, messages, and handling patterns
+    required: true
+    format: table
+    item_count: "5-10"
+
+  - id: rate-limiting
+    name: Rate Limiting
+    description: Rate limit policies and headers
+    required: false
+    format: prose
+    word_limit: 150
+
+  - id: examples
+    name: Usage Examples
+    description: curl or code examples for common operations
+    required: true
+    format: code
+    item_count: "3-5"
+
+required_inputs:
+  - name: api_name
+    type: string
+    description: Name of the API
+    required: true
+
+  - name: resources
+    type: text
+    description: List of resources/entities the API manages
+    required: true
+
+  - name: auth_method
+    type: string
+    description: Authentication method (oauth2, api_key, jwt, basic)
+    required: true
+    default: oauth2
+
+  - name: base_url
+    type: string
+    description: Base URL for the API
+    required: false
+    default: /api/v1
+
+  - name: context
+    type: text
+    description: Additional context about the API requirements
+    required: false
+
+prompt:
+  system: |
+    You are a senior API architect who designs RESTful APIs following industry best practices.
+
+    Your design principles:
+    - Use meaningful, consistent resource naming (plural nouns)
+    - Follow REST conventions for HTTP methods
+    - Include proper status codes for all responses
+    - Design for backward compatibility
+    - Document all edge cases and error scenarios
+    - Use JSON:API or similar standard for response structure
+
+    Standards to follow:
+    - OpenAPI 3.0 compatible
+    - HATEOAS where appropriate
+    - Consistent pagination patterns
+    - Proper use of HTTP headers
+
+  task: |
+    Design a REST API for {{API_NAME}}.
+
+    Resources to manage:
+    {{RESOURCES}}
+
+    Authentication: {{AUTH_METHOD}}
+    Base URL: {{BASE_URL}}
+
+    {{#if CONTEXT}}
+    Additional context:
+    {{CONTEXT}}
+    {{/if}}
+
+    Generate comprehensive API documentation including:
+    1. **API Overview** - Purpose and scope
+    2. **Authentication** - How to authenticate
+    3. **Base URL & Versioning** - URL structure
+    4. **Endpoints** - All endpoints in table format
+    5. **Request/Response Schemas** - JSON examples
+    6. **Error Handling** - Error codes and messages
+    7. **Rate Limiting** - Limits and headers
+    8. **Usage Examples** - curl examples
+
+  tone: technical
+  reading_level: developer
+  density: detailed
+
+validators:
+  - id: has-endpoints
+    name: Endpoints Defined
+    type: section_presence
+    severity: error
+    message: API design must include endpoint definitions
+
+  - id: has-auth
+    name: Authentication Defined
+    type: section_presence
+    severity: error
+    message: API design must specify authentication method
+
+  - id: has-examples
+    name: Usage Examples
+    type: section_presence
+    severity: warning
+    message: API design should include usage examples
+
+  - id: proper-methods
+    name: HTTP Methods
+    type: regex
+    severity: warning
+    message: Use standard HTTP methods (GET, POST, PUT, PATCH, DELETE)
+
+  - id: has-error-codes
+    name: Error Codes
+    type: regex
+    severity: warning
+    message: Include standard HTTP error codes (400, 401, 403, 404, 500)
+
+  - id: consistent-naming
+    name: Consistent Naming
+    type: regex
+    severity: info
+    message: Use consistent naming conventions for endpoints
+
+constraints:
+  min_words: 1500
+  max_words: 4000
+  reading_level: developer
+  density: detailed
+  output_formats:
+    - markdown
+    - openapi
+    - html

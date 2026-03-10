@@ -1,0 +1,444 @@
+# =============================================================================
+# Project Summary Domain Model
+# Version: 1.0.0
+# Purpose: Quick-scan project cards (30-sec to 2-min understanding)
+# =============================================================================
+
+domain: project-summary
+version: "1.0.0"
+description: Scannable project summary cards for portfolio views and quick understanding
+owner: platform
+dependencies:
+  - core
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+  ProjectSummary:
+    description: Complete project summary card data
+    required:
+      - id
+      - name
+      - tagline
+      - target_user
+      - problem
+      - solution
+      - status
+    fields:
+      # Identity
+      id:
+        type: string
+        description: Unique project identifier (matches .project uuid/id)
+        example: "proto-gocoder-t9x2k-189"
+
+      name:
+        type: string
+        description: Human-readable project name
+        example: "GoCoder"
+
+      tagline:
+        type: string
+        max_length: 100
+        description: One-line description in plain English
+        example: "Web-based AI coding assistant with per-user containers"
+
+      # Who
+      target_user:
+        type: TargetUser
+        description: Who this project is for
+
+      # Problem
+      problem:
+        type: Problem
+        description: What problem this solves
+
+      # Solution
+      solution:
+        type: Solution
+        description: The approach/answer
+
+      # Status
+      status:
+        type: Status
+        description: Current project state
+
+      # Vision
+      vision:
+        type: Vision
+        description: Next steps and future direction
+
+      # Optional metadata
+      links:
+        type: Links
+        optional: true
+        description: Quick links to project resources
+
+      tags:
+        type: array
+        items: string
+        optional: true
+        description: Searchable tags
+
+      classification:
+        type: Classification
+        optional: true
+        description: Project ownership classification
+
+      updated_at:
+        type: datetime
+        description: Last update timestamp
+
+  TargetUser:
+    description: Who the project is built for
+    required:
+      - short_description
+    fields:
+      short_description:
+        type: string
+        max_length: 50
+        description: 3-5 word user description
+        example: "Solo devs wanting quick AI code help"
+
+      persona:
+        type: string
+        optional: true
+        max_length: 100
+        description: Primary persona label
+        example: "Solo developers and learners"
+
+      context:
+        type: array
+        items: string
+        max_items: 5
+        optional: true
+        description: Key characteristics of target user
+        example:
+          - "May not have local dev environment"
+          - "Want quick answers, not project scaffolding"
+          - "Often on mobile or borrowed machines"
+
+  Problem:
+    description: The pain point being addressed
+    required:
+      - short_description
+    fields:
+      short_description:
+        type: string
+        max_length: 100
+        description: Pain point in one sentence
+        example: "CLI tools require local setup, no mobile access"
+
+      long_description:
+        type: string
+        max_length: 500
+        optional: true
+        description: 2-3 sentences describing the problem in human terms
+        example: "Getting AI help with code requires installing CLI tools, managing API keys, and having a proper dev setup."
+
+      alternatives:
+        type: array
+        items: Alternative
+        min_items: 1
+        max_items: 5
+        description: Current solutions and their gaps
+
+  Alternative:
+    description: An existing solution and why it falls short
+    required:
+      - name
+      - gap
+    fields:
+      name:
+        type: string
+        max_length: 50
+        description: Name of alternative solution
+        example: "Claude Code CLI"
+
+      gap:
+        type: string
+        max_length: 100
+        description: Why this alternative falls short
+        example: "Requires local install + terminal"
+
+  Solution:
+    description: The project's approach
+    required:
+      - short_description
+    fields:
+      short_description:
+        type: string
+        max_length: 100
+        description: Solution in one sentence
+        example: "Browser chat + real container execution"
+
+      long_description:
+        type: string
+        max_length: 500
+        optional: true
+        description: 2-3 sentences on what the project does
+        example: "A browser-based chat interface that spins up a personal container with Claude Code installed."
+
+      capabilities:
+        type: array
+        items: string
+        max_items: 6
+        optional: true
+        description: Key capabilities (verb phrases)
+        example:
+          - "Chat with AI in Claude-style interface"
+          - "Execute code in isolated container"
+          - "Access terminal directly in browser"
+
+      differentiator:
+        type: string
+        max_length: 200
+        optional: true
+        description: What makes this different - the "aha" insight
+        example: "Combines chat simplicity with real execution environment"
+
+  Status:
+    description: Current project state
+    required:
+      - phase
+      - indicator
+    fields:
+      phase:
+        type: Phase
+        description: Current SDLC phase
+
+      indicator:
+        type: StatusIndicator
+        description: Health/progress indicator
+
+      progress_percent:
+        type: integer
+        min: 0
+        max: 100
+        optional: true
+        description: Overall progress percentage
+
+      milestones:
+        type: array
+        items: Milestone
+        max_items: 10
+        optional: true
+        description: Progress milestones
+
+      blockers:
+        type: string
+        optional: true
+        description: Current blockers (null/empty = none)
+        example: "Waiting on OAuth provider approval"
+
+  Phase:
+    description: SDLC phase information
+    required:
+      - number
+      - name
+    fields:
+      number:
+        type: integer
+        min: 1
+        max: 9
+        description: Phase number (1-9)
+
+      name:
+        type: string
+        description: Phase name
+        enum:
+          - seed
+          - research
+          - expansion
+          - analysis
+          - selection
+          - design
+          - test
+          - implementation
+          - refinement
+
+  Milestone:
+    description: A progress milestone
+    required:
+      - description
+      - status
+    fields:
+      description:
+        type: string
+        max_length: 100
+        description: What was done or needs to be done
+        example: "React + Tailwind UI setup"
+
+      status:
+        type: MilestoneStatus
+        description: Milestone completion status
+
+  Vision:
+    description: Future direction
+    required:
+      - next_action
+    fields:
+      next_action:
+        type: string
+        max_length: 150
+        description: Single most important next step
+        example: "Complete OAuth flow (GitHub/Google login)"
+
+      roadmap:
+        type: array
+        items: string
+        max_items: 5
+        optional: true
+        description: Near to long-term goals
+        example:
+          - "MVP deployed to AWS ECS"
+          - "Firecracker VMs for sub-200ms boot"
+          - "Persistent workspaces + collaboration"
+
+  Links:
+    description: Quick links to project resources
+    fields:
+      project_path:
+        type: string
+        optional: true
+        description: Path to project directory
+
+      readme:
+        type: string
+        optional: true
+        description: Path to README
+
+      demo:
+        type: string
+        format: uri
+        optional: true
+        description: Demo URL if available
+
+      repo:
+        type: string
+        format: uri
+        optional: true
+        description: Git repository URL
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+  StatusIndicator:
+    description: Visual status indicator
+    values:
+      - green      # Active, making progress
+      - yellow     # Active, some friction
+      - red        # Blocked, needs attention
+      - gray       # Paused/on hold
+      - completed  # Done
+
+  MilestoneStatus:
+    description: Milestone completion status
+    values:
+      - done       # Completed
+      - active     # In progress
+      - pending    # Not started
+
+  Classification:
+    description: Project ownership classification
+    values:
+      - personal
+      - work
+      - shared
+      - oss
+
+# =============================================================================
+# EXAMPLE DATA
+# =============================================================================
+
+examples:
+  minimal:
+    id: "example-minimal-001"
+    name: "Example Project"
+    tagline: "A minimal example project"
+    target_user:
+      short_description: "Developers learning the system"
+    problem:
+      short_description: "No good examples exist"
+      alternatives:
+        - name: "Reading docs"
+          gap: "Abstract, hard to apply"
+    solution:
+      short_description: "Concrete working example"
+    status:
+      phase:
+        number: 1
+        name: seed
+      indicator: green
+    vision:
+      next_action: "Add more examples"
+
+  full:
+    id: "proto-gocoder-t9x2k-189"
+    name: "GoCoder"
+    tagline: "Web-based AI coding assistant with per-user containers"
+    target_user:
+      short_description: "Solo devs wanting quick AI code help"
+      persona: "Solo developers and learners"
+      context:
+        - "May not have local dev environment"
+        - "Want quick answers, not project scaffolding"
+        - "Often on mobile or borrowed machines"
+    problem:
+      short_description: "CLI tools require local setup, no mobile access"
+      long_description: "Getting AI help with code requires installing CLI tools, managing API keys, and having a proper dev setup. Can't quickly get answers on a phone or Chromebook."
+      alternatives:
+        - name: "Claude Code CLI"
+          gap: "Requires local install + terminal"
+        - name: "ChatGPT/Claude Web"
+          gap: "No code execution, no file system"
+        - name: "Replit AI"
+          gap: "Full IDE - overkill for quick tasks"
+    solution:
+      short_description: "Browser chat + real container execution"
+      long_description: "A browser-based chat interface that spins up a personal container with Claude Code installed. Ask questions, get answers with real code execution - no setup required."
+      capabilities:
+        - "Chat with AI in Claude-style interface"
+        - "Execute code in isolated container"
+        - "Access terminal directly in browser"
+        - "Upload/download files via S3"
+      differentiator: "Combines chat simplicity with real execution environment"
+    status:
+      phase:
+        number: 8
+        name: implementation
+      indicator: yellow
+      progress_percent: 80
+      milestones:
+        - description: "React + Tailwind UI"
+          status: done
+        - description: "xterm.js terminal working"
+          status: done
+        - description: "WebSocket connection"
+          status: done
+        - description: "OAuth authentication"
+          status: active
+        - description: "Claude Code CLI integration"
+          status: pending
+        - description: "AWS deployment"
+          status: pending
+      blockers: null
+    vision:
+      next_action: "Complete OAuth flow (GitHub/Google login)"
+      roadmap:
+        - "MVP deployed to AWS ECS"
+        - "Firecracker VMs for sub-200ms boot"
+        - "Persistent workspaces + collaboration"
+    links:
+      project_path: "projects/personal/active/tool-gocoder-web-agentic-coding-ui-like-claude-code-web-t9x2k-189/"
+      readme: "README.md"
+    tags:
+      - ai
+      - web
+      - developer-tools
+      - containers
+    classification: personal
+    updated_at: "2025-12-03T00:00:00Z"

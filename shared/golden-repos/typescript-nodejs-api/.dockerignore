@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Testing
+coverage
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Docker
+Dockerfile*
+docker-compose*
+.docker
+
+# Docs
+*.md
+
+# Environment
+.env*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

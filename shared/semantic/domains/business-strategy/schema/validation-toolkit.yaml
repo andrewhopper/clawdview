@@ -1,0 +1,149 @@
+# Validation & Experimentation Toolkit Entities
+# Source: Testing Business Ideas (Bland & Osterwalder, 2019)
+
+entities:
+
+  TestCard:
+    description: Documents a single business hypothesis test with method, metrics, and criteria
+    source: "Testing Business Ideas (Bland & Osterwalder, 2019)"
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      hypothesisId: { type: string, required: true }
+      step1_hypothesis: { type: string, required: true, description: "We believe that..." }
+      step2_test: { type: string, required: true, description: "To verify, we will..." }
+      step3_metric: { type: string, required: true, description: "And measure..." }
+      step4_criteria: { type: string, required: true, description: "We are right if..." }
+      experimentType: { type: ExperimentType, required: true }
+      testCost: { type: TestCost }
+      testStrength: { type: TestStrength }
+      dataReliability: { type: DataReliability }
+      timeRequired: { type: string }
+      status: { type: TestCardStatus, required: true }
+      assignedTo: { type: string }
+      dueDate: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  LearningCard:
+    description: Documents insights and decisions from completed experiments
+    source: "Testing Business Ideas (Bland & Osterwalder, 2019)"
+    properties:
+      id: { type: string, required: true }
+      testCardId: { type: string, required: true }
+      step1_hypothesis: { type: string, required: true, description: "We believed that..." }
+      step2_observation: { type: string, required: true, description: "We observed..." }
+      step3_learnings: { type: string, required: true, description: "From that we learned..." }
+      step4_decisions: { type: string, required: true, description: "Therefore we will..." }
+      hypothesisValidated: { type: boolean, required: true }
+      confidenceLevel: { type: ConfidenceLevel, required: true }
+      nextActions: { type: array, items: string }
+      pivotRequired: { type: boolean }
+      pivotType: { type: PivotType }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ValidationBoard:
+    description: Kanban-style board tracking hypotheses through validation stages
+    source: "Strategyzer Validation Board"
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      businessModelId: { type: string, description: "Linked BMC or Lean Canvas" }
+      columns: { type: array, items: ValidationColumn, required: true }
+      hypotheses: { type: array, items: BoardHypothesis }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ValidationColumn:
+    description: Column in validation board representing a validation stage
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      stage: { type: ValidationStage, required: true }
+      sequence: { type: integer, required: true }
+      wipLimit: { type: integer, description: "Work-in-progress limit" }
+
+  BoardHypothesis:
+    description: Hypothesis card on validation board
+    properties:
+      id: { type: string, required: true }
+      hypothesis: { type: string, required: true }
+      category: { type: HypothesisCategoryBMC, required: true }
+      importance: { type: HypothesisImportance, required: true }
+      currentColumn: { type: string, required: true }
+      testCards: { type: array, items: string }
+      learningCards: { type: array, items: string }
+      status: { type: BoardHypothesisStatus, required: true }
+
+  ExperimentBoard:
+    description: Board for managing and prioritizing experiments
+    source: "Testing Business Ideas (Bland & Osterwalder, 2019)"
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      experiments: { type: array, items: Experiment }
+      prioritizationCriteria: { type: array, items: string }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Experiment:
+    description: A structured experiment to test a hypothesis
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      hypothesisId: { type: string, required: true }
+      type: { type: ExperimentType, required: true }
+      category: { type: ExperimentCategory, required: true }
+      description: { type: string }
+      testCost: { type: TestCost, required: true }
+      testStrength: { type: TestStrength, required: true }
+      dataReliability: { type: DataReliability, required: true }
+      setupTime: { type: string }
+      runTime: { type: string }
+      status: { type: ExperimentStatus, required: true }
+      results: { type: ExperimentResults }
+
+  ExperimentResults:
+    description: Results from a completed experiment
+    properties:
+      id: { type: string, required: true }
+      experimentId: { type: string, required: true }
+      dataCollected: { type: string }
+      metricsObserved: { type: array, items: ObservedMetric }
+      hypothesisSupported: { type: boolean }
+      confidenceLevel: { type: ConfidenceLevel }
+      insights: { type: array, items: string }
+      recommendations: { type: array, items: string }
+      completedAt: { type: datetime, required: true }
+
+  ObservedMetric:
+    description: A metric observed during an experiment
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      expectedValue: { type: string }
+      actualValue: { type: string, required: true }
+      variance: { type: string }
+      interpretation: { type: string }
+
+  ExperimentLibrary:
+    description: Library of experiment templates categorized by type
+    source: "Testing Business Ideas - 44 Experiment Types"
+    properties:
+      id: { type: string, required: true }
+      experiments: { type: array, items: ExperimentTemplate }
+
+  ExperimentTemplate:
+    description: Template for a type of experiment
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      category: { type: ExperimentCategory, required: true }
+      description: { type: string, required: true }
+      typicalCost: { type: TestCost }
+      typicalStrength: { type: TestStrength }
+      typicalReliability: { type: DataReliability }
+      setupInstructions: { type: string }
+      bestFor: { type: array, items: string }
+      examples: { type: array, items: string }

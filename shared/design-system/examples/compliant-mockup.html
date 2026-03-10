@@ -1,0 +1,243 @@
+<!--
+  Asset: User Dashboard Mockup
+  Project: example-project-a1b2c3
+  Asset ID: dash-f7e8d9c0.v1
+  Date: 2025-12-05
+  Design System: shared/design-system
+
+  Atomic Level: page
+
+  Tokens Used:
+  - Colors: --background, --foreground, --primary, --muted, --card, --border
+  - Spacing: space-4 (1rem), space-6 (1.5rem), space-8 (2rem)
+  - Typography: text-3xl (h1), text-lg (h2), text-base (body), text-sm (caption)
+
+  Visual Hierarchy:
+  - Level 1: Page title "Dashboard" (3xl, bold)
+  - Level 2: Section headers (lg, semibold)
+  - Level 3: Body text (base, regular)
+
+  Information Architecture:
+  - Global nav: Header with main sections
+  - Local nav: None (single page view)
+  - Content groups: Stats row, Recent activity, Quick actions
+-->
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Compliant Example</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Design Tokens - Dark Theme */
+    .dark {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      --secondary: 240 3.7% 15.9%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+      --radius: 0.5rem;
+    }
+    * { border-color: hsl(var(--border)); }
+    body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
+
+    /* Component Styles - Using Tokens Only */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      height: 2.5rem;
+      transition: opacity 0.2s;
+    }
+    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+    .btn-outline { border: 1px solid hsl(var(--border)); background: transparent; }
+    .btn-outline:hover { background: hsl(var(--accent)); }
+
+    .card {
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--card));
+      color: hsl(var(--card-foreground));
+    }
+    .card-header { padding: 1.5rem; padding-bottom: 0; }
+    .card-content { padding: 1.5rem; }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+  <!-- ORGANISM: Header (global navigation) -->
+  <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+    <div class="container mx-auto flex h-14 items-center px-4">
+      <!-- MOLECULE: Logo + Brand -->
+      <div class="mr-4 flex items-center">
+        <span class="text-lg font-bold">Acme Inc</span>
+      </div>
+      <!-- MOLECULE: Navigation -->
+      <nav class="flex items-center space-x-6 text-sm font-medium">
+        <a class="text-foreground" href="#">Dashboard</a>
+        <a class="text-muted-foreground hover:text-foreground" href="#">Projects</a>
+        <a class="text-muted-foreground hover:text-foreground" href="#">Team</a>
+        <a class="text-muted-foreground hover:text-foreground" href="#">Settings</a>
+      </nav>
+      <div class="flex-1"></div>
+      <!-- ATOM: Button -->
+      <button class="btn btn-outline">Logout</button>
+    </div>
+  </header>
+
+  <!-- TEMPLATE: Dashboard Layout -->
+  <main class="container mx-auto py-8 px-4">
+
+    <!-- HIERARCHY LEVEL 1: Page Title -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <p class="text-muted-foreground mt-2">Welcome back, here's your overview.</p>
+    </div>
+
+    <!-- ORGANISM: Stats Row (content group by proximity) -->
+    <div class="grid gap-4 md:grid-cols-3 mb-8">
+      <!-- MOLECULE: Stat Card -->
+      <div class="card">
+        <div class="card-header">
+          <p class="text-sm text-muted-foreground">Total Revenue</p>
+        </div>
+        <div class="card-content">
+          <p class="text-2xl font-bold">$45,231.89</p>
+          <p class="text-xs text-muted-foreground">+20.1% from last month</p>
+        </div>
+      </div>
+      <!-- MOLECULE: Stat Card -->
+      <div class="card">
+        <div class="card-header">
+          <p class="text-sm text-muted-foreground">Active Users</p>
+        </div>
+        <div class="card-content">
+          <p class="text-2xl font-bold">2,350</p>
+          <p class="text-xs text-muted-foreground">+180 this week</p>
+        </div>
+      </div>
+      <!-- MOLECULE: Stat Card -->
+      <div class="card">
+        <div class="card-header">
+          <p class="text-sm text-muted-foreground">Conversion Rate</p>
+        </div>
+        <div class="card-content">
+          <p class="text-2xl font-bold">3.2%</p>
+          <p class="text-xs text-muted-foreground">+0.3% from last week</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid gap-6 md:grid-cols-2">
+
+      <!-- ORGANISM: Recent Activity (HIERARCHY LEVEL 2: Section) -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-lg font-semibold">Recent Activity</h2>
+        </div>
+        <div class="card-content">
+          <div class="space-y-4">
+            <!-- HIERARCHY LEVEL 3: Body items -->
+            <div class="flex items-center gap-4">
+              <div class="h-8 w-8 rounded-full bg-secondary"></div>
+              <div>
+                <p class="text-sm font-medium">New user registered</p>
+                <p class="text-xs text-muted-foreground">2 minutes ago</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="h-8 w-8 rounded-full bg-secondary"></div>
+              <div>
+                <p class="text-sm font-medium">Payment received</p>
+                <p class="text-xs text-muted-foreground">15 minutes ago</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="h-8 w-8 rounded-full bg-secondary"></div>
+              <div>
+                <p class="text-sm font-medium">Project completed</p>
+                <p class="text-xs text-muted-foreground">1 hour ago</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORGANISM: Quick Actions (HIERARCHY LEVEL 2: Section) -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-lg font-semibold">Quick Actions</h2>
+        </div>
+        <div class="card-content">
+          <div class="grid gap-2">
+            <!-- ATOMS: Buttons (single focal point = primary CTA) -->
+            <button class="btn btn-primary w-full">Create New Project</button>
+            <button class="btn btn-secondary w-full">Invite Team Member</button>
+            <button class="btn btn-outline w-full">View Reports</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ORGANISM: Footer -->
+  <footer class="border-t mt-8">
+    <div class="container mx-auto py-6 px-4">
+      <p class="text-sm text-muted-foreground text-center">
+        © 2025 Acme Inc. All rights reserved.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

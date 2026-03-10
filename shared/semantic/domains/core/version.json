@@ -1,0 +1,51 @@
+{
+  "domain": "core",
+  "version": "1.0.0",
+  "description": "Foundation primitives for all domain models - Entity, Person, Time, Money, Address, etc.",
+  "languages": ["typescript", "python", "rust"],
+  "changelog": {
+    "1.0.0": "Initial release - Entity, Individual, Person, Organization, Time (TimePoint, Duration, DateRange, Recurrence), Money, Address, GeoLocation, ContactInfo, Quantity, MediaObject, Status, Identifier"
+  },
+  "entities": [
+    "Entity",
+    "AuditInfo",
+    "Individual",
+    "Person",
+    "Organization",
+    "TimePoint",
+    "Duration",
+    "DateRange",
+    "Recurrence",
+    "Money",
+    "Currency",
+    "Address",
+    "GeoLocation",
+    "ContactInfo",
+    "Quantity",
+    "Weight",
+    "Length",
+    "Volume",
+    "Temperature",
+    "Percentage",
+    "MediaObject",
+    "Image",
+    "Document",
+    "Video",
+    "Audio",
+    "Status",
+    "Identifier"
+  ],
+  "enums": [
+    "TimeOfDay",
+    "Season",
+    "LifeStage",
+    "RecurrenceFrequency",
+    "AddressType",
+    "PhoneType",
+    "UnitSystem",
+    "GenericStatus"
+  ],
+  "dependencies": [],
+  "w3c_standards": ["RDF", "OWL", "SHACL", "Schema.org"],
+  "notes": "This is the foundation layer. All other domains should import from core rather than redefining these primitives."
+}

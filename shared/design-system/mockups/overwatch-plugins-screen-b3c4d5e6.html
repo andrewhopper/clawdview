@@ -1,0 +1,916 @@
+<!--
+  Asset: Overwatch Plugins Screen
+  Project: overwatch-local-automation
+  Asset ID: overwatch-plugins-b3c4d5e6.v1
+  Date: 2025-12-19
+  Design System: shared/design-system
+
+  Atomic Level: page
+
+  Tokens Used:
+  - Colors: --background, --foreground, --primary, --secondary, --muted, --accent, --destructive, --card, --border
+  - Spacing: space-2, space-4, space-6, space-8
+  - Typography: text-sm, text-base, text-lg, text-xl, text-2xl, text-3xl
+  - Border Radius: --radius
+-->
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overwatch - Plugins</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+            success: { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' },
+            warning: { DEFAULT: 'hsl(var(--warning))', foreground: 'hsl(var(--warning-foreground))' },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --primary-foreground: 0 0% 98%;
+      --secondary: 240 4.8% 95.9%;
+      --secondary-foreground: 240 5.9% 10%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --accent: 240 4.8% 95.9%;
+      --accent-foreground: 240 5.9% 10%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 0 0% 98%;
+      --success: 142 76% 36%;
+      --success-foreground: 0 0% 98%;
+      --warning: 38 92% 50%;
+      --warning-foreground: 0 0% 98%;
+      --border: 240 5.9% 90%;
+      --input: 240 5.9% 90%;
+      --ring: 240 5.9% 10%;
+      --radius: 0.5rem;
+    }
+    .dark {
+      --background: 222 47% 6%;
+      --foreground: 210 40% 98%;
+      --card: 222 47% 8%;
+      --card-foreground: 210 40% 98%;
+      --popover: 222 47% 8%;
+      --popover-foreground: 210 40% 98%;
+      --primary: 210 100% 52%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 217 33% 17%;
+      --secondary-foreground: 210 40% 98%;
+      --muted: 217 33% 17%;
+      --muted-foreground: 215 20% 65%;
+      --accent: 217 33% 17%;
+      --accent-foreground: 210 40% 98%;
+      --destructive: 0 62.8% 50%;
+      --destructive-foreground: 0 0% 98%;
+      --success: 142 76% 42%;
+      --success-foreground: 0 0% 98%;
+      --warning: 38 92% 50%;
+      --warning-foreground: 0 0% 10%;
+      --border: 217 33% 17%;
+      --input: 217 33% 17%;
+      --ring: 210 100% 52%;
+    }
+    * { border-color: hsl(var(--border)); }
+    body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
+
+    /* Button component styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      padding: 0.5rem 1rem;
+      height: 2.5rem;
+      cursor: pointer;
+    }
+    .btn:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+    .btn:disabled { pointer-events: none; opacity: 0.5; }
+    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+    .btn-secondary:hover { filter: brightness(1.2); }
+    .btn-outline { border: 1px solid hsl(var(--border)); background: transparent; }
+    .btn-outline:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+    .btn-ghost:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+    .btn-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
+    .btn-destructive:hover { filter: brightness(1.1); }
+    .btn-success { background: hsl(var(--success)); color: hsl(var(--success-foreground)); }
+    .btn-success:hover { filter: brightness(1.1); }
+    .btn-sm { height: 2rem; padding: 0 0.75rem; font-size: 0.75rem; }
+    .btn-lg { height: 2.75rem; padding: 0 2rem; }
+    .btn-icon { width: 2.5rem; padding: 0; }
+    .btn-icon.btn-sm { width: 2rem; }
+
+    /* Card component styles */
+    .card { border-radius: var(--radius); border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--card-foreground)); }
+    .card-header { display: flex; flex-direction: column; gap: 0.375rem; padding: 1.5rem; }
+    .card-title { font-size: 1.125rem; font-weight: 600; line-height: 1.2; }
+    .card-description { font-size: 0.875rem; color: hsl(var(--muted-foreground)); }
+    .card-content { padding: 1.5rem; padding-top: 0; }
+    .card-footer { display: flex; align-items: center; padding: 1.5rem; padding-top: 0; gap: 0.5rem; }
+
+    /* Input component styles */
+    .input {
+      display: flex;
+      height: 2.5rem;
+      width: 100%;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid hsl(var(--input));
+      background: hsl(var(--background));
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+    }
+    .input::placeholder { color: hsl(var(--muted-foreground)); }
+    .input:focus { outline: none; border-color: hsl(var(--ring)); box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2); }
+
+    /* Badge component styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 9999px;
+      border: 1px solid transparent;
+      padding: 0.125rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .badge-default { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .badge-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+    .badge-outline { border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
+    .badge-success { background: hsl(var(--success) / 0.2); color: hsl(var(--success)); border-color: hsl(var(--success) / 0.3); }
+    .badge-warning { background: hsl(var(--warning) / 0.2); color: hsl(var(--warning)); border-color: hsl(var(--warning) / 0.3); }
+    .badge-destructive { background: hsl(var(--destructive) / 0.2); color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / 0.3); }
+
+    /* Tab styles */
+    .tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid hsl(var(--border)); }
+    .tab {
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: hsl(var(--foreground)); }
+    .tab.active { color: hsl(var(--foreground)); border-bottom-color: hsl(var(--primary)); }
+
+    /* Switch toggle */
+    .switch {
+      position: relative;
+      width: 2.75rem;
+      height: 1.5rem;
+      background: hsl(var(--muted));
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .switch.active { background: hsl(var(--primary)); }
+    .switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 1.25rem;
+      height: 1.25rem;
+      background: white;
+      border-radius: 9999px;
+      transition: transform 0.2s;
+    }
+    .switch.active::after { transform: translateX(1.25rem); }
+
+    /* Progress bar */
+    .progress { height: 0.5rem; background: hsl(var(--muted)); border-radius: 9999px; overflow: hidden; }
+    .progress-bar { height: 100%; background: hsl(var(--primary)); transition: width 0.3s; }
+
+    /* Plugin card hover */
+    .plugin-card { transition: all 0.2s; }
+    .plugin-card:hover { border-color: hsl(var(--primary) / 0.5); transform: translateY(-2px); }
+
+    /* Sidebar nav */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 0.875rem;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-item:hover { background: hsl(var(--accent)); color: hsl(var(--foreground)); }
+    .nav-item.active { background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); }
+
+    /* Dropdown */
+    .dropdown {
+      position: relative;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 0.25rem;
+      min-width: 10rem;
+      background: hsl(var(--popover));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 0.25rem;
+      z-index: 50;
+      display: none;
+    }
+    .dropdown-menu.show { display: block; }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      border-radius: calc(var(--radius) - 4px);
+      cursor: pointer;
+    }
+    .dropdown-item:hover { background: hsl(var(--accent)); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: hsl(var(--muted)); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+  </style>
+</head>
+<body class="min-h-screen bg-background font-sans antialiased">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 border-r bg-card flex flex-col">
+      <!-- Logo -->
+      <div class="h-14 flex items-center px-4 border-b">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <svg class="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </div>
+          <span class="font-bold text-lg">Overwatch</span>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+        <div class="nav-item">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          Dashboard
+        </div>
+        <div class="nav-item">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          Services
+          <span class="ml-auto badge badge-success">12</span>
+        </div>
+        <div class="nav-item active">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
+          </svg>
+          Plugins
+        </div>
+        <div class="nav-item">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          Logs
+        </div>
+        <div class="nav-item">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Events
+        </div>
+
+        <div class="pt-4 pb-2">
+          <p class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Configuration</p>
+        </div>
+
+        <div class="nav-item">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Settings
+        </div>
+        <div class="nav-item">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Help
+        </div>
+      </nav>
+
+      <!-- Status Footer -->
+      <div class="p-3 border-t">
+        <div class="flex items-center gap-2 text-sm">
+          <div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+          <span class="text-muted-foreground">System healthy</span>
+        </div>
+        <div class="mt-2 text-xs text-muted-foreground">
+          v2.1.0 • Port 3456
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <!-- Header -->
+      <header class="h-14 border-b flex items-center justify-between px-6">
+        <div class="flex items-center gap-4">
+          <h1 class="text-xl font-semibold">Plugins</h1>
+          <span class="badge badge-secondary">24 installed</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" class="input pl-9 w-64" placeholder="Search plugins...">
+          </div>
+          <button class="btn btn-primary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Plugin
+          </button>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <div class="px-6 pt-4">
+        <div class="tabs">
+          <div class="tab active">All Plugins</div>
+          <div class="tab">Installed</div>
+          <div class="tab">Available</div>
+          <div class="tab">Updates <span class="ml-1 badge badge-warning text-xs">3</span></div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="flex-1 overflow-y-auto p-6">
+        <!-- Categories Filter -->
+        <div class="flex items-center gap-2 mb-6">
+          <span class="text-sm text-muted-foreground">Category:</span>
+          <button class="btn btn-sm btn-primary">All</button>
+          <button class="btn btn-sm btn-outline">Infrastructure</button>
+          <button class="btn btn-sm btn-outline">Publishers</button>
+          <button class="btn btn-sm btn-outline">Subscribers</button>
+          <button class="btn btn-sm btn-outline">Integrations</button>
+          <button class="btn btn-sm btn-outline">AI Agents</button>
+        </div>
+
+        <!-- Featured Plugin -->
+        <div class="card mb-6 border-primary/30 bg-primary/5">
+          <div class="p-6">
+            <div class="flex items-start justify-between">
+              <div class="flex gap-4">
+                <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="font-semibold text-lg">Claude Code Integration</h3>
+                    <span class="badge badge-default">Featured</span>
+                    <span class="badge badge-success">Installed</span>
+                  </div>
+                  <p class="text-muted-foreground mt-1">Bridge between Overwatch and Claude Code for AI-assisted automation. Enables natural language commands, code generation, and intelligent file watching.</p>
+                  <div class="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                    <span class="flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                      </svg>
+                      12.4k downloads
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                      4.9 (328 reviews)
+                    </span>
+                    <span>by Anthropic</span>
+                    <span>v2.3.1</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="btn btn-outline btn-sm">Configure</button>
+                <button class="btn btn-secondary btn-sm">Update</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plugin Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          <!-- Plugin Card 1 - Installed -->
+          <div class="card plugin-card cursor-pointer">
+            <div class="p-4">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-medium truncate">Doc Agent</h4>
+                    <span class="badge badge-success text-xs">Running</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">Auto-updates API documentation when source files change</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Subscriber</span>
+                  <span>•</span>
+                  <span>v1.2.0</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div class="switch active" onclick="this.classList.toggle('active')"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plugin Card 2 - Installed -->
+          <div class="card plugin-card cursor-pointer">
+            <div class="p-4">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-medium truncate">Diagram Generator</h4>
+                    <span class="badge badge-success text-xs">Running</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">Auto-generates architecture diagrams from code structure</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Subscriber</span>
+                  <span>•</span>
+                  <span>v1.0.3</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div class="switch active" onclick="this.classList.toggle('active')"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plugin Card 3 - Installed -->
+          <div class="card plugin-card cursor-pointer">
+            <div class="p-4">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-medium truncate">Semantic Indexer</h4>
+                    <span class="badge badge-success text-xs">Running</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">Builds and maintains semantic search index for codebase</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Subscriber</span>
+                  <span>•</span>
+                  <span>v2.1.0</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div class="switch active" onclick="this.classList.toggle('active')"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plugin Card 4 - Stopped -->
+          <div class="card plugin-card cursor-pointer">
+            <div class="p-4">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-medium truncate">Slack Notifier</h4>
+                    <span class="badge badge-secondary text-xs">Stopped</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">Sends notifications to Slack channels on events</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Integration</span>
+                  <span>•</span>
+                  <span>v1.5.2</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div class="switch" onclick="this.classList.toggle('active')"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plugin Card 5 - Update Available -->
+          <div class="card plugin-card cursor-pointer border-warning/30">
+            <div class="p-4">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-medium truncate">File Watcher</h4>
+                    <span class="badge badge-warning text-xs">Update</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">Monitors filesystem changes and publishes events</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Publisher</span>
+                  <span>•</span>
+                  <span>v1.8.0 → v2.0.0</span>
+                </div>
+                <button class="btn btn-sm btn-outline">Update</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plugin Card 6 - Not Installed -->
+          <div class="card plugin-card cursor-pointer opacity-80">
+            <div class="p-4">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-medium truncate">Metrics Collector</h4>
+                    <span class="badge badge-outline text-xs">Not Installed</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">Collects and aggregates system and application metrics</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Subscriber</span>
+                  <span>•</span>
+                  <span>v3.2.1</span>
+                </div>
+                <button class="btn btn-sm btn-primary">Install</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plugin Card 7 - GitHub Integration -->
+          <div class="card plugin-card cursor-pointer opacity-80">
+            <div class="p-4">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-medium truncate">GitHub Actions</h4>
+                    <span class="badge badge-outline text-xs">Not Installed</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">Trigger GitHub Actions workflows from Overwatch events</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Integration</span>
+                  <span>•</span>
+                  <span>v1.0.0</span>
+                </div>
+                <button class="btn btn-sm btn-primary">Install</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plugin Card 8 - AI Code Review -->
+          <div class="card plugin-card cursor-pointer opacity-80">
+            <div class="p-4">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-medium truncate">AI Code Reviewer</h4>
+                    <span class="badge badge-outline text-xs">Not Installed</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">Automated code review using Claude on file changes</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>AI Agent</span>
+                  <span>•</span>
+                  <span>v2.0.0</span>
+                </div>
+                <button class="btn btn-sm btn-primary">Install</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plugin Card 9 - Test Runner -->
+          <div class="card plugin-card cursor-pointer opacity-80">
+            <div class="p-4">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-medium truncate">Auto Test Runner</h4>
+                    <span class="badge badge-outline text-xs">Not Installed</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">Automatically runs tests on file changes with smart filtering</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Subscriber</span>
+                  <span>•</span>
+                  <span>v1.4.0</span>
+                </div>
+                <button class="btn btn-sm btn-primary">Install</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Load More -->
+        <div class="flex justify-center mt-8">
+          <button class="btn btn-outline">
+            Load More Plugins
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Sidebar - Plugin Details -->
+    <aside class="w-80 border-l bg-card hidden xl:flex flex-col">
+      <div class="h-14 border-b flex items-center justify-between px-4">
+        <h2 class="font-semibold">Plugin Details</h2>
+        <button class="btn btn-ghost btn-icon btn-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4">
+        <!-- Plugin Header -->
+        <div class="text-center mb-6">
+          <div class="w-20 h-20 mx-auto rounded-xl bg-secondary flex items-center justify-center mb-3">
+            <svg class="w-10 h-10 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-lg">Doc Agent</h3>
+          <p class="text-sm text-muted-foreground">by Hopper Labs</p>
+          <div class="flex items-center justify-center gap-2 mt-2">
+            <span class="badge badge-success">Running</span>
+            <span class="badge badge-secondary">v1.2.0</span>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-2 mb-6">
+          <div class="text-center p-2 rounded-lg bg-secondary">
+            <div class="text-lg font-semibold">2.1k</div>
+            <div class="text-xs text-muted-foreground">Downloads</div>
+          </div>
+          <div class="text-center p-2 rounded-lg bg-secondary">
+            <div class="text-lg font-semibold">4.8</div>
+            <div class="text-xs text-muted-foreground">Rating</div>
+          </div>
+          <div class="text-center p-2 rounded-lg bg-secondary">
+            <div class="text-lg font-semibold">12</div>
+            <div class="text-xs text-muted-foreground">Reviews</div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-6">
+          <h4 class="text-sm font-semibold mb-2">Description</h4>
+          <p class="text-sm text-muted-foreground">
+            Automatically updates API documentation when source files change. Supports JSDoc, TypeDoc, and Swagger/OpenAPI formats. Integrates with the semantic indexer for intelligent doc generation.
+          </p>
+        </div>
+
+        <!-- Configuration -->
+        <div class="mb-6">
+          <h4 class="text-sm font-semibold mb-3">Configuration</h4>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-muted-foreground block mb-1">Output Directory</label>
+              <input type="text" class="input text-sm" value="docs/api">
+            </div>
+            <div>
+              <label class="text-xs text-muted-foreground block mb-1">Format</label>
+              <select class="input text-sm">
+                <option>Markdown</option>
+                <option>HTML</option>
+                <option>JSON</option>
+              </select>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">Auto-commit changes</span>
+              <div class="switch active" onclick="this.classList.toggle('active')"></div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">Include private members</span>
+              <div class="switch" onclick="this.classList.toggle('active')"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resource Usage -->
+        <div class="mb-6">
+          <h4 class="text-sm font-semibold mb-3">Resource Usage</h4>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-muted-foreground">Memory</span>
+                <span>45 MB / 128 MB</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" style="width: 35%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-muted-foreground">CPU</span>
+                <span>12%</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" style="width: 12%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dependencies -->
+        <div class="mb-6">
+          <h4 class="text-sm font-semibold mb-2">Dependencies</h4>
+          <div class="flex flex-wrap gap-1">
+            <span class="badge badge-outline text-xs">zmq_bus</span>
+            <span class="badge badge-outline text-xs">file_watcher</span>
+            <span class="badge badge-outline text-xs">semantic_indexer</span>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div>
+          <h4 class="text-sm font-semibold mb-3">Recent Activity</h4>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-start gap-2">
+              <div class="w-1.5 h-1.5 rounded-full bg-success mt-1.5 shrink-0"></div>
+              <div>
+                <div class="text-muted-foreground">Generated docs for <span class="text-foreground">api/routes.ts</span></div>
+                <div class="text-xs text-muted-foreground">2 min ago</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-2">
+              <div class="w-1.5 h-1.5 rounded-full bg-success mt-1.5 shrink-0"></div>
+              <div>
+                <div class="text-muted-foreground">Updated <span class="text-foreground">README.md</span></div>
+                <div class="text-xs text-muted-foreground">5 min ago</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-2">
+              <div class="w-1.5 h-1.5 rounded-full bg-warning mt-1.5 shrink-0"></div>
+              <div>
+                <div class="text-muted-foreground">Skipped <span class="text-foreground">test/*.ts</span> (excluded)</div>
+                <div class="text-xs text-muted-foreground">8 min ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions Footer -->
+      <div class="p-4 border-t space-y-2">
+        <button class="btn btn-outline w-full">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Restart Plugin
+        </button>
+        <button class="btn btn-destructive w-full">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          Uninstall
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+
+    // Category filter switching
+    document.querySelectorAll('.flex.items-center.gap-2.mb-6 button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.flex.items-center.gap-2.mb-6 button').forEach(b => {
+          b.classList.remove('btn-primary');
+          b.classList.add('btn-outline');
+        });
+        btn.classList.remove('btn-outline');
+        btn.classList.add('btn-primary');
+      });
+    });
+
+    // Nav item switching
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

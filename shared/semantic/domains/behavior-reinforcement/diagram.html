@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Behavior Reinforcement Domain Model</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      background: #0a0a0f;
+      color: #e4e4e7;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 2rem;
+      margin: 0;
+    }
+    h1 { color: #a78bfa; margin-bottom: 0.5rem; }
+    h2 { color: #8b5cf6; margin-top: 2rem; }
+    .subtitle { color: #71717a; margin-bottom: 2rem; }
+    .mermaid { background: #18181b; border-radius: 12px; padding: 2rem; margin: 1rem 0; }
+    .section { margin: 2rem 0; }
+    code { background: #27272a; padding: 0.2rem 0.4rem; border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #27272a; }
+    th { color: #a1a1aa; }
+    .tag { background: #3f3f46; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-right: 0.25rem; }
+  </style>
+</head>
+<body>
+  <h1>Behavior Reinforcement Domain Model</h1>
+  <p class="subtitle">RLHF-style pattern tracking with provenance and human approval</p>
+
+  <h2>Entity Relationship Diagram</h2>
+  <div class="mermaid">
+erDiagram
+    LearnedPattern ||--|| Provenance : has
+    LearnedPattern ||--|| ApprovalStatus : has
+    LearnedPattern ||--o| EffectivenessMetrics : tracks
+    LearnedPattern ||--o{ PatternExample : contains
+    LearnedPattern ||--o{ ReinforcementEvent : logged_in
+    ReinforcementEvent ||--o| UserFeedback : has
+
+    LearnedPattern {
+        uuid id PK
+        string human_id "NICE-20251209-0001"
+        enum signal "positive|negative"
+        enum category "accuracy|efficiency|ux|..."
+        string title
+        text pattern
+        text anti_pattern
+        string trigger_context
+        string[] tags
+        datetime created_at
+        datetime updated_at
+    }
+
+    Provenance {
+        enum source_type "user_feedback|self_observation|..."
+        string session_id
+        string git_commit
+        string file_path
+        string tool_name
+        string observed_by
+        datetime observed_at
+        string[] related_patterns
+    }
+
+    ApprovalStatus {
+        enum status "pending|approved|rejected|needs_revision"
+        string reviewed_by
+        datetime reviewed_at
+        string review_notes
+        decimal confidence_score "0.0-1.0"
+        string rejection_reason
+        string suggested_revision
+        int approved_version
+    }
+
+    EffectivenessMetrics {
+        int times_applied
+        int times_violated
+        datetime last_applied_at
+        datetime last_violated_at
+        decimal success_rate
+        int user_feedback_positive
+        int user_feedback_negative
+    }
+
+    PatternExample {
+        string situation
+        string correct_behavior
+        string incorrect_behavior
+        string source_session_id
+    }
+
+    ReinforcementEvent {
+        uuid id PK
+        uuid pattern_id FK
+        enum event_type "applied|violated|reminded|overridden"
+        string session_id
+        string context
+        string outcome
+        datetime occurred_at
+    }
+
+    UserFeedback {
+        enum signal "thumbs_up|thumbs_down|correction|praise"
+        string comment
+        string provided_by
+        datetime provided_at
+    }
+  </div>
+
+  <h2>Approval Workflow</h2>
+  <div class="mermaid">
+stateDiagram-v2
+    [*] --> pending: Pattern created
+    pending --> approved: Human approves
+    pending --> rejected: Human rejects
+    pending --> needs_revision: Needs changes
+    needs_revision --> pending: Revised
+    approved --> deprecated: Outdated
+    rejected --> [*]: Discarded
+    deprecated --> [*]: Archived
+  </div>
+
+  <h2>Pattern Lifecycle</h2>
+  <div class="mermaid">
+flowchart LR
+    subgraph Discovery
+        A[AI makes mistake] --> B[Self-observation]
+        C[User feedback] --> D[User correction]
+        E[Batch analysis] --> F[Pattern mining]
+    end
+
+    subgraph Capture
+        B --> G[Create LearnedPattern]
+        D --> G
+        F --> G
+        G --> H[Add Provenance]
+        H --> I[Status: pending]
+    end
+
+    subgraph Approval
+        I --> J{Human Review}
+        J -->|Approve| K[Status: approved]
+        J -->|Reject| L[Status: rejected]
+        J -->|Revise| M[Status: needs_revision]
+        M --> I
+    end
+
+    subgraph Application
+        K --> N[AI applies pattern]
+        N --> O[Log ReinforcementEvent]
+        O --> P[Track effectiveness]
+        P --> Q{Working?}
+        Q -->|Yes| R[Reinforce]
+        Q -->|No| S[Flag for review]
+    end
+
+    style A fill:#ef4444
+    style C fill:#3b82f6
+    style K fill:#22c55e
+    style L fill:#ef4444
+  </div>
+
+  <h2>Enums Reference</h2>
+
+  <h3>ReinforcementSignal</h3>
+  <table>
+    <tr><th>Value</th><th>Description</th><th>Source</th></tr>
+    <tr><td><code>positive</code></td><td>Reinforce this behavior</td><td>/nice</td></tr>
+    <tr><td><code>negative</code></td><td>Avoid this behavior</td><td>/error, /fail</td></tr>
+  </table>
+
+  <h3>PatternCategory</h3>
+  <table>
+    <tr><th>Value</th><th>Description</th></tr>
+    <tr><td><code>accuracy</code></td><td>Correct on first try, factual correctness</td></tr>
+    <tr><td><code>efficiency</code></td><td>Fast, parallel execution, minimal friction</td></tr>
+    <tr><td><code>ux</code></td><td>Good user experience choices</td></tr>
+    <tr><td><code>proactivity</code></td><td>Anticipated user needs</td></tr>
+    <tr><td><code>communication</code></td><td>Clear, concise, well-formatted output</td></tr>
+    <tr><td><code>following_rules</code></td><td>Correctly applied CLAUDE.md or other rules</td></tr>
+    <tr><td><code>tool_usage</code></td><td>Correct use of tools (BAML, git, etc.)</td></tr>
+    <tr><td><code>code_quality</code></td><td>Good coding practices</td></tr>
+    <tr><td><code>architecture</code></td><td>Good design decisions</td></tr>
+    <tr><td><code>security</code></td><td>Security-conscious behavior</td></tr>
+  </table>
+
+  <h3>ProvenanceSourceType</h3>
+  <table>
+    <tr><th>Value</th><th>Description</th></tr>
+    <tr><td><code>user_feedback</code></td><td>User explicitly said "good job" or "that's wrong"</td></tr>
+    <tr><td><code>self_observation</code></td><td>AI noticed its own mistake during retry</td></tr>
+    <tr><td><code>error_recovery</code></td><td>Learned from fixing an error</td></tr>
+    <tr><td><code>documentation</code></td><td>Extracted from docs/CLAUDE.md</td></tr>
+    <tr><td><code>prior_session</code></td><td>Pattern from previous conversation</td></tr>
+    <tr><td><code>batch_analysis</code></td><td>Discovered via batch log analysis</td></tr>
+    <tr><td><code>human_authored</code></td><td>Manually written by human</td></tr>
+  </table>
+
+  <h3>ApprovalState</h3>
+  <table>
+    <tr><th>Value</th><th>Description</th></tr>
+    <tr><td><code>pending</code></td><td>Awaiting human review</td></tr>
+    <tr><td><code>approved</code></td><td>Human approved - active for reinforcement</td></tr>
+    <tr><td><code>rejected</code></td><td>Human rejected - discarded</td></tr>
+    <tr><td><code>needs_revision</code></td><td>Needs changes before approval</td></tr>
+    <tr><td><code>deprecated</code></td><td>Was approved, now outdated</td></tr>
+  </table>
+
+  <footer style="margin-top: 3rem; color: #52525b; font-size: 0.875rem;">
+    Domain: behavior-reinforcement v0.1.0 | Generated: 2025-12-09
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      flowchart: { curve: 'basis' }
+    });
+  </script>
+</body>
+</html>

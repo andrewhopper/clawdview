@@ -1,0 +1,545 @@
+# =============================================================================
+# Domain: behavior-reinforcement
+# Version: 0.1.0
+# Status: development
+# Dependencies: core@^1.0.0
+# Created: 2025-12-09
+# Updated: 2025-12-09
+# Spec: /shared/semantic/VERSIONED_SCHEMA_SPEC.md
+# =============================================================================
+#
+# Purpose: Track AI behavior patterns for RLHF-style reinforcement learning.
+# Captures positive patterns (/nice) and negative patterns (/error) with
+# full provenance tracking and human approval workflow.
+#
+# Use cases:
+# - Log good AI behaviors to reinforce
+# - Log mistakes/anti-patterns to avoid
+# - Track human approval of learned patterns
+# - Build training data for model improvement
+# - Create searchable pattern library
+# =============================================================================
+
+domain:
+  name: behavior-reinforcement
+  version: "0.1.0"
+  description: "RLHF-style behavior pattern tracking with provenance and human approval"
+  namespace: "https://hopperlabs.ai/ontology/behavior-reinforcement#"
+  created_at: "2025-12-09"
+  updated_at: "2025-12-09"
+  dependencies:
+    core: "^1.0.0"
+
+  changelog:
+    "0.1.0": "Initial development version"
+
+# =============================================================================
+# ENTITIES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # LearnedPattern - A reusable behavior or knowledge pattern
+  # ---------------------------------------------------------------------------
+  LearnedPattern:
+    description: "A behavior pattern that should be reinforced or avoided"
+    extends: core.Entity
+    properties:
+      id:
+        type: string
+        format: uuid
+        required: true
+        description: "Primary UUID identifier"
+
+      human_id:
+        type: string
+        pattern: "^(NICE|ERR)-[0-9]{8}-[0-9]{4}$"
+        description: "Human-readable ID, e.g., NICE-20251209-0001 or ERR-20251209-0001"
+
+      signal:
+        type: ReinforcementSignal
+        required: true
+        description: "Positive (reinforce) or negative (avoid)"
+
+      category:
+        type: PatternCategory
+        required: true
+        description: "Category of behavior"
+
+      title:
+        type: string
+        required: true
+        maxLength: 100
+        description: "Short descriptive title"
+
+      pattern:
+        type: string
+        required: true
+        description: "The actual pattern/rule to learn (can be multi-line)"
+
+      anti_pattern:
+        type: string
+        description: "What NOT to do (for positive patterns, show the wrong way)"
+
+      # --- RLHF-Compatible Pairwise Comparison ---
+      # Aligns with Anthropic/HuggingFace hh-rlhf format: {chosen, rejected}
+      chosen:
+        type: string
+        description: "RLHF-compatible: The preferred/correct response or behavior"
+
+      rejected:
+        type: string
+        description: "RLHF-compatible: The non-preferred/incorrect response or behavior"
+
+      preference_strength:
+        type: PreferenceStrength
+        description: "How strongly the chosen option is preferred over rejected"
+
+      trigger_context:
+        type: string
+        description: "When/where this pattern applies"
+
+      examples:
+        type: array
+        items: PatternExample
+        description: "Concrete examples of the pattern in action"
+
+      tags:
+        type: array
+        items: string
+        description: "Searchable tags"
+
+      # Provenance
+      provenance:
+        type: Provenance
+        required: true
+        description: "Where this pattern came from"
+
+      # Approval workflow
+      approval:
+        type: ApprovalStatus
+        required: true
+        description: "Human approval status"
+
+      # Effectiveness tracking
+      effectiveness:
+        type: EffectivenessMetrics
+        description: "How well this pattern is being applied"
+
+      created_at:
+        type: datetime
+        required: true
+      updated_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # PatternExample - Concrete example of a pattern
+  # ---------------------------------------------------------------------------
+  PatternExample:
+    description: "A concrete example demonstrating the pattern"
+    properties:
+      situation:
+        type: string
+        required: true
+        description: "The context/situation"
+
+      correct_behavior:
+        type: string
+        required: true
+        description: "What to do (good example)"
+
+      incorrect_behavior:
+        type: string
+        description: "What not to do (bad example)"
+
+      source_session_id:
+        type: string
+        description: "Session where this example occurred"
+
+  # ---------------------------------------------------------------------------
+  # Provenance - Where the pattern came from
+  # ---------------------------------------------------------------------------
+  Provenance:
+    description: "Tracks the origin and lineage of a learned pattern"
+    properties:
+      source_type:
+        type: ProvenanceSourceType
+        required: true
+        description: "How this pattern was discovered"
+
+      # --- Project Context ---
+      project_context:
+        type: ProjectContext
+        description: "High-level project context when pattern was learned"
+
+      # --- Session Details ---
+      session_id:
+        type: string
+        description: "Claude Code session ID where pattern was observed"
+
+      conversation_turn:
+        type: integer
+        description: "Turn number in conversation"
+
+      # --- Code Context ---
+      git_commit:
+        type: string
+        pattern: "^[a-f0-9]{7,40}$"
+        description: "Git commit hash for code context"
+
+      git_branch:
+        type: string
+        description: "Git branch name"
+
+      file_path:
+        type: string
+        description: "File being worked on when pattern was learned"
+
+      tool_name:
+        type: string
+        description: "Tool that was being used (Bash, Edit, etc.)"
+
+      # --- Observer ---
+      observed_by:
+        type: string
+        required: true
+        description: "Who/what observed the pattern (user ID, AI model)"
+
+      observed_at:
+        type: datetime
+        required: true
+
+      related_patterns:
+        type: array
+        items: string
+        format: uuid
+        description: "UUIDs of related patterns"
+
+  # ---------------------------------------------------------------------------
+  # ProjectContext - High-level context about what was being built
+  # ---------------------------------------------------------------------------
+  ProjectContext:
+    description: "High-level project context for pattern applicability"
+    properties:
+      project_id:
+        type: string
+        format: uuid
+        description: "UUID from .project file if available"
+
+      project_name:
+        type: string
+        description: "Human-readable project name, e.g., 'overwatch-pathway-analyzer'"
+
+      project_type:
+        type: ProjectType
+        description: "Type of project: poc, prototype, production, tool, library"
+
+      domain:
+        type: string
+        description: "Domain area, e.g., 'microservice', 'cli-tool', 'web-app', 'data-pipeline'"
+
+      tech_stack:
+        type: array
+        items: string
+        description: "Technologies in use, e.g., ['python', 'fastapi', 'postgres']"
+
+      sdlc_phase:
+        type: string
+        description: "SDLC phase if applicable, e.g., 'phase-8-implementation'"
+
+      task_description:
+        type: string
+        description: "What was being worked on, e.g., 'Adding BAML integration for workflow analysis'"
+
+      constraints:
+        type: array
+        items: string
+        description: "Active constraints, e.g., ['local-only', 'no-cloud', 'must-use-ollama']"
+
+  # ---------------------------------------------------------------------------
+  # ApprovalStatus - Human approval workflow
+  # ---------------------------------------------------------------------------
+  ApprovalStatus:
+    description: "Tracks human review and approval of patterns"
+    properties:
+      status:
+        type: ApprovalState
+        required: true
+        default: pending
+
+      reviewed_by:
+        type: string
+        description: "Human reviewer ID/name"
+
+      reviewed_at:
+        type: datetime
+
+      review_notes:
+        type: string
+        description: "Notes from reviewer"
+
+      confidence_score:
+        type: decimal
+        minimum: 0.0
+        maximum: 1.0
+        description: "How confident reviewer is in this pattern (0-1)"
+
+      # Rejection handling
+      rejection_reason:
+        type: string
+        description: "Why pattern was rejected"
+
+      suggested_revision:
+        type: string
+        description: "How to improve the pattern"
+
+      # Versioning for approved patterns
+      approved_version:
+        type: integer
+        description: "Version number of approved pattern"
+
+      previous_versions:
+        type: array
+        items: string
+        description: "IDs of previous versions"
+
+  # ---------------------------------------------------------------------------
+  # EffectivenessMetrics - Track how well pattern is being applied
+  # ---------------------------------------------------------------------------
+  EffectivenessMetrics:
+    description: "Metrics on pattern application and effectiveness"
+    properties:
+      times_applied:
+        type: integer
+        default: 0
+        description: "How many times AI applied this pattern"
+
+      times_violated:
+        type: integer
+        default: 0
+        description: "How many times AI violated this pattern"
+
+      last_applied_at:
+        type: datetime
+
+      last_violated_at:
+        type: datetime
+
+      success_rate:
+        type: decimal
+        description: "applied / (applied + violated)"
+
+      user_feedback_positive:
+        type: integer
+        default: 0
+
+      user_feedback_negative:
+        type: integer
+        default: 0
+
+  # ---------------------------------------------------------------------------
+  # ReinforcementEvent - Log of pattern application
+  # ---------------------------------------------------------------------------
+  ReinforcementEvent:
+    description: "Record of a pattern being applied or violated"
+    extends: core.Entity
+    properties:
+      id:
+        type: string
+        required: true
+
+      pattern_id:
+        type: string
+        required: true
+        description: "Reference to LearnedPattern"
+
+      event_type:
+        type: ReinforcementEventType
+        required: true
+
+      session_id:
+        type: string
+        required: true
+
+      context:
+        type: string
+        description: "What was happening when event occurred"
+
+      outcome:
+        type: string
+        description: "Result of applying/violating pattern"
+
+      user_feedback:
+        type: UserFeedback
+        description: "User's reaction"
+
+      occurred_at:
+        type: datetime
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # UserFeedback - Human feedback on pattern application
+  # ---------------------------------------------------------------------------
+  UserFeedback:
+    description: "User feedback on AI behavior"
+    properties:
+      signal:
+        type: FeedbackSignal
+        required: true
+
+      comment:
+        type: string
+
+      provided_by:
+        type: string
+        required: true
+
+      provided_at:
+        type: datetime
+        required: true
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  ReinforcementSignal:
+    description: "Whether to reinforce or avoid this pattern"
+    values:
+      - positive    # Reinforce this behavior (/nice)
+      - negative    # Avoid this behavior (/error)
+
+  ProjectType:
+    description: "Type of project being worked on"
+    values:
+      - poc              # Proof of concept, throwaway code
+      - spike            # Time-boxed exploration
+      - prototype        # Working demo, may evolve
+      - production       # Production-grade code
+      - tool             # Developer tool or utility
+      - library          # Reusable library/package
+      - script           # One-off script
+      - config           # Configuration/infrastructure
+      - documentation    # Docs, guides, specs
+
+  PreferenceStrength:
+    description: "How strongly one option is preferred (RLHF alignment)"
+    values:
+      - strong           # Clear preference, obvious choice
+      - moderate         # Preferred but close
+      - weak             # Slight preference
+      - equal            # Both acceptable (tie)
+
+  PatternCategory:
+    description: "Category of behavior pattern"
+    values:
+      - accuracy           # Correct on first try, factual correctness
+      - efficiency         # Fast, parallel execution, minimal friction
+      - ux                 # Good user experience choices
+      - proactivity        # Anticipated user needs
+      - communication      # Clear, concise, well-formatted output
+      - following_rules    # Correctly applied CLAUDE.md or other rules
+      - tool_usage         # Correct use of tools (BAML, git, etc.)
+      - code_quality       # Good coding practices
+      - architecture       # Good design decisions
+      - security           # Security-conscious behavior
+
+  ProvenanceSourceType:
+    description: "How the pattern was discovered"
+    values:
+      - user_feedback      # User explicitly said "good job" or "that's wrong"
+      - self_observation   # AI noticed its own mistake during retry
+      - error_recovery     # Learned from fixing an error
+      - documentation      # Extracted from docs/CLAUDE.md
+      - prior_session      # Pattern from previous conversation
+      - batch_analysis     # Discovered via batch log analysis
+      - human_authored     # Manually written by human
+
+  ApprovalState:
+    description: "Human approval workflow state"
+    values:
+      - pending            # Awaiting review
+      - approved           # Human approved
+      - rejected           # Human rejected
+      - needs_revision     # Needs changes before approval
+      - deprecated         # Was approved, now deprecated
+
+  ReinforcementEventType:
+    description: "Type of reinforcement event"
+    values:
+      - applied            # Pattern was correctly applied
+      - violated           # Pattern was violated
+      - reminded           # AI was reminded of pattern
+      - overridden         # User overrode pattern
+
+  FeedbackSignal:
+    description: "User feedback signal"
+    values:
+      - thumbs_up
+      - thumbs_down
+      - correction         # User provided correction
+      - praise             # Explicit praise
+      - complaint          # Explicit complaint
+
+# =============================================================================
+# ACTIONS
+# =============================================================================
+
+actions:
+
+  CreatePattern:
+    type: create
+    description: "Create a new learned pattern"
+    operatesOn: LearnedPattern
+    params:
+      signal: { type: ReinforcementSignal, required: true }
+      category: { type: PatternCategory, required: true }
+      title: { type: string, required: true }
+      pattern: { type: string, required: true }
+      provenance: { type: Provenance, required: true }
+    returns: LearnedPattern
+
+  ApprovePattern:
+    type: update
+    description: "Human approves a pattern"
+    operatesOn: LearnedPattern
+    params:
+      pattern_id: { type: string, required: true }
+      reviewed_by: { type: string, required: true }
+      confidence_score: { type: decimal }
+      review_notes: { type: string }
+    returns: LearnedPattern
+
+  RejectPattern:
+    type: update
+    description: "Human rejects a pattern"
+    operatesOn: LearnedPattern
+    params:
+      pattern_id: { type: string, required: true }
+      reviewed_by: { type: string, required: true }
+      rejection_reason: { type: string, required: true }
+      suggested_revision: { type: string }
+    returns: LearnedPattern
+
+  LogApplication:
+    type: create
+    description: "Log that a pattern was applied"
+    operatesOn: ReinforcementEvent
+    params:
+      pattern_id: { type: string, required: true }
+      session_id: { type: string, required: true }
+      context: { type: string }
+    returns: ReinforcementEvent
+
+  LogViolation:
+    type: create
+    description: "Log that a pattern was violated"
+    operatesOn: ReinforcementEvent
+    params:
+      pattern_id: { type: string, required: true }
+      session_id: { type: string, required: true }
+      context: { type: string }
+    returns: ReinforcementEvent

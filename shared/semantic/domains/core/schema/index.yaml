@@ -1,0 +1,32 @@
+# Core Domain Schema Index
+# Imports all schema fragments
+
+domain: core
+version: 1.0.0
+description: Foundation primitives for all domain models
+namespace: http://protoflow.ai/ontology/core#
+dependencies: []
+
+imports:
+  - base.yaml       # Entity, AuditInfo
+  - people.yaml     # Person, Organization
+  - time.yaml       # TimePoint, Duration, DateRange, TimeWindow, ScheduleTemplate, CalendarDay, etc.
+  - money.yaml      # Money, Currency
+  - location.yaml   # Address, GeoLocation
+  - contact.yaml    # ContactInfo
+  - measurement.yaml # Quantity, Weight, Length
+  - media.yaml      # Image, Document, Video
+  - status.yaml     # Status, Identifier, IdentifierType
+  - ownership.yaml  # OwnershipRecord, TransferRecord, Encumbrance, Lien
+
+# Type mappings for code generation
+types:
+  string: { ts: string, py: str, rust: String }
+  integer: { ts: number, py: int, rust: i32 }
+  long: { ts: number, py: int, rust: i64 }
+  decimal: { ts: number, py: "Decimal", rust: f64 }
+  boolean: { ts: boolean, py: bool, rust: bool }
+  date: { ts: string, py: "date", rust: "NaiveDate" }
+  datetime: { ts: string, py: "datetime", rust: "DateTime<Utc>" }
+  duration: { ts: string, py: "timedelta", rust: "Duration" }
+  uri: { ts: string, py: str, rust: String }

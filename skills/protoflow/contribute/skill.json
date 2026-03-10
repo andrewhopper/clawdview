@@ -1,0 +1,44 @@
+{
+  "name": "protoflow:contribute",
+  "description": "Create contribution sandbox, clone from GitLab, make changes, and open merge request",
+  "version": "1.0.0",
+  "plugin": "protoflow",
+  "handler": "handler.py",
+  "arguments": {
+    "description": {
+      "description": "Brief description of the contribution",
+      "type": "string",
+      "required": false
+    },
+    "type": {
+      "description": "Type of contribution",
+      "type": "string",
+      "enum": ["bug-fix", "feature", "docs", "performance", "refactor", "tests", "other"],
+      "required": false
+    },
+    "issue": {
+      "description": "Related GitLab issue number",
+      "type": "string",
+      "required": false
+    },
+    "repo": {
+      "description": "Repository to contribute to (default: protoflow/protoflow)",
+      "type": "string",
+      "required": false
+    }
+  },
+  "examples": [
+    {
+      "command": "/protoflow:contribute",
+      "description": "Start interactive contribution workflow"
+    },
+    {
+      "command": "/protoflow:contribute --description \"Fix S3 timeout\" --type bug-fix",
+      "description": "Contribute bug fix with description"
+    },
+    {
+      "command": "/protoflow:contribute --type docs --issue 1234",
+      "description": "Contribute docs improvement for specific issue"
+    }
+  ]
+}

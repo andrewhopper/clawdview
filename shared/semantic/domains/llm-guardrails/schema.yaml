@@ -1,0 +1,319 @@
+# LLM Guardrails Domain Model
+# Safety constraints, content filtering, and output validation
+# Source: Anthropic Constitutional AI, OpenAI moderation, proto-context-management-game
+
+domain:
+  name: llm-guardrails
+  version: "1.0.0"
+  description: Safety guardrails - constraints, content filtering, output validation, and policies
+  dependencies: [core, llm-message]
+  sources:
+    - "Anthropic Constitutional AI"
+    - "OpenAI Moderation API"
+    - "proto-context-management-game guardrails concept"
+    - "AWS Bedrock Guardrails"
+  created_at: "2025-11-23"
+  updated_at: "2025-11-23"
+
+entities:
+
+  GuardrailSet:
+    description: A set of guardrails applied to LLM interactions
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string }
+      rules: { type: array, items: string, description: "GuardrailRule IDs" }
+      filters: { type: array, items: string, description: "ContentFilter IDs" }
+      validators: { type: array, items: string, description: "OutputValidator IDs" }
+      enforcementLevel: { type: EnforcementLevel }
+      isActive: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  GuardrailRule:
+    description: A specific guardrail rule/constraint
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      description: { type: string, required: true }
+      type: { type: RuleType, required: true }
+      scope: { type: RuleScope, required: true }
+      condition: { type: string, description: "Condition expression" }
+      action: { type: RuleAction, required: true }
+      message: { type: string, description: "Message when triggered" }
+      severity: { type: Severity }
+      priority: { type: integer }
+      isEnabled: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  ContentFilter:
+    description: Filter for detecting/blocking specific content
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      category: { type: FilterCategory, required: true }
+      method: { type: FilterMethod, required: true }
+      patterns: { type: array, items: string, description: "Regex patterns" }
+      keywords: { type: array, items: string }
+      threshold: { type: decimal, description: "For ML-based filters" }
+      action: { type: FilterAction, required: true }
+      isEnabled: { type: boolean, default: true }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  OutputValidator:
+    description: Validator for LLM outputs
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: ValidatorType, required: true }
+      config: { type: object }
+      onFailure: { type: ValidatorAction, required: true }
+      isEnabled: { type: boolean, default: true }
+
+  GuardrailViolation:
+    description: Record of a guardrail violation
+    properties:
+      id: { type: string, required: true }
+      guardrailSetId: { type: string, required: true }
+      ruleId: { type: string }
+      filterId: { type: string }
+      validatorId: { type: string }
+      messageId: { type: string }
+      violationType: { type: ViolationType, required: true }
+      content: { type: string, description: "Content that triggered violation" }
+      severity: { type: Severity, required: true }
+      actionTaken: { type: string }
+      wasBlocked: { type: boolean }
+      wasModified: { type: boolean }
+      timestamp: { type: datetime, required: true }
+
+  TopicPolicy:
+    description: Policy for allowed/denied topics
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      topics: { type: array, items: Topic }
+      defaultAction: { type: TopicAction }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Topic:
+    description: A topic with its policy
+    properties:
+      name: { type: string, required: true }
+      description: { type: string }
+      action: { type: TopicAction, required: true }
+      examples: { type: array, items: string }
+      keywords: { type: array, items: string }
+
+  PIIConfig:
+    description: Configuration for PII detection and handling
+    properties:
+      id: { type: string, required: true }
+      enabledTypes: { type: array, items: PIIType }
+      action: { type: PIIAction, required: true }
+      maskingPattern: { type: string, default: "[REDACTED]" }
+      allowlist: { type: array, items: string, description: "Allowed PII patterns" }
+
+  WordPolicy:
+    description: Policy for specific words/phrases
+    properties:
+      id: { type: string, required: true }
+      blockedWords: { type: array, items: string }
+      blockedPhrases: { type: array, items: string }
+      profanityFilter: { type: boolean, default: true }
+      customDictionary: { type: string, description: "Path to dictionary" }
+      action: { type: FilterAction }
+
+  GroundingConfig:
+    description: Configuration for response grounding
+    properties:
+      id: { type: string, required: true }
+      requireGrounding: { type: boolean, default: false }
+      groundingSources: { type: array, items: string }
+      groundingThreshold: { type: decimal }
+      onUngrounded: { type: GroundingAction }
+
+  SafetyScore:
+    description: Safety score for content
+    properties:
+      contentId: { type: string, required: true }
+      overallScore: { type: decimal, required: true, description: "0-1 safety score" }
+      categoryScores: { type: array, items: CategoryScore }
+      isSafe: { type: boolean }
+      flaggedCategories: { type: array, items: string }
+      scoredAt: { type: datetime, required: true }
+
+  CategoryScore:
+    description: Score for a specific safety category
+    properties:
+      category: { type: FilterCategory, required: true }
+      score: { type: decimal, required: true }
+      threshold: { type: decimal }
+      flagged: { type: boolean }
+
+  GuardrailMetrics:
+    description: Aggregated guardrail metrics
+    properties:
+      guardrailSetId: { type: string, required: true }
+      period: { type: string }
+      totalRequests: { type: integer }
+      violations: { type: integer }
+      blockedRequests: { type: integer }
+      modifiedResponses: { type: integer }
+      violationsByType: { type: object }
+      violationsBySeverity: { type: object }
+      topTriggeredRules: { type: array, items: string }
+      recordedAt: { type: datetime }
+
+enums:
+
+  RuleType:
+    description: Type of guardrail rule
+    values:
+      - Prohibition    # Must not do X
+      - Requirement    # Must do X
+      - Constraint     # Limit on behavior
+      - Format         # Output format rule
+      - Topic          # Topic restriction
+      - Persona        # Stay in character
+
+  RuleScope:
+    description: Scope of rule application
+    values:
+      - Input          # Apply to user input
+      - Output         # Apply to LLM output
+      - Both           # Apply to both
+      - System         # System-level rule
+
+  RuleAction:
+    description: Action when rule triggers
+    values:
+      - Block          # Block the request/response
+      - Warn           # Allow but warn
+      - Modify         # Modify content
+      - Flag           # Flag for review
+      - Log            # Log only
+      - Redirect       # Redirect to different handler
+
+  FilterCategory:
+    description: Category of content filter
+    values:
+      - Hate           # Hate speech
+      - Violence       # Violent content
+      - Sexual         # Sexual content
+      - SelfHarm       # Self-harm content
+      - Harassment     # Harassment
+      - Misinformation # False information
+      - Illegal        # Illegal activities
+      - PII            # Personal information
+      - Profanity      # Profane language
+      - Spam           # Spam content
+      - Jailbreak      # Jailbreak attempts
+      - PromptInjection # Prompt injection
+
+  FilterMethod:
+    description: Method for content filtering
+    values:
+      - Regex          # Regular expression matching
+      - Keyword        # Keyword matching
+      - ML             # Machine learning model
+      - LLM            # LLM-based detection
+      - Hybrid         # Combination
+      - External       # External moderation API
+
+  FilterAction:
+    description: Action when filter triggers
+    values:
+      - Block
+      - Mask
+      - Replace
+      - Flag
+      - Log
+
+  ValidatorType:
+    description: Type of output validator
+    values:
+      - Schema         # JSON schema validation
+      - Regex          # Regex pattern validation
+      - Length         # Length constraints
+      - Format         # Format validation
+      - Grounding      # Grounding check
+      - Factuality     # Fact check
+      - Consistency    # Self-consistency check
+      - Custom         # Custom validator
+
+  ValidatorAction:
+    description: Action on validation failure
+    values:
+      - Reject         # Reject the output
+      - Retry          # Retry generation
+      - Fallback       # Use fallback response
+      - Flag           # Flag for review
+      - Pass           # Pass anyway (logging only)
+
+  ViolationType:
+    description: Type of guardrail violation
+    values:
+      - ContentPolicy  # Content policy violation
+      - TopicPolicy    # Topic restriction
+      - FormatViolation # Format requirement
+      - PIIDetected    # PII detected
+      - JailbreakAttempt # Jailbreak attempt
+      - ValidationFailure # Validation failed
+
+  Severity:
+    description: Severity of violation
+    values:
+      - Low
+      - Medium
+      - High
+      - Critical
+
+  EnforcementLevel:
+    description: How strictly guardrails are enforced
+    values:
+      - Strict         # Block all violations
+      - Moderate       # Block high severity only
+      - Lenient        # Warn only
+      - Monitor        # Log only
+
+  TopicAction:
+    description: Action for topic policy
+    values:
+      - Allow          # Allow discussion
+      - Deny           # Block discussion
+      - Restrict       # Allow with restrictions
+      - Redirect       # Redirect to resource
+
+  PIIType:
+    description: Types of PII to detect
+    values:
+      - Name
+      - Email
+      - Phone
+      - SSN
+      - CreditCard
+      - Address
+      - DateOfBirth
+      - IPAddress
+      - Custom
+
+  PIIAction:
+    description: Action for PII detection
+    values:
+      - Block
+      - Mask
+      - Anonymize
+      - Flag
+
+  GroundingAction:
+    description: Action for ungrounded responses
+    values:
+      - Block
+      - AddDisclaimer
+      - RequestCitation
+      - Flag

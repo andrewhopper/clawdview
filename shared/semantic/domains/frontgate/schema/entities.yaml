@@ -1,0 +1,305 @@
+# Frontgate Domain Entities
+# Version: 1.0.0
+#
+# EXTENDS:
+#   observer: Rule, Violation, CheckResult
+#   human-task: Task, TaskDecision
+#   core: Entity
+#
+# COMPOSES:
+#   value-objects: File, FileScope, Destination, AutoFix, FileTriageInput
+
+domain:
+  name: frontgate
+  version: "1.0.0"
+  description: Self-organizing file system gatekeeper with deterministic rules
+  dependencies: [observer, human-task, core, events]
+  use_case: File organization enforcement, quarantine, triage approval workflows
+  created_at: "2025-12-01"
+  updated_at: "2025-12-02"
+
+entities:
+
+  # ============================================
+  # RULES (extends observer:Rule)
+  # ============================================
+
+  FileRule:
+    description: |
+      File organization rule with destination routing.
+      Extends observer:Rule with file-system-specific fields.
+    extends: observer:Rule
+    properties:
+      # Inherited from observer:Rule:
+      # - id, name, description, version, category, tags
+      # - severity, enforcement, enabled
+      # - pattern, anti_pattern, file_patterns, fix_hint
+      # - created_at, updated_at
+
+      # File-specific extensions:
+      scope:
+        type: FileScope
+        required: true
+        description: Glob patterns defining what files this rule applies to
+      destination:
+        type: Destination
+        description: Where matching files should be routed
+      auto_fix:
+        type: AutoFix
+        description: Automatic remediation configuration
+      learned_from:
+        type: File
+        description: Original file that taught this rule (for provenance)
+
+  # ============================================
+  # QUARANTINE (extends core:Entity)
+  # ============================================
+
+  QuarantineEntry:
+    description: |
+      File held in quarantine pending classification.
+      Tracks original location, reason, and resolution.
+    extends: core:Entity
+    properties:
+      # Inherited from core:Entity:
+      # - id, name, description
+
+      file:
+        type: File
+        required: true
+        description: The quarantined file
+      original_path:
+        type: string
+        required: true
+        description: Where the file was before quarantine
+      quarantine_path:
+        type: string
+        required: true
+        description: Current location in quarantine zone
+      reason:
+        type: QuarantineReason
+        required: true
+      source:
+        type: EventSource
+        required: true
+        description: What triggered the quarantine
+      violation:
+        type: observer:Violation
+        description: The rule violation that caused quarantine
+      detected_at:
+        type: datetime
+        auto_generate: true
+      resolved_at:
+        type: datetime
+      resolution:
+        type: Resolution
+
+  # ============================================
+  # TRIAGE (composes human-task patterns)
+  # ============================================
+
+  FileTriage:
+    description: |
+      A file triage task for human review.
+      Composes human-task:Task pattern with FileTriageInput.
+    extends: human-task:Task
+    properties:
+      # Inherited from human-task:Task:
+      # - id, typeId, assignedTo, status, priority
+      # - source, correlationId, contextTags
+      # - recommendation, dependencies, impacts
+      # - dueAt, expiresAt, completedAt, createdAt, updatedAt
+
+      # Input is FileTriageInput (validated by TaskType.inputSchema)
+      input:
+        type: FileTriageInput
+        required: true
+        description: File and violation being triaged
+
+      # Triage-specific fields
+      quarantine_entry_id:
+        type: string
+        description: FK to QuarantineEntry if from quarantine
+
+  TriageSession:
+    description: |
+      Batch triage session (maps to human-task:ReviewCase).
+      Groups multiple file triage tasks for efficient review.
+    extends: human-task:ReviewCase
+    properties:
+      # Inherited from human-task:ReviewCase:
+      # - id, name, description, caseType, tasks, queueId
+      # - assignedTo, status, metadata, completionCriteria
+      # - progress, dueAt, completedAt, createdAt, updatedAt
+
+      # Session-specific computed fields
+      files_processed:
+        type: integer
+        default: 0
+      rules_learned:
+        type: integer
+        default: 0
+      mode:
+        type: OperatingMode
+        required: true
+        description: Learning, strict, permissive, or audit
+
+  # ============================================
+  # EVENTS (extends events:DomainEvent)
+  # ============================================
+
+  FileCreatedEvent:
+    description: A new file was detected in monitored directory
+    extends: events:DomainEvent
+    properties:
+      file:
+        type: File
+        required: true
+      source:
+        type: EventSource
+        required: true
+
+  FileViolationEvent:
+    description: A file violated one or more rules
+    extends: events:DomainEvent
+    properties:
+      file:
+        type: File
+        required: true
+      violations:
+        type: observer:Violation[]
+        required: true
+      action_taken:
+        type: string
+        description: "block, warn, quarantine, suggest"
+
+  FileQuarantinedEvent:
+    description: A file was moved to quarantine
+    extends: events:DomainEvent
+    properties:
+      quarantine_entry:
+        type: QuarantineEntry
+        required: true
+
+  FileTriageCompletedEvent:
+    description: A triage decision was made
+    extends: events:DomainEvent
+    properties:
+      triage:
+        type: FileTriage
+        required: true
+      decision:
+        type: human-task:TaskDecision
+        required: true
+      rule_learned:
+        type: FileRule
+        description: New rule created from this decision
+
+  RuleLearnedEvent:
+    description: A new rule was learned from user decision
+    extends: events:DomainEvent
+    properties:
+      rule:
+        type: FileRule
+        required: true
+      learned_from:
+        type: File
+        required: true
+      session_id:
+        type: string
+        description: FK to TriageSession
+
+# ============================================
+# ACTIONS
+# ============================================
+
+actions:
+
+  CheckFile:
+    description: Check a single file against all active rules
+    parameters:
+      file:
+        type: File
+        required: true
+    result: observer:CheckResult
+    permission: frontgate:check
+    idempotent: true
+
+  ScanDirectory:
+    description: Scan directory for violations
+    parameters:
+      path:
+        type: string
+        required: true
+      recursive:
+        type: boolean
+        default: true
+    result:
+      type: object
+      description: "Array of CheckResult"
+    permission: frontgate:scan
+    idempotent: true
+
+  QuarantineFile:
+    description: Move file to quarantine zone
+    parameters:
+      file:
+        type: File
+        required: true
+      reason:
+        type: QuarantineReason
+        required: true
+      source:
+        type: EventSource
+        required: true
+    result: QuarantineEntry
+    permission: frontgate:quarantine
+    idempotent: false
+
+  StartTriageSession:
+    description: Begin interactive triage session
+    parameters:
+      mode:
+        type: OperatingMode
+        default: learning
+      files:
+        type: File[]
+        description: Specific files to triage (or all quarantined if empty)
+    result: TriageSession
+    permission: frontgate:triage
+    idempotent: false
+
+  SubmitTriageDecision:
+    description: Submit decision for a file in triage
+    parameters:
+      triage_id:
+        type: string
+        required: true
+      action:
+        type: string
+        required: true
+        description: "FK to human-task:ActionType"
+      destination:
+        type: Destination
+      create_rule:
+        type: boolean
+        default: false
+    result: human-task:TaskDecision
+    permission: frontgate:triage
+    idempotent: false
+
+  LearnRule:
+    description: Create rule from user decision
+    parameters:
+      file:
+        type: File
+        required: true
+      destination:
+        type: Destination
+        required: true
+      scope:
+        type: FileScope
+        description: Inferred or user-specified scope
+    result: FileRule
+    permission: frontgate:rules
+    idempotent: false

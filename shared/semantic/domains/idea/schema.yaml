@@ -1,0 +1,504 @@
+# Domain: Idea
+# Ideas, brainstorming, and collaborative ideation
+# Use cases: Brainstorming sessions, idea boards, innovation management
+
+domain:
+  name: idea
+  version: "1.0.0"
+  description: Ideas, brainstorming, and collaborative ideation
+  layer: domain
+  dependencies:
+    - primitive-entity     # Idea extends Entity
+    - primitive-actor      # Authors are Actors
+    - primitive-relation   # IdeaRelation
+    - primitive-quantity   # Vote counts, confidence
+    - primitive-event      # Ideation events
+  created_at: "2025-12-04"
+  updated_at: "2025-12-04"
+
+entities:
+
+  # ============================================
+  # IDEAS
+  # ============================================
+
+  Idea:
+    extends: Entity  # From primitive-entity
+    description: A proposed concept or suggestion
+    properties:
+      id:
+        type: uuid
+        required: true
+      text:
+        type: string
+        required: true
+        maxLength: 2000
+        description: Full idea text
+      summary:
+        type: string
+        maxLength: 100
+        description: Short title/summary
+      authorId:
+        type: uuid
+        required: true
+        description: Who proposed this idea
+      sessionId:
+        type: uuid
+        description: Brainstorming session this belongs to
+      topics:
+        type: array
+        items: Topic
+        description: Extracted themes/topics
+      votes:
+        type: VoteAggregate
+        description: Voting data
+      status:
+        type: IdeaStatus
+        default: proposed
+      priority:
+        type: Priority
+        description: Assigned priority level
+      effort:
+        type: EffortEstimate
+        description: Estimated effort to implement
+      createdAt:
+        type: datetime
+        required: true
+      updatedAt:
+        type: datetime
+
+  Topic:
+    description: Extracted theme or keyword from idea
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        maxLength: 50
+        description: Topic/theme name
+      confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+        description: Extraction confidence
+      source:
+        type: TopicSource
+        description: How topic was identified
+      category:
+        type: string
+        description: Parent category if any
+
+  # ============================================
+  # VOTING
+  # ============================================
+
+  VoteAggregate:
+    description: Aggregated voting data for an idea
+    properties:
+      upvotes:
+        type: integer
+        default: 0
+        minimum: 0
+      downvotes:
+        type: integer
+        default: 0
+        minimum: 0
+      supporters:
+        type: array
+        items: uuid
+        description: IDs of upvoters
+      detractors:
+        type: array
+        items: uuid
+        description: IDs of downvoters
+    computed:
+      score:
+        type: integer
+        formula: "upvotes - downvotes"
+      totalVotes:
+        type: integer
+        formula: "upvotes + downvotes"
+      approvalRate:
+        type: number
+        formula: "upvotes / totalVotes"
+        description: "0-1 approval ratio"
+
+  Vote:
+    extends: Event  # From primitive-event
+    description: Individual vote on an idea
+    properties:
+      id:
+        type: uuid
+        required: true
+      ideaId:
+        type: uuid
+        required: true
+      voterId:
+        type: uuid
+        required: true
+      voteType:
+        type: VoteType
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+      comment:
+        type: string
+        maxLength: 500
+        description: Optional comment with vote
+
+  # ============================================
+  # IDEA RELATIONSHIPS
+  # ============================================
+
+  IdeaRelation:
+    extends: Relation  # From primitive-relation
+    description: Relationship between two ideas
+    properties:
+      id:
+        type: uuid
+        required: true
+      sourceIdeaId:
+        type: uuid
+        required: true
+      targetIdeaId:
+        type: uuid
+        required: true
+      relationType:
+        type: IdeaRelationType
+        required: true
+      strength:
+        type: number
+        minimum: 0
+        maximum: 1
+        description: Relationship strength (for inferred relations)
+      createdBy:
+        type: uuid
+        description: Who created this relation (null if auto-inferred)
+      createdAt:
+        type: datetime
+        required: true
+
+  IdeaCluster:
+    description: Group of related ideas
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      ideaIds:
+        type: array
+        items: uuid
+        minItems: 1
+      centroidTopics:
+        type: array
+        items: string
+        description: Common topics in cluster
+      createdAt:
+        type: datetime
+        required: true
+
+  # ============================================
+  # QUESTIONS & CONCERNS
+  # ============================================
+
+  Question:
+    extends: Entity  # From primitive-entity
+    description: Question raised during brainstorming
+    properties:
+      id:
+        type: uuid
+        required: true
+      text:
+        type: string
+        required: true
+        maxLength: 500
+      authorId:
+        type: uuid
+        required: true
+      relatedIdeaId:
+        type: uuid
+        description: Idea this question relates to
+      sessionId:
+        type: uuid
+      answered:
+        type: boolean
+        default: false
+      answer:
+        type: string
+        maxLength: 1000
+      answeredBy:
+        type: uuid
+      answeredAt:
+        type: datetime
+      createdAt:
+        type: datetime
+        required: true
+
+  Concern:
+    extends: Entity  # From primitive-entity
+    description: Concern or objection raised about an idea
+    properties:
+      id:
+        type: uuid
+        required: true
+      text:
+        type: string
+        required: true
+        maxLength: 500
+      authorId:
+        type: uuid
+        required: true
+      ideaId:
+        type: uuid
+        required: true
+        description: Idea this concern is about
+      concernType:
+        type: ConcernType
+      severity:
+        type: Severity
+        default: medium
+      resolved:
+        type: boolean
+        default: false
+      resolution:
+        type: string
+        maxLength: 500
+      createdAt:
+        type: datetime
+        required: true
+
+  # ============================================
+  # BRAINSTORMING SESSIONS
+  # ============================================
+
+  BrainstormingSession:
+    description: Collaborative ideation session
+    properties:
+      id:
+        type: uuid
+        required: true
+      title:
+        type: string
+        required: true
+        maxLength: 200
+      description:
+        type: string
+        maxLength: 1000
+      facilitatorId:
+        type: uuid
+        description: Session facilitator
+      participants:
+        type: array
+        items: Participant
+      status:
+        type: SessionStatus
+        default: scheduled
+      phase:
+        type: BrainstormingPhase
+        default: ideation
+      config:
+        type: SessionConfig
+      scheduledStart:
+        type: datetime
+      actualStart:
+        type: datetime
+      endedAt:
+        type: datetime
+      ideaCount:
+        type: integer
+        default: 0
+      createdAt:
+        type: datetime
+        required: true
+
+  Participant:
+    description: Session participant
+    properties:
+      actorId:
+        type: uuid
+        required: true
+      displayName:
+        type: string
+        required: true
+      role:
+        type: ParticipantRole
+        default: contributor
+      joinedAt:
+        type: datetime
+      leftAt:
+        type: datetime
+      ideasCount:
+        type: integer
+        default: 0
+      votesCount:
+        type: integer
+        default: 0
+
+  SessionConfig:
+    description: Configuration for brainstorming session
+    properties:
+      allowAnonymous:
+        type: boolean
+        default: false
+        description: Allow anonymous ideas
+      votingEnabled:
+        type: boolean
+        default: true
+      maxIdeasPerPerson:
+        type: integer
+        description: Limit ideas per participant
+      timeLimit:
+        type: integer
+        description: Time limit in minutes
+      topicExtraction:
+        type: boolean
+        default: true
+        description: Auto-extract topics from ideas
+      clustering:
+        type: boolean
+        default: true
+        description: Auto-cluster related ideas
+
+  # ============================================
+  # ESTIMATION
+  # ============================================
+
+  EffortEstimate:
+    description: Effort estimation for implementing an idea
+    properties:
+      value:
+        type: number
+        required: true
+        minimum: 0
+      unit:
+        type: EffortUnit
+        required: true
+      confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+        description: Confidence in estimate
+      estimatedBy:
+        type: uuid
+      estimatedAt:
+        type: datetime
+
+  Priority:
+    description: Priority assignment
+    properties:
+      level:
+        type: PriorityLevel
+        required: true
+      score:
+        type: integer
+        minimum: 0
+        maximum: 100
+        description: Numeric priority score
+      assignedBy:
+        type: uuid
+      assignedAt:
+        type: datetime
+
+enums:
+
+  IdeaStatus:
+    description: Lifecycle status of an idea
+    values:
+      - proposed        # Just proposed
+      - discussed       # Being discussed
+      - accepted        # Accepted for action
+      - rejected        # Not proceeding
+      - deferred        # Postponed for later
+      - merged          # Merged with another idea
+      - implemented     # Already implemented
+
+  IdeaRelationType:
+    description: Type of relationship between ideas
+    values:
+      - supports        # A supports/reinforces B
+      - contradicts     # A contradicts B
+      - extends         # A extends/builds on B
+      - similar         # A is similar to B
+      - alternative     # A is an alternative to B
+      - depends_on      # A depends on B
+      - merges_with     # A merged into B
+
+  VoteType:
+    description: Type of vote
+    values:
+      - upvote
+      - downvote
+
+  TopicSource:
+    description: How a topic was identified
+    values:
+      - extracted       # NLP extraction
+      - manual          # Manually tagged
+      - inferred        # Inferred from context
+      - suggested       # System suggestion, user confirmed
+
+  ConcernType:
+    description: Type of concern
+    values:
+      - feasibility     # Can we do this?
+      - cost            # Too expensive
+      - time            # Takes too long
+      - risk            # Too risky
+      - scope           # Out of scope
+      - technical       # Technical limitations
+      - other
+
+  Severity:
+    values: [low, medium, high, critical]
+
+  SessionStatus:
+    values: [scheduled, active, paused, completed, cancelled]
+
+  BrainstormingPhase:
+    description: Current phase of brainstorming
+    values:
+      - warmup          # Getting started
+      - ideation        # Generating ideas
+      - discussion      # Discussing ideas
+      - voting          # Voting on ideas
+      - prioritization  # Prioritizing accepted ideas
+      - wrapup          # Session ending
+
+  ParticipantRole:
+    values: [facilitator, contributor, observer]
+
+  EffortUnit:
+    description: Units for effort estimation
+    values:
+      - hours
+      - days
+      - weeks
+      - story_points
+      - t_shirt_size
+
+  PriorityLevel:
+    values: [critical, high, medium, low, none]
+
+meta:
+  use_cases:
+    - "Brainstorming sessions - real-time idea capture"
+    - "Innovation management - track ideas to implementation"
+    - "Meeting facilitation - structured ideation"
+    - "Design thinking - divergent/convergent phases"
+
+  integrations:
+    - "AWS Comprehend (topic extraction)"
+    - "Real-time transcription (idea capture)"
+    - "Miro, MURAL (visual collaboration)"
+
+  related_domains:
+    - meeting: "Brainstorming happens in meetings"
+    - speaker-diarization: "Attribute ideas to speakers"
+    - voting: "Generic voting patterns"

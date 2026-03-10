@@ -1,0 +1,5 @@
+# User Research Domain Model
+# Main entry point - imports from modular schema/ directory
+# Sources: Cooper (2004), Osterwalder (2014), Christensen (2016), WCAG 2.1
+
+$ref: schema/index.yaml

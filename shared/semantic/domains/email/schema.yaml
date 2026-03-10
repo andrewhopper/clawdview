@@ -1,0 +1,239 @@
+# Email Domain Model
+# Electronic mail entities and actions
+
+domain:
+  name: email
+  version: "1.0.0"
+  description: Email entities, folders, threads, and actions
+  dependencies: [core, action]
+  created_at: "2025-11-21"
+  updated_at: "2025-11-22"
+
+entities:
+
+  Email:
+    description: Electronic mail message
+    properties:
+      id: { type: string, required: true }
+      messageId: { type: string, description: "RFC 5322 Message-ID" }
+      subject: { type: string, required: true }
+      body: { type: string }
+      bodyHtml: { type: string }
+      from: { type: EmailAddress, required: true }
+      to: { type: array, items: EmailAddress, required: true }
+      cc: { type: array, items: EmailAddress }
+      bcc: { type: array, items: EmailAddress }
+      replyTo: { type: EmailAddress }
+      status: { type: EmailStatus, required: true }
+      isRead: { type: boolean, default: false }
+      isStarred: { type: boolean, default: false }
+      labels: { type: array, items: string }
+      folderId: { type: string }
+      threadId: { type: string }
+      inReplyToId: { type: string }
+      attachments: { type: array, items: Attachment }
+      headers: { type: object }
+      sentAt: { type: datetime }
+      receivedAt: { type: datetime }
+      readAt: { type: datetime }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  EmailAddress:
+    description: Email address with optional display name
+    properties:
+      email: { type: string, required: true }
+      name: { type: string }
+
+  Attachment:
+    description: File attached to email
+    properties:
+      id: { type: string, required: true }
+      emailId: { type: string, required: true }
+      fileName: { type: string, required: true }
+      mimeType: { type: string, required: true }
+      size: { type: integer, description: "Size in bytes" }
+      url: { type: uri }
+      contentId: { type: string, description: "For inline attachments" }
+      isInline: { type: boolean, default: false }
+      createdAt: { type: datetime, required: true }
+
+  Folder:
+    description: Organizational folder for emails
+    properties:
+      id: { type: string, required: true }
+      name: { type: string, required: true }
+      type: { type: FolderType, required: true }
+      parentFolderId: { type: string }
+      unreadCount: { type: integer, default: 0 }
+      totalCount: { type: integer, default: 0 }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Thread:
+    description: Conversation thread of related emails
+    properties:
+      id: { type: string, required: true }
+      subject: { type: string }
+      participants: { type: array, items: EmailAddress }
+      messageCount: { type: integer }
+      unreadCount: { type: integer }
+      lastMessageAt: { type: datetime }
+      snippet: { type: string, description: "Preview of latest message" }
+      createdAt: { type: datetime, required: true }
+      updatedAt: { type: datetime, required: true }
+
+  Inbox:
+    description: User's email inbox
+    properties:
+      id: { type: string, required: true }
+      userId: { type: string, required: true }
+      emailAddress: { type: string, required: true }
+      folders: { type: array, items: Folder }
+      unreadCount: { type: integer, default: 0 }
+      quotaUsed: { type: integer, description: "Storage used in bytes" }
+      quotaLimit: { type: integer, description: "Storage limit in bytes" }
+
+enums:
+
+  EmailStatus:
+    values:
+      - Draft
+      - Queued
+      - Sent
+      - Delivered
+      - Failed
+      - Deleted
+      - Archived
+
+  FolderType:
+    values:
+      - Inbox
+      - Sent
+      - Drafts
+      - Trash
+      - Spam
+      - Archive
+      - Custom
+
+actions:
+
+  SendEmail:
+    description: Send email to recipients
+    parameters:
+      to: { type: array, items: string, required: true }
+      subject: { type: string, required: true }
+      body: { type: string, required: true }
+      bodyHtml: { type: string }
+      cc: { type: array, items: string }
+      bcc: { type: array, items: string }
+      attachments: { type: array, items: Attachment }
+      replyToEmailId: { type: string }
+    result: Email
+    permission: email:send
+    idempotent: false
+    errors: [INVALID_RECIPIENT, SMTP_ERROR, QUOTA_EXCEEDED, ATTACHMENT_TOO_LARGE]
+
+  GetEmail:
+    description: Retrieve email by ID
+    parameters:
+      emailId: { type: string, required: true }
+    result: Email
+    permission: email:read
+    idempotent: true
+
+  DeleteEmail:
+    description: Move to trash or permanently delete
+    parameters:
+      emailId: { type: string, required: true }
+      permanent: { type: boolean, default: false }
+    result: { type: void }
+    permission: email:delete
+    idempotent: true
+
+  ForwardEmail:
+    description: Forward email to new recipients
+    parameters:
+      emailId: { type: string, required: true }
+      to: { type: array, items: string, required: true }
+      message: { type: string }
+    result: Email
+    permission: email:send
+    idempotent: false
+
+  ReplyEmail:
+    description: Reply to an email
+    parameters:
+      emailId: { type: string, required: true }
+      body: { type: string, required: true }
+      replyAll: { type: boolean, default: false }
+    result: Email
+    permission: email:send
+    idempotent: false
+
+  MarkAsRead:
+    description: Mark email as read
+    parameters:
+      emailId: { type: string, required: true }
+    result: Email
+    permission: email:read
+    idempotent: true
+
+  MarkAsUnread:
+    description: Mark email as unread
+    parameters:
+      emailId: { type: string, required: true }
+    result: Email
+    permission: email:read
+    idempotent: true
+
+  ArchiveEmail:
+    description: Move email to archive
+    parameters:
+      emailId: { type: string, required: true }
+    result: Email
+    permission: email:archive
+    idempotent: true
+
+  MoveEmail:
+    description: Move email to folder
+    parameters:
+      emailId: { type: string, required: true }
+      folderId: { type: string, required: true }
+    result: Email
+    permission: email:read
+    idempotent: true
+
+  SearchEmails:
+    description: Search emails
+    parameters:
+      query: { type: string, required: true }
+      folderId: { type: string }
+      from: { type: string }
+      to: { type: string }
+      dateFrom: { type: date }
+      dateTo: { type: date }
+      hasAttachment: { type: boolean }
+      isRead: { type: boolean }
+      limit: { type: integer, default: 50 }
+      offset: { type: integer, default: 0 }
+    result: { type: array, items: Email }
+    permission: email:read
+    idempotent: true
+
+  CreateFolder:
+    description: Create email folder
+    parameters:
+      name: { type: string, required: true }
+      parentFolderId: { type: string }
+    result: Folder
+    permission: email:manage
+    idempotent: false
+
+  DeleteFolder:
+    description: Delete email folder
+    parameters:
+      folderId: { type: string, required: true }
+    result: { type: void }
+    permission: email:manage
+    idempotent: true

@@ -1,0 +1,708 @@
+@prefix hd: <http://hopperlabs.ai/ontology/human-drives#> .
+@prefix core: <http://hopperlabs.ai/ontology/core#> .
+@prefix action: <http://hopperlabs.ai/ontology/action#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# ============================================
+# Human Drives Domain Ontology
+# Description: Fundamental existential and evolutionary drives - meaning, purpose, joy, affiliation, procreation
+# Created: 2025-11-25
+# Research: Frankl (logotherapy), Ikigai, hedonic/eudaimonic psychology, sexual strategies theory
+# ============================================
+
+# ================================================================================
+# 1. MEANING DOMAIN - Viktor Frankl's Logotherapy
+# ================================================================================
+
+hd:MeaningSource a owl:Class ;
+    rdfs:label "Meaning Source" ;
+    rdfs:comment "Source of life meaning - creative work, relationships, transcendent experiences, or attitude toward suffering" ;
+    rdfs:seeAlso <https://positivepsychology.com/viktor-frankl-logotherapy/> .
+
+hd:sourceType a owl:ObjectProperty ;
+    rdfs:domain hd:MeaningSource ;
+    rdfs:range hd:MeaningSourceType ;
+    rdfs:label "Source Type" ;
+    rdfs:comment "Type of meaning source (creative_work, love_connection, etc.)" .
+
+hd:description a owl:DatatypeProperty ;
+    rdfs:domain hd:MeaningSource ;
+    rdfs:range xsd:string ;
+    rdfs:label "Description" ;
+    rdfs:comment "Description of the meaning source" .
+
+hd:strength a owl:DatatypeProperty ;
+    rdfs:domain hd:MeaningSource ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Strength" ;
+    rdfs:comment "Strength of meaning (0.0-1.0)" .
+
+hd:stability a owl:DatatypeProperty ;
+    rdfs:domain hd:MeaningSource ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Stability" ;
+    rdfs:comment "Stability over time (0.0-1.0)" .
+
+hd:WillToMeaning a owl:Class ;
+    rdfs:label "Will To Meaning" ;
+    rdfs:comment "Primary human motivational force - drive to find meaning in life (Frankl)" ;
+    rdfs:seeAlso <https://www.simplypsychology.org/logotherapy.html> .
+
+hd:intensity a owl:DatatypeProperty ;
+    rdfs:domain hd:WillToMeaning ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Intensity" ;
+    rdfs:comment "Intensity of drive (0.0-1.0)" .
+
+hd:frustrationLevel a owl:DatatypeProperty ;
+    rdfs:domain hd:WillToMeaning ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Frustration Level" ;
+    rdfs:comment "Level of existential frustration (0.0-1.0)" .
+
+hd:fulfillment a owl:DatatypeProperty ;
+    rdfs:domain hd:WillToMeaning ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Fulfillment" ;
+    rdfs:comment "Degree of meaning fulfillment (0.0-1.0)" .
+
+hd:ExistentialVacuum a owl:Class ;
+    rdfs:label "Existential Vacuum" ;
+    rdfs:comment "State of meaninglessness - boredom, apathy, emptiness when meaning is frustrated" ;
+    rdfs:seeAlso <https://pmc.ncbi.nlm.nih.gov/articles/PMC7290245/> .
+
+hd:severity a owl:ObjectProperty ;
+    rdfs:domain hd:ExistentialVacuum ;
+    rdfs:range hd:Severity ;
+    rdfs:label "Severity" ;
+    rdfs:comment "Severity level of existential vacuum" .
+
+hd:symptoms a owl:DatatypeProperty ;
+    rdfs:domain hd:ExistentialVacuum ;
+    rdfs:range xsd:string ;
+    rdfs:label "Symptoms" ;
+    rdfs:comment "List of symptoms (JSON array)" .
+
+hd:duration a owl:ObjectProperty ;
+    rdfs:domain hd:ExistentialVacuum ;
+    rdfs:range core:Duration ;
+    rdfs:label "Duration" ;
+    rdfs:comment "Duration of vacuum state" .
+
+hd:triggers a owl:DatatypeProperty ;
+    rdfs:domain hd:ExistentialVacuum ;
+    rdfs:range xsd:string ;
+    rdfs:label "Triggers" ;
+    rdfs:comment "Events or situations that triggered vacuum" .
+
+hd:MeaningPathway a owl:Class ;
+    rdfs:label "Meaning Pathway" ;
+    rdfs:comment "Route to discovering meaning - creative, experiential, or attitudinal" ;
+    rdfs:seeAlso <https://positivepsychology.com/viktor-frankl-logotherapy/> .
+
+hd:pathwayType a owl:ObjectProperty ;
+    rdfs:domain hd:MeaningPathway ;
+    rdfs:range hd:PathwayType ;
+    rdfs:label "Pathway Type" ;
+    rdfs:comment "Type of pathway (creative, experiential, attitudinal)" .
+
+hd:engagementLevel a owl:DatatypeProperty ;
+    rdfs:domain hd:MeaningPathway ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Engagement Level" ;
+    rdfs:comment "Level of engagement with pathway (0.0-1.0)" .
+
+hd:outcomes a owl:DatatypeProperty ;
+    rdfs:domain hd:MeaningPathway ;
+    rdfs:range xsd:string ;
+    rdfs:label "Outcomes" ;
+    rdfs:comment "Outcomes from pursuing pathway" .
+
+hd:LifeTask a owl:Class ;
+    rdfs:label "Life Task" ;
+    rdfs:comment "Meaningful responsibility or calling in life" ;
+    rdfs:seeAlso <https://positivepsychology.com/viktor-frankl-logotherapy/> .
+
+hd:importance a owl:DatatypeProperty ;
+    rdfs:domain hd:LifeTask ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Importance" ;
+    rdfs:comment "Importance rating (0.0-1.0)" .
+
+hd:completionStatus a owl:ObjectProperty ;
+    rdfs:domain hd:LifeTask ;
+    rdfs:range hd:TaskStatus ;
+    rdfs:label "Completion Status" ;
+    rdfs:comment "Status of life task completion" .
+
+# ================================================================================
+# 2. PURPOSE DOMAIN - Ikigai (Japanese Reason for Living)
+# ================================================================================
+
+hd:Ikigai a owl:Class ;
+    rdfs:label "Ikigai" ;
+    rdfs:comment "Japanese concept - reason for living, intersection of love, skill, need, and value" ;
+    rdfs:seeAlso <https://positivepsychology.com/ikigai/> .
+
+hd:whatYouLove a owl:DatatypeProperty ;
+    rdfs:domain hd:Ikigai ;
+    rdfs:range xsd:string ;
+    rdfs:label "What You Love" ;
+    rdfs:comment "Activities and pursuits you love" .
+
+hd:whatYoureGoodAt a owl:DatatypeProperty ;
+    rdfs:domain hd:Ikigai ;
+    rdfs:range xsd:string ;
+    rdfs:label "What You're Good At" ;
+    rdfs:comment "Your skills and strengths" .
+
+hd:whatWorldNeeds a owl:DatatypeProperty ;
+    rdfs:domain hd:Ikigai ;
+    rdfs:range xsd:string ;
+    rdfs:label "What World Needs" ;
+    rdfs:comment "What the world needs from you" .
+
+hd:whatYouCanBePaidFor a owl:DatatypeProperty ;
+    rdfs:domain hd:Ikigai ;
+    rdfs:range xsd:string ;
+    rdfs:label "What You Can Be Paid For" ;
+    rdfs:comment "What you can earn money from" .
+
+hd:alignmentScore a owl:DatatypeProperty ;
+    rdfs:domain hd:Ikigai ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Alignment Score" ;
+    rdfs:comment "How aligned the four dimensions are (0.0-1.0)" .
+
+hd:LifePurpose a owl:Class ;
+    rdfs:label "Life Purpose" ;
+    rdfs:comment "Core purpose that guides life decisions and actions" ;
+    rdfs:seeAlso <https://pmc.ncbi.nlm.nih.gov/articles/PMC10936145/> .
+
+hd:clarity a owl:ObjectProperty ;
+    rdfs:domain hd:LifePurpose ;
+    rdfs:range hd:PurposeClarity ;
+    rdfs:label "Clarity" ;
+    rdfs:comment "Clarity of purpose (undefined to crystallized)" .
+
+hd:commitment a owl:DatatypeProperty ;
+    rdfs:domain hd:LifePurpose ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Commitment" ;
+    rdfs:comment "Level of commitment to purpose (0.0-1.0)" .
+
+hd:impact a owl:DatatypeProperty ;
+    rdfs:domain hd:LifePurpose ;
+    rdfs:range xsd:string ;
+    rdfs:label "Impact" ;
+    rdfs:comment "Expected or actual impact of purpose" .
+
+hd:IkigaiDimension a owl:Class ;
+    rdfs:label "Ikigai Dimension" ;
+    rdfs:comment "Individual component of ikigai framework" ;
+    rdfs:seeAlso <https://pmc.ncbi.nlm.nih.gov/articles/PMC8395894/> .
+
+hd:dimensionType a owl:ObjectProperty ;
+    rdfs:domain hd:IkigaiDimension ;
+    rdfs:range hd:IkigaiDimensionType ;
+    rdfs:label "Dimension Type" ;
+    rdfs:comment "Which of four ikigai dimensions" .
+
+hd:score a owl:DatatypeProperty ;
+    rdfs:domain hd:IkigaiDimension ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Score" ;
+    rdfs:comment "Strength of dimension (0.0-1.0)" .
+
+hd:satisfaction a owl:DatatypeProperty ;
+    rdfs:domain hd:IkigaiDimension ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Satisfaction" ;
+    rdfs:comment "Satisfaction with dimension (0.0-1.0)" .
+
+hd:PurposeAlignment a owl:Class ;
+    rdfs:label "Purpose Alignment" ;
+    rdfs:comment "Alignment between purpose and behavior" .
+
+hd:conflicts a owl:DatatypeProperty ;
+    rdfs:domain hd:PurposeAlignment ;
+    rdfs:range xsd:string ;
+    rdfs:label "Conflicts" ;
+    rdfs:comment "Areas of misalignment" .
+
+hd:congruence a owl:DatatypeProperty ;
+    rdfs:domain hd:PurposeAlignment ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Congruence" ;
+    rdfs:comment "Overall congruence score (0.0-1.0)" .
+
+# ================================================================================
+# 3. JOY/WELLBEING DOMAIN - Hedonic & Eudaimonic Psychology
+# ================================================================================
+
+hd:HedonicWellbeing a owl:Class ;
+    rdfs:label "Hedonic Wellbeing" ;
+    rdfs:comment "Pleasure-based happiness - positive affect, life satisfaction, enjoyment" ;
+    rdfs:seeAlso <https://positivepsychology.com/hedonic-vs-eudaimonic-wellbeing/> .
+
+hd:positiveAffect a owl:DatatypeProperty ;
+    rdfs:domain hd:HedonicWellbeing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Positive Affect" ;
+    rdfs:comment "Level of positive emotions (0.0-1.0)" .
+
+hd:lifeSatisfaction a owl:DatatypeProperty ;
+    rdfs:domain hd:HedonicWellbeing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Life Satisfaction" ;
+    rdfs:comment "Overall life satisfaction (0.0-1.0)" .
+
+hd:vitality a owl:DatatypeProperty ;
+    rdfs:domain hd:HedonicWellbeing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Vitality" ;
+    rdfs:comment "Energy and vitality level (0.0-1.0)" .
+
+hd:carefreeness a owl:DatatypeProperty ;
+    rdfs:domain hd:HedonicWellbeing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Carefreeness" ;
+    rdfs:comment "Sense of ease and carefreeness (0.0-1.0)" .
+
+hd:EudaimonicWellbeing a owl:Class ;
+    rdfs:label "Eudaimonic Wellbeing" ;
+    rdfs:comment "Meaning-based happiness - self-realization, personal growth, flourishing" ;
+    rdfs:seeAlso <https://positivepsychology.com/hedonic-vs-eudaimonic-wellbeing/> .
+
+hd:selfRealization a owl:DatatypeProperty ;
+    rdfs:domain hd:EudaimonicWellbeing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Self Realization" ;
+    rdfs:comment "Degree of self-actualization (0.0-1.0)" .
+
+hd:personalGrowth a owl:DatatypeProperty ;
+    rdfs:domain hd:EudaimonicWellbeing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Personal Growth" ;
+    rdfs:comment "Rate of personal development (0.0-1.0)" .
+
+hd:mastery a owl:DatatypeProperty ;
+    rdfs:domain hd:EudaimonicWellbeing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Mastery" ;
+    rdfs:comment "Sense of competence and mastery (0.0-1.0)" .
+
+hd:autonomy a owl:DatatypeProperty ;
+    rdfs:domain hd:EudaimonicWellbeing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Autonomy" ;
+    rdfs:comment "Self-determination and autonomy (0.0-1.0)" .
+
+hd:Flourishing a owl:Class ;
+    rdfs:label "Flourishing" ;
+    rdfs:comment "Optimal human functioning - high hedonic AND eudaimonic wellbeing" ;
+    rdfs:seeAlso <https://pmc.ncbi.nlm.nih.gov/articles/PMC5647812/> .
+
+hd:hedonicScore a owl:DatatypeProperty ;
+    rdfs:domain hd:Flourishing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Hedonic Score" ;
+    rdfs:comment "Hedonic wellbeing component (0.0-1.0)" .
+
+hd:eudaimonicScore a owl:DatatypeProperty ;
+    rdfs:domain hd:Flourishing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Eudaimonic Score" ;
+    rdfs:comment "Eudaimonic wellbeing component (0.0-1.0)" .
+
+hd:balance a owl:DatatypeProperty ;
+    rdfs:domain hd:Flourishing ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Balance" ;
+    rdfs:comment "Balance between hedonic and eudaimonic (0.0-1.0)" .
+
+hd:thriving a owl:DatatypeProperty ;
+    rdfs:domain hd:Flourishing ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "Thriving" ;
+    rdfs:comment "Whether person is truly thriving" .
+
+hd:JoySource a owl:Class ;
+    rdfs:label "Joy Source" ;
+    rdfs:comment "Specific source of happiness or joy" .
+
+hd:joySourceType a owl:ObjectProperty ;
+    rdfs:domain hd:JoySource ;
+    rdfs:range hd:JoySourceType ;
+    rdfs:label "Joy Source Type" ;
+    rdfs:comment "Type of joy (hedonic or eudaimonic)" .
+
+hd:sustainability a owl:DatatypeProperty ;
+    rdfs:domain hd:JoySource ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Sustainability" ;
+    rdfs:comment "How sustainable this joy source is (0.0-1.0)" .
+
+hd:PeakExperience a owl:Class ;
+    rdfs:label "Peak Experience" ;
+    rdfs:comment "Transcendent moment of profound joy, insight, or meaning (Maslow)" ;
+    rdfs:seeAlso <https://www.simplypsychology.org/maslow.html> .
+
+hd:transformation a owl:DatatypeProperty ;
+    rdfs:domain hd:PeakExperience ;
+    rdfs:range xsd:string ;
+    rdfs:label "Transformation" ;
+    rdfs:comment "How the experience transformed the person" .
+
+# ================================================================================
+# 4. AFFILIATION DOMAIN - Social Connection & Belonging
+# ================================================================================
+
+hd:SocialConnection a owl:Class ;
+    rdfs:label "Social Connection" ;
+    rdfs:comment "Relationship bond with another person or group" ;
+    rdfs:seeAlso <https://www.simplypsychology.org/attachment.html> .
+
+hd:connectionType a owl:ObjectProperty ;
+    rdfs:domain hd:SocialConnection ;
+    rdfs:range hd:ConnectionType ;
+    rdfs:label "Connection Type" ;
+    rdfs:comment "Type of connection (family, friendship, romantic, etc.)" .
+
+hd:quality a owl:DatatypeProperty ;
+    rdfs:domain hd:SocialConnection ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Quality" ;
+    rdfs:comment "Quality of connection (0.0-1.0)" .
+
+hd:reciprocity a owl:DatatypeProperty ;
+    rdfs:domain hd:SocialConnection ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Reciprocity" ;
+    rdfs:comment "Degree of mutual exchange (0.0-1.0)" .
+
+hd:BelongingNeed a owl:Class ;
+    rdfs:label "Belonging Need" ;
+    rdfs:comment "Fundamental need to belong and be accepted" ;
+    rdfs:seeAlso <https://www.psychologs.com/the-psychology-behind-need-for-affiliation/> .
+
+hd:deficit a owl:DatatypeProperty ;
+    rdfs:domain hd:BelongingNeed ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Deficit" ;
+    rdfs:comment "Gap between need and fulfillment (0.0-1.0)" .
+
+hd:TribalIdentity a owl:Class ;
+    rdfs:label "Tribal Identity" ;
+    rdfs:comment "Identity and status within a social group or tribe" ;
+    rdfs:seeAlso <https://pmc.ncbi.nlm.nih.gov/articles/PMC9630490/> .
+
+hd:group a owl:DatatypeProperty ;
+    rdfs:domain hd:TribalIdentity ;
+    rdfs:range xsd:string ;
+    rdfs:label "Group" ;
+    rdfs:comment "Group or tribe identifier" .
+
+hd:identityStrength a owl:DatatypeProperty ;
+    rdfs:domain hd:TribalIdentity ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Identity Strength" ;
+    rdfs:comment "Strength of identification (0.0-1.0)" .
+
+hd:loyalty a owl:DatatypeProperty ;
+    rdfs:domain hd:TribalIdentity ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Loyalty" ;
+    rdfs:comment "Degree of loyalty to group (0.0-1.0)" .
+
+hd:status a owl:ObjectProperty ;
+    rdfs:domain hd:TribalIdentity ;
+    rdfs:range hd:TribalRole ;
+    rdfs:label "Status" ;
+    rdfs:comment "Status/role within tribe" .
+
+hd:Coalition a owl:Class ;
+    rdfs:label "Coalition" ;
+    rdfs:comment "Strategic alliance or partnership within social structure" ;
+    rdfs:seeAlso <https://www.nature.com/articles/s41386-022-01378-2> .
+
+hd:members a owl:DatatypeProperty ;
+    rdfs:domain hd:Coalition ;
+    rdfs:range xsd:string ;
+    rdfs:label "Members" ;
+    rdfs:comment "Coalition members (JSON array)" .
+
+hd:purpose a owl:DatatypeProperty ;
+    rdfs:domain hd:Coalition ;
+    rdfs:range xsd:string ;
+    rdfs:label "Purpose" ;
+    rdfs:comment "Purpose of coalition" .
+
+hd:SocialSupport a owl:Class ;
+    rdfs:label "Social Support" ;
+    rdfs:comment "Support provided through social connections" .
+
+hd:supportType a owl:ObjectProperty ;
+    rdfs:domain hd:SocialSupport ;
+    rdfs:range hd:SupportType ;
+    rdfs:label "Support Type" ;
+    rdfs:comment "Type of support (emotional, instrumental, etc.)" .
+
+hd:availability a owl:DatatypeProperty ;
+    rdfs:domain hd:SocialSupport ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Availability" ;
+    rdfs:comment "How available this support is (0.0-1.0)" .
+
+# ================================================================================
+# 5. PROCREATION/MATING DOMAIN - Evolutionary Psychology
+# ================================================================================
+
+hd:MatingStrategy a owl:Class ;
+    rdfs:label "Mating Strategy" ;
+    rdfs:comment "Reproductive strategy - long-term, short-term, or mixed" ;
+    rdfs:seeAlso <https://pubmed.ncbi.nlm.nih.gov/8483982/> .
+
+hd:strategyType a owl:ObjectProperty ;
+    rdfs:domain hd:MatingStrategy ;
+    rdfs:range hd:MatingStrategyType ;
+    rdfs:label "Strategy Type" ;
+    rdfs:comment "Type of mating strategy" .
+
+hd:timeHorizon a owl:ObjectProperty ;
+    rdfs:domain hd:MatingStrategy ;
+    rdfs:range hd:TimeHorizon ;
+    rdfs:label "Time Horizon" ;
+    rdfs:comment "Short-term vs long-term orientation" .
+
+hd:investmentLevel a owl:DatatypeProperty ;
+    rdfs:domain hd:MatingStrategy ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Investment Level" ;
+    rdfs:comment "Level of parental investment (0.0-1.0)" .
+
+hd:MatePreference a owl:Class ;
+    rdfs:label "Mate Preference" ;
+    rdfs:comment "Desired qualities in a romantic partner" ;
+    rdfs:seeAlso <https://labs.la.utexas.edu/buss/files/2015/09/evolution_of_human_mating_2007.pdf> .
+
+hd:trait a owl:ObjectProperty ;
+    rdfs:domain hd:MatePreference ;
+    rdfs:range hd:MateSelectionCriterion ;
+    rdfs:label "Trait" ;
+    rdfs:comment "Desired mate trait" .
+
+hd:flexibility a owl:DatatypeProperty ;
+    rdfs:domain hd:MatePreference ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Flexibility" ;
+    rdfs:comment "How flexible this preference is (0.0-1.0)" .
+
+hd:ReproductiveFitness a owl:Class ;
+    rdfs:label "Reproductive Fitness" ;
+    rdfs:comment "Evolutionary success potential - health, resources, genetics, parental ability" ;
+    rdfs:seeAlso <https://en.wikipedia.org/wiki/Human_mating_strategies> .
+
+hd:health a owl:DatatypeProperty ;
+    rdfs:domain hd:ReproductiveFitness ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Health" ;
+    rdfs:comment "Physical health indicator (0.0-1.0)" .
+
+hd:resources a owl:DatatypeProperty ;
+    rdfs:domain hd:ReproductiveFitness ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Resources" ;
+    rdfs:comment "Resource availability (0.0-1.0)" .
+
+hd:genetics a owl:DatatypeProperty ;
+    rdfs:domain hd:ReproductiveFitness ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Genetics" ;
+    rdfs:comment "Genetic quality indicator (0.0-1.0)" .
+
+hd:parentalAbility a owl:DatatypeProperty ;
+    rdfs:domain hd:ReproductiveFitness ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Parental Ability" ;
+    rdfs:comment "Capacity for parental investment (0.0-1.0)" .
+
+hd:PairBond a owl:Class ;
+    rdfs:label "Pair Bond" ;
+    rdfs:comment "Long-term romantic partnership" ;
+    rdfs:seeAlso <https://pmc.ncbi.nlm.nih.gov/articles/PMC5573563/> .
+
+hd:bondStrength a owl:DatatypeProperty ;
+    rdfs:domain hd:PairBond ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Bond Strength" ;
+    rdfs:comment "Strength of pair bond (0.0-1.0)" .
+
+hd:SexualSelection a owl:Class ;
+    rdfs:label "Sexual Selection" ;
+    rdfs:comment "Mate choice and competition process" .
+
+hd:selectionType a owl:ObjectProperty ;
+    rdfs:domain hd:SexualSelection ;
+    rdfs:range hd:SelectionType ;
+    rdfs:label "Selection Type" ;
+    rdfs:comment "Intrasexual competition or intersexual selection" .
+
+hd:criteria a owl:DatatypeProperty ;
+    rdfs:domain hd:SexualSelection ;
+    rdfs:range xsd:string ;
+    rdfs:label "Criteria" ;
+    rdfs:comment "Selection criteria (JSON array)" .
+
+hd:competitionLevel a owl:DatatypeProperty ;
+    rdfs:domain hd:SexualSelection ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Competition Level" ;
+    rdfs:comment "Intensity of competition (0.0-1.0)" .
+
+hd:ParentalInvestment a owl:Class ;
+    rdfs:label "Parental Investment" ;
+    rdfs:comment "Resources invested in offspring" .
+
+hd:investmentType a owl:ObjectProperty ;
+    rdfs:domain hd:ParentalInvestment ;
+    rdfs:range hd:InvestmentType ;
+    rdfs:label "Investment Type" ;
+    rdfs:comment "Type of investment (time, resources, protection, etc.)" .
+
+hd:amount a owl:DatatypeProperty ;
+    rdfs:domain hd:ParentalInvestment ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "Amount" ;
+    rdfs:comment "Amount of investment (0.0-1.0)" .
+
+# ================================================================================
+# ENUMS (OWL Class with oneOf restriction)
+# ================================================================================
+
+# Meaning/Purpose Enums
+hd:MeaningSourceType a owl:Class ;
+    rdfs:label "Meaning Source Type" ;
+    owl:oneOf (hd:creative_work hd:love_connection hd:transcendent_experience hd:service hd:suffering_attitude hd:legacy hd:growth) .
+
+hd:PathwayType a owl:Class ;
+    rdfs:label "Pathway Type" ;
+    owl:oneOf (hd:creative hd:experiential hd:attitudinal) .
+
+hd:IkigaiDimensionType a owl:Class ;
+    rdfs:label "Ikigai Dimension Type" ;
+    owl:oneOf (hd:what_you_love hd:what_youre_good_at hd:what_world_needs hd:what_you_can_be_paid_for) .
+
+hd:PurposeClarity a owl:Class ;
+    rdfs:label "Purpose Clarity" ;
+    owl:oneOf (hd:undefined hd:exploring hd:emerging hd:clear hd:crystallized) .
+
+hd:TaskStatus a owl:Class ;
+    rdfs:label "Task Status" ;
+    owl:oneOf (hd:not_started hd:in_progress hd:completed hd:blocked hd:abandoned) .
+
+hd:Severity a owl:Class ;
+    rdfs:label "Severity" ;
+    owl:oneOf (hd:mild hd:moderate hd:severe hd:critical) .
+
+# Joy/Wellbeing Enums
+hd:JoySourceType a owl:Class ;
+    rdfs:label "Joy Source Type" ;
+    owl:oneOf (hd:hedonic hd:eudaimonic hd:integrated) .
+
+hd:FlourishingLevel a owl:Class ;
+    rdfs:label "Flourishing Level" ;
+    owl:oneOf (hd:languishing hd:moderate hd:flourishing hd:thriving) .
+
+# Affiliation Enums
+hd:ConnectionType a owl:Class ;
+    rdfs:label "Connection Type" ;
+    owl:oneOf (hd:family hd:friendship hd:romantic hd:mentor hd:community hd:tribal) .
+
+hd:TribalRole a owl:Class ;
+    rdfs:label "Tribal Role" ;
+    owl:oneOf (hd:alpha hd:beta hd:member hd:peripheral hd:outsider) .
+
+hd:SupportType a owl:Class ;
+    rdfs:label "Support Type" ;
+    owl:oneOf (hd:emotional hd:instrumental hd:informational hd:appraisal) .
+
+# Procreation/Mating Enums
+hd:MatingStrategyType a owl:Class ;
+    rdfs:label "Mating Strategy Type" ;
+    owl:oneOf (hd:long_term hd:short_term hd:mixed hd:serial_monogamy) .
+
+hd:TimeHorizon a owl:Class ;
+    rdfs:label "Time Horizon" ;
+    owl:oneOf (hd:immediate hd:short hd:medium hd:long hd:lifelong) .
+
+hd:MateSelectionCriterion a owl:Class ;
+    rdfs:label "Mate Selection Criterion" ;
+    owl:oneOf (hd:genetic_quality hd:resource_provision hd:parental_ability hd:compatibility hd:social_status hd:kindness hd:intelligence hd:attractiveness) .
+
+hd:SelectionType a owl:Class ;
+    rdfs:label "Selection Type" ;
+    owl:oneOf (hd:intrasexual_competition hd:intersexual_selection) .
+
+hd:InvestmentType a owl:Class ;
+    rdfs:label "Investment Type" ;
+    owl:oneOf (hd:time hd:resources hd:protection hd:teaching hd:emotional_support) .
+
+# ================================================================================
+# KINETIC LAYER: Actions (What Can Be Done)
+# ================================================================================
+
+hd:SeekMeaningAction a action:CreateAction ;
+    rdfs:label "Seek Meaning" ;
+    rdfs:comment "Search for life meaning through creative, experiential, or attitudinal pathways" ;
+    action:operatesOn hd:MeaningSource ;
+    action:requiresPermission "hd:seek_meaning" ;
+    action:isIdempotent false .
+
+hd:AlignWithPurposeAction a action:UpdateAction ;
+    rdfs:label "Align With Purpose" ;
+    rdfs:comment "Align behavior and decisions with ikigai/life purpose" ;
+    action:operatesOn hd:PurposeAlignment ;
+    action:requiresPermission "hd:align_purpose" ;
+    action:isIdempotent false .
+
+hd:CultivateJoyAction a action:CreateAction ;
+    rdfs:label "Cultivate Joy" ;
+    rdfs:comment "Pursue hedonic or eudaimonic wellbeing activities" ;
+    action:operatesOn hd:JoySource ;
+    action:requiresPermission "hd:cultivate_joy" ;
+    action:isIdempotent false .
+
+hd:BuildConnectionAction a action:CreateAction ;
+    rdfs:label "Build Connection" ;
+    rdfs:comment "Form and strengthen social bonds" ;
+    action:operatesOn hd:SocialConnection ;
+    action:requiresPermission "hd:build_connection" ;
+    action:isIdempotent false .
+
+hd:SelectMateAction a action:CreateAction ;
+    rdfs:label "Select Mate" ;
+    rdfs:comment "Choose romantic partner based on preferences and strategy" ;
+    action:operatesOn hd:PairBond ;
+    action:requiresPermission "hd:select_mate" ;
+    action:isIdempotent false .
+
+hd:InvestInOffspringAction a action:CreateAction ;
+    rdfs:label "Invest In Offspring" ;
+    rdfs:comment "Allocate parental resources to children" ;
+    action:operatesOn hd:ParentalInvestment ;
+    action:requiresPermission "hd:invest_offspring" ;
+    action:isIdempotent false .
+
+# ================================================================================
+# LLM Agent Integration
+# ================================================================================
+
+hd:HumanDrivesCapability a action:AgentCapability ;
+    rdfs:label "Human Drives Capability" ;
+    action:naturalLanguageDescription "Understand and model fundamental human drives: meaning (Frankl's logotherapy), purpose (ikigai), joy (hedonic/eudaimonic wellbeing), affiliation (social connection/hierarchy), and procreation (mating strategies). Use these to explain behavior at the deepest existential and evolutionary level." .

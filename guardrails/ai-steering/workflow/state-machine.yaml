@@ -1,0 +1,451 @@
+# AI Steering Workflow State Machine
+# Defines states, transitions, triggers, and rule application points
+# Version: 1.0.0
+# Last Updated: 2025-11-23
+
+version: "1.0.0"
+
+# =============================================================================
+# State Machine Definition
+# =============================================================================
+
+state_machine:
+  name: artifact-creation-workflow
+  description: State machine for creating any publishable artifact
+  initial_state: IDLE
+
+  states:
+    IDLE:
+      description: No active creation workflow
+      on_enter: []
+      on_exit: []
+
+    INTENT_DETECTED:
+      description: User intent has been classified
+      on_enter:
+        - Classify artifact type from user request
+        - Resolve inherited base types
+        - Load applicable rules
+      rules_applied:
+        - intent-detection-rules
+
+    ARTIFACT_INITIALIZED:
+      description: Project structure created
+      on_enter:
+        - Create project directory
+        - Initialize tech stack based on artifact type
+        - Create .project file with phase metadata
+      rules_applied:
+        - microsite-use-vite-react
+        - microsite-use-fastapi-backend
+
+    NEEDS_DEFINED:
+      description: Component and data model requirements listed
+      on_enter:
+        - List required UI components
+        - List required data models/entities
+        - Generate dependency checklist
+      rules_applied: []
+
+    UI_REGISTRY_CHECKED:
+      description: Shared UI component registry audited
+      on_enter:
+        - Search shared/ui-components/ for matches
+        - Report found vs missing components
+      rules_applied:
+        - react-use-design-system-repository
+        - design-system-component-audit
+        - microsite-use-shadcn-components
+
+    DATA_REGISTRY_CHECKED:
+      description: Shared domain model registry audited
+      on_enter:
+        - Search shared/semantic/domains/registry.yaml
+        - Report found vs missing entities
+      rules_applied:
+        - app-use-semantic-layer-registry
+        - microsite-use-existing-domain-models
+
+    EXISTING_RESOURCES_IMPORTED:
+      description: Found resources imported into project
+      on_enter:
+        - Import matched UI components
+        - Import matched domain models
+        - Configure dependencies
+      rules_applied: []
+
+    NEW_RESOURCE_PROPOSED:
+      description: New component or model needs approval
+      on_enter:
+        - Generate preview of new resource
+        - Display approval prompt
+      rules_applied:
+        - new-component-human-approval
+        - microsite-prompt-extend-domain-models
+
+    HUMAN_APPROVAL_PENDING:
+      description: Waiting for human approval on new resource
+      on_enter:
+        - Display approval options [y/n/local-only]
+      rules_applied:
+        - new-component-human-approval
+
+    RESOURCE_ADDED_TO_REGISTRY:
+      description: Approved resource added to shared registry
+      on_enter:
+        - Add to shared/ui-components/ or shared/semantic/domains/
+        - Create Storybook story if UI component
+        - Update registry index
+      rules_applied:
+        - microsite-react-components-storybook
+        - microsite-storybook-required-stories
+
+    IMPLEMENTATION_IN_PROGRESS:
+      description: Building the artifact
+      on_enter:
+        - Phase 8 - Implementation
+      rules_applied:
+        - microsite-pydantic-models
+
+    IMPLEMENTATION_COMPLETE:
+      description: Build successful, ready for deployment
+      on_enter:
+        - Run build
+        - Run tests
+        - Generate deployment preview
+      rules_applied: []
+
+    PUBLISH_PROMPT:
+      description: Prompting user for S3 deployment
+      on_enter:
+        - Display publish options [public/temp/private/skip]
+      rules_applied:
+        - microsite-prompt-s3-publish
+
+    PUBLISHED:
+      description: Artifact deployed to S3
+      on_enter:
+        - Upload to S3
+        - Generate access URL
+        - Create bookmark file
+      rules_applied: []
+
+    COMPLETE:
+      description: Workflow finished
+      on_enter:
+        - Display summary
+        - Show access URLs
+      rules_applied: []
+
+  # ===========================================================================
+  # Transitions
+  # ===========================================================================
+
+  transitions:
+    - from: IDLE
+      to: INTENT_DETECTED
+      trigger: user_request
+      condition: Request matches artifact creation intent
+      actions:
+        - Parse user request
+        - Classify intent
+        - Determine artifact type
+
+    - from: INTENT_DETECTED
+      to: ARTIFACT_INITIALIZED
+      trigger: type_confirmed
+      condition: Artifact type resolved
+      actions:
+        - Initialize project structure
+        - Apply tech stack rules
+
+    - from: ARTIFACT_INITIALIZED
+      to: NEEDS_DEFINED
+      trigger: structure_created
+      condition: Project initialized
+      actions:
+        - Analyze requirements
+        - List dependencies
+
+    - from: NEEDS_DEFINED
+      to: UI_REGISTRY_CHECKED
+      trigger: needs_listed
+      condition: Has UI components needed
+      actions:
+        - Search UI registry
+
+    - from: NEEDS_DEFINED
+      to: DATA_REGISTRY_CHECKED
+      trigger: needs_listed
+      condition: Has data models needed AND no UI components
+      actions:
+        - Search domain registry
+
+    - from: UI_REGISTRY_CHECKED
+      to: DATA_REGISTRY_CHECKED
+      trigger: ui_check_complete
+      condition: Has data models needed
+      actions:
+        - Search domain registry
+
+    - from: UI_REGISTRY_CHECKED
+      to: EXISTING_RESOURCES_IMPORTED
+      trigger: ui_check_complete
+      condition: All UI found AND no data models needed
+      actions:
+        - Import UI components
+
+    - from: DATA_REGISTRY_CHECKED
+      to: EXISTING_RESOURCES_IMPORTED
+      trigger: data_check_complete
+      condition: All resources found in registries
+      actions:
+        - Import all matched resources
+
+    - from: DATA_REGISTRY_CHECKED
+      to: NEW_RESOURCE_PROPOSED
+      trigger: data_check_complete
+      condition: Some resources not found
+      actions:
+        - Generate new resource proposals
+
+    - from: UI_REGISTRY_CHECKED
+      to: NEW_RESOURCE_PROPOSED
+      trigger: ui_check_complete
+      condition: Some UI components not found
+      actions:
+        - Generate new component proposals
+
+    - from: NEW_RESOURCE_PROPOSED
+      to: HUMAN_APPROVAL_PENDING
+      trigger: proposal_ready
+      condition: Always
+      actions:
+        - Display approval prompt
+
+    - from: HUMAN_APPROVAL_PENDING
+      to: RESOURCE_ADDED_TO_REGISTRY
+      trigger: human_approved
+      condition: User approved adding to registry
+      actions:
+        - Create resource in shared location
+        - Generate Storybook if UI
+
+    - from: HUMAN_APPROVAL_PENDING
+      to: EXISTING_RESOURCES_IMPORTED
+      trigger: human_local_only
+      condition: User chose local-only
+      actions:
+        - Create resource locally
+        - Skip registry addition
+
+    - from: HUMAN_APPROVAL_PENDING
+      to: NEEDS_DEFINED
+      trigger: human_rejected
+      condition: User rejected proposal
+      actions:
+        - Return to needs definition
+        - Request alternative
+
+    - from: RESOURCE_ADDED_TO_REGISTRY
+      to: EXISTING_RESOURCES_IMPORTED
+      trigger: registry_updated
+      condition: All new resources added
+      actions:
+        - Import newly added resources
+
+    - from: EXISTING_RESOURCES_IMPORTED
+      to: IMPLEMENTATION_IN_PROGRESS
+      trigger: imports_complete
+      condition: All resources available
+      actions:
+        - Begin implementation
+
+    - from: IMPLEMENTATION_IN_PROGRESS
+      to: IMPLEMENTATION_COMPLETE
+      trigger: build_success
+      condition: Build passes, tests pass
+      actions:
+        - Generate build artifacts
+
+    - from: IMPLEMENTATION_COMPLETE
+      to: PUBLISH_PROMPT
+      trigger: ready_for_deploy
+      condition: Artifact is Publishable type
+      actions:
+        - Display publish options
+
+    - from: IMPLEMENTATION_COMPLETE
+      to: COMPLETE
+      trigger: ready_for_deploy
+      condition: Artifact is NOT Publishable type
+      actions:
+        - Display completion summary
+
+    - from: PUBLISH_PROMPT
+      to: PUBLISHED
+      trigger: publish_confirmed
+      condition: User selected publish option
+      actions:
+        - Upload to S3
+        - Generate URL
+
+    - from: PUBLISH_PROMPT
+      to: COMPLETE
+      trigger: publish_skipped
+      condition: User skipped publishing
+      actions:
+        - Display local access info
+
+    - from: PUBLISHED
+      to: COMPLETE
+      trigger: upload_complete
+      condition: S3 upload successful
+      actions:
+        - Create bookmark
+        - Display URL
+
+# =============================================================================
+# Triggers (Events that cause transitions)
+# =============================================================================
+
+triggers:
+  user_request:
+    description: User initiates artifact creation
+    sources:
+      - Natural language request
+      - Slash command (/new-prototype, /new-idea)
+      - Intent detection
+
+  type_confirmed:
+    description: Artifact type determined and confirmed
+    sources:
+      - Auto-detection from request
+      - User confirmation
+
+  structure_created:
+    description: Project directory and files created
+    sources:
+      - Successful initialization
+
+  needs_listed:
+    description: Requirements analysis complete
+    sources:
+      - Component list generated
+      - Entity list generated
+
+  ui_check_complete:
+    description: UI registry search complete
+    sources:
+      - Search finished
+
+  data_check_complete:
+    description: Domain registry search complete
+    sources:
+      - Registry lookup finished
+
+  proposal_ready:
+    description: New resource proposal generated
+    sources:
+      - Missing resource identified
+
+  human_approved:
+    description: User approved adding to shared registry
+    sources:
+      - User input: 'y' or 'yes'
+
+  human_local_only:
+    description: User chose to keep resource local
+    sources:
+      - User input: 'local' or 'local-only'
+
+  human_rejected:
+    description: User rejected proposal
+    sources:
+      - User input: 'n' or 'no'
+
+  registry_updated:
+    description: Shared registry updated with new resource
+    sources:
+      - File created in shared/
+
+  imports_complete:
+    description: All resources imported into project
+    sources:
+      - Import statements added
+
+  build_success:
+    description: Build and tests passed
+    sources:
+      - npm run build success
+      - pytest success
+
+  ready_for_deploy:
+    description: Artifact ready for deployment
+    sources:
+      - Build complete
+
+  publish_confirmed:
+    description: User confirmed publishing
+    sources:
+      - User input: '1', '2', or '3'
+
+  publish_skipped:
+    description: User skipped publishing
+    sources:
+      - User input: '4' or 'skip'
+
+  upload_complete:
+    description: S3 upload finished
+    sources:
+      - s3_publish.py success
+
+# =============================================================================
+# Intent Detection Integration
+# =============================================================================
+
+intent_detection:
+  description: How user intents map to artifact types
+
+  patterns:
+    Microsite:
+      - "create a microsite"
+      - "build a small web app"
+      - "make a demo site"
+      - "prototype a web interface"
+
+    Website:
+      - "create a website"
+      - "build a landing page"
+      - "make a static site"
+
+    Dashboard:
+      - "create a dashboard"
+      - "build an analytics view"
+      - "make a metrics page"
+
+    API:
+      - "create an API"
+      - "build a backend"
+      - "make an endpoint"
+
+    PDF:
+      - "generate a PDF"
+      - "create a report"
+      - "export to PDF"
+
+    Document:
+      - "write a document"
+      - "create documentation"
+      - "write a guide"
+
+    Presentation:
+      - "create a presentation"
+      - "make slides"
+      - "build a deck"
+
+  task_type_mapping:
+    "New Project": [Microsite, Website, Dashboard, API, MobileApp]
+    "New Artifact": [PDF, Document, Presentation]
+    "Task": Any  # Determined by context
+    "New Script": [CLI, API]

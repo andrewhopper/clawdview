@@ -1,0 +1,146 @@
+# Document Validation Rules
+# Source: CRITICAL_RULES.md, WRITING_STANDARDS.md
+# Generated rules for Observer validation system
+
+rules:
+  - id: DOC-001
+    name: Date Required
+    description: Documentation must include a date
+    category: documentation
+    tags: [date, metadata, audit]
+    validator_name: has_date_in_document
+    severity: warning
+    enforcement: warn
+    fix_hint: "Add 'Last Updated: YYYY-MM-DD' or include a date in the header"
+    asset_types: [markdown]
+    source: WRITING_STANDARDS.md
+
+  - id: DOC-002
+    name: ISO Date Format
+    description: Dates should use ISO format (YYYY-MM-DD)
+    category: style
+    tags: [date, format, iso8601]
+    validator_name: has_valid_date_format
+    severity: info
+    enforcement: allow
+    fix_hint: "Use YYYY-MM-DD format (e.g., 2025-11-22)"
+    asset_types: [markdown]
+
+  - id: DOC-003
+    name: Stage Title Format
+    description: "Phase documents must use '# Stage N - Phase Name' title format"
+    category: documentation
+    tags: [sdlc, phase, title, format]
+    validator_name: has_stage_title
+    severity: warning
+    enforcement: warn
+    fix_hint: "Start document with '# Stage N - Phase Name'"
+    asset_types: [markdown]
+    file_patterns: ["**/seed.md", "**/expansion.md", "**/analysis.md", "**/design.md"]
+    source: WRITING_STANDARDS.md
+
+  - id: DOC-004
+    name: Decimal Outline Format
+    description: Technical documents should use decimal outline (1.0, 1.1)
+    category: style
+    tags: [format, outline, structure]
+    validator_name: uses_decimal_outline
+    severity: info
+    enforcement: allow
+    fix_hint: "Use numbered sections: 1.0 Overview, 1.1 Background"
+    asset_types: [markdown]
+    source: WRITING_STANDARDS.md
+
+  - id: DOC-005
+    name: Numbered Lists Preferred
+    description: Use numbered lists instead of bullets (except checkboxes)
+    category: style
+    tags: [format, lists, brevity]
+    validator_name: no_bullet_lists_except_checkboxes
+    severity: info
+    enforcement: allow
+    fix_hint: "Replace '- item' with '1. item'"
+    asset_types: [markdown]
+    critical_rule_ref: 2
+    source: CRITICAL_RULES.md
+
+  - id: DOC-006
+    name: Content Too Short
+    description: Document content is too short (< 50 chars)
+    category: documentation
+    tags: [length, completeness]
+    validator_name: content_not_too_short
+    severity: warning
+    enforcement: warn
+    fix_hint: Add more content to the document
+    asset_types: [markdown]
+
+  - id: DOC-007
+    name: Content Too Long
+    description: Document exceeds recommended length (> 50000 chars)
+    category: documentation
+    tags: [length, maintainability]
+    validator_name: content_not_too_long
+    severity: info
+    enforcement: allow
+    fix_hint: Consider splitting into multiple documents
+    asset_types: [markdown]
+
+  - id: DOC-008
+    name: Placeholder Text
+    description: Remove placeholder text before finalizing
+    category: compliance
+    tags: [placeholder, completeness, blocking]
+    anti_pattern: '\[(?:TODO|TBD|PLACEHOLDER|INSERT|YOUR_.*_HERE)\]|lorem\s+ipsum'
+    severity: error
+    enforcement: block
+    fix_hint: Replace placeholder text with actual content
+    asset_types: [markdown]
+    critical_rule_ref: 7
+    source: CRITICAL_RULES.md
+
+  - id: DOC-009
+    name: Visual Diagrams Required
+    description: Architecture/design documents should include diagrams
+    category: architecture
+    tags: [diagram, visual, architecture]
+    pattern: '```(?:mermaid|ascii|diagram)|[┌┐└┘│─┬┴├┤┼→←↑↓]|graph\s+(?:LR|TD|TB)'
+    severity: info
+    enforcement: allow
+    fix_hint: Add ASCII art diagram or Mermaid graph
+    asset_types: [markdown]
+    file_patterns: ["**/design*.md", "**/architecture*.md"]
+    source: WRITING_STANDARDS.md
+
+  - id: DOC-010
+    name: Malformed Links
+    description: Markdown links should be properly formatted
+    category: style
+    tags: [links, format, broken]
+    anti_pattern: '\[([^\]]+)\]\(\s*\)'
+    severity: warning
+    enforcement: warn
+    fix_hint: "Fix link format: [text](url)"
+    asset_types: [markdown]
+
+  - id: DOC-011
+    name: H1 Header Required
+    description: Document should start with a single H1 header
+    category: style
+    tags: [header, structure, format]
+    pattern: '^#\s+\w+'
+    severity: warning
+    enforcement: warn
+    fix_hint: "Start document with '# Title'"
+    asset_types: [markdown]
+
+  - id: DOC-012
+    name: Unresolved TODOs
+    description: TODO markers indicate incomplete work
+    category: compliance
+    tags: [todo, completeness, tracking]
+    anti_pattern: '(?i)\bTODO\b(?!Write)|\bFIXME\b|\bHACK\b'
+    severity: info
+    enforcement: allow
+    fix_hint: Resolve TODOs or convert to tracked issues
+    asset_types: [markdown]

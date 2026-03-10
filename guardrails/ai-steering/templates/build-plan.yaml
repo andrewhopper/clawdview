@@ -1,0 +1,397 @@
+# Build Plan Template
+# Uses steering domain model for composable, context-aware build guidance
+# Version: 1.0.0
+
+version: "1.0.0"
+domain: steering
+description: Template for generating build plans based on context and needs
+
+# =============================================================================
+# Build Plan Structure
+# =============================================================================
+
+buildPlan:
+  metadata:
+    name: "{project_name}"
+    context: "{detected_context}"  # poc | production | internal
+    createdAt: "{timestamp}"
+    generatedBy: "steering-engine"
+
+  # Context Detection
+  contextDetection:
+    input: "{user_request}"
+    indicators: []
+    resolved: null  # poc | production | internal
+    confidence: 0.0
+    overridden: false
+
+  # Resolved Traits
+  traits:
+    - name: null
+      applied: false
+      rules: []
+
+  # Resolved Needs
+  needs:
+    framework:
+      requirement: OPTIONAL
+      preference:
+        base: 50
+        resolved: null  # After context applied
+      resolution:
+        choice: null
+        message: null
+
+    designSystem:
+      requirement: OPTIONAL
+      preference:
+        base: 50
+        resolved: null
+      resolution:
+        choice: null
+        message: null
+
+    auth:
+      requirement: OPTIONAL
+      preference:
+        base: 50
+        resolved: null
+      resolution:
+        choice: null
+        message: null
+
+    database:
+      requirement: OPTIONAL
+      preference:
+        base: 50
+        resolved: null
+      resolution:
+        choice: null
+        message: null
+
+    testing:
+      requirement: OPTIONAL
+      preference:
+        base: 50
+        resolved: null
+      resolution:
+        choice: null
+        message: null
+
+    deployment:
+      requirement: OPTIONAL
+      preference:
+        base: 50
+        resolved: null
+      resolution:
+        choice: null
+        message: null
+
+  # Build Steps
+  steps:
+    - id: "setup"
+      name: "Project Setup"
+      description: "Initialize project structure"
+      constraint:
+        requirement: REQUIRED
+        preference: null
+      actions:
+        - action: "create-directory"
+          target: "{project_path}"
+        - action: "init-framework"
+          framework: "{resolved.framework}"
+      dependencies: []
+      validations:
+        - "directory-exists"
+        - "package-json-valid"
+
+    - id: "domain-models"
+      name: "Domain Models"
+      description: "Set up domain models from shared registry"
+      constraint:
+        requirement: REQUIRED
+        preference: null
+      actions:
+        - action: "check-registry"
+          registry: "shared/semantic/domains/"
+        - action: "generate-types"
+          source: "{required_domains}"
+          target: "{project_path}/types/"
+      dependencies: ["setup"]
+      validations:
+        - "types-generated"
+        - "no-any-types"
+
+    - id: "ui-components"
+      name: "UI Components"
+      description: "Set up design system and components"
+      constraint:
+        requirement: OPTIONAL
+        preference:
+          base: 70
+          overrides:
+            poc: 50
+            production: 90
+      actions:
+        - action: "check-registry"
+          registry: "shared/ui-components/"
+        - action: "install-shadcn"
+          components: "{required_components}"
+      dependencies: ["setup"]
+      validations:
+        - "components-installed"
+        - "storybook-stories-exist"
+      condition: "traits.includes('UIComponent')"
+
+    - id: "auth-setup"
+      name: "Authentication"
+      description: "Configure authentication based on context"
+      constraint:
+        requirement: OPTIONAL
+        preference:
+          base: 50
+          overrides:
+            poc: 30      # Simple auth for POC
+            production: 90  # Full auth for production
+      actions:
+        - action: "setup-auth"
+          provider: "{resolved.auth.provider}"
+          features: "{resolved.auth.features}"
+      dependencies: ["setup", "domain-models"]
+      validations:
+        - "auth-configured"
+        - "routes-protected"
+      condition: "needs.auth.detected"
+
+    - id: "database-setup"
+      name: "Database"
+      description: "Configure data persistence"
+      constraint:
+        requirement: OPTIONAL
+        preference:
+          base: 50
+          overrides:
+            poc: 30      # SQLite/JSON for POC
+            production: 90  # Managed DB for production
+      actions:
+        - action: "setup-database"
+          type: "{resolved.database.choice}"
+          orm: "{resolved.database.orm}"
+      dependencies: ["setup", "domain-models"]
+      validations:
+        - "database-connected"
+        - "migrations-run"
+      condition: "needs.database.detected"
+
+    - id: "api-setup"
+      name: "API Layer"
+      description: "Set up API routes or backend"
+      constraint:
+        requirement: OPTIONAL
+        preference:
+          base: 60
+          overrides:
+            poc: 50
+            production: 80
+      actions:
+        - action: "setup-api"
+          type: "{resolved.framework == 'nextjs' ? 'api-routes' : 'fastapi'}"
+      dependencies: ["setup", "domain-models"]
+      validations:
+        - "api-endpoints-defined"
+        - "pydantic-models-used"
+      condition: "needs.api.detected"
+
+    - id: "testing-setup"
+      name: "Testing"
+      description: "Configure testing based on context"
+      constraint:
+        requirement: OPTIONAL
+        preference:
+          base: 40
+          overrides:
+            poc: 10      # Skip tests for POC
+            production: 95  # Full tests for production
+            internal: 60
+      actions:
+        - action: "setup-testing"
+          unit: "{resolved.testing.unit}"
+          integration: "{resolved.testing.integration}"
+          e2e: "{resolved.testing.e2e}"
+      dependencies: ["setup"]
+      validations:
+        - "test-config-exists"
+        - "sample-tests-pass"
+      condition: "resolved.testing.choice != 'manual-only'"
+
+    - id: "deployment-setup"
+      name: "Deployment"
+      description: "Configure deployment pipeline"
+      constraint:
+        requirement: OPTIONAL
+        preference:
+          base: 50
+          overrides:
+            poc: 30      # S3 static for POC
+            production: 95  # Full CI/CD for production
+      actions:
+        - action: "setup-deployment"
+          infra: "{resolved.deployment.infra}"
+          ci: "{resolved.deployment.ci}"
+      dependencies: ["setup", "testing-setup"]
+      validations:
+        - "deploy-config-exists"
+        - "ci-pipeline-valid"
+      condition: "context != 'poc' || needs.deployment.explicit"
+
+    - id: "publish"
+      name: "Publish"
+      description: "Publish artifacts to S3"
+      constraint:
+        requirement: OPTIONAL
+        preference:
+          base: 70
+          overrides:
+            poc: 80      # Always offer for POC
+            production: 60  # Production uses CI/CD
+      actions:
+        - action: "offer-s3-publish"
+          files: "{publishable_artifacts}"
+      dependencies: ["*"]  # After all other steps
+      validations:
+        - "publish-url-valid"
+      condition: "traits.includes('Publishable')"
+
+# =============================================================================
+# Resolution Algorithm
+# =============================================================================
+
+resolution:
+  algorithm:
+    - step: "detect-context"
+      description: "Analyze user input for context indicators"
+      fallback: "ask-user"
+
+    - step: "match-traits"
+      description: "Determine applicable traits from artifact type"
+
+    - step: "collect-needs"
+      description: "Identify needs from user request and traits"
+
+    - step: "resolve-needs"
+      description: "Apply context to resolve each need"
+      for_each: "need"
+      actions:
+        - "get-base-preference"
+        - "apply-context-override"
+        - "select-resolution"
+
+    - step: "order-steps"
+      description: "Topological sort by dependencies"
+
+    - step: "filter-steps"
+      description: "Remove steps where condition is false or preference < threshold"
+      threshold: 25  # Skip if preference < 25
+
+    - step: "generate-plan"
+      description: "Output final build plan"
+
+# =============================================================================
+# Example: Cat Lovers Website (POC)
+# =============================================================================
+
+example:
+  input: "Create a quick cat lovers website with user login"
+
+  contextDetection:
+    input: "Create a quick cat lovers website with user login"
+    indicators: ["quick"]
+    resolved: "poc"
+    confidence: 0.85
+
+  traits:
+    - name: "Publishable"
+      applied: true
+      rules: ["asset-offer-s3-publish"]
+    - name: "UIComponent"
+      applied: true
+      rules: ["registry-check", "design-system-check"]
+    - name: "TypeSafe"
+      applied: true
+      rules: ["use-domain-types"]
+    - name: "DataModel"
+      applied: true
+      rules: ["registry-check"]
+
+  needs:
+    framework:
+      requirement: OPTIONAL
+      preference:
+        base: 60
+        resolved: 85  # POC override for Next.js (has API needs)
+      resolution:
+        choice: "nextjs"
+        message: "POC + API needs → Next.js (API routes for auth)"
+
+    auth:
+      requirement: OPTIONAL
+      preference:
+        base: 50
+        resolved: 30  # POC = simple auth
+      resolution:
+        choice: "simple-auth"
+        message: "POC → Simple user/password (no MFA)"
+
+    database:
+      requirement: OPTIONAL
+      preference:
+        base: 50
+        resolved: 30  # POC = SQLite
+      resolution:
+        choice: "sqlite"
+        message: "POC → SQLite (zero setup)"
+
+    testing:
+      requirement: OPTIONAL
+      preference:
+        base: 40
+        resolved: 10  # POC = skip
+      resolution:
+        choice: "manual-only"
+        message: "POC → Manual testing only"
+
+    deployment:
+      requirement: OPTIONAL
+      preference:
+        base: 50
+        resolved: 80  # POC = S3 publish
+      resolution:
+        choice: "s3-static"
+        message: "POC → S3 static hosting"
+
+  steps:
+    - id: "setup"
+      status: "required"
+      framework: "nextjs"
+    - id: "domain-models"
+      status: "required"
+    - id: "ui-components"
+      status: "included"
+      preference: 50
+    - id: "auth-setup"
+      status: "included"
+      preference: 30
+      provider: "next-auth-credentials"
+    - id: "database-setup"
+      status: "included"
+      preference: 30
+      type: "sqlite"
+    - id: "testing-setup"
+      status: "skipped"
+      reason: "preference (10) < threshold (25)"
+    - id: "deployment-setup"
+      status: "skipped"
+      reason: "POC uses direct S3 publish"
+    - id: "publish"
+      status: "included"
+      preference: 80

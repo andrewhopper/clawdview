@@ -1,0 +1,706 @@
+# Investor Domain Model
+# Living database for tracking angel investors, VCs, and accelerator programs
+# Optimized for: dashboards, reports, trend analysis, periodic refresh
+# Created: 2025-12-11
+
+domain:
+  name: investor
+  version: "1.0.0"
+  description: Angel investors, VCs, accelerators - profiles, thesis, check sizes, portfolio tracking
+  dependencies: [core, organization]
+  created_at: "2025-12-11"
+  updated_at: "2025-12-11"
+  use_case: Investor CRM, fundraising research, trend dashboards
+
+# ============================================
+# ENTITIES
+# ============================================
+
+entities:
+
+  # --------------------------------------------
+  # INVESTOR (BASE)
+  # --------------------------------------------
+
+  Investor:
+    description: Individual angel or institutional investor profile
+    properties:
+      id:
+        type: uuid
+        required: true
+        description: "Unique identifier (8-char short form for filenames)"
+      name:
+        type: string
+        required: true
+        max_length: 255
+        description: "Full name (person) or firm name"
+      investor_type:
+        type: enum
+        enum_ref: InvestorType
+        required: true
+      status:
+        type: enum
+        enum_ref: InvestorStatus
+        required: true
+        default: active
+
+      # Profile
+      headline:
+        type: string
+        max_length: 500
+        description: "One-line description (e.g., 'Former GitHub CEO, AI-focused angel')"
+      bio:
+        type: text
+        description: "Extended background and investment philosophy"
+      technical_background:
+        type: boolean
+        default: false
+        description: "Has deep technical/engineering experience"
+      background_tags:
+        type: array
+        items: string
+        description: "e.g., ['ex-founder', 'ex-CTO', 'patent-holder', 'PhD']"
+
+      # Affiliation (for angels associated with firms)
+      primary_firm_id:
+        type: uuid
+        references: InvestmentFirm.id
+        description: "Primary firm affiliation (if any)"
+
+      # Data freshness
+      last_verified:
+        type: date
+        required: true
+        description: "When this data was last verified/updated"
+      data_sources:
+        type: array
+        items: string
+        description: "Sources: ['Signal', 'Crunchbase', 'LinkedIn', 'website']"
+      confidence_level:
+        type: enum
+        enum_ref: ConfidenceLevel
+        default: medium
+
+      # Timestamps
+      created_at:
+        type: datetime
+        required: true
+        auto: true
+      updated_at:
+        type: datetime
+        required: true
+        auto: true
+
+    indexes:
+      - [investor_type]
+      - [status]
+      - [technical_background]
+
+  # --------------------------------------------
+  # INVESTMENT FIRM / FUND
+  # --------------------------------------------
+
+  InvestmentFirm:
+    description: VC firm, accelerator, or institutional investor entity
+    properties:
+      id:
+        type: uuid
+        required: true
+      name:
+        type: string
+        required: true
+        max_length: 255
+      firm_type:
+        type: enum
+        enum_ref: FirmType
+        required: true
+
+      # Financials
+      aum:
+        type: decimal
+        description: "Assets under management (USD)"
+      latest_fund_size:
+        type: decimal
+        description: "Most recent fund size (USD)"
+      latest_fund_year:
+        type: integer
+        description: "Year of latest fund"
+
+      # Contact & Web
+      website:
+        type: string
+        format: url
+      twitter:
+        type: string
+      linkedin:
+        type: string
+      crunchbase_url:
+        type: string
+
+      # Location
+      headquarters:
+        type: string
+        description: "City, e.g., 'San Francisco, CA'"
+      geographic_focus:
+        type: array
+        items: enum
+        enum_ref: GeographicFocus
+
+      # Program info (for accelerators)
+      is_accelerator:
+        type: boolean
+        default: false
+      batch_frequency:
+        type: string
+        description: "e.g., 'Bi-annual (Spring/Fall)', 'Rolling'"
+      program_duration:
+        type: string
+        description: "e.g., '3 months', '5 weeks'"
+
+      # Data freshness
+      last_verified:
+        type: date
+        required: true
+      data_sources:
+        type: array
+        items: string
+
+      created_at:
+        type: datetime
+        auto: true
+      updated_at:
+        type: datetime
+        auto: true
+
+    indexes:
+      - [firm_type]
+      - [is_accelerator]
+
+  # --------------------------------------------
+  # INVESTMENT THESIS
+  # --------------------------------------------
+
+  InvestmentThesis:
+    description: Investment focus and criteria for an investor or firm
+    properties:
+      id:
+        type: uuid
+        required: true
+      investor_id:
+        type: uuid
+        references: Investor.id
+        description: "FK to individual investor"
+      firm_id:
+        type: uuid
+        references: InvestmentFirm.id
+        description: "FK to firm (one of investor_id or firm_id required)"
+
+      # Stage & Size
+      stages:
+        type: array
+        items: enum
+        enum_ref: InvestmentStage
+        required: true
+      check_size_min:
+        type: decimal
+        description: "Minimum check size (USD)"
+      check_size_max:
+        type: decimal
+        description: "Maximum check size (USD)"
+      check_size_typical:
+        type: decimal
+        description: "Sweet spot check size (USD)"
+      leads_rounds:
+        type: boolean
+        default: false
+        description: "Willing to lead rounds"
+      follows_only:
+        type: boolean
+        default: false
+
+      # Focus Areas
+      sector_focus:
+        type: array
+        items: enum
+        enum_ref: SectorFocus
+        required: true
+      sector_tags:
+        type: array
+        items: string
+        description: "Free-form tags: ['LLM infrastructure', 'AI agents', 'vertical SaaS']"
+
+      # Geographic
+      geographic_focus:
+        type: array
+        items: enum
+        enum_ref: GeographicFocus
+      invests_globally:
+        type: boolean
+        default: false
+
+      # Preferences
+      prefers_technical_founders:
+        type: boolean
+        default: false
+      prefers_repeat_founders:
+        type: boolean
+        default: false
+      ip_patent_focus:
+        type: boolean
+        default: false
+        description: "Values novel IP / patent portfolios"
+
+      # Thesis description
+      thesis_summary:
+        type: text
+        description: "Written investment thesis"
+      anti_thesis:
+        type: text
+        description: "What they explicitly don't invest in"
+
+      last_verified:
+        type: date
+      created_at:
+        type: datetime
+        auto: true
+      updated_at:
+        type: datetime
+        auto: true
+
+    indexes:
+      - [investor_id]
+      - [firm_id]
+      - [stages]
+      - [sector_focus]
+
+  # --------------------------------------------
+  # CONTACT INFORMATION
+  # --------------------------------------------
+
+  InvestorContact:
+    description: Contact methods for reaching an investor
+    properties:
+      id:
+        type: uuid
+        required: true
+      investor_id:
+        type: uuid
+        references: Investor.id
+      firm_id:
+        type: uuid
+        references: InvestmentFirm.id
+
+      contact_type:
+        type: enum
+        enum_ref: ContactType
+        required: true
+      value:
+        type: string
+        required: true
+        description: "URL, handle, email"
+      is_preferred:
+        type: boolean
+        default: false
+      notes:
+        type: string
+        description: "e.g., 'DMs open', 'Requires warm intro'"
+
+      created_at:
+        type: datetime
+        auto: true
+      updated_at:
+        type: datetime
+        auto: true
+
+    indexes:
+      - [investor_id]
+      - [firm_id]
+      - [contact_type]
+
+  # --------------------------------------------
+  # PORTFOLIO COMPANY
+  # --------------------------------------------
+
+  PortfolioCompany:
+    description: Company in investor's portfolio (for tracking investment patterns)
+    properties:
+      id:
+        type: uuid
+        required: true
+      investor_id:
+        type: uuid
+        references: Investor.id
+      firm_id:
+        type: uuid
+        references: InvestmentFirm.id
+
+      company_name:
+        type: string
+        required: true
+      company_url:
+        type: string
+        format: url
+
+      # Investment details
+      investment_stage:
+        type: enum
+        enum_ref: InvestmentStage
+      investment_year:
+        type: integer
+      led_round:
+        type: boolean
+        default: false
+
+      # Categorization
+      sector:
+        type: enum
+        enum_ref: SectorFocus
+      sector_tags:
+        type: array
+        items: string
+
+      # Outcome
+      outcome:
+        type: enum
+        enum_ref: InvestmentOutcome
+      outcome_details:
+        type: string
+        description: "e.g., 'Acquired by Google for $1B'"
+      is_unicorn:
+        type: boolean
+        default: false
+
+      notes:
+        type: text
+
+      created_at:
+        type: datetime
+        auto: true
+      updated_at:
+        type: datetime
+        auto: true
+
+    indexes:
+      - [investor_id]
+      - [firm_id]
+      - [sector]
+      - [investment_year]
+      - [is_unicorn]
+
+  # --------------------------------------------
+  # ACCELERATOR PROGRAM
+  # --------------------------------------------
+
+  AcceleratorProgram:
+    description: Specific accelerator program or batch
+    properties:
+      id:
+        type: uuid
+        required: true
+      firm_id:
+        type: uuid
+        required: true
+        references: InvestmentFirm.id
+
+      program_name:
+        type: string
+        required: true
+        description: "e.g., 'Arc Spring 25', 'YC W24', 'HF0 Batch 3'"
+
+      # Investment terms
+      investment_amount:
+        type: decimal
+        description: "Standard investment (USD)"
+      equity_percentage:
+        type: decimal
+        description: "Standard equity taken (%)"
+      investment_structure:
+        type: string
+        description: "e.g., 'SAFE', '7% equity + uncapped SAFE'"
+
+      # Program details
+      duration_weeks:
+        type: integer
+      is_residential:
+        type: boolean
+        default: false
+      location:
+        type: string
+      is_remote_friendly:
+        type: boolean
+        default: false
+
+      # Focus
+      sector_focus:
+        type: array
+        items: enum
+        enum_ref: SectorFocus
+      stage_focus:
+        type: array
+        items: enum
+        enum_ref: InvestmentStage
+
+      # Application
+      application_url:
+        type: string
+        format: url
+      next_deadline:
+        type: date
+      acceptance_rate:
+        type: decimal
+        description: "As percentage (e.g., 1.5 = 1.5%)"
+
+      # Benefits
+      additional_benefits:
+        type: array
+        items: string
+        description: "e.g., ['$300K AWS credits', 'NVIDIA GPU access']"
+
+      notes:
+        type: text
+
+      last_verified:
+        type: date
+      created_at:
+        type: datetime
+        auto: true
+      updated_at:
+        type: datetime
+        auto: true
+
+    indexes:
+      - [firm_id]
+      - [sector_focus]
+      - [next_deadline]
+
+  # --------------------------------------------
+  # INVESTOR ACTIVITY (FOR TREND TRACKING)
+  # --------------------------------------------
+
+  InvestorActivity:
+    description: Time-series record of investor activity for trend analysis
+    properties:
+      id:
+        type: uuid
+        required: true
+      investor_id:
+        type: uuid
+        references: Investor.id
+      firm_id:
+        type: uuid
+        references: InvestmentFirm.id
+
+      period:
+        type: string
+        required: true
+        description: "YYYY-MM or YYYY-QN format"
+
+      # Metrics
+      deals_announced:
+        type: integer
+        default: 0
+      ai_deals:
+        type: integer
+        default: 0
+        description: "AI-focused deals"
+      total_deployed:
+        type: decimal
+        description: "Estimated capital deployed (USD)"
+
+      # Activity indicators
+      activity_level:
+        type: enum
+        enum_ref: ActivityLevel
+
+      notes:
+        type: text
+      source:
+        type: string
+
+      created_at:
+        type: datetime
+        auto: true
+
+    indexes:
+      - [investor_id]
+      - [firm_id]
+      - [period]
+
+# ============================================
+# ENUMS
+# ============================================
+
+enums:
+
+  InvestorType:
+    description: Type of investor entity
+    values:
+      - angel              # Individual angel investor
+      - super_angel        # High-volume angel (50+ investments)
+      - micro_vc           # Small institutional fund (<$50M)
+      - vc                 # Traditional VC
+      - corporate_vc       # Corporate venture arm
+      - family_office      # Family office
+      - accelerator        # Accelerator program
+      - scout              # Scout for larger fund
+      - syndicate_lead     # AngelList syndicate lead
+      - founder_fund       # Fund by founders for founders
+
+  FirmType:
+    description: Type of investment firm
+    values:
+      - vc_fund            # Traditional VC fund
+      - micro_vc           # Micro VC (<$50M AUM)
+      - accelerator        # Accelerator program
+      - incubator          # Incubator
+      - corporate_vc       # Corporate venture arm
+      - family_office      # Family office
+      - angel_group        # Organized angel group
+      - studio             # Venture studio
+
+  InvestorStatus:
+    description: Current status of investor
+    values:
+      - active             # Actively investing
+      - selective          # Highly selective / slow pace
+      - paused             # Temporarily not investing
+      - raising            # Currently raising new fund
+      - inactive           # No longer investing
+      - unknown            # Status unclear
+
+  InvestmentStage:
+    description: Investment stage focus
+    values:
+      - pre_seed           # Pre-seed ($50K - $500K)
+      - seed               # Seed ($500K - $3M)
+      - series_a           # Series A ($3M - $15M)
+      - series_b           # Series B ($15M - $50M)
+      - growth             # Growth stage ($50M+)
+      - any                # Stage agnostic
+
+  SectorFocus:
+    description: Investment sector focus
+    values:
+      - ai_ml              # AI/ML broadly
+      - ai_infrastructure  # AI infrastructure/tooling
+      - ai_applications    # AI application layer
+      - llm_tools          # LLM tooling and dev tools
+      - ai_agents          # AI agents and automation
+      - ambient_ai         # Ambient/invisible AI
+      - human_ai_interface # Human-AI interaction
+      - developer_tools    # Developer tools (non-AI)
+      - b2b_saas           # B2B SaaS
+      - vertical_saas      # Vertical SaaS
+      - enterprise         # Enterprise software
+      - healthtech         # Health technology
+      - wellness           # Wellness/fitness
+      - digital_health     # Digital health
+      - biotech            # Biotechnology
+      - deep_tech          # Deep technology
+      - robotics           # Robotics
+      - climate            # Climate tech
+      - fintech            # Financial technology
+      - consumer           # Consumer tech
+      - marketplace        # Marketplaces
+      - defense            # Defense tech
+      - hardware           # Hardware
+      - cybersecurity      # Cybersecurity
+
+  GeographicFocus:
+    description: Geographic investment focus
+    values:
+      - boston             # Boston/Cambridge ecosystem
+      - nyc                # New York City ecosystem
+      - sf_bay_area        # San Francisco Bay Area
+      - la                 # Los Angeles
+      - seattle            # Seattle
+      - austin             # Austin
+      - us_national        # US national
+      - north_america      # US + Canada
+      - europe             # Europe
+      - global             # Global / no geographic restriction
+
+  ContactType:
+    description: Type of contact method
+    values:
+      - website            # Personal/firm website
+      - email              # Email address
+      - twitter            # Twitter/X handle
+      - linkedin           # LinkedIn profile
+      - signal_nfx         # Signal by NFX profile
+      - crunchbase         # Crunchbase profile
+      - angellist          # AngelList profile
+      - calendly           # Calendly booking link
+      - pitch_form         # Pitch submission form
+
+  InvestmentOutcome:
+    description: Outcome of a portfolio investment
+    values:
+      - active             # Still operating
+      - acquired           # Acquired
+      - ipo                # Went public
+      - unicorn            # Reached $1B+ valuation
+      - failed             # Shut down
+      - unknown            # Outcome unknown
+
+  ActivityLevel:
+    description: Investor activity level for a period
+    values:
+      - very_active        # 10+ deals
+      - active             # 5-10 deals
+      - moderate           # 2-5 deals
+      - low                # 1 deal
+      - inactive           # No deals
+
+  ConfidenceLevel:
+    description: Confidence in data accuracy
+    values:
+      - high               # Recently verified from primary source
+      - medium             # Verified within 6 months
+      - low                # May be outdated
+      - unverified         # Not yet verified
+
+# ============================================
+# ACTIONS
+# ============================================
+
+actions:
+
+  SearchInvestors:
+    description: Search investors by criteria
+    input:
+      stages: { type: array, items: InvestmentStage }
+      sectors: { type: array, items: SectorFocus }
+      geographic: { type: array, items: GeographicFocus }
+      technical_background: { type: boolean }
+      check_size_min: { type: decimal }
+      check_size_max: { type: decimal }
+      investor_types: { type: array, items: InvestorType }
+    output:
+      investors: { type: array, items: Investor }
+      count: { type: integer }
+
+  RefreshInvestorData:
+    description: Mark investor data for refresh
+    input:
+      investor_id: { type: uuid }
+      sources_to_check: { type: array, items: string }
+    output:
+      refresh_task_id: { type: uuid }
+
+  GenerateInvestorReport:
+    description: Generate report for investor outreach
+    input:
+      investor_ids: { type: array, items: uuid }
+      format: { type: string, enum: [markdown, html, pdf] }
+    output:
+      report_url: { type: string }
+
+  TrackActivityTrends:
+    description: Get activity trends for dashboard
+    input:
+      period_start: { type: string }
+      period_end: { type: string }
+      group_by: { type: string, enum: [investor, sector, stage] }
+    output:
+      trends: { type: array }
