@@ -6,6 +6,15 @@ export interface FileTreeItem {
   size?: number;
   mtime?: number;
   children?: FileTreeItem[];
+  /** Absolute path of the watched root this item belongs to */
+  rootDir?: string;
+}
+
+export interface WatchedDirInfo {
+  /** Absolute path */
+  absolutePath: string;
+  /** Short display label (last path segment) */
+  label: string;
 }
 
 export interface GitInfo {

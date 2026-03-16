@@ -20,10 +20,10 @@ export function PreferencesPanel({
 }: PreferencesPanelProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Preferences</DialogTitle>
-          <DialogDescription>Configure QuickView behavior and watched file types.</DialogDescription>
+          <DialogDescription>Configure ClawdView behavior and watched file types.</DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="flex-1 -mx-6 px-6">

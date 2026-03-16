@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { cn } from '@/lib/utils';
-import type { FileTreeItem, ViewMode } from '../types';
-import { ChevronRight, RefreshCw, Eye, Search, FolderTree, Clock, LayoutList, type LucideIcon } from 'lucide-react';
+import type { FileTreeItem, ViewMode, WatchedDirInfo } from '../types';
+import { ChevronRight, RefreshCw, Eye, Search, FolderTree, Clock, LayoutList, X, FolderPlus, type LucideIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -47,12 +47,38 @@ interface FileTreeProps {
   onFileSelect: (file: FileTreeItem) => void;
   onRefresh: () => void;
   isFileTypeWatched: (ext: string) => boolean;
+  watchedDirs: WatchedDirInfo[];
+  onAddDir: (dir: string) => void;
+  onRemoveDir: (dir: string) => void;
 }
 
-export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTypeWatched }: FileTreeProps) {
+export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTypeWatched, watchedDirs, onAddDir, onRemoveDir }: FileTreeProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('tree');
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedPaths, setCollapsedPaths] = useState<Set<string>>(new Set());
+  const initialCollapseApplied = useRef(false);
+  const [addingDir, setAddingDir] = useState(false);
+  const [newDirPath, setNewDirPath] = useState('');
+  const addDirInputRef = useRef<HTMLInputElement>(null);
+
+  const isMultiDir = watchedDirs.length > 1;
+
+  // Collapse all directories on initial tree load
+  useLayoutEffect(() => {
+    if (initialCollapseApplied.current || tree.length === 0) return;
+    initialCollapseApplied.current = true;
+    const dirs = new Set<string>();
+    function collectDirs(items: FileTreeItem[]) {
+      for (const item of items) {
+        if (item.type === 'directory') {
+          dirs.add(item.path);
+          if (item.children) collectDirs(item.children);
+        }
+      }
+    }
+    collectDirs(tree);
+    if (dirs.size > 0) setCollapsedPaths(dirs);
+  }, [tree]);
   const [activeExtFilters, setActiveExtFilters] = useState<Set<string>>(new Set());
   const [showIgnored, setShowIgnored] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -128,6 +154,21 @@ export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTy
       return next;
     });
   }, []);
+
+  const handleAddDir = useCallback(() => {
+    const trimmed = newDirPath.trim();
+    if (trimmed) {
+      onAddDir(trimmed);
+      setNewDirPath('');
+      setAddingDir(false);
+    }
+  }, [newDirPath, onAddDir]);
+
+  useEffect(() => {
+    if (addingDir) {
+      addDirInputRef.current?.focus();
+    }
+  }, [addingDir]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -237,17 +278,33 @@ export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTy
           {displayFiles.length === 0 ? (
             <div className="text-muted-foreground text-sm text-center py-6 px-3">No matching files</div>
           ) : viewMode === 'tree' ? (
-            <TreeView
-              tree={filteredTree}
-              displayFiles={displayFiles}
-              collapsedPaths={collapsedPaths}
-              selectedPath={selectedPath}
-              showIgnored={showIgnored}
-              searchQuery={searchQuery}
-              activeExtFilters={activeExtFilters}
-              onFileSelect={onFileSelect}
-              onToggleCollapse={toggleCollapse}
-            />
+            isMultiDir ? (
+              <MultiRootTreeView
+                tree={filteredTree}
+                displayFiles={displayFiles}
+                collapsedPaths={collapsedPaths}
+                selectedPath={selectedPath}
+                showIgnored={showIgnored}
+                searchQuery={searchQuery}
+                activeExtFilters={activeExtFilters}
+                watchedDirs={watchedDirs}
+                onFileSelect={onFileSelect}
+                onToggleCollapse={toggleCollapse}
+                onRemoveDir={onRemoveDir}
+              />
+            ) : (
+              <TreeView
+                tree={filteredTree}
+                displayFiles={displayFiles}
+                collapsedPaths={collapsedPaths}
+                selectedPath={selectedPath}
+                showIgnored={showIgnored}
+                searchQuery={searchQuery}
+                activeExtFilters={activeExtFilters}
+                onFileSelect={onFileSelect}
+                onToggleCollapse={toggleCollapse}
+              />
+            )
           ) : viewMode === 'recent' ? (
             <RecentView
               files={displayFiles}
@@ -264,9 +321,168 @@ export function FileTree({ tree, selectedPath, onFileSelect, onRefresh, isFileTy
             />
           )}
         </div>
+
+        {/* Add directory section */}
+        <div className="px-2.5 py-2 border-t border-border">
+          {addingDir ? (
+            <div className="flex items-center gap-1">
+              <Input
+                ref={addDirInputRef}
+                placeholder="/absolute/path..."
+                value={newDirPath}
+                onChange={(e) => setNewDirPath(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddDir();
+                  if (e.key === 'Escape') { setAddingDir(false); setNewDirPath(''); }
+                }}
+                className="h-6 text-xs flex-1"
+              />
+              <Button variant="ghost" size="icon-sm" onClick={handleAddDir}>
+                <FolderPlus className="w-3.5 h-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon-sm" onClick={() => { setAddingDir(false); setNewDirPath(''); }}>
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-6 text-[11px] text-muted-foreground gap-1.5 justify-start"
+              onClick={() => setAddingDir(true)}
+            >
+              <FolderPlus className="w-3 h-3" />
+              Add directory...
+            </Button>
+          )}
+        </div>
       </ScrollArea>
     </aside>
   );
+}
+
+// Multi-root tree view: each watched dir is a collapsible root section
+function MultiRootTreeView({
+  tree, displayFiles, collapsedPaths, selectedPath, showIgnored,
+  searchQuery, activeExtFilters, watchedDirs, onFileSelect, onToggleCollapse, onRemoveDir,
+}: {
+  tree: FileTreeItem[];
+  displayFiles: FileTreeItem[];
+  collapsedPaths: Set<string>;
+  selectedPath: string | null;
+  showIgnored: boolean;
+  searchQuery: string;
+  activeExtFilters: Set<string>;
+  watchedDirs: WatchedDirInfo[];
+  onFileSelect: (file: FileTreeItem) => void;
+  onToggleCollapse: (path: string) => void;
+  onRemoveDir: (dir: string) => void;
+}) {
+  const matchingPaths = useMemo(() => new Set(displayFiles.map((f) => f.path)), [displayFiles]);
+
+  const ancestorPaths = useMemo(() => {
+    const ancestors = new Set<string>();
+    for (const f of displayFiles) {
+      const parts = f.path.split(/[\\/]/);
+      let cur = '';
+      for (let i = 0; i < parts.length - 1; i++) {
+        cur = cur ? cur + '/' + parts[i] : parts[i];
+        ancestors.add(cur);
+      }
+    }
+    return ancestors;
+  }, [displayFiles]);
+
+  return (
+    <>
+      {tree.map((rootItem) => {
+        if (rootItem.type !== 'directory') return null;
+        const isOpen = !collapsedPaths.has(rootItem.path);
+        const dirInfo = watchedDirs.find((d) => d.absolutePath === rootItem.path);
+        const canRemove = watchedDirs.length > 1;
+
+        return (
+          <Collapsible key={rootItem.path} open={isOpen} onOpenChange={() => onToggleCollapse(rootItem.path)}>
+            <div className="flex items-center group">
+              <CollapsibleTrigger className="flex items-center gap-1.5 flex-1 py-1.5 px-2 cursor-pointer rounded-md text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground select-none">
+                <ChevronRight className={cn('w-3 h-3 transition-transform', isOpen && 'rotate-90')} />
+                <span className="truncate" title={dirInfo?.absolutePath}>{rootItem.name}</span>
+              </CollapsibleTrigger>
+              {canRemove && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity mr-1 h-5 w-5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveDir(rootItem.path);
+                      }}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Remove directory</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+            <CollapsibleContent>
+              {rootItem.children && renderItems(rootItem.children, 1, {
+                matchingPaths, ancestorPaths, collapsedPaths, selectedPath,
+                showIgnored, searchQuery, activeExtFilters, onFileSelect, onToggleCollapse,
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        );
+      })}
+    </>
+  );
+}
+
+interface RenderContext {
+  matchingPaths: Set<string>;
+  ancestorPaths: Set<string>;
+  collapsedPaths: Set<string>;
+  selectedPath: string | null;
+  showIgnored: boolean;
+  searchQuery: string;
+  activeExtFilters: Set<string>;
+  onFileSelect: (file: FileTreeItem) => void;
+  onToggleCollapse: (path: string) => void;
+}
+
+function renderItems(items: FileTreeItem[], level: number, ctx: RenderContext) {
+  return items.map((item) => {
+    if (item.type === 'directory') {
+      if (!ctx.showIgnored && IGNORED_DIRS.has(item.name)) return null;
+      if ((ctx.searchQuery || ctx.activeExtFilters.size > 0) && !ctx.ancestorPaths.has(item.path)) return null;
+
+      const isOpen = !ctx.collapsedPaths.has(item.path);
+      return (
+        <Collapsible key={item.path} open={isOpen} onOpenChange={() => ctx.onToggleCollapse(item.path)}>
+          <CollapsibleTrigger className="flex items-center gap-1.5 w-full py-1 px-2 cursor-pointer rounded-md text-sm font-medium text-foreground hover:bg-accent select-none" style={{ paddingLeft: `${8 + level * 16}px` }}>
+            <ChevronRight className={cn('w-3 h-3 text-muted-foreground transition-transform', isOpen && 'rotate-90')} />
+            <span className="truncate">{item.name}</span>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            {item.children && renderItems(item.children, level + 1, ctx)}
+          </CollapsibleContent>
+        </Collapsible>
+      );
+    }
+
+    if (!ctx.matchingPaths.has(item.path)) return null;
+    return (
+      <FileItem
+        key={item.path}
+        item={item}
+        level={level}
+        isSelected={item.path === ctx.selectedPath}
+        onClick={() => ctx.onFileSelect(item)}
+      />
+    );
+  });
 }
 
 // Tree view using shadcn Collapsible
@@ -299,40 +515,10 @@ function TreeView({
     return ancestors;
   }, [displayFiles]);
 
-  function renderItems(items: FileTreeItem[], level: number) {
-    return items.map((item) => {
-      if (item.type === 'directory') {
-        if (!showIgnored && IGNORED_DIRS.has(item.name)) return null;
-        if ((searchQuery || activeExtFilters.size > 0) && !ancestorPaths.has(item.path)) return null;
-
-        const isOpen = !collapsedPaths.has(item.path);
-        return (
-          <Collapsible key={item.path} open={isOpen} onOpenChange={() => onToggleCollapse(item.path)}>
-            <CollapsibleTrigger className="flex items-center gap-1.5 w-full py-1 px-2 cursor-pointer rounded-md text-sm font-medium text-foreground hover:bg-accent select-none" style={{ paddingLeft: `${8 + level * 16}px` }}>
-              <ChevronRight className={cn('w-3 h-3 text-muted-foreground transition-transform', isOpen && 'rotate-90')} />
-              <span className="truncate">{item.name}</span>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              {item.children && renderItems(item.children, level + 1)}
-            </CollapsibleContent>
-          </Collapsible>
-        );
-      }
-
-      if (!matchingPaths.has(item.path)) return null;
-      return (
-        <FileItem
-          key={item.path}
-          item={item}
-          level={level}
-          isSelected={item.path === selectedPath}
-          onClick={() => onFileSelect(item)}
-        />
-      );
-    });
-  }
-
-  return <>{renderItems(tree, 0)}</>;
+  return <>{renderItems(tree, 0, {
+    matchingPaths, ancestorPaths, collapsedPaths, selectedPath,
+    showIgnored, searchQuery, activeExtFilters, onFileSelect, onToggleCollapse,
+  })}</>;
 }
 
 function RecentView({
@@ -438,7 +624,7 @@ function TypeView({
       {groups.ungrouped.length > 0 && (
         <div>
           <div className="text-xs font-semibold text-muted-foreground py-2 px-3 uppercase tracking-wide">
-            📄 Other ({groups.ungrouped.length})
+            Other ({groups.ungrouped.length})
           </div>
           {groups.ungrouped.map((f) => (
             <FileItem

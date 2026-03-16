@@ -4,6 +4,7 @@
   "description": "Universal rapid prototyping tool for instant code preview",
   "main": "dist/server/server.js",
   "bin": {
+    "cview": "./bin/cview.js",
     "quickview": "./bin/quickview.js"
   },
   "scripts": {

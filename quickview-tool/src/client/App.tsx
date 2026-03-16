@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Play, Sparkles, ExternalLink, Info } from 'lucide-react';
+import { Play, Sparkles, ExternalLink, Info, PanelLeftClose, PanelLeftOpen, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { Header } from './components/Header';
 import { FileTree } from './components/FileTree';
 import { PreferencesPanel } from './components/PreferencesPanel';
+import { Logo } from './components/Logo';
 import { FileInfoModal } from './components/FileInfoModal';
 import { HtmlRenderer } from './components/renderers/HtmlRenderer';
 import { ReactRenderer } from './components/renderers/ReactRenderer';
@@ -18,17 +19,20 @@ import { useSocket } from './hooks/useSocket';
 import { usePreferences } from './hooks/usePreferences';
 import { useTheme } from './hooks/useTheme';
 import { cn } from './lib/utils';
-import type { FileTreeItem, FileData, CurrentFile, TabName } from './types';
+import type { FileTreeItem, FileData, CurrentFile, TabName, WatchedDirInfo } from './types';
 
 declare const hljs: any;
 
 const HIGHLIGHT_LANG_MAP: Record<string, string> = {
   '.js': 'javascript', '.jsx': 'javascript', '.py': 'python',
   '.html': 'html', '.css': 'css', '.json': 'json',
-  '.md': 'markdown', '.svg': 'xml',
+  '.md': 'markdown', '.svg': 'xml', '.xml': 'xml',
+  '.yaml': 'yaml', '.yml': 'yaml', '.txt': 'plaintext',
 };
 
-const FORMATTABLE_EXTENSIONS = ['.js', '.jsx', '.json', '.html', '.css'];
+const FORMATTABLE_EXTENSIONS = ['.js', '.jsx', '.json', '.html', '.css', '.yaml', '.yml', '.xml'];
+const PREVIEWABLE_EXTENSIONS = new Set(['.html', '.md', '.svg', '.jsx', '.json']);
+const EXECUTABLE_EXTENSIONS = new Set(['.py']);
 
 interface OutputResult {
   success: boolean;
@@ -44,6 +48,9 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [fileInfoOpen, setFileInfoOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [watchedDirs, setWatchedDirs] = useState<WatchedDirInfo[]>([]);
 
   const codeRef = useRef<HTMLElement>(null);
   const currentFileRef = useRef(currentFile);
@@ -52,6 +59,18 @@ export function App() {
   fileContentRef.current = fileContent;
 
   const fileExtension = currentFile?.extension || '';
+  const hasPreview = PREVIEWABLE_EXTENSIONS.has(fileExtension);
+  const hasOutput = EXECUTABLE_EXTENSIONS.has(fileExtension);
+
+  // Auto-switch to Code tab when file has no preview
+  useEffect(() => {
+    if (fileExtension && !hasPreview && activeTab === 'preview') {
+      setActiveTab('code');
+    }
+    if (!hasOutput && activeTab === 'output') {
+      setActiveTab('code');
+    }
+  }, [fileExtension, hasPreview, hasOutput, activeTab]);
 
   const { isDark, toggleTheme } = useTheme();
   const { preferences, updatePreference, resetPreferences, isFileTypeWatched } = usePreferences();
@@ -86,14 +105,18 @@ export function App() {
     }
   }, [preferences.autoOpenOnChange, loadFile]);
 
-  const { connected, requestRefresh } = useSocket(onFileTree, onFileChange);
+  const onWatchedDirs = useCallback((dirs: WatchedDirInfo[]) => {
+    setWatchedDirs(dirs);
+  }, []);
+
+  const { connected, requestRefresh, addDir, removeDir } = useSocket(onFileTree, onFileChange, onWatchedDirs);
 
   // Highlight code when content or tab changes
   useEffect(() => {
-    if (activeTab === 'code' && codeRef.current && fileContent && typeof hljs !== 'undefined') {
-      const language = HIGHLIGHT_LANG_MAP[fileExtension];
+    if (activeTab === 'code' && codeRef.current && fileContent) {
       codeRef.current.textContent = fileContent;
-      if (language) {
+      const language = HIGHLIGHT_LANG_MAP[fileExtension];
+      if (language && typeof hljs !== 'undefined') {
         codeRef.current.className = `language-${language}`;
         hljs.highlightElement(codeRef.current);
       }
@@ -168,13 +191,60 @@ export function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const ZOOM_STEPS = [25, 50, 75, 100, 125, 150, 200, 300];
+  const zoomIn = useCallback(() => {
+    setZoomLevel((prev) => {
+      const next = ZOOM_STEPS.find((s) => s > prev);
+      return next ?? prev;
+    });
+  }, []);
+  const zoomOut = useCallback(() => {
+    setZoomLevel((prev) => {
+      const next = [...ZOOM_STEPS].reverse().find((s) => s < prev);
+      return next ?? prev;
+    });
+  }, []);
+  const zoomReset = useCallback(() => setZoomLevel(100), []);
+
+  // Keyboard shortcuts for zoom (Cmd/Ctrl + =/-)
+  useEffect(() => {
+    function handleZoomKey(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn(); }
+      else if (e.key === '-') { e.preventDefault(); zoomOut(); }
+      else if (e.key === '0') { e.preventDefault(); zoomReset(); }
+    }
+    document.addEventListener('keydown', handleZoomKey);
+    return () => document.removeEventListener('keydown', handleZoomKey);
+  }, [zoomIn, zoomOut, zoomReset]);
+
+  const zoomStyle = useMemo(() => {
+    if (zoomLevel === 100) return undefined;
+    const scale = zoomLevel / 100;
+    return {
+      transform: `scale(${scale})`,
+      transformOrigin: 'top left',
+      width: `${100 / scale}%`,
+      height: `${100 / scale}%`,
+    } as React.CSSProperties;
+  }, [zoomLevel]);
+
   const previewContent = useMemo(() => {
     if (!fileContent) {
       return (
-        <div className="px-10 py-16 text-center text-muted-foreground">
-          <h2 className="text-2xl font-semibold text-foreground mb-3">Welcome to QuickView!</h2>
-          <p className="text-muted-foreground text-sm">Select a file from the sidebar to start previewing</p>
-          <div className="mt-8 text-left max-w-xs mx-auto">
+        <div className="px-10 py-16 max-w-md mx-auto">
+          <div className="flex items-center gap-3 mb-3">
+            <Logo size={36} className="text-foreground" />
+            <h2 className="text-2xl font-semibold text-foreground">ClawdView</h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Watch your files come to life as you code. ClawdView gives you instant, live previews alongside Claude Code and other coding CLI tools.
+          </p>
+          <pre className="mt-5 bg-muted/50 rounded-md px-4 py-3 text-xs font-mono text-foreground leading-relaxed">
+{`cview                  # launch in current directory
+cview ./some/dir/here  # launch in a specific directory`}
+          </pre>
+          <div className="mt-8">
             <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Supported formats</h3>
             <ul className="space-y-2">
               <li className="text-sm text-muted-foreground">🌐 HTML/CSS/JavaScript</li>
@@ -185,6 +255,12 @@ export function App() {
               <li className="text-sm text-muted-foreground">📊 JSON/YAML</li>
             </ul>
           </div>
+          <p className="mt-8 text-sm text-muted-foreground">
+            Head over to GitHub to report{' '}
+            <a href="https://github.com/andrewhopper/clawdview/issues" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">issues</a>
+            {' '}or{' '}
+            <a href="https://github.com/andrewhopper/clawdview" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">contribute</a>.
+          </p>
         </div>
       );
     }
@@ -216,48 +292,67 @@ export function App() {
         />
 
         <div className="flex flex-1 overflow-hidden min-h-0">
-          <FileTree
-            tree={fileTree}
-            selectedPath={currentFile?.path ?? null}
-            onFileSelect={loadFile}
-            onRefresh={requestRefresh}
-            isFileTypeWatched={isFileTypeWatched}
-          />
+          {sidebarOpen && (
+            <FileTree
+              tree={fileTree}
+              selectedPath={currentFile?.path ?? null}
+              onFileSelect={loadFile}
+              onRefresh={requestRefresh}
+              isFileTypeWatched={isFileTypeWatched}
+              watchedDirs={watchedDirs}
+              onAddDir={addDir}
+              onRemoveDir={removeDir}
+            />
+          )}
 
           <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabName)} className="flex-1 flex flex-col overflow-hidden">
-              <div className="bg-card border-b border-border px-2 shrink-0">
+              <div className="bg-card border-b border-border px-2 shrink-0 flex items-center">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setSidebarOpen((v) => !v)}
+                  className="mr-1 shrink-0"
+                >
+                  {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+                </Button>
                 <TabsList className="h-9 bg-transparent gap-1 rounded-none">
-                  <TabsTrigger value="preview" className="data-[state=active]:shadow-none data-[state=active]:bg-accent rounded-md text-xs gap-1.5">
-                    🖥️ Preview
-                  </TabsTrigger>
+                  {hasPreview && (
+                    <TabsTrigger value="preview" className="data-[state=active]:shadow-none data-[state=active]:bg-accent rounded-md text-xs gap-1.5">
+                      🖥️ Preview
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger value="code" className="data-[state=active]:shadow-none data-[state=active]:bg-accent rounded-md text-xs gap-1.5">
                     📝 Code
                   </TabsTrigger>
-                  <TabsTrigger value="output" className="data-[state=active]:shadow-none data-[state=active]:bg-accent rounded-md text-xs gap-1.5">
-                    📊 Output
-                  </TabsTrigger>
+                  {hasOutput && (
+                    <TabsTrigger value="output" className="data-[state=active]:shadow-none data-[state=active]:bg-accent rounded-md text-xs gap-1.5">
+                      📊 Output
+                    </TabsTrigger>
+                  )}
                 </TabsList>
               </div>
 
               <div className="flex-1 relative overflow-hidden">
                 <TabsContent value="preview" className="absolute inset-0 overflow-auto mt-0 ring-0 focus-visible:ring-0">
-                  <div className="h-full bg-background">
+                  <div className="h-full bg-background" style={zoomStyle}>
                     {previewContent}
                   </div>
                 </TabsContent>
 
                 <TabsContent value="code" className="absolute inset-0 overflow-auto mt-0 ring-0 focus-visible:ring-0">
-                  <pre className="min-h-full">
-                    <code
-                      ref={codeRef}
-                      className="block bg-background text-foreground p-5 font-mono text-sm leading-relaxed min-h-full overflow-auto whitespace-pre"
-                    />
-                  </pre>
+                  <div style={zoomStyle}>
+                    <pre className="min-h-full">
+                      <code
+                        ref={codeRef}
+                        className="block bg-background text-foreground p-5 font-mono text-sm leading-relaxed min-h-full overflow-auto whitespace-pre"
+                      />
+                    </pre>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="output" className="absolute inset-0 overflow-auto mt-0 ring-0 focus-visible:ring-0">
-                  <div className="bg-background text-green-600 dark:text-green-400 font-mono text-sm leading-relaxed p-5 min-h-full">
+                  <div className="bg-background text-green-600 dark:text-green-400 font-mono text-sm leading-relaxed p-5 min-h-full" style={zoomStyle}>
                     {outputResult ? (
                       <div className={cn(
                         'p-3.5 m-3 rounded-md border-l-3 text-sm',
@@ -305,6 +400,22 @@ export function App() {
                   </Button>
                 </>
               )}
+
+              <div className="ml-auto flex items-center gap-0.5">
+                <Button variant="ghost" size="icon-sm" onClick={zoomOut} disabled={zoomLevel <= 25} title="Zoom out (⌘−)">
+                  <ZoomOut className="h-3.5 w-3.5" />
+                </Button>
+                <button
+                  onClick={zoomReset}
+                  className="text-xs tabular-nums text-muted-foreground hover:text-foreground min-w-[3.5rem] text-center"
+                  title="Reset zoom (⌘0)"
+                >
+                  {zoomLevel}%
+                </button>
+                <Button variant="ghost" size="icon-sm" onClick={zoomIn} disabled={zoomLevel >= 300} title="Zoom in (⌘+)">
+                  <ZoomIn className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>

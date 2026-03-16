@@ -1,4 +1,5 @@
-import { Settings, Sun, Moon } from 'lucide-react';
+import { Settings, Sun, Moon, Github } from 'lucide-react';
+import { Logo } from './Logo';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Separator } from './ui/separator';
@@ -21,7 +22,10 @@ export function Header({
 }: HeaderProps) {
   return (
     <header className="bg-card border-b border-border px-4 h-12 flex justify-between items-center shrink-0">
-      <h1 className="text-sm font-semibold tracking-tight">QuickView</h1>
+      <div className="flex items-center gap-2">
+        <Logo size={22} />
+        <h1 className="text-sm font-semibold tracking-tight">ClawdView</h1>
+      </div>
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <span
@@ -48,6 +52,16 @@ export function Header({
             </Button>
           </TooltipTrigger>
           <TooltipContent>Preferences</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <a href="https://github.com/andrewhopper/clawdview" target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="icon-sm" asChild>
+                <span><Github className="h-4 w-4" /></span>
+              </Button>
+            </a>
+          </TooltipTrigger>
+          <TooltipContent>GitHub</TooltipContent>
         </Tooltip>
       </div>
     </header>
