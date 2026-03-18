@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock 4 – Floating FAB + Command Palette</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    /* Sidebar panel */
+    .sidebar-panel {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 280px;
+      background: white;
+      border-right: 1px solid hsl(220 13% 91%);
+      box-shadow: 8px 0 32px rgba(0,0,0,0.08);
+      transform: translateX(-100%);
+      transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-panel.open { transform: translateX(0); }
+
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(2px);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .backdrop.visible { opacity: 1; pointer-events: auto; }
+
+    /* Floating action button */
+    .fab {
+      position: fixed;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      background: hsl(222.2 84% 4.9%);
+      color: white;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 30;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .fab:hover { background: hsl(221.2 83.2% 45%); }
+    .fab.hidden-fab { opacity: 0; pointer-events: none; transform: translateY(-50%) translateX(-8px); }
+
+    /* Command palette */
+    .palette {
+      position: absolute;
+      top: 56px;
+      left: 8px;
+      right: 8px;
+      background: white;
+      border: 1px solid hsl(220 13% 91%);
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      overflow: hidden;
+      max-height: 340px;
+      display: flex;
+      flex-direction: column;
+    }
+    .palette-input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 13px;
+      border: none;
+      border-bottom: 1px solid hsl(220 13% 91%);
+      outline: none;
+      background: transparent;
+    }
+    .palette-list { overflow-y: auto; }
+    .palette-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      color: hsl(222.2 47.4% 11.2%);
+    }
+    .palette-item:hover, .palette-item.focused {
+      background: hsl(210 40% 96.1%);
+    }
+    .palette-item .path {
+      margin-left: auto;
+      font-size: 11px;
+      color: hsl(215.4 16.3% 60%);
+    }
+    .highlight { color: hsl(221.2 83.2% 53.3%); font-weight: 600; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 overflow-hidden h-screen">
+
+  <!-- Backdrop -->
+  <div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
+
+  <!-- Floating button (left edge, visible when sidebar closed) -->
+  <div class="fab" id="fab" onclick="openSidebar()" title="Open file browser (⌘B)">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M9 5l7 7-7 7"/>
+    </svg>
+  </div>
+
+  <!-- Sidebar panel -->
+  <aside class="sidebar-panel" id="sidebarPanel">
+    <!-- Header -->
+    <div class="h-12 flex items-center justify-between px-4 border-b border-gray-100 shrink-0">
+      <span class="font-semibold text-sm">Browse Files</span>
+      <div class="flex items-center gap-1">
+        <button onclick="closeSidebar()"
+          class="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400" title="Close (⌘B)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search / Command palette -->
+    <div class="palette" id="palette">
+      <input class="palette-input" id="searchInput"
+        placeholder="Search files…"
+        oninput="filterFiles(this.value)"
+        onkeydown="handleKey(event)" />
+      <div class="palette-list" id="paletteList"></div>
+    </div>
+
+    <!-- Static file tree (below palette) -->
+    <div class="flex-1 overflow-y-auto pt-2 mt-80">
+      <div class="px-4 py-1 text-xs text-gray-400 font-semibold uppercase tracking-widest">Recent</div>
+      <div class="px-3 space-y-0.5">
+        <div onclick="pick('App.tsx')" class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-100 cursor-pointer text-sm">
+          <svg class="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          App.tsx
+          <span class="ml-auto text-xs text-gray-400">src/</span>
+        </div>
+        <div onclick="pick('index.tsx')" class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-100 cursor-pointer text-sm">
+          <svg class="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          index.tsx
+          <span class="ml-auto text-xs text-gray-400">src/</span>
+        </div>
+        <div onclick="pick('main.css')" class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-100 cursor-pointer text-sm">
+          <svg class="w-4 h-4 text-purple-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          main.css
+          <span class="ml-auto text-xs text-gray-400">src/</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="h-full flex flex-col">
+    <!-- Minimal top bar -->
+    <div class="h-12 bg-white border-b border-gray-200 flex items-center px-16 gap-2 shrink-0">
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-gray-400">src /</span>
+        <span id="fileName" class="font-medium text-gray-900">App.tsx</span>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <kbd class="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">⌘B</kbd>
+        <span class="text-xs text-gray-400">toggle sidebar</span>
+      </div>
+    </div>
+
+    <main class="flex-1 overflow-auto p-6">
+      <div class="max-w-2xl mx-auto">
+        <div class="text-xs text-gray-400 mb-6 border border-dashed border-gray-200 rounded-lg p-4 text-center">
+          <strong class="block text-gray-600 mb-1">Mock 4 — Floating FAB + Search Palette</strong>
+          A small arrow button floats on the left edge. Clicking it opens a panel with
+          a live-filter search palette at the top and a recent-files list below.
+          Clicking outside closes. No persistent pin — maximizes editor space.
+        </div>
+        <pre class="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-4 leading-relaxed font-mono"><code>import React, { useState } from 'react'
+
+export default function App() {
+  const [count, setCount] = useState(0)
+  return (
+    &lt;button onClick={() =&gt; setCount(c =&gt; c + 1)}&gt;
+      Count: {count}
+    &lt;/button&gt;
+  )
+}</code></pre>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const files = [
+      { name: 'App.tsx', path: 'src/', color: 'text-blue-400' },
+      { name: 'index.tsx', path: 'src/', color: 'text-blue-400' },
+      { name: 'utils.ts', path: 'src/', color: 'text-blue-300' },
+      { name: 'main.css', path: 'src/', color: 'text-purple-400' },
+      { name: 'index.html', path: 'public/', color: 'text-orange-400' },
+      { name: 'package.json', path: '', color: 'text-yellow-500' },
+      { name: 'tailwind.config.js', path: '', color: 'text-cyan-400' },
+    ];
+
+    let focusedIndex = -1;
+
+    function renderList(filtered, query) {
+      const list = document.getElementById('paletteList');
+      if (!filtered.length) {
+        list.innerHTML = '<div class="px-4 py-6 text-sm text-gray-400 text-center">No files found</div>';
+        return;
+      }
+      list.innerHTML = filtered.map((f, i) => {
+        const name = query
+          ? f.name.replace(new RegExp(`(${query})`, 'gi'), '<span class="highlight">$1</span>')
+          : f.name;
+        return `<div class="palette-item ${i === focusedIndex ? 'focused' : ''}" onclick="pick('${f.name}')">
+          <svg class="w-4 h-4 ${f.color} shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          ${name}
+          <span class="path">${f.path}</span>
+        </div>`;
+      }).join('');
+    }
+
+    let filtered = [...files];
+
+    function filterFiles(q) {
+      focusedIndex = -1;
+      filtered = q ? files.filter(f => f.name.toLowerCase().includes(q.toLowerCase())) : [...files];
+      renderList(filtered, q);
+    }
+
+    function handleKey(e) {
+      if (e.key === 'ArrowDown') { focusedIndex = Math.min(focusedIndex + 1, filtered.length - 1); renderList(filtered, document.getElementById('searchInput').value); }
+      else if (e.key === 'ArrowUp') { focusedIndex = Math.max(focusedIndex - 1, 0); renderList(filtered, document.getElementById('searchInput').value); }
+      else if (e.key === 'Enter' && filtered[focusedIndex]) { pick(filtered[focusedIndex].name); }
+      else if (e.key === 'Escape') { closeSidebar(); }
+    }
+
+    function pick(name) {
+      document.getElementById('fileName').textContent = name;
+      closeSidebar();
+    }
+
+    function openSidebar() {
+      document.getElementById('sidebarPanel').classList.add('open');
+      document.getElementById('backdrop').classList.add('visible');
+      document.getElementById('fab').classList.add('hidden-fab');
+      document.getElementById('searchInput').value = '';
+      filtered = [...files];
+      renderList(filtered, '');
+      setTimeout(() => document.getElementById('searchInput').focus(), 220);
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebarPanel').classList.remove('open');
+      document.getElementById('backdrop').classList.remove('visible');
+      document.getElementById('fab').classList.remove('hidden-fab');
+    }
+
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') { e.preventDefault(); openSidebar(); }
+    });
+
+    renderList(files, '');
+  </script>
+</body>
+</html>
