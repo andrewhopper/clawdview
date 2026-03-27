@@ -1,0 +1,105 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e6]
+      - heading "ClawdView" [level=1] [ref=e12]
+    - generic [ref=e13]:
+      - generic [ref=e16]: No file selected
+      - button [ref=e17]:
+        - img
+      - button [ref=e18]:
+        - img
+      - link [ref=e19] [cursor=pointer]:
+        - /url: https://github.com/andrewhopper/clawdview
+        - generic [ref=e20]:
+          - img
+  - generic [ref=e21]:
+    - complementary [ref=e22]:
+      - generic [ref=e23]:
+        - heading "Files" [level=3] [ref=e24]
+        - generic [ref=e25]:
+          - generic [ref=e26]: 5 files
+          - button [ref=e27]:
+            - img
+          - button [ref=e28]:
+            - img
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - textbox "Search files... (Ctrl+F)" [ref=e34]
+      - generic [ref=e35]:
+        - button "Tree" [ref=e36]:
+          - img
+          - text: Tree
+        - button "Recent" [ref=e37]:
+          - img
+          - text: Recent
+        - button "Type" [ref=e38]:
+          - img
+          - text: Type
+      - generic [ref=e39]:
+        - generic "1 file" [ref=e40] [cursor=pointer]: CSS
+        - generic "1 file" [ref=e41] [cursor=pointer]: HTML
+        - generic "1 file" [ref=e42] [cursor=pointer]: JSON
+        - generic "1 file" [ref=e43] [cursor=pointer]: MD
+        - generic "1 file" [ref=e44] [cursor=pointer]: Python
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - generic [ref=e49] [cursor=pointer]:
+            - generic [ref=e50]: 🎨
+            - generic [ref=e51]: sample.css
+          - generic [ref=e52] [cursor=pointer]:
+            - generic [ref=e53]: 🌐
+            - generic [ref=e54]: sample.html
+          - generic [ref=e55] [cursor=pointer]:
+            - generic [ref=e56]: 📊
+            - generic [ref=e57]: sample.json
+          - generic [ref=e58] [cursor=pointer]:
+            - generic [ref=e59]: 📝
+            - generic [ref=e60]: sample.md
+          - generic [ref=e61] [cursor=pointer]:
+            - generic [ref=e62]: 🐍
+            - generic [ref=e63]: sample.py
+        - button "Add directory..." [ref=e65]:
+          - img
+          - text: Add directory...
+    - generic [ref=e66]:
+      - generic [ref=e67]:
+        - generic [ref=e68]:
+          - button [ref=e69]:
+            - img
+          - tablist [ref=e70]:
+            - tab "📝 Code" [ref=e71]
+        - tabpanel [ref=e73]:
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - img [ref=e77]
+              - heading "ClawdView" [level=2] [ref=e83]
+            - paragraph [ref=e84]: Watch your files come to life as you code. ClawdView gives you instant, live previews alongside Claude Code and other coding CLI tools.
+            - generic [ref=e85]: "cview # launch in current directory cview ./some/dir/here # launch in a specific directory"
+            - generic [ref=e86]:
+              - heading "Supported formats" [level=3] [ref=e87]
+              - list [ref=e88]:
+                - listitem [ref=e89]: 🌐 HTML/CSS/JavaScript
+                - listitem [ref=e90]: ⚛️ React Components (JSX)
+                - listitem [ref=e91]: 🐍 Python Scripts
+                - listitem [ref=e92]: 🎨 SVG Graphics
+                - listitem [ref=e93]: 📝 Markdown
+                - listitem [ref=e94]: 📊 JSON/YAML
+            - paragraph [ref=e95]:
+              - text: Head over to GitHub to report
+              - link "issues" [ref=e96] [cursor=pointer]:
+                - /url: https://github.com/andrewhopper/clawdview/issues
+              - text: or
+              - link "contribute" [ref=e97] [cursor=pointer]:
+                - /url: https://github.com/andrewhopper/clawdview
+              - text: .
+      - generic [ref=e99]:
+        - button "Zoom out (⌘−)" [ref=e100]:
+          - img
+        - button "100%" [ref=e101]
+        - button "Zoom in (⌘+)" [ref=e102]:
+          - img
+```

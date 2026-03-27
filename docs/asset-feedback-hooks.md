@@ -378,11 +378,11 @@ Add to `.claude/settings.json`:
 | `.claude/hooks/post-asset-change.sh` | Create | Detect asset changes, write pending feedback |
 | `.claude/hooks/inject-feedback.sh` | Create | Read feedback, inject into conversation |
 | `.claude/hooks/wait-for-feedback.sh` | Create | (Optional) Block Stop until feedback received |
-| `quickview-tool/src/routes/feedback-routes.js` | Create | API endpoint for feedback submission |
-| `quickview-tool/server.js` | Modify | Register feedback routes |
-| `quickview-tool/public/index.html` | Modify | Add feedback panel HTML |
-| `quickview-tool/public/app.js` | Modify | Add feedback polling + submission logic |
-| `quickview-tool/public/style.css` | Modify | Style feedback panel |
+| `clawdview-tool/src/routes/feedback-routes.js` | Create | API endpoint for feedback submission |
+| `clawdview-tool/server.js` | Modify | Register feedback routes |
+| `clawdview-tool/public/index.html` | Modify | Add feedback panel HTML |
+| `clawdview-tool/public/app.js` | Modify | Add feedback polling + submission logic |
+| `clawdview-tool/public/style.css` | Modify | Style feedback panel |
 | `.clawdview/feedback/` | Created at runtime | Stores pending/response JSON |
 | `.gitignore` | Modify | Ignore `.clawdview/feedback/` |
 

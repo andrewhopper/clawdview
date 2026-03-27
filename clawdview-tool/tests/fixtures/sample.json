@@ -1,0 +1,13 @@
+{
+  "name": "ClawdView Test Fixture",
+  "version": "1.0.0",
+  "features": [
+    "preview",
+    "live-reload",
+    "syntax-highlighting"
+  ],
+  "config": {
+    "port": 3333,
+    "watchDir": "."
+  }
+}
