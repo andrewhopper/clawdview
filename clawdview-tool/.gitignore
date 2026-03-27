@@ -72,6 +72,10 @@ pids
 # Test coverage
 coverage/
 
+# Playwright test artifacts
+test-results/
+tests/playwright-report/
+
 # Build output
 dist/
 build/
