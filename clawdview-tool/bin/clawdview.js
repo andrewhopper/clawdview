@@ -21,12 +21,13 @@ try {
   ({ TunnelService } = require('../dist/server/services/tunnel-service'));
 }
 
+const pkg = require('../package.json');
 const program = new Command();
 
 program
   .name('clawdview')
   .description('Universal rapid prototyping tool for instant code preview')
-  .version('2.0.0');
+  .version(pkg.version);
 
 program
   .command('start')

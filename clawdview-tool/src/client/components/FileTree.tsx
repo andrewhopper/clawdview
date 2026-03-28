@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { FileTreeItem, ViewMode, WatchedDirInfo } from '../types';
+import { FILE_TYPE_GROUPS, EXT_LABELS, FILE_ICONS } from '../../shared/file-types';
 import { ChevronRight, RefreshCw, Eye, Search, FolderTree, Clock, LayoutList, X, FolderPlus, type LucideIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -17,23 +18,6 @@ const IGNORED_DIRS = new Set([
   '.terraform', '.serverless',
 ]);
 
-const FILE_TYPE_GROUPS: Record<string, { extensions: Set<string>; icon: string }> = {
-  'Web': { extensions: new Set(['.html', '.css', '.svg']), icon: '🌐' },
-  'Script': { extensions: new Set(['.js', '.jsx', '.py']), icon: '📜' },
-  'Data': { extensions: new Set(['.json', '.xml', '.yaml', '.yml']), icon: '📊' },
-  'Docs': { extensions: new Set(['.md', '.txt']), icon: '📝' },
-};
-
-const EXT_LABELS: Record<string, string> = {
-  '.html': 'HTML', '.css': 'CSS', '.js': 'JS', '.jsx': 'JSX',
-  '.py': 'Python', '.json': 'JSON', '.md': 'MD', '.svg': 'SVG',
-  '.txt': 'TXT', '.xml': 'XML', '.yaml': 'YAML', '.yml': 'YML',
-};
-
-const FILE_ICONS: Record<string, string> = {
-  html: '🌐', js: '📜', jsx: '📜', py: '🐍',
-  json: '📊', md: '📝', svg: '🎨', css: '🎨',
-};
 
 const VIEW_MODES: { mode: ViewMode; icon: LucideIcon; label: string }[] = [
   { mode: 'tree', icon: FolderTree, label: 'Tree' },

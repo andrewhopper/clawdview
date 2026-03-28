@@ -6,10 +6,7 @@ import type { FileTreeItem, GitInfo, ExifData } from '../../shared/types';
 
 export type { FileTreeItem, GitInfo, ExifData };
 
-const ALLOWED_EXTENSIONS = [
-  '.html', '.jsx', '.js', '.py', '.css', '.json',
-  '.md', '.svg', '.txt', '.xml', '.yaml', '.yml',
-];
+import { ALLOWED_EXTENSIONS } from '../../shared/file-types';
 
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.webp', '.gif'];
 

@@ -11,6 +11,7 @@ import { PythonRenderer } from './components/renderers/PythonRenderer';
 import { SvgRenderer } from './components/renderers/SvgRenderer';
 import { MarkdownRenderer } from './components/renderers/MarkdownRenderer';
 import { JsonRenderer } from './components/renderers/JsonRenderer';
+import { DrawioRenderer } from './components/renderers/DrawioRenderer';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { Button } from './components/ui/button';
 import { Separator } from './components/ui/separator';
@@ -28,10 +29,11 @@ const HIGHLIGHT_LANG_MAP: Record<string, string> = {
   '.html': 'html', '.css': 'css', '.json': 'json',
   '.md': 'markdown', '.svg': 'xml', '.xml': 'xml',
   '.yaml': 'yaml', '.yml': 'yaml', '.txt': 'plaintext',
+  '.drawio': 'xml',
 };
 
 const FORMATTABLE_EXTENSIONS = ['.js', '.jsx', '.json', '.html', '.css', '.yaml', '.yml', '.xml'];
-const PREVIEWABLE_EXTENSIONS = new Set(['.html', '.md', '.svg', '.jsx', '.json']);
+const PREVIEWABLE_EXTENSIONS = new Set(['.html', '.md', '.svg', '.jsx', '.json', '.drawio']);
 const EXECUTABLE_EXTENSIONS = new Set(['.py']);
 
 interface OutputResult {
@@ -272,6 +274,7 @@ cview ./some/dir/here  # launch in a specific directory`}
       case '.svg': return <SvgRenderer content={fileContent} />;
       case '.md': return <MarkdownRenderer content={fileContent} />;
       case '.json': return <JsonRenderer content={fileContent} />;
+      case '.drawio': return <DrawioRenderer content={fileContent} />;
       default: return (
         <div className="p-5">
           <pre className="whitespace-pre-wrap text-foreground text-sm font-mono">{fileContent}</pre>

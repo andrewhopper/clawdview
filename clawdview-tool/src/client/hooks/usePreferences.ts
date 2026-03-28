@@ -1,15 +1,13 @@
 import { useState, useCallback } from 'react';
 import type { Preferences } from '../types';
+import FILE_TYPES, { DEFAULT_WATCHED_FILE_TYPES } from '../../shared/file-types';
 
 const STORAGE_KEY = 'clawdview-preferences';
 
 const DEFAULT_PREFERENCES: Preferences = {
   autoOpenOnChange: true,
   maxOpenTabs: 10,
-  watchedFileTypes: [
-    '.html', '.jsx', '.js', '.py', '.css', '.json',
-    '.md', '.svg', '.txt', '.xml', '.yaml', '.yml',
-  ],
+  watchedFileTypes: DEFAULT_WATCHED_FILE_TYPES,
 };
 
 function loadPreferences(): Preferences {
@@ -62,17 +60,4 @@ export function usePreferences() {
   return { preferences, updatePreference, resetPreferences, isFileTypeWatched };
 }
 
-export const ALL_FILE_TYPES = [
-  { ext: '.html', label: 'HTML', icon: '🌐' },
-  { ext: '.jsx', label: 'React JSX', icon: '⚛️' },
-  { ext: '.js', label: 'JavaScript', icon: '📜' },
-  { ext: '.py', label: 'Python', icon: '🐍' },
-  { ext: '.css', label: 'CSS', icon: '🎨' },
-  { ext: '.json', label: 'JSON', icon: '📊' },
-  { ext: '.md', label: 'Markdown', icon: '📝' },
-  { ext: '.svg', label: 'SVG', icon: '🎨' },
-  { ext: '.txt', label: 'Text', icon: '📄' },
-  { ext: '.xml', label: 'XML', icon: '📄' },
-  { ext: '.yaml', label: 'YAML', icon: '📄' },
-  { ext: '.yml', label: 'YAML', icon: '📄' },
-];
+export const ALL_FILE_TYPES = FILE_TYPES;
