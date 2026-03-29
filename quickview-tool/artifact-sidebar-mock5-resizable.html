@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock 5 – Resizable + Collapsible Sidebar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    :root {
+      --sidebar-w: 220px;
+      --min-w: 160px;
+      --max-w: 400px;
+      --collapsed-w: 0px;
+    }
+
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      max-width: var(--sidebar-w);
+      background: hsl(0 0% 98%);
+      border-right: 1px solid hsl(220 13% 91%);
+      display: flex;
+      flex-direction: column;
+      transition: width 0.18s ease, min-width 0.18s ease, max-width 0.18s ease;
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .sidebar.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+    }
+
+    /* Resize handle */
+    .resize-handle {
+      position: absolute;
+      top: 0;
+      right: -3px;
+      width: 6px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 20;
+      background: transparent;
+      transition: background 0.1s;
+    }
+    .resize-handle:hover, .resize-handle.dragging {
+      background: hsl(221.2 83.2% 53.3% / 0.3);
+    }
+
+    /* Collapse toggle strip (left of main) */
+    .collapse-strip {
+      width: 16px;
+      background: hsl(0 0% 98%);
+      border-right: 1px solid hsl(220 13% 91%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: background 0.1s;
+    }
+    .collapse-strip:hover { background: hsl(210 40% 96.1%); }
+    .collapse-strip .chevron {
+      color: hsl(215.4 16.3% 46.9%);
+      transition: transform 0.18s;
+    }
+    .collapse-strip.sidebar-open .chevron { transform: rotate(0deg); }
+    .collapse-strip.sidebar-closed .chevron { transform: rotate(180deg); }
+
+    /* Sidebar content */
+    .sidebar-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 160px;
+    }
+
+    .tree-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 1px 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      color: hsl(222.2 47.4% 11.2%);
+    }
+    .tree-row:hover { background: hsl(210 40% 96.1%); }
+    .tree-row.selected { background: hsl(221.2 83.2% 53.3% / 0.12); color: hsl(221.2 83.2% 53.3%); }
+    .tree-row span { overflow: hidden; text-overflow: ellipsis; }
+
+    /* Tabs in main area */
+    .tab-bar { display: flex; border-bottom: 1px solid hsl(220 13% 91%); overflow-x: auto; background: white; }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 14px;
+      height: 36px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      border-right: 1px solid hsl(220 13% 91%);
+      color: hsl(215.4 16.3% 46.9%);
+    }
+    .tab.active {
+      background: white;
+      color: hsl(222.2 47.4% 11.2%);
+      border-bottom: 2px solid hsl(221.2 83.2% 53.3%);
+    }
+    .tab .close-btn { opacity: 0; font-size: 14px; line-height: 1; }
+    .tab:hover .close-btn { opacity: 1; }
+
+    /* Width label */
+    .width-label {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: hsl(215.4 16.3% 60%);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-900">
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        <!-- Sidebar header -->
+        <div class="h-10 flex items-center justify-between px-3 border-b border-gray-200 shrink-0">
+          <span class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Explorer</span>
+          <button class="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 text-gray-400" title="New file">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- File tree -->
+        <div class="flex-1 overflow-y-auto py-1">
+          <div class="tree-row font-medium text-gray-500 text-xs uppercase tracking-widest mt-1" style="cursor:default">
+            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+            <span>clawdview</span>
+          </div>
+
+          <div class="tree-row pl-4" style="color:#888">
+            <svg class="w-3.5 h-3.5 shrink-0 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+            <span>src</span>
+          </div>
+          <div class="tree-row selected pl-8" onclick="selectRow(this,'App.tsx')">
+            <svg class="w-3.5 h-3.5 shrink-0 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+            <span>App.tsx</span>
+          </div>
+          <div class="tree-row pl-8" onclick="selectRow(this,'index.tsx')">
+            <svg class="w-3.5 h-3.5 shrink-0 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+            <span>index.tsx</span>
+          </div>
+          <div class="tree-row pl-8" onclick="selectRow(this,'main.css')">
+            <svg class="w-3.5 h-3.5 shrink-0 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+            <span>main.css</span>
+          </div>
+          <div class="tree-row pl-8" onclick="selectRow(this,'utils.ts')">
+            <svg class="w-3.5 h-3.5 shrink-0 text-blue-300" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+            <span>utils.ts</span>
+          </div>
+          <div class="tree-row pl-4" style="color:#888">
+            <svg class="w-3.5 h-3.5 shrink-0 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+            <span>public</span>
+          </div>
+          <div class="tree-row pl-8" onclick="selectRow(this,'index.html')">
+            <svg class="w-3.5 h-3.5 shrink-0 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+            <span>index.html</span>
+          </div>
+          <div class="tree-row" onclick="selectRow(this,'package.json')">
+            <svg class="w-3.5 h-3.5 shrink-0 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+            <span>package.json</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resize handle -->
+      <div class="resize-handle" id="resizeHandle"></div>
+
+      <!-- Width label -->
+      <div class="width-label" id="widthLabel">220px</div>
+    </aside>
+
+    <!-- Collapse strip -->
+    <div class="collapse-strip sidebar-open" id="collapseStrip" onclick="toggleCollapse()" title="Collapse sidebar">
+      <svg class="chevron w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </div>
+
+    <!-- Main content -->
+    <main class="flex-1 flex flex-col overflow-hidden min-w-0">
+      <!-- Tab bar -->
+      <div class="tab-bar shrink-0">
+        <div class="tab active">
+          <svg class="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          App.tsx
+          <span class="close-btn">×</span>
+        </div>
+        <div class="tab">
+          <svg class="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          index.tsx
+          <span class="close-btn">×</span>
+        </div>
+        <div class="tab">
+          <svg class="w-3 h-3 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4z"/></svg>
+          main.css
+          <span class="close-btn">×</span>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <div class="flex-1 overflow-auto p-6">
+        <div class="max-w-xl">
+          <div class="text-xs text-gray-400 mb-5 border border-dashed border-gray-200 rounded-lg p-4 text-center">
+            <strong class="block text-gray-600 mb-1">Mock 5 — Drag-to-Resize + Collapsible Strip</strong>
+            Drag the right edge of the sidebar to resize it. The thin strip on the right
+            of the sidebar collapses/expands it. Width is remembered between sessions.
+            Open tabs persist across collapse/expand.
+          </div>
+          <pre class="text-sm text-gray-700 bg-gray-50 border border-gray-100 rounded-lg p-4 leading-relaxed font-mono"><code>import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+
+export default function App() {
+  return (
+    &lt;Sheet&gt;
+      &lt;SheetTrigger asChild&gt;
+        &lt;Button variant="outline"&gt;
+          Open Files
+        &lt;/Button&gt;
+      &lt;/SheetTrigger&gt;
+      &lt;SheetContent side="left"&gt;
+        {/* file tree here */}
+      &lt;/SheetContent&gt;
+    &lt;/Sheet&gt;
+  )
+}</code></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const handle = document.getElementById('resizeHandle');
+    const strip = document.getElementById('collapseStrip');
+    const widthLabel = document.getElementById('widthLabel');
+
+    let isCollapsed = false;
+    let lastWidth = 220;
+    let dragging = false;
+    let startX = 0;
+    let startW = 0;
+
+    function updateLabel(w) {
+      widthLabel.textContent = `${Math.round(w)}px`;
+    }
+
+    // Resize drag
+    handle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      dragging = true;
+      startX = e.clientX;
+      startW = sidebar.offsetWidth;
+      handle.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const delta = e.clientX - startX;
+      const newW = Math.max(160, Math.min(400, startW + delta));
+      sidebar.style.width = newW + 'px';
+      sidebar.style.minWidth = newW + 'px';
+      sidebar.style.maxWidth = newW + 'px';
+      lastWidth = newW;
+      updateLabel(newW);
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove('dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    });
+
+    // Collapse/expand
+    function toggleCollapse() {
+      isCollapsed = !isCollapsed;
+      if (isCollapsed) {
+        lastWidth = sidebar.offsetWidth;
+        sidebar.classList.add('collapsed');
+        strip.classList.remove('sidebar-open');
+        strip.classList.add('sidebar-closed');
+      } else {
+        sidebar.classList.remove('collapsed');
+        sidebar.style.width = lastWidth + 'px';
+        sidebar.style.minWidth = lastWidth + 'px';
+        sidebar.style.maxWidth = lastWidth + 'px';
+        strip.classList.add('sidebar-open');
+        strip.classList.remove('sidebar-closed');
+        updateLabel(lastWidth);
+      }
+    }
+
+    function selectRow(el, name) {
+      document.querySelectorAll('.tree-row').forEach(r => r.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+  </script>
+</body>
+</html>

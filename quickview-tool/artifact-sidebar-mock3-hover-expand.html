@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock 3 – Hover to Expand Rail</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    :root {
+      --rail: 52px;
+      --expanded: 232px;
+    }
+
+    .sidebar {
+      width: var(--rail);
+      min-width: var(--rail);
+      transition: width 0.18s ease, min-width 0.18s ease;
+      overflow: hidden;
+      background: hsl(222.2 84% 4.9%);
+      color: hsl(210 40% 98%);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    /* Hover expand — no click needed */
+    .sidebar:hover, .sidebar.pinned {
+      width: var(--expanded);
+      min-width: var(--expanded);
+    }
+
+    .nav-label {
+      opacity: 0;
+      white-space: nowrap;
+      font-size: 13px;
+      transition: opacity 0.12s ease 0.06s;
+      overflow: hidden;
+    }
+    .sidebar:hover .nav-label, .sidebar.pinned .nav-label { opacity: 1; }
+
+    .section-header {
+      opacity: 0;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: hsl(215 20% 55%);
+      padding: 0 8px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      transition: opacity 0.12s ease 0.06s;
+    }
+    .sidebar:hover .section-header, .sidebar.pinned .section-header { opacity: 1; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      margin: 1px 6px;
+      cursor: pointer;
+      color: hsl(215 20% 65%);
+      transition: background 0.1s, color 0.1s;
+    }
+    .nav-item:hover { background: hsl(215 28% 17%); color: hsl(210 40% 98%); }
+    .nav-item.active {
+      background: hsl(221.2 83.2% 53.3%);
+      color: white;
+    }
+
+    .pin-btn {
+      opacity: 0;
+      transition: opacity 0.12s ease 0.06s;
+    }
+    .sidebar:hover .pin-btn, .sidebar.pinned .pin-btn { opacity: 1; }
+
+    /* Tooltip only on rail (not hovered) */
+    .tip {
+      position: absolute;
+      left: calc(var(--rail) + 8px);
+      background: hsl(222.2 84% 4.9%);
+      border: 1px solid hsl(217 33% 25%);
+      color: hsl(210 40% 95%);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 60;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .has-tip { position: relative; }
+    .sidebar:not(:hover):not(.pinned) .has-tip:hover .tip { opacity: 1; }
+  </style>
+</head>
+<body class="flex h-screen bg-gray-950 text-gray-100 overflow-hidden">
+
+  <!-- Dark sidebar (VS Code-style) -->
+  <aside id="sidebar" class="sidebar">
+    <!-- Logo / top area -->
+    <div class="h-12 flex items-center px-3.5 gap-3 border-b border-gray-800 shrink-0">
+      <div class="w-6 h-6 rounded bg-blue-600 flex items-center justify-center shrink-0">
+        <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M3 4a1 1 0 000 2h14a1 1 0 100-2H3zM3 9a1 1 0 000 2h14a1 1 0 100-2H3zM3 14a1 1 0 000 2h7a1 1 0 100-2H3z"/>
+        </svg>
+      </div>
+      <span class="nav-label font-semibold text-sm text-white">ClawdView</span>
+      <button id="pinBtn" onclick="togglePin()"
+        class="pin-btn ml-auto w-6 h-6 flex items-center justify-center rounded hover:bg-gray-700 text-gray-500 hover:text-gray-300"
+        title="Pin sidebar">
+        <svg class="w-3.5 h-3.5" id="pinIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Nav sections -->
+    <nav class="flex-1 overflow-y-auto py-3 space-y-4">
+
+      <div>
+        <div class="section-header px-5">Explorer</div>
+        <div class="has-tip nav-item active" onclick="select(this)">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+          </svg>
+          <span class="nav-label">Files</span>
+          <span class="tip">Files</span>
+        </div>
+        <div class="has-tip nav-item" onclick="select(this)">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+          </svg>
+          <span class="nav-label">Search</span>
+          <span class="tip">Search</span>
+        </div>
+        <div class="has-tip nav-item" onclick="select(this)">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+          </svg>
+          <span class="nav-label">Source Control</span>
+          <span class="tip">Source Control</span>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-800 pt-4">
+        <div class="section-header px-5">Artifacts</div>
+        <div class="has-tip nav-item" onclick="select(this)">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+          </svg>
+          <span class="nav-label">Components</span>
+          <span class="tip">Components</span>
+        </div>
+        <div class="has-tip nav-item" onclick="select(this)">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          <span class="nav-label">Analytics</span>
+          <span class="tip">Analytics</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Bottom: Settings -->
+    <div class="border-t border-gray-800 py-2 shrink-0">
+      <div class="has-tip nav-item">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span class="nav-label text-gray-400">Settings</span>
+        <span class="tip">Settings</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content area -->
+  <main class="flex-1 flex flex-col overflow-hidden bg-gray-900">
+    <div class="h-12 border-b border-gray-800 flex items-center px-4 gap-2 text-sm text-gray-400 shrink-0">
+      <span class="text-gray-600">src</span>
+      <span class="text-gray-700">/</span>
+      <span class="text-gray-300">App.tsx</span>
+    </div>
+
+    <div class="flex-1 overflow-auto p-6">
+      <div class="max-w-xl">
+        <div class="text-xs text-gray-500 mb-6 border border-dashed border-gray-700 rounded-lg p-4 text-center">
+          <strong class="block text-gray-400 mb-1">Mock 3 — Hover-to-Expand Rail (dark)</strong>
+          Hover the sidebar to expand. Pin icon locks it open.
+          Tooltips show on icon rail when not hovered/pinned.
+        </div>
+        <pre class="text-sm text-green-400 bg-gray-800 rounded-lg p-4 leading-relaxed font-mono"><code>import React from 'react'
+
+function App() {
+  return (
+    &lt;div className="app"&gt;
+      &lt;h1&gt;Hello&lt;/h1&gt;
+    &lt;/div&gt;
+  )
+}</code></pre>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let pinned = false;
+    function togglePin() {
+      pinned = !pinned;
+      const sb = document.getElementById('sidebar');
+      const icon = document.getElementById('pinIcon');
+      sb.classList.toggle('pinned', pinned);
+      icon.style.color = pinned ? 'hsl(221.2 83.2% 53.3%)' : '';
+    }
+    function select(el) {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      el.classList.add('active');
+    }
+  </script>
+</body>
+</html>
