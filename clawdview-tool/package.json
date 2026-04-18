@@ -7,6 +7,24 @@
     "cview": "./bin/cview.js",
     "clawdview": "./bin/clawdview.js"
   },
+  "files": [
+    "bin",
+    "dist",
+    "README.md",
+    "CLAUDE.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrewhopper/clawdview.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andrewhopper/clawdview/issues"
+  },
+  "homepage": "https://github.com/andrewhopper/clawdview#readme",
   "scripts": {
     "dev": "concurrently \"tsx watch src/server/server.ts\" \"vite\"",
     "dev:server": "tsx watch src/server/server.ts",
@@ -17,9 +35,10 @@
     "start": "node dist/server/server.js",
     "preview": "clawdview start",
     "preview:port": "clawdview start --port",
-    "release": "npm version patch && npm run build && npm install -g .",
-    "release:minor": "npm version minor && npm run build && npm install -g .",
-    "release:major": "npm version major && npm run build && npm install -g .",
+    "prepublishOnly": "npm run build",
+    "release:patch": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
@@ -71,11 +90,17 @@
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "preview",
     "prototyping",
     "development",
-    "hot-reload"
+    "hot-reload",
+    "claude-code",
+    "live-reload",
+    "artifacts"
   ],
   "author": "Andrew Hopper",
   "license": "MIT"

@@ -4,21 +4,26 @@ const { Command } = require('commander');
 const path = require('path');
 const fs = require('fs');
 
-// Use tsx to register TypeScript support for direct execution
-try {
-  require('tsx/cjs');
-} catch {
-  // If tsx is not available, fall back to compiled JS
-}
-
-// Try TypeScript source first, then compiled JS
 let ClawdViewServer, TunnelService;
 try {
-  ({ ClawdViewServer } = require('../src/server/server'));
-  ({ TunnelService } = require('../src/server/services/tunnel-service'));
-} catch {
   ({ ClawdViewServer } = require('../dist/server/server'));
   ({ TunnelService } = require('../dist/server/services/tunnel-service'));
+} catch (err) {
+  if (fs.existsSync(path.join(__dirname, '..', 'src', 'server', 'server.ts'))) {
+    try {
+      require('tsx/cjs');
+      ({ ClawdViewServer } = require('../src/server/server'));
+      ({ TunnelService } = require('../src/server/services/tunnel-service'));
+    } catch (devErr) {
+      console.error('Failed to load ClawdView. Run "npm run build" first.');
+      console.error(devErr.message);
+      process.exit(1);
+    }
+  } else {
+    console.error('Failed to load ClawdView from dist/. The package may be corrupted — try reinstalling.');
+    console.error(err.message);
+    process.exit(1);
+  }
 }
 
 const pkg = require('../package.json');
