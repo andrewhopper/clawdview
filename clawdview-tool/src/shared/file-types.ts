@@ -23,6 +23,7 @@ const FILE_TYPES: FileTypeEntry[] = [
   // Docs
   { ext: '.md', label: 'Markdown', icon: '📝', group: 'Docs' },
   { ext: '.txt', label: 'Text', icon: '📄', group: 'Docs' },
+  { ext: '.output', label: 'Output', icon: '📋', group: 'Docs' },
 ];
 
 export default FILE_TYPES;
