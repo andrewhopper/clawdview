@@ -1,0 +1,48 @@
+{
+  "name": "clawdview-renderers",
+  "version": "0.1.0",
+  "description": "Standalone, in-line content renderers (HTML, Markdown, SVG, JSON, JSX, Drawio) extracted from ClawdView, designed to drop into chat interfaces and other React apps.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./HtmlRenderer": "./src/HtmlRenderer.tsx",
+    "./MarkdownRenderer": "./src/MarkdownRenderer.tsx",
+    "./SvgRenderer": "./src/SvgRenderer.tsx",
+    "./JsonRenderer": "./src/JsonRenderer.tsx",
+    "./ReactRenderer": "./src/ReactRenderer.tsx",
+    "./DrawioRenderer": "./src/DrawioRenderer.tsx",
+    "./Renderer": "./src/Renderer.tsx"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "dependencies": {
+    "dompurify": "^3.1.6",
+    "marked": "^14.1.4"
+  },
+  "devDependencies": {
+    "@types/dompurify": "^3.0.5",
+    "@types/react": ">=18"
+  },
+  "keywords": [
+    "react",
+    "renderer",
+    "markdown",
+    "html-preview",
+    "svg",
+    "jsx",
+    "chat",
+    "in-line",
+    "clawdview"
+  ],
+  "license": "MIT"
+}

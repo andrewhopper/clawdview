@@ -5,13 +5,15 @@ import { FileTree } from './components/FileTree';
 import { PreferencesPanel } from './components/PreferencesPanel';
 import { Logo } from './components/Logo';
 import { FileInfoModal } from './components/FileInfoModal';
-import { HtmlRenderer } from './components/renderers/HtmlRenderer';
-import { ReactRenderer } from './components/renderers/ReactRenderer';
+import {
+  HtmlRenderer,
+  ReactRenderer,
+  SvgRenderer,
+  MarkdownRenderer,
+  JsonRenderer,
+  DrawioRenderer,
+} from 'clawdview-renderers';
 import { PythonRenderer } from './components/renderers/PythonRenderer';
-import { SvgRenderer } from './components/renderers/SvgRenderer';
-import { MarkdownRenderer } from './components/renderers/MarkdownRenderer';
-import { JsonRenderer } from './components/renderers/JsonRenderer';
-import { DrawioRenderer } from './components/renderers/DrawioRenderer';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { Button } from './components/ui/button';
 import { Separator } from './components/ui/separator';

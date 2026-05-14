@@ -1,0 +1,13 @@
+{
+  "name": "clawdview-monorepo",
+  "private": true,
+  "workspaces": [
+    "clawdview-tool",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm --workspace clawdview-tool run dev",
+    "build": "npm --workspace clawdview-tool run build",
+    "test": "npm --workspace clawdview-tool test"
+  }
+}
